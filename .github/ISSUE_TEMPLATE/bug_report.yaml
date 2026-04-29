@@ -1,0 +1,44 @@
+name: Bug report
+description: gh-tasks の不具合を報告する
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 発生した事象
+      description: 何が起きたか、何を期待していたか
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 再現手順
+      description: |
+        最小再現コマンド (gh tasks ... の出力含む)
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: gh-tasks version
+      description: "`gh tasks --version` の出力"
+    validations:
+      required: true
+  - type: input
+    id: gh-version
+    attributes:
+      label: gh CLI version
+      description: "`gh --version` の出力"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: OS
+      options:
+        - macOS
+        - Linux
+        - Windows
+    validations:
+      required: true

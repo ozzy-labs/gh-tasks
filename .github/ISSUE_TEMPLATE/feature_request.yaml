@@ -1,0 +1,29 @@
+name: Feature request
+description: gh-tasks への機能追加を提案する
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: motivation
+    attributes:
+      label: 動機 / ユースケース
+      description: なぜこの機能が必要か。既存ワークフローのどこが詰まるか
+    validations:
+      required: true
+  - type: dropdown
+    id: scope
+    attributes:
+      label: 対象スコープ
+      multiple: true
+      options:
+        - repo (Issue / Milestone)
+        - org (OzzyLabs Platform Project)
+        - user (Personal Project)
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 想定 CLI / skill
+      description: 例 `gh tasks foo --bar` や skill 名・呼び出し方
+    validations:
+      required: false

@@ -1,0 +1,7 @@
+scan:
+  scanners:
+    - vuln
+  skip-dirs:
+    - node_modules
+    - dist
+    - tests/fixtures

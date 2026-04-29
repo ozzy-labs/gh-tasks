@@ -1,0 +1,21 @@
+# Auto-updated by commons sync.sh
+# 'pinned' is user-editable — add or remove paths freely
+commit: pending
+synced_at: pending
+# Auto-updated by Renovate
+skills_commit: pending
+# Adapters opted in for @ozzylabs/skills sync (per ADR-0018 / handbook#68).
+skills_adapters:
+  - claude-code
+  - codex-cli
+  - gemini-cli
+  - copilot
+pinned:
+  - lefthook-base.yaml
+  - .gitattributes
+  - .editorconfig
+  - .commitlintrc.yaml
+  - .devcontainer/devcontainer.json
+  - .gemini/settings.json
+  - .github/ISSUE_TEMPLATE/bug_report.yaml
+  - .github/ISSUE_TEMPLATE/feature_request.yaml

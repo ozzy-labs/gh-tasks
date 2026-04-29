@@ -1,0 +1,19 @@
+[tools]
+# Runtime & package managers
+node = "24"
+pnpm = "10"
+bun = "1.2"
+
+# Git hooks & commit conventions
+lefthook = "2"
+
+# Linters & formatters
+biome = "2"
+shellcheck = "0.11"
+shfmt = "3"
+"npm:markdownlint-cli2" = "0.21"
+"pipx:yamllint" = "1"
+yamlfmt = "0.21"
+actionlint = "1"
+gitleaks = "8"
+trivy = "0.69"

@@ -1,0 +1,17 @@
+{
+  "help.header": "gh tasks — GitHub Projects v2 / Issues / Milestone を横断するタスク管理",
+  "help.usage": "Usage: gh tasks <command> [options]",
+  "help.commands": "Commands:",
+  "help.flags": "Flags:\n  --scope repo|org|user   対象スコープ\n  --lang ja|en            出力言語\n  --help, -h              ヘルプ表示\n  --version, -v           バージョン表示",
+  "help.cmd.add": "Issue / Project draft item を追加",
+  "help.cmd.list": "タスク一覧",
+  "help.cmd.today": "今日のタスク",
+  "help.cmd.plan": "週次 / イテレーション計画",
+  "help.cmd.triage": "未トリアージ整理",
+  "help.cmd.done": "完了化",
+  "help.cmd.review": "振り返り",
+  "help.cmd.standup": "活動サマリ",
+  "help.cmd.link": "PR と Issue / Project 項目の紐付け",
+  "error.unknownCommand": "不明なコマンド",
+  "error.notImplemented": "未実装"
+}

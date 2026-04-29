@@ -1,0 +1,22 @@
+{
+  "name": "@ozzylabs/gh-tasks",
+  "version": "0.0.0",
+  "description": "gh extension for managing tasks across GitHub Projects v2, Issues, and Milestones",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "bun build src/cli.ts --compile --outfile=bin/gh-tasks",
+    "build:all": "node ../../scripts/build-cli.mjs",
+    "dev": "bun run src/cli.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@octokit/graphql": "^8.1.0",
+    "@octokit/request-error": "^6.1.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.0",
+    "vitest": "^3.0.0"
+  }
+}

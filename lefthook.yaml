@@ -1,0 +1,60 @@
+extends:
+  - lefthook-base.yaml
+
+commit-msg:
+  commands:
+    commitlint:
+      run: npx --yes @commitlint/cli --edit {1}
+
+pre-commit:
+  parallel: true
+  commands:
+    check-yaml-extension:
+      glob: '**/*.yml'
+      run: 'echo "❌ .yml files found. Use .yaml extension instead." && exit 1'
+    biome-check:
+      glob: '*.{ts,tsx,js,jsx,json}'
+      run: biome check --write --files-ignore-unknown=true --diagnostic-level=error {staged_files}
+      stage_fixed: true
+    markdownlint:
+      glob: '*.md'
+      exclude:
+        - 'node_modules/**'
+        - '**/node_modules/**'
+        - '**/CHANGELOG.md'
+      run: markdownlint-cli2 {staged_files}
+    yamlfmt:
+      glob: '*.yaml'
+      run: yamlfmt {staged_files}
+      stage_fixed: true
+    yamllint:
+      glob: '*.yaml'
+      run: yamllint {staged_files}
+    shellcheck:
+      glob: '*.sh'
+      run: shellcheck {staged_files}
+    shfmt:
+      glob: '*.sh'
+      run: shfmt -w {staged_files}
+      stage_fixed: true
+    actionlint:
+      glob: '.github/workflows/*.yaml'
+      run: actionlint
+    gitleaks:
+      run: gitleaks protect --staged --no-banner --redact
+    trivy:
+      run: mise exec -- trivy fs --scanners vuln --exit-code 1 --no-progress .
+
+pre-push:
+  commands:
+    typecheck:
+      run: pnpm -r typecheck
+    check-branch-name:
+      run: |
+        BRANCH=$(git rev-parse --abbrev-ref HEAD)
+        if [ "$BRANCH" = "main" ]; then exit 0; fi
+        echo "$BRANCH" | grep -qE '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)/.+' || {
+          echo "❌ Invalid branch name: $BRANCH"
+          echo "Expected format: <type>/<description>"
+          exit 1
+        }

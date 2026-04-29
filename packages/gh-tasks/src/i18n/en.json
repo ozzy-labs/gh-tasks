@@ -1,0 +1,17 @@
+{
+  "help.header": "gh tasks — manage tasks across GitHub Projects v2, Issues, and Milestones",
+  "help.usage": "Usage: gh tasks <command> [options]",
+  "help.commands": "Commands:",
+  "help.flags": "Flags:\n  --scope repo|org|user   Target scope\n  --lang ja|en            Output language\n  --help, -h              Show help\n  --version, -v           Show version",
+  "help.cmd.add": "Add an Issue / Project draft item",
+  "help.cmd.list": "List tasks",
+  "help.cmd.today": "Today's tasks",
+  "help.cmd.plan": "Plan a week / iteration",
+  "help.cmd.triage": "Triage untriaged items",
+  "help.cmd.done": "Mark as done",
+  "help.cmd.review": "Retrospective summary",
+  "help.cmd.standup": "Activity summary",
+  "help.cmd.link": "Link a PR to an Issue / Project item",
+  "error.unknownCommand": "Unknown command",
+  "error.notImplemented": "Not implemented"
+}

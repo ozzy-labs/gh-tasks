@@ -1,0 +1,4 @@
+# Shared base config from commons (placeholder until commons sync runs).
+# Extended by lefthook.yaml in this repo.
+
+glob_matcher: doublestar
