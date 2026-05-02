@@ -9,6 +9,7 @@ Design documentation for `gh-tasks`. This is the **English mirror**; the SSOT li
 | [concepts.md](./concepts.md) | Terminology (scope / item / iteration / personal vs team) |
 | [installation.md](./installation.md) | `gh extension install ozzy-labs/gh-tasks` + initial setup |
 | [scope-detection.md](./scope-detection.md) | `--scope` auto-detection and precedence |
+| [locale-detection.md](./locale-detection.md) | `--lang` / `LC_ALL` / `LANG` output language precedence |
 | [projects-v2-setup.md](./projects-v2-setup.md) | Field definitions for personal and team use |
 | [cli-reference.md](./cli-reference.md) | All commands and flags |
 | [troubleshooting.md](./troubleshooting.md) | Auth errors, `--repo` resolution, `gh agent-task` clash, API rate limit |

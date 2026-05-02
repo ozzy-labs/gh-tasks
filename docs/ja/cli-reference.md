@@ -11,7 +11,7 @@
 
 - `--scope repo|org|user`: 対象スコープ。省略時は自動判定([scope-detection.md](./scope-detection.md))
 - `--repo <owner>/<name>`: repo scope のターゲット。省略時は git remote `origin` から推定
-- `--lang ja|en`: 出力言語。省略時は `LANG` 環境変数から推定
+- `--lang ja|en`: 出力言語。省略時は `LC_ALL` → `LANG` env → デフォルト `en` の順で解決([locale-detection.md](./locale-detection.md))
 - `--help`, `-h`: ヘルプ表示
 - `--version`, `-v`: バージョン表示
 
