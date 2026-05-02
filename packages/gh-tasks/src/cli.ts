@@ -5,6 +5,7 @@ import { link } from './commands/link.ts';
 import { list } from './commands/list.ts';
 import { plan } from './commands/plan.ts';
 import { review } from './commands/review.ts';
+import { standup } from './commands/standup.ts';
 import { today } from './commands/today.ts';
 import { triage } from './commands/triage.ts';
 import { resolveLocale, t } from './i18n/index.ts';
@@ -80,6 +81,9 @@ async function main(argv: string[]): Promise<number> {
   }
   if (cmd === 'review') {
     return review(args.slice(1));
+  }
+  if (cmd === 'standup') {
+    return standup(args.slice(1));
   }
 
   const locale = resolveLocale(argv);
