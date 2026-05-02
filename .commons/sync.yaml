@@ -1,20 +1,16 @@
 # Auto-updated by commons sync.sh
 # 'pinned' is user-editable — add or remove paths freely
 commit: 56690c0a257fd80b921be9ce5709e619175f9398
-synced_at: 2026-05-02T11:01:55Z
-skills_commit: pending
+synced_at: 2026-05-02T11:31:28Z
+skills_commit: 4d35fa3683789c8b4a8633bf6aa5bf8e5e7bc230
 skills_adapters:
   - claude-code
   - codex-cli
   - gemini-cli
   - copilot
 pinned:
-  - lefthook-base.yaml
-  - .gitattributes
   - .editorconfig
   - .commitlintrc.yaml
-  - .devcontainer/devcontainer.json
-  - .gemini/settings.json
   - .github/ISSUE_TEMPLATE/bug_report.yaml
   - .github/ISSUE_TEMPLATE/feature_request.yaml
   - biome.json
