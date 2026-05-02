@@ -26,5 +26,9 @@
   "link.added": "Appended Closes link to the PR body",
   "link.alreadyLinked": "Already linked",
   "triage.empty": "No untriaged issues",
-  "triage.found": "Untriaged issues"
+  "triage.found": "Untriaged issues",
+  "plan.proposed": "Proposed milestone",
+  "plan.candidates": "Candidate issues",
+  "plan.empty": "no candidates fall in this range",
+  "plan.dryRunNote": "(v0.1.0 is dry-run only; milestone creation lands in v0.2.0)"
 }
