@@ -16,5 +16,6 @@
   "error.notImplemented": "未実装",
   "error.add.titleRequired": "title が必須です。`gh tasks add <title>` の形式で実行してください",
   "error.scope.notImplemented": "このスコープは v0.1.0 では未実装",
-  "add.created.repo": "Issue を作成しました"
+  "add.created.repo": "Issue を作成しました",
+  "list.empty": "オープンの Issue はありません"
 }

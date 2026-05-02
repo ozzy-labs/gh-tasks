@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { add } from './commands/add.ts';
+import { list } from './commands/list.ts';
 import { resolveLocale, t } from './i18n/index.ts';
 
 const VERSION = '0.0.0';
@@ -52,6 +53,9 @@ async function main(argv: string[]): Promise<number> {
   // Subcommand dispatch — implementations land in src/commands/{cmd}.ts
   if (cmd === 'add') {
     return add(args.slice(1));
+  }
+  if (cmd === 'list') {
+    return list(args.slice(1));
   }
 
   const locale = resolveLocale(argv);
