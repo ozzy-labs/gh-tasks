@@ -11,19 +11,21 @@ Build a daily / weekly / iteration plan and commit the chosen items into the rig
 
 ## Inputs
 
-- **--period** (optional): one of `daily` / `weekly` / `sprint`. Defaults to `daily`
+- **--period** (optional): one of `daily` / `weekly` / `sprint`. Defaults to `weekly`
 - **--scope** (optional): `repo` / `org` / `user`. Defaults to git remote detection
+- **--dry-run** (optional): preview candidates without creating or binding the Milestone
 
 ## Steps
 
 1. Pull and summarize recent open / unfinished Issues and drafts
-2. Confirm priorities with the user
-3. Commit the plan via `gh tasks plan [--period ...] [--scope ...]` (repo scope updates a Milestone; org/user scope updates a Project v2 Iteration)
+2. Confirm priorities with the user (use `--dry-run` to review candidates first)
+3. Commit the plan via `gh tasks plan [--period ...] [--scope ...]` (repo scope creates or reuses a Milestone and binds in-range Issues; org/user scope will update a Project v2 Iteration)
 4. Present the finalized plan back to the user
 
 ## Fallback
 
 - Too many plan candidates: ask the user for a narrowing condition (label / assignee)
 - Iteration field undefined: surface the setup steps from `docs/en/projects-v2-setup.md`
+- Issue already bound to another Milestone: the CLI skips and reports it; rerun with `--dry-run` if needed
 
-> v0.1.0 stub. Awaits the `gh tasks plan` CLI implementation.
+> v0.1.0: repo scope supports Milestone create / reuse and Issue binding. org/user scope lands in v0.2.0.
