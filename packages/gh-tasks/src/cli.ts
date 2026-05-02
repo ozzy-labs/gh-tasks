@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { add } from './commands/add.ts';
 import { list } from './commands/list.ts';
+import { today } from './commands/today.ts';
 import { resolveLocale, t } from './i18n/index.ts';
 
 const VERSION = '0.0.0';
@@ -56,6 +57,9 @@ async function main(argv: string[]): Promise<number> {
   }
   if (cmd === 'list') {
     return list(args.slice(1));
+  }
+  if (cmd === 'today') {
+    return today(args.slice(1));
   }
 
   const locale = resolveLocale(argv);
