@@ -17,5 +17,6 @@
   "error.add.titleRequired": "title is required. Run `gh tasks add <title>`",
   "error.scope.notImplemented": "This scope is not yet implemented in v0.1.0",
   "add.created.repo": "Issue created",
-  "list.empty": "No open issues"
+  "list.empty": "No open issues",
+  "today.empty": "No issues updated today"
 }
