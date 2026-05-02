@@ -30,5 +30,9 @@
   "plan.proposed": "Proposed milestone",
   "plan.candidates": "Candidate issues",
   "plan.empty": "no candidates fall in this range",
-  "plan.dryRunNote": "(v0.1.0 is dry-run only; milestone creation lands in v0.2.0)"
+  "plan.dryRunNote": "(v0.1.0 is dry-run only; milestone creation lands in v0.2.0)",
+  "review.heading": "Review",
+  "review.closedIssues": "Closed Issues",
+  "review.mergedPRs": "Merged PRs",
+  "review.none": "None"
 }
