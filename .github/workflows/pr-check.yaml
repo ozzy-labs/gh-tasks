@@ -48,6 +48,11 @@ jobs:
               return;
             }
 
+            if (branch.startsWith('release-please--')) {
+              core.info('Branch is a release-please auto PR, skipping check');
+              return;
+            }
+
             if (!pattern.test(branch)) {
               core.setFailed(
                 `Branch name does not follow naming convention.\n\n` +
@@ -58,4 +63,4 @@ jobs:
             } else {
               core.info('Branch name follows naming convention');
             }
-# end: ozzy-labs/commons
+          # end: ozzy-labs/commons
