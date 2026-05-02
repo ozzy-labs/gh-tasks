@@ -32,6 +32,9 @@ importers:
       '@octokit/graphql':
         specifier: ^8.1.0
         version: 8.2.2
+      '@octokit/request':
+        specifier: ^9.1.0
+        version: 9.2.4
       '@octokit/request-error':
         specifier: ^6.1.0
         version: 6.1.8

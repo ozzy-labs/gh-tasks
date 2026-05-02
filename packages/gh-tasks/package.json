@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@octokit/graphql": "^8.1.0",
+    "@octokit/request": "^9.1.0",
     "@octokit/request-error": "^6.1.0"
   },
   "devDependencies": {
