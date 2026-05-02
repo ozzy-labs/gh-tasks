@@ -21,5 +21,8 @@
   "today.empty": "今日更新された Issue はありません",
   "error.done.idRequired": "Issue 番号が必須です。`gh tasks done <id>` の形式で実行してください",
   "done.closed": "Issue を CLOSED にしました",
-  "done.alreadyClosed": "既に CLOSED です"
+  "done.alreadyClosed": "既に CLOSED です",
+  "error.link.argsRequired": "PR 番号と Issue 番号の 2 つが必要です。`gh tasks link <pr> <task>` の形式で実行してください",
+  "link.added": "PR body に Closes リンクを追加しました",
+  "link.alreadyLinked": "既にリンク済"
 }

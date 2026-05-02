@@ -21,5 +21,8 @@
   "today.empty": "No issues updated today",
   "error.done.idRequired": "Issue id is required. Run `gh tasks done <id>`",
   "done.closed": "Issue closed",
-  "done.alreadyClosed": "Issue is already closed"
+  "done.alreadyClosed": "Issue is already closed",
+  "error.link.argsRequired": "Both PR and task numbers are required. Run `gh tasks link <pr> <task>`",
+  "link.added": "Appended Closes link to the PR body",
+  "link.alreadyLinked": "Already linked"
 }
