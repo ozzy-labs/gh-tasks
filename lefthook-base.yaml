@@ -8,6 +8,13 @@
 #     - lefthook-base.yaml
 #
 # Then add repo-specific commands (biome, taplo, ruff, etc.)
+# Shared base config from commons
+# Extend this in your repo's lefthook.yaml:
+#
+#   extends:
+#     - lefthook-base.yaml
+#
+# Then add repo-specific commands (biome, taplo, ruff, etc.)
 glob_matcher: doublestar
 commit-msg:
   commands:
