@@ -36,7 +36,9 @@ function makeStream(): NodeJS.WritableStream & { written: string } {
 }
 
 describe('today command', () => {
-  const NOW = new Date('2026-05-03T10:00:00+09:00');
+  // Use UTC-anchored timestamps so the test is TZ-independent across the
+  // local dev box (often JST) and the CI runner (UTC).
+  const NOW = new Date('2026-05-03T12:00:00Z');
 
   it('shows issues updated today', async () => {
     const stdout = makeStream();
@@ -46,13 +48,13 @@ describe('today command', () => {
           number: 1,
           title: 'updated today',
           url: 'https://github.com/o/n/issues/1',
-          updatedAt: '2026-05-03T08:00:00+09:00',
+          updatedAt: '2026-05-03T11:00:00Z',
         },
         {
           number: 2,
           title: 'old issue',
           url: 'https://github.com/o/n/issues/2',
-          updatedAt: '2026-04-30T08:00:00+09:00',
+          updatedAt: '2026-04-30T08:00:00Z',
         },
       ]),
       stdout,
@@ -74,7 +76,7 @@ describe('today command', () => {
           number: 1,
           title: 'old',
           url: 'https://github.com/o/n/issues/1',
-          updatedAt: '2026-04-30T08:00:00+09:00',
+          updatedAt: '2026-04-30T08:00:00Z',
         },
       ]),
       stdout,
