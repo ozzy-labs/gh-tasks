@@ -6,7 +6,7 @@ GitHub CLI extension and skill bundle for managing tasks across GitHub Projects 
 
 `gh tasks` provides a unified abstraction over three scopes (`repo` / `org` / `user`) so the same commands work whether you are tracking a personal todo, a single repository's backlog, or coordination across the OzzyLabs Platform.
 
-This package backs the [OzzyLabs handbook ADR-0022](https://github.com/ozzy-labs/handbook/blob/main/adr/0022-create-gh-tasks-repo.md) decision to consolidate Projects v2 access into a single CLI + skill bundle, distributed for Claude Code, Codex CLI, GitHub Copilot, and Gemini CLI via the [ADR-0018](https://github.com/ozzy-labs/handbook/blob/main/adr/0018-agent-adapter-architecture.md) agent adapter mechanism.
+This package backs the [OzzyLabs handbook ADR-0022](https://github.com/ozzy-labs/handbook/blob/main/adr/0022-create-gh-tasks-repo.md) decision to consolidate Projects v2 access into a single CLI + skill bundle, distributed for Claude Code, Codex CLI, GitHub Copilot, and Gemini CLI via the [ADR-0018](https://github.com/ozzy-labs/handbook/blob/main/adr/0018-agent-adapter-architecture.md) agent adapter mechanism. Skills SSOT lives in [`@ozzylabs/skills`](https://github.com/ozzy-labs/skills) per [handbook ADR-0016](https://github.com/ozzy-labs/handbook/blob/main/adr/0016-create-skills-repo.md); the v0.1.0 implementation specification was finalized in [handbook reviews/2026-04-30-gh-tasks-design.md](https://github.com/ozzy-labs/handbook/blob/main/reviews/2026-04-30-gh-tasks-design.md).
 
 ## Status
 
