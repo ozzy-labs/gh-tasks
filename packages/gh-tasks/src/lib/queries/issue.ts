@@ -62,3 +62,61 @@ export interface ListRepoIssuesResponse {
     issues: { nodes: RepoIssueNode[] };
   } | null;
 }
+
+/**
+ * Resolve an Issue's node id from `<owner>/<name>` + issue number.
+ * Required input for the `closeIssue` mutation.
+ */
+export const GET_ISSUE_BY_NUMBER = /* GraphQL */ `
+  query GetIssueByNumber($owner: String!, $name: String!, $number: Int!) {
+    repository(owner: $owner, name: $name) {
+      issue(number: $number) {
+        id
+        number
+        url
+        state
+      }
+    }
+  }
+`;
+
+export interface GetIssueByNumberResponse {
+  repository: {
+    issue: {
+      id: string;
+      number: number;
+      url: string;
+      state: 'OPEN' | 'CLOSED';
+    } | null;
+  } | null;
+}
+
+/**
+ * Close an Issue (state CLOSED, optional reason).
+ *
+ * Variables:
+ *   - $input: CloseIssueInput { issueId, stateReason? }
+ */
+export const CLOSE_ISSUE = /* GraphQL */ `
+  mutation CloseIssue($input: CloseIssueInput!) {
+    closeIssue(input: $input) {
+      issue {
+        id
+        number
+        url
+        state
+      }
+    }
+  }
+`;
+
+export interface CloseIssueResponse {
+  closeIssue: {
+    issue: {
+      id: string;
+      number: number;
+      url: string;
+      state: 'CLOSED';
+    };
+  };
+}
