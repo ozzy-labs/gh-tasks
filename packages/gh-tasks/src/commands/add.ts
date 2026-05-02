@@ -63,26 +63,31 @@ export async function add(argv: readonly string[], deps: AddCommandDeps = {}): P
   return 0;
 }
 
+// Flags that take a separate-arg value (`--flag value` form). Required so
+// parseArgs does not consume the value as a positional title.
+const VALUE_FLAGS = new Set(['--scope', '--repo', '--lang', '--body']);
+
 function parseArgs(argv: readonly string[]): ParsedArgs {
   let title: string | null = null;
   let body: string | undefined;
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === undefined) continue;
+
+    if (arg.startsWith('--body=')) {
+      body = arg.slice('--body='.length);
+      continue;
+    }
     if (arg === '--body') {
       body = argv[i + 1];
       i++;
       continue;
     }
-    if (arg.startsWith('--body=')) {
-      body = arg.slice('--body='.length);
-      continue;
-    }
     if (arg.startsWith('--')) {
-      // skip other flags (consumed by detectScope / resolveRepo / resolveLocale)
-      // single-arg flags need no skip; value-flags (--scope / --repo / --lang)
-      // are still parsed correctly by their own resolvers because we only
-      // mutate `title` and `body` here.
+      if (!arg.includes('=') && VALUE_FLAGS.has(arg)) {
+        // --flag value form: skip the value so it is not parsed as positional
+        i++;
+      }
       continue;
     }
     if (title === null) {

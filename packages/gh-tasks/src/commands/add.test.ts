@@ -89,6 +89,23 @@ describe('add command', () => {
     expect(stderr.written).toContain('title');
   });
 
+  it('parses title correctly when value-flags appear before it', async () => {
+    const recorded: RecordedRequest[] = [];
+    const code = await add(
+      ['--lang', 'ja', '--scope=repo', '--repo=ozzy-labs/gh-tasks', 'my title'],
+      {
+        client: makeMockClient(recorded),
+        stdout: makeStream(),
+        stderr: makeStream(),
+      }
+    );
+
+    expect(code).toBe(0);
+    expect(recorded[1]?.vars).toEqual({
+      input: { repositoryId: 'REPO_ID', title: 'my title' },
+    });
+  });
+
   it('returns 2 for non-repo scopes (org / user) until they are implemented', async () => {
     const stderr = makeStream();
     const code = await add(['my title', '--scope=org'], {
