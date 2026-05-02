@@ -9,6 +9,7 @@
 | [concepts.md](./concepts.md) | 用語(scope / item / iteration / personal vs team) |
 | [installation.md](./installation.md) | `gh extension install ozzy-labs/gh-tasks` + 初期セットアップ |
 | [scope-detection.md](./scope-detection.md) | `--scope` 自動判定アルゴリズムと優先順 |
+| [locale-detection.md](./locale-detection.md) | `--lang` / `LC_ALL` / `LANG` 出力言語の優先順 |
 | [projects-v2-setup.md](./projects-v2-setup.md) | 個人 / チーム両用途のフィールド定義 |
 | [cli-reference.md](./cli-reference.md) | 全コマンド / フラグ |
 | [troubleshooting.md](./troubleshooting.md) | 認証エラー、`--repo` 解決失敗、`gh agent-task` collision、API rate limit |

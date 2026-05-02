@@ -11,7 +11,7 @@ Legend:
 
 - `--scope repo|org|user`: target scope. Auto-detected when omitted ([scope-detection.md](./scope-detection.md))
 - `--repo <owner>/<name>`: repo-scope target. Defaults to git remote `origin`
-- `--lang ja|en`: output language. Defaults to `LANG` env
+- `--lang ja|en`: output language. Resolves in order `LC_ALL` → `LANG` env → default `en` ([locale-detection.md](./locale-detection.md))
 - `--help`, `-h`: show help
 - `--version`, `-v`: show version
 
