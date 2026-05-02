@@ -163,3 +163,35 @@ export interface ListRepoIssuesWithLabelsResponse {
     issues: { nodes: RepoIssueWithLabelsNode[] };
   } | null;
 }
+
+/**
+ * List recently CLOSED Issues. The caller filters by `closedAt` window
+ * (`gh tasks review` does this client-side).
+ */
+export const LIST_CLOSED_ISSUES = /* GraphQL */ `
+  query ListClosedIssues($owner: String!, $name: String!, $first: Int!) {
+    repository(owner: $owner, name: $name) {
+      issues(first: $first, states: CLOSED, orderBy: { field: UPDATED_AT, direction: DESC }) {
+        nodes {
+          id
+          number
+          title
+          url
+          closedAt
+        }
+      }
+    }
+  }
+`;
+
+export interface ClosedIssueNode {
+  id: string;
+  number: number;
+  title: string;
+  url: string;
+  closedAt: string;
+}
+
+export interface ListClosedIssuesResponse {
+  repository: { issues: { nodes: ClosedIssueNode[] } } | null;
+}

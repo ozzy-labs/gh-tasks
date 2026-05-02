@@ -53,3 +53,34 @@ export interface UpdatePullRequestResponse {
     };
   };
 }
+
+/**
+ * List recently MERGED PullRequests. The caller filters by `mergedAt`.
+ */
+export const LIST_MERGED_PRS = /* GraphQL */ `
+  query ListMergedPRs($owner: String!, $name: String!, $first: Int!) {
+    repository(owner: $owner, name: $name) {
+      pullRequests(first: $first, states: MERGED, orderBy: { field: UPDATED_AT, direction: DESC }) {
+        nodes {
+          id
+          number
+          title
+          url
+          mergedAt
+        }
+      }
+    }
+  }
+`;
+
+export interface MergedPRNode {
+  id: string;
+  number: number;
+  title: string;
+  url: string;
+  mergedAt: string;
+}
+
+export interface ListMergedPRsResponse {
+  repository: { pullRequests: { nodes: MergedPRNode[] } } | null;
+}
