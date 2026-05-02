@@ -24,9 +24,7 @@ const TARGETS = [
 for (const { triple, name } of TARGETS) {
   const out = resolve(OUT_DIR, name);
   console.log(`[build-cli] ${triple} → ${out}`);
-  execFileSync(
-    'bun',
-    ['build', ENTRY, '--compile', `--target=${triple}`, `--outfile=${out}`],
-    { stdio: 'inherit' }
-  );
+  execFileSync('bun', ['build', ENTRY, '--compile', `--target=${triple}`, `--outfile=${out}`], {
+    stdio: 'inherit',
+  });
 }

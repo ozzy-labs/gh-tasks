@@ -43,14 +43,19 @@ pre-commit:
     gitleaks:
       run: gitleaks protect --staged --no-banner --redact
     trivy:
-      run: mise exec -- trivy fs --scanners vuln --exit-code 1 --no-progress .
+      run: |
+        if ! command -v trivy >/dev/null 2>&1; then
+          echo "trivy not installed; skipping (install via brew/apt or your local mise)" >&2
+          exit 0
+        fi
+        trivy fs --scanners vuln --exit-code 1 --no-progress .
 
 pre-push:
   commands:
     typecheck:
       run: pnpm -r typecheck
     check-branch-name:
-      run: |
+      run: |-
         BRANCH=$(git rev-parse --abbrev-ref HEAD)
         if [ "$BRANCH" = "main" ]; then exit 0; fi
         echo "$BRANCH" | grep -qE '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)/.+' || {

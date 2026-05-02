@@ -68,7 +68,7 @@ repo-internal ADR-0002 で根拠記録。
 ## Adapter Files
 
 | Agent | Configuration |
-|-------|---------------|
+| ----- | ------------- |
 | Claude Code | `CLAUDE.md`, `.claude/` |
 | Gemini CLI | `.gemini/settings.json` → `AGENTS.md` |
 | Codex CLI | `AGENTS.md` + `.agents/skills/` |

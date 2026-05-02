@@ -22,7 +22,7 @@
     "build:skills": "node scripts/build-skills.mjs",
     "lint": "biome check --write .",
     "lint:check": "biome check .",
-    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#dist\" \"#**/CHANGELOG.md\"",
+    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#**/node_modules\" \"#**/dist\" \"#**/CHANGELOG.md\"",
     "lint:yaml": "yamllint .",
     "lint:all": "pnpm run lint:check && pnpm run lint:md && pnpm run lint:yaml",
     "typecheck": "pnpm -r run typecheck",
