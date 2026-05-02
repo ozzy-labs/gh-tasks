@@ -2,5 +2,12 @@ formatter:
   type: basic
   indent: 2
   retain_line_breaks_single: true
-  pad_line_comments: 2
+  pad_line_comments: 1
   trim_trailing_whitespace: true
+  line_ending: lf
+  max_line_length: 120
+  scan_folded_as_literal: true
+  drop_merge_tag: true
+gitignore_excludes: true
+exclude:
+  - pnpm-lock.yaml
