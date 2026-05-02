@@ -52,13 +52,19 @@ gh alias set task tasks
 | `task-standup` | 活動サマリ |
 | `task-link-pr` | PR と項目の紐付け |
 
-Renovate auto-sync で 4 エージェント分の SKILL.md が consumer リポに配信される。consumer の `renovate.json` に以下を追加する:
+Renovate auto-sync で 4 エージェント分の SKILL.md が consumer リポに配信される。利用するアダプターの sub-preset を extend する:
 
 ```jsonc
 {
-  "extends": ["github>ozzy-labs/gh-tasks//skills-sync"]
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "github>ozzy-labs/gh-tasks//skills-sync/claude-code",
+    "github>ozzy-labs/gh-tasks//skills-sync/codex-cli"
+  ]
 }
 ```
+
+詳細(全 adapter preset 一覧、`gh_tasks_commit:` を `@ozzylabs/skills` と並走で tracking する仕組み)は [`skills-sync/README.md`](skills-sync/README.md)。
 
 ## スコープ対応
 

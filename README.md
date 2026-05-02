@@ -52,13 +52,19 @@ Default `--scope` resolves in this order: current working directory's git remote
 | `task-standup` | Activity summary for team sharing |
 | `task-link-pr` | Auto-link a PR to its tracking item |
 
-Skills are distributed for Claude Code, Codex CLI, GitHub Copilot, and Gemini CLI via Renovate auto-sync. Add to a consumer repo's `renovate.json`:
+Skills are distributed for Claude Code, Codex CLI, GitHub Copilot, and Gemini CLI via Renovate auto-sync. Pick the adapter sub-presets you need:
 
 ```jsonc
 {
-  "extends": ["github>ozzy-labs/gh-tasks//skills-sync"]
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "github>ozzy-labs/gh-tasks//skills-sync/claude-code",
+    "github>ozzy-labs/gh-tasks//skills-sync/codex-cli"
+  ]
 }
 ```
+
+See [`skills-sync/README.md`](skills-sync/README.md) for the full list of adapter presets and how `gh_tasks_commit:` is tracked alongside `@ozzylabs/skills`.
 
 ## Scope coverage
 
