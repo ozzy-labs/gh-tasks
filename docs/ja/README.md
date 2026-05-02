@@ -6,15 +6,15 @@
 
 | ファイル | 用途 |
 | --- | --- |
-| concepts.md | 用語(scope / item / iteration / personal vs team) |
-| installation.md | `gh extension install ozzy-labs/gh-tasks` + 初期セットアップ |
-| scope-detection.md | `--scope` 自動判定アルゴリズムと設定優先順 |
-| projects-v2-setup.md | 個人 / チーム両用途のフィールド定義 |
-| cli-reference.md | 全コマンド / フラグ |
-| recipes/{agent}.md | 各エージェントでの使用例 |
-| troubleshooting.md | `gh agent-task` collision 検知時の手順、認証エラー、PATH 問題 |
+| [concepts.md](./concepts.md) | 用語(scope / item / iteration / personal vs team) |
+| [installation.md](./installation.md) | `gh extension install ozzy-labs/gh-tasks` + 初期セットアップ |
+| [scope-detection.md](./scope-detection.md) | `--scope` 自動判定アルゴリズムと優先順 |
+| [projects-v2-setup.md](./projects-v2-setup.md) | 個人 / チーム両用途のフィールド定義 |
+| [cli-reference.md](./cli-reference.md) | 全コマンド / フラグ |
+| [troubleshooting.md](./troubleshooting.md) | 認証エラー、`--repo` 解決失敗、`gh agent-task` collision、API rate limit |
+| recipes/{agent}.md | 各エージェントでの使用例(v0.1.0 後続) |
 
-> 本ディレクトリは v0.1.0 スコープのスタブ。実装と並行して埋めていく。
+> v0.1.0 初版。実装と並走して内容を充実化していく。recipes は v0.1.0 後続で追加。
 
 ## 設計の根拠
 
