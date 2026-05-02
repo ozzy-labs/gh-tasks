@@ -26,5 +26,9 @@
   "link.added": "PR body に Closes リンクを追加しました",
   "link.alreadyLinked": "既にリンク済",
   "triage.empty": "未トリアージの Issue はありません",
-  "triage.found": "未トリアージの Issue"
+  "triage.found": "未トリアージの Issue",
+  "plan.proposed": "提案 Milestone",
+  "plan.candidates": "候補 Issue",
+  "plan.empty": "期間内に該当する候補がありません",
+  "plan.dryRunNote": "(v0.1.0 は dry-run のみ。Milestone 作成は v0.2.0 で対応)"
 }
