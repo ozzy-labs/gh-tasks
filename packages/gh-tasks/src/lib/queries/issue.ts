@@ -120,3 +120,46 @@ export interface CloseIssueResponse {
     };
   };
 }
+
+/**
+ * List open Issues with their label set so the caller can filter for
+ * untriaged items (label-less Issues).
+ *
+ * Variables:
+ *   - $owner / $name / $first
+ */
+export const LIST_REPO_ISSUES_WITH_LABELS = /* GraphQL */ `
+  query ListRepoIssuesWithLabels($owner: String!, $name: String!, $first: Int!) {
+    repository(owner: $owner, name: $name) {
+      issues(first: $first, states: OPEN, orderBy: { field: UPDATED_AT, direction: DESC }) {
+        nodes {
+          id
+          number
+          title
+          url
+          updatedAt
+          labels(first: 20) {
+            nodes {
+              name
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+export interface RepoIssueWithLabelsNode {
+  id: string;
+  number: number;
+  title: string;
+  url: string;
+  updatedAt: string;
+  labels: { nodes: Array<{ name: string }> };
+}
+
+export interface ListRepoIssuesWithLabelsResponse {
+  repository: {
+    issues: { nodes: RepoIssueWithLabelsNode[] };
+  } | null;
+}

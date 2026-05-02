@@ -24,5 +24,7 @@
   "done.alreadyClosed": "Issue is already closed",
   "error.link.argsRequired": "Both PR and task numbers are required. Run `gh tasks link <pr> <task>`",
   "link.added": "Appended Closes link to the PR body",
-  "link.alreadyLinked": "Already linked"
+  "link.alreadyLinked": "Already linked",
+  "triage.empty": "No untriaged issues",
+  "triage.found": "Untriaged issues"
 }
