@@ -10,7 +10,7 @@ This package backs the [OzzyLabs handbook ADR-0022](https://github.com/ozzy-labs
 
 ## Status
 
-Early scaffold. The CLI surface and skill set described below are the v0.1.0 target. See [docs/adr/](docs/adr/) for repo-internal decisions and [docs/en/](docs/en/) for design documentation.
+v0.1.0 — feature-complete. The CLI commands and skills described below are implemented and tested across all three scopes (`repo` / `org` / `user`); the release tag is published via release-please. See [docs/adr/](docs/adr/) for repo-internal decisions and [docs/en/](docs/en/) for design documentation.
 
 ## Install
 
@@ -26,7 +26,7 @@ gh alias set task tasks
 
 The extension inherits authentication from `gh auth login` — no separate token configuration is required.
 
-## CLI commands (v0.1.0 target)
+## CLI commands
 
 | Command | Purpose |
 | --- | --- |
@@ -41,7 +41,7 @@ The extension inherits authentication from `gh auth login` — no separate token
 
 Default `--scope` resolves in this order: explicit `--scope` flag → current working directory's git remote (`origin` present → `repo`) → `~/.config/ozzylabs/gh-tasks.toml` `default_scope` → `user`.
 
-## Skills (v0.1.0 target)
+## Skills
 
 | Skill | Purpose |
 | --- | --- |
