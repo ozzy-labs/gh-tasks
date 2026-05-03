@@ -13,11 +13,17 @@ Recipes for using `gh-tasks` (CLI + skills) from Gemini CLI.
 
 Gemini CLI reads the file pointed to by `context.fileName` in `.gemini/settings.json` (typically `AGENTS.md`). The `gh-tasks` adapter ships only `AGENTS.md.snippet`, which is merged into the marker block in `AGENTS.md`. Gemini CLI itself does not have a `SKILL.md` auto-load mechanism like Claude Code, so skills are exposed as a list of names + descriptions inside `AGENTS.md`.
 
-> **Note**: as of v0.1.0 the consumer-side delivery pipeline is still being wired up ([Issue #16](https://github.com/ozzy-labs/gh-tasks/issues/16)). Until that lands, build locally and merge the snippet into the consumer's `AGENTS.md` marker block manually.
-
 ```bash
+# 1. Build the adapter outputs in gh-tasks
 pnpm run build:skills    # emits dist/gemini-cli/AGENTS.md.snippet
+
+# 2. From the consumer repo root, run commons' sync-skills.sh with MARKER_TAG override
+MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \
+  /path/to/gh-tasks/dist \
+  .
 ```
+
+The snippet is merged into the marker block in the consumer's `AGENTS.md`. See [`skills-sync/README.md`](../../../skills-sync/README.md) for details.
 
 Example `.gemini/settings.json`:
 
@@ -123,7 +129,7 @@ The `SKILL.md` bodies still live under `.agents/skills/` (Codex CLI) and `.claud
 
 ### `AGENTS.md` snippet stale
 
-- Re-inject the snippet from `pnpm run build:skills` into the `AGENTS.md` marker block (delivery pipeline is tracked in [Issue #16](https://github.com/ozzy-labs/gh-tasks/issues/16))
+- Re-run `MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y /path/to/gh-tasks/dist .` to refresh the marker block (idempotent)
 - The snippet update is idempotent — safe to run repeatedly
 
 ### Projects v2 fields missing

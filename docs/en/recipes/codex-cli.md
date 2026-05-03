@@ -16,11 +16,17 @@ Codex CLI starts from `AGENTS.md` and resolves referenced skills from `.agents/s
 - `.agents/skills/{name}/SKILL.md` — the skill body (SSOT, as-is)
 - `AGENTS.md.snippet` — a marker block listing the skills, inserted into the consumer's `AGENTS.md`
 
-> **Note**: as of v0.1.0 the consumer-side delivery pipeline is still being wired up ([Issue #16](https://github.com/ozzy-labs/gh-tasks/issues/16)). Until that lands, build locally and merge `dist/codex-cli/.agents/skills/` plus `AGENTS.md.snippet` into the consumer manually.
-
 ```bash
+# 1. Build the adapter outputs in gh-tasks
 pnpm run build:skills    # generates dist/codex-cli/.agents/skills/{name}/SKILL.md and AGENTS.md.snippet
+
+# 2. From the consumer repo root, run commons' sync-skills.sh with MARKER_TAG override
+MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \
+  /path/to/gh-tasks/dist \
+  .
 ```
+
+The script copies `.agents/skills/{name}/SKILL.md` and merges the snippet into `AGENTS.md` in one shot. See [`skills-sync/README.md`](../../../skills-sync/README.md) for details.
 
 The injected `AGENTS.md` block looks like:
 
@@ -102,7 +108,7 @@ Codex CLI skills work as Markdown procedures — the agent walks the steps. Unli
 
 - Confirm the marker block exists in `AGENTS.md` (`<!-- begin: @ozzylabs/gh-tasks -->`)
 - Confirm `.agents/skills/{name}/SKILL.md` exists
-- Re-copy the output of `pnpm run build:skills` (once [Issue #16](https://github.com/ozzy-labs/gh-tasks/issues/16) lands, the finalized sync command will replace this manual step)
+- Re-run `MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y /path/to/gh-tasks/dist .` (idempotent)
 
 ### `--scope` auto-detection fails
 
