@@ -1,0 +1,30 @@
+# GitHub Projects v2 field template - org (team) scope
+#
+# Used by `gh-tasks` org scope (e.g. OzzyLabs Platform Project v2).
+# Extends the user template with cross-repo coordination fields:
+#
+# - Repository: built-in field type for the owning repo of an item.
+# - Project: free-form single_select identifying a logical project that
+#   spans multiple repos (e.g. "Platform", "Docs", "Infra"). Edit the
+#   options list to match your org's project taxonomy.
+#
+# Iteration cadence is configured in the GitHub UI (see user.yaml note).
+name: gh-tasks org scope
+description: Team Project v2 fields for gh-tasks (org scope)
+fields:
+  - name: Status
+    type: single_select
+    options:
+      - Todo
+      - In Progress
+      - Done
+  - name: Iteration
+    type: iteration
+  - name: Repository
+    type: repository
+  - name: Project
+    type: single_select
+    options:
+      - Platform
+      - Docs
+      - Infra

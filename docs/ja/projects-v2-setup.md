@@ -27,7 +27,16 @@ OzzyLabs Platform Project v2 に上記 + 以下を追加:
 
 GitHub UI で Project を作成し、Settings → Custom fields で上記フィールドを追加する。`gh project` CLI でも作成可能だが、Iteration の設定は UI のほうが容易。
 
-テンプレート YAML(`gh project create --from-yaml`)は v0.2.0 で `packages/templates/` 配下に提供予定。
+### テンプレート YAML
+
+フィールド定義の SSOT は `packages/templates/projects-v2/` に同梱:
+
+| ファイル | 用途 |
+| --- | --- |
+| [`packages/templates/projects-v2/user.yaml`](../../packages/templates/projects-v2/user.yaml) | 個人 / `user` scope(Status / Iteration) |
+| [`packages/templates/projects-v2/org.yaml`](../../packages/templates/projects-v2/org.yaml) | チーム / `org` scope(user セット + Repository / Project) |
+
+`gh` CLI は現時点で `gh project create --from-yaml` を実装していないため、適用は `gh project field-create` の連続呼び出しで行う。具体的なコマンド例は [`packages/templates/README.md`](../../packages/templates/README.md) を参照。
 
 ## scope 別の対応
 
