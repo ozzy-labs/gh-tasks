@@ -106,6 +106,24 @@ gh tasks standup [--mine] [--since <iso8601>] [--scope ...] [--repo ...] [--proj
 - `--since` defaults to 24h ago
 - `--mine` filters to items where the viewer is the author or an assignee. DraftIssues have no author / assignee fields and are excluded under `--mine`
 
+### `gh tasks projects init` ✅
+
+Create a Projects v2 board from a YAML template and add the custom fields in one shot.
+
+```bash
+gh tasks projects init [<yaml-path> | --template user|org] --title '<project-title>' [--owner <login>|@me] [--dry-run]
+```
+
+- Positional arg: YAML path (matches `packages/templates/projects-v2/{user,org}.yaml`)
+- `--template user|org`: use the bundled YAML (mutually exclusive with the positional arg)
+- `--owner <login>`: project owner (user or org login; default `@me`)
+- `--title <string>`: required
+- `--dry-run`: list the fields that would be created without issuing mutations
+- Field types: `text` / `number` / `date` / `single_select` / `iteration` / `repository` (`repository` is built-in and is skipped automatically)
+- `single_select` options are created with `color: GRAY`; recolor in the UI as needed
+
+Returns: prints the created Project URL to stdout, exits 0.
+
 ### `gh tasks link <pr> <task>` ✅
 
 Link a PR to its tracking Issue / Project item.

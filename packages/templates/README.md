@@ -43,13 +43,20 @@ field types and have no configurable options here; their cadence
 
 ### Applying a template
 
-> **Heads up:** the GitHub CLI (`gh` 2.x) does **not** implement
-> `gh project create --from-yaml`. These YAML files are the
-> authoritative spec for the field set; the snippets below apply them
-> through the `gh project field-create` subcommand. A future
-> `gh tasks projects init` helper (tracked in
-> [#65](https://github.com/ozzy-labs/gh-tasks/issues/65)) will consume
-> the same YAML directly.
+> **Tip:** `gh` 2.x does not implement `gh project create --from-yaml`,
+> but `gh tasks projects init` consumes these same YAML files directly
+> via the GraphQL API:
+>
+> ```bash
+> gh tasks projects init --template user --title "gh-tasks personal"
+> gh tasks projects init packages/templates/projects-v2/org.yaml \
+>   --owner my-org --title "team board"
+> ```
+>
+> `--dry-run` previews the field set without mutating. The raw
+> `gh project field-create` snippets below remain valid for hand
+> application or for environments where running `gh tasks` is not
+> convenient.
 
 #### Personal (user) scope
 

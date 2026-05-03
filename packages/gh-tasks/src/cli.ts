@@ -4,6 +4,7 @@ import { done } from './commands/done.ts';
 import { link } from './commands/link.ts';
 import { list } from './commands/list.ts';
 import { plan } from './commands/plan.ts';
+import { projects } from './commands/projects.ts';
 import { review } from './commands/review.ts';
 import { standup } from './commands/standup.ts';
 import { today } from './commands/today.ts';
@@ -26,6 +27,7 @@ const COMMANDS = [
   'review',
   'standup',
   'link',
+  'projects',
 ] as const;
 
 type Command = (typeof COMMANDS)[number];
@@ -101,6 +103,9 @@ async function main(argv: string[]): Promise<number> {
     }
     if (cmd === 'standup') {
       return await standup(rest, { config });
+    }
+    if (cmd === 'projects') {
+      return await projects(rest, { config });
     }
   } catch (err) {
     if (err instanceof AuthError || err instanceof RepoError || err instanceof ScopeError) {

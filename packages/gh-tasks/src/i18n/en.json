@@ -12,6 +12,7 @@
   "help.cmd.review": "Retrospective summary",
   "help.cmd.standup": "Activity summary",
   "help.cmd.link": "Link a PR to an Issue / Project item",
+  "help.cmd.projects": "Set up Projects v2 (init, etc.)",
   "error.unknownCommand": "Unknown command",
   "error.notImplemented": "Not implemented",
   "error.auth.tokenMissing": "GH_TOKEN / GITHUB_TOKEN not set. Run `gh auth login`.",
@@ -73,5 +74,16 @@
   "standup.blockers": "Blockers",
   "standup.none": "(none)",
   "standup.blockersHint": "(no blockers detected — fill in manually)",
-  "standup.empty.project": "(no project items in this range)"
+  "standup.empty.project": "(no project items in this range)",
+  "error.projects.subcommandRequired": "Subcommand required. Example: `gh tasks projects init --template user --title '...'`",
+  "error.projects.unknownSubcommand": "unknown subcommand: '{sub}' (valid: init)",
+  "error.projectsInit.titleRequired": "--title is required. Example: `gh tasks projects init --template user --title 'my todo'`",
+  "error.projectsInit.templateRequired": "either --template <user|org> or a YAML path is required",
+  "error.projectsInit.templateConflict": "--template and a YAML path cannot be combined",
+  "error.projectsInit.yamlRead": "failed to read YAML: '{path}' ({reason})",
+  "error.projectsInit.ownerNotFound": "owner not resolvable: '{owner}'",
+  "projectsInit.dryRunHeader": "(--dry-run) Would create Project '{title}' under owner '{owner}' with these fields:",
+  "projectsInit.created": "Project created: {url}",
+  "projectsInit.fieldCreated": "  field added: {name} ({dataType})",
+  "projectsInit.fieldSkipped": "  field skipped (already exists): {name}"
 }
