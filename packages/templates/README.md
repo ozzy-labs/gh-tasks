@@ -47,8 +47,9 @@ field types and have no configurable options here; their cadence
 > `gh project create --from-yaml`. These YAML files are the
 > authoritative spec for the field set; the snippets below apply them
 > through the `gh project field-create` subcommand. A future
-> `gh tasks projects init` helper (tracked separately) will consume the
-> same YAML directly.
+> `gh tasks projects init` helper (tracked in
+> [#65](https://github.com/ozzy-labs/gh-tasks/issues/65)) will consume
+> the same YAML directly.
 
 #### Personal (user) scope
 
