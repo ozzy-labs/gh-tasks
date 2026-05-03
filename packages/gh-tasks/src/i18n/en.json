@@ -58,6 +58,8 @@
   "review.heading": "Review",
   "review.closedIssues": "Closed Issues",
   "review.mergedPRs": "Merged PRs",
+  "review.completedProjectItems": "Completed Project Items",
+  "review.empty.project": "No project items completed in this range",
   "review.none": "None",
   "standup.heading": "Standup",
   "standup.yesterday": "Yesterday",

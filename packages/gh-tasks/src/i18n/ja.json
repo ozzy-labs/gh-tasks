@@ -58,6 +58,8 @@
   "review.heading": "振り返り",
   "review.closedIssues": "クローズした Issue",
   "review.mergedPRs": "マージした PR",
+  "review.completedProjectItems": "完了した Project アイテム",
+  "review.empty.project": "期間内に完了した Project アイテムはありません",
   "review.none": "該当なし",
   "standup.heading": "スタンドアップ",
   "standup.yesterday": "Yesterday",
