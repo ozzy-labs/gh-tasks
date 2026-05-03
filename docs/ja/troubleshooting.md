@@ -24,11 +24,19 @@ gh tasks add 'title' --repo=<owner>/<name>
 git remote add origin git@github.com:<owner>/<name>.git
 ```
 
-## `--scope user` / `--scope org` で「未実装」エラー
+## `--scope org|user` で「Project の指定が必要です」
 
-**原因**: v0.1.0 では `repo` scope のみ実装。`org` / `user` scope は projectId 解決ロジック実装後に有効化される。
+**原因**: `org` / `user` scope は Projects v2 のターゲットが必要だが、`--project` も config の対応キー(`org_project` / `user_project`)も未設定。
 
-**解決**: `--scope repo` を使うか、v0.1.0 後続リリースを待つ。進捗は handbook ADR-0022 / 関連 PR を参照。
+**解決**:
+
+```bash
+gh tasks list --scope=user --project=<owner>/<number>
+# または ~/.config/ozzylabs/gh-tasks.toml にデフォルトを保存
+echo 'user_project = "<owner>/<number>"' >> ~/.config/ozzylabs/gh-tasks.toml
+```
+
+config の全スキーマは [installation.md](./installation.md) を参照。
 
 ## `gh agent-task` との semantic 衝突
 
@@ -41,7 +49,7 @@ GitHub CLI 公式の `gh agent-task` (preview) と本拡張の `gh tasks` でコ
 **解決**:
 
 - 数分待ってリトライ
-- 大量データを扱う場合は `--limit`(将来対応)で結果数を絞る
+- 大量データを扱う場合は `--limit` で結果数を絞る(`gh tasks list` / `gh tasks triage` で対応)
 - CI で実行する場合は `GITHUB_TOKEN` env を渡してレート上限を引き上げる
 
 ## `gh extension install` がコケる

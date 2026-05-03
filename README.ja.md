@@ -35,11 +35,11 @@ gh alias set task tasks
 | `gh tasks plan` | 週次 / イテレーション計画(repo は Milestone、org/user は Iteration) |
 | `gh tasks triage` | 未トリアージ Issue / draft の整理 |
 | `gh tasks done <id>` | 完了化(repo: Issue close、org/user: Status → Done) |
-| `gh tasks review [--daily\|--weekly\|--sprint]` | 振り返り |
+| `gh tasks review [--period daily\|weekly\|sprint]` | 振り返り |
 | `gh tasks standup [--mine]` | 個人 / チーム活動サマリ |
 | `gh tasks link <pr> <task>` | PR と Issue / Project 項目の紐付け |
 
-`--scope` のデフォルトは「作業ディレクトリの git remote から推論 → `~/.config/ozzylabs/gh-tasks.toml` の `default_scope` → `repo`」の順で決定。
+`--scope` の解決順は「明示の `--scope` フラグ → 作業ディレクトリの git remote(`origin` があれば `repo`)→ `~/.config/ozzylabs/gh-tasks.toml` の `default_scope` → `user`」。
 
 ## Skills(v0.1.0 ターゲット)
 

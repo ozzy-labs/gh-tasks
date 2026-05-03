@@ -2,9 +2,7 @@
 
 The `org` / `user` scopes use GitHub Projects v2 as backing storage. This page lists the minimum fields required.
 
-> `org` / `user` scope is not implemented in v0.1.0. This document captures the design ahead of implementation.
-
-## v0.1.0 target (personal / `user` scope)
+## Personal (`user` scope)
 
 Define these fields on a personal Project v2:
 
@@ -14,7 +12,7 @@ Define these fields on a personal Project v2:
 | Status | Single select | `Todo` / `In Progress` / `Done` |
 | Iteration | Iteration | Weekly / sprint planning (target of `gh tasks plan`) |
 
-## v0.1.0 target (team / `org` scope)
+## Team (`org` scope)
 
 OzzyLabs Platform Project v2 needs the personal set plus:
 

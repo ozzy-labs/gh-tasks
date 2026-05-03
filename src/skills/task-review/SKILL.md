@@ -1,7 +1,7 @@
 ---
 name: task-review
-description: 振り返りサマリを生成する。`gh tasks review --daily|--weekly|--sprint` を呼び出して期間内の Issue close / PR merge / 差分を要約する。
-description_en: Generate a retrospective summary. Invokes `gh tasks review --daily|--weekly|--sprint` to summarize Issues closed / PRs merged / diffs within the period.
+description: 振り返りサマリを生成する。`gh tasks review --period daily|weekly|sprint` を呼び出して期間内の Issue close / PR merge / Project アイテムの完了を要約する。
+description_en: Generate a retrospective summary. Invokes `gh tasks review --period daily|weekly|sprint` to summarize Issues closed, PRs merged, and Project items completed within the period.
 allowed-tools: Bash(gh:*)
 locale: ja
 ---
@@ -25,5 +25,3 @@ daily / weekly / sprint 単位の振り返りサマリを生成する。
 
 - 戻り値が空: 期間 / scope の指定をユーザーに再確認
 - API rate limit: 期間を絞って再試行
-
-> v0.1.0 スタブ。`gh tasks review` の CLI 実装が完成するまで実用不可。

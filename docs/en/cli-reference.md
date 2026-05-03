@@ -1,66 +1,116 @@
 # CLI reference
 
-All `gh tasks` commands and flags. v0.1.0 target.
-
-Legend:
-
-- ✅ Implemented
-- 🚧 Planned for v0.1.0 (not yet implemented)
+All `gh tasks` commands and flags.
 
 ## Common flags
 
 - `--scope repo|org|user`: target scope. Auto-detected when omitted ([scope-detection.md](./scope-detection.md))
 - `--repo <owner>/<name>`: repo-scope target. Defaults to git remote `origin`
-- `--lang ja|en`: output language. Resolves in order `LC_ALL` → `LANG` env → default `en` ([locale-detection.md](./locale-detection.md))
+- `--project <owner>/<number>`: org / user scope target Projects v2. Defaults to `org_project` / `user_project` from config
+- `--lang ja|en`: output language. Resolves in priority order `--lang` flag → config `lang` → `LC_ALL` → `LANG` → `en` ([locale-detection.md](./locale-detection.md))
 - `--help`, `-h`: show help
 - `--version`, `-v`: show version
 
 ## Commands
 
-### `gh tasks add <title>` ✅ repo scope implemented
+### `gh tasks add <title>` ✅
 
-Add an Issue / Project draft item.
+Add an Issue (`repo`) / Projects v2 draft item (`org` / `user`).
 
 ```bash
-gh tasks add '<title>' [--scope repo] [--repo <owner>/<name>] [--body '<detail>']
+gh tasks add '<title>' [--scope repo|org|user] [--repo <owner>/<name>] [--project <owner>/<number>] [--body '<detail>']
 ```
 
 - `repo` scope: creates a GitHub Issue
-- `org` / `user` scope: creates a Projects v2 draft item (🚧 follow-up to v0.1.0)
+- `org` / `user` scope: creates a Projects v2 draft item on the resolved project
 
-Returns: prints the URL of the created Issue / item to stdout, exits 0.
+Returns: prints the URL of the created Issue / draft item id to stdout, exits 0.
 
-### `gh tasks list` 🚧
+### `gh tasks list` ✅
 
 List tasks per scope.
 
-### `gh tasks today` 🚧
+```bash
+gh tasks list [--scope ...] [--repo ...] [--project ...] [--limit <n>]
+```
 
-Pull today's todos.
+- `repo` scope: lists open Issues
+- `org` / `user` scope: lists Projects v2 items
+- `--limit` defaults to 30
 
-### `gh tasks plan [--period daily|weekly|sprint]` 🚧
+### `gh tasks today` ✅
 
-Week / iteration plan. `repo` scope updates a Milestone; `org` / `user` scope updates a Project v2 Iteration.
+Items updated within today (UTC midnight `[start, end)`).
 
-### `gh tasks triage` 🚧
+```bash
+gh tasks today [--scope ...] [--repo ...] [--project ...]
+```
 
-Triage untriaged items. Assists with labeling, scope routing, and close decisions.
+### `gh tasks plan [--period daily|weekly|sprint]` ✅
 
-### `gh tasks done <id>` 🚧
+Plan a daily / weekly / sprint cycle.
 
-Mark done (`repo`: Issue close; `org` / `user`: Status → Done).
+```bash
+gh tasks plan [--period daily|weekly|sprint] [--scope ...] [--repo ...] [--project ...] [--dry-run]
+```
 
-### `gh tasks review [--period daily|weekly|sprint]` 🚧
+- `repo` scope: finds-or-creates a Milestone for the period and binds open Issues whose `updatedAt` falls in the period
+- `org` / `user` scope: finds the matching Projects v2 Iteration (or falls back to the iteration containing today) and updates the Iteration field on items in the period
+- `--dry-run`: preview without mutating
+- Period boundaries are anchored at local midnight in the resolved IANA timezone (`TZ` env → system tz → UTC fallback)
+- `--period` defaults to `weekly`
 
-Generate a retrospective summary.
+### `gh tasks triage` ✅
 
-### `gh tasks standup [--mine]` 🚧
+List untriaged items (Issues with no labels in `repo` scope; items with `Status` unset or set to `Triage` in `org` / `user` scope).
 
-Activity summary.
+```bash
+gh tasks triage [--scope ...] [--repo ...] [--project ...] [--limit <n>]
+```
 
-### `gh tasks link <pr> <task>` 🚧
+- `--limit` defaults to 20
+
+### `gh tasks done <id>` ✅
+
+Close an Issue (`repo`: `<id>` is the Issue number) or set a Projects v2 item's `Status` to `Done` (`org` / `user`: `<id>` is the project item node id, e.g. `PVTI_xxx`).
+
+```bash
+gh tasks done <id> [--scope ...] [--repo ...] [--project ...]
+```
+
+### `gh tasks review [--period daily|weekly|sprint]` ✅
+
+Generate a retrospective summary in Markdown.
+
+```bash
+gh tasks review [--period daily|weekly|sprint] [--scope ...] [--repo ...] [--project ...]
+```
+
+- `repo` scope: aggregates Issues `closedAt` and PRs `mergedAt` falling in the period window
+- `org` / `user` scope: aggregates Projects v2 items whose `Status` is `Done` and whose `updatedAt` falls in the window
+- `--period` defaults to `weekly`
+
+### `gh tasks standup [--mine]` ✅
+
+Activity summary in Markdown (Yesterday / Today / Blockers sections).
+
+```bash
+gh tasks standup [--mine] [--since <iso8601>] [--scope ...] [--repo ...] [--project ...]
+```
+
+- `--since` defaults to 24h ago
+- `--mine` filters to items where the viewer is the author or an assignee. DraftIssues have no author / assignee fields and are excluded under `--mine`
+
+### `gh tasks link <pr> <task>` ✅
 
 Link a PR to its tracking Issue / Project item.
+
+```bash
+gh tasks link <pr> <task> [--scope ...] [--repo ...] [--project ...]
+```
+
+- `repo` scope: appends `Closes #<task>` to the PR body (idempotent — already-linked PRs are reported)
+- `org` / `user` scope: adds both the PR and the Issue to the same Projects v2 board so they surface together (the underlying Issue ↔ PR relation comes from the `Closes` keyword on the PR body)
 
 ## Skill integration
 
@@ -69,4 +119,6 @@ Each command has a corresponding skill SSOT under `src/skills/{name}/SKILL.md` (
 ## Related
 
 - [scope-detection.md](./scope-detection.md): `--scope` resolution order
+- [locale-detection.md](./locale-detection.md): `--lang` resolution order
+- [projects-v2-setup.md](./projects-v2-setup.md): required Projects v2 fields for `org` / `user` scope
 - [src/skills/](../../src/skills/): skill SSOT for each command

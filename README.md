@@ -35,11 +35,11 @@ The extension inherits authentication from `gh auth login` — no separate token
 | `gh tasks plan` | Plan a week / iteration (Milestone for repo, Iteration for org/user) |
 | `gh tasks triage` | Triage untriaged Issues / draft items |
 | `gh tasks done <id>` | Close an Issue (repo) or set Status → Done (org/user) |
-| `gh tasks review [--daily\|--weekly\|--sprint]` | Retrospective summary |
+| `gh tasks review [--period daily\|weekly\|sprint]` | Retrospective summary |
 | `gh tasks standup [--mine]` | Activity summary |
 | `gh tasks link <pr> <task>` | Link a PR to an Issue / Project item |
 
-Default `--scope` resolves in this order: current working directory's git remote → `~/.config/ozzylabs/gh-tasks.toml` `default_scope` → `repo`.
+Default `--scope` resolves in this order: explicit `--scope` flag → current working directory's git remote (`origin` present → `repo`) → `~/.config/ozzylabs/gh-tasks.toml` `default_scope` → `user`.
 
 ## Skills (v0.1.0 target)
 

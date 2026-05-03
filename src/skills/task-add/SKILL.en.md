@@ -25,5 +25,3 @@ Persist an item that emerged in the conversation to the right scope.
 
 - `gh auth login` not run: surface the auth flow and stop
 - scope auto-detected to `repo` but no git remote present: suggest `--scope user`
-
-> v0.1.0 stub. Awaits the `gh tasks add` CLI implementation (repo scope routes through Octokit GraphQL per repo-internal ADR-0003).

@@ -25,5 +25,3 @@ Format recent team or personal activity for a standup post.
 
 - `--since` too far back, output overwhelming: suggest a shorter window
 - `--mine` returns nothing: suggest extending the window or switching scope
-
-> v0.1.0 stub. Awaits the `gh tasks standup` CLI implementation.

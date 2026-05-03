@@ -26,5 +26,3 @@ locale: ja
 
 - `gh auth login` 未実行: 認証手順を提示して中断
 - scope 自動判定が `repo` だが git remote 不在: `--scope user` でフォールバック提案
-
-> v0.1.0 スタブ。`gh tasks add` の CLI 実装(repo-internal ADR-0003 の Octokit GraphQL 経由)が完成するまで実用不可。
