@@ -13,9 +13,10 @@ Design documentation for `gh-tasks`. This is the **English mirror**; the SSOT li
 | [projects-v2-setup.md](./projects-v2-setup.md) | Field definitions for personal and team use |
 | [cli-reference.md](./cli-reference.md) | All commands and flags |
 | [troubleshooting.md](./troubleshooting.md) | Auth errors, `--repo` resolution, `gh agent-task` clash, API rate limit |
-| recipes/{agent}.md | Usage examples per agent (follow-up to v0.1.0) |
-
-> v0.1.0 initial version. Content evolves alongside implementation; recipes land after v0.1.0.
+| [recipes/claude-code.md](./recipes/claude-code.md) | Loading skills and use cases on Claude Code |
+| [recipes/codex-cli.md](./recipes/codex-cli.md) | Loading skills and use cases on Codex CLI |
+| [recipes/gemini-cli.md](./recipes/gemini-cli.md) | Loading skills and use cases on Gemini CLI |
+| [recipes/copilot.md](./recipes/copilot.md) | Loading skills and use cases on GitHub Copilot |
 
 ## Design rationale
 
