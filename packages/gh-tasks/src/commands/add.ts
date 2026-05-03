@@ -1,14 +1,21 @@
 import { resolveLocale, t } from '../i18n/index.ts';
 import type { AppConfig } from '../lib/config.ts';
 import { createClient, type GraphQLClient, resolveToken } from '../lib/github.ts';
+import { ProjectError, type ProjectRef, resolveProjectRef } from '../lib/project.ts';
 import {
+  ADD_PROJECT_V2_DRAFT_ISSUE,
+  type AddProjectV2DraftIssueResponse,
   CREATE_ISSUE,
   type CreateIssueResponse,
+  GET_ORG_PROJECT_V2,
   GET_REPOSITORY_ID,
+  GET_USER_PROJECT_V2,
+  type GetOrgProjectV2Response,
   type GetRepositoryIdResponse,
+  type GetUserProjectV2Response,
 } from '../lib/queries/index.ts';
 import { resolveRepo } from '../lib/repo.ts';
-import { detectScope } from '../lib/scope.ts';
+import { detectScope, type Scope } from '../lib/scope.ts';
 
 export interface AddCommandDeps {
   client?: GraphQLClient;
@@ -36,11 +43,61 @@ export async function add(argv: readonly string[], deps: AddCommandDeps = {}): P
   }
 
   const scope = detectScope({ argv, hasGitRemote: deps.hasGitRemote, config: deps.config });
-  if (scope !== 'repo') {
-    stderr.write(`${t(locale, 'error.scope.notImplemented')}: --scope ${scope}\n`);
-    return 2;
+
+  if (scope === 'repo') {
+    return await addRepoIssue({ argv, deps, locale, stdout, stderr, title, body });
   }
 
+  // org / user scope: add a Projects v2 draft item.
+  let projectRef: ProjectRef;
+  try {
+    projectRef = resolveProjectRef({ scope, argv, config: deps.config });
+  } catch (err) {
+    if (err instanceof ProjectError) {
+      stderr.write(`${err.message}\n`);
+      return 2;
+    }
+    throw err;
+  }
+
+  const client = deps.client ?? createClient(resolveToken());
+  const projectId = await resolveProjectNodeId({ client, scope, projectRef });
+  if (!projectId) {
+    stderr.write(
+      `project not found: ${projectRef.owner}/${projectRef.number} (--scope ${scope})\n`
+    );
+    return 1;
+  }
+
+  const draftData = await client.request<AddProjectV2DraftIssueResponse>(
+    ADD_PROJECT_V2_DRAFT_ISSUE,
+    {
+      input: {
+        projectId,
+        title,
+        ...(body !== undefined ? { body } : {}),
+      },
+    }
+  );
+
+  stdout.write(
+    `${t(locale, 'add.created.project')}: ${draftData.addProjectV2DraftIssue.projectItem.id}\n`
+  );
+  return 0;
+}
+
+interface AddRepoIssueContext {
+  argv: readonly string[];
+  deps: AddCommandDeps;
+  locale: 'ja' | 'en';
+  stdout: NodeJS.WritableStream;
+  stderr: NodeJS.WritableStream;
+  title: string;
+  body: string | undefined;
+}
+
+async function addRepoIssue(ctx: AddRepoIssueContext): Promise<number> {
+  const { argv, deps, locale, stdout, stderr, title, body } = ctx;
   const repo = resolveRepo({ argv, getRemoteUrl: deps.getRemoteUrl });
   const client = deps.client ?? createClient(resolveToken());
 
@@ -65,9 +122,31 @@ export async function add(argv: readonly string[], deps: AddCommandDeps = {}): P
   return 0;
 }
 
+interface ResolveProjectNodeIdOptions {
+  client: GraphQLClient;
+  scope: Exclude<Scope, 'repo'>;
+  projectRef: ProjectRef;
+}
+
+async function resolveProjectNodeId(opts: ResolveProjectNodeIdOptions): Promise<string | null> {
+  const { client, scope, projectRef } = opts;
+  if (scope === 'org') {
+    const data = await client.request<GetOrgProjectV2Response>(GET_ORG_PROJECT_V2, {
+      login: projectRef.owner,
+      number: projectRef.number,
+    });
+    return data.organization?.projectV2?.id ?? null;
+  }
+  const data = await client.request<GetUserProjectV2Response>(GET_USER_PROJECT_V2, {
+    login: projectRef.owner,
+    number: projectRef.number,
+  });
+  return data.user?.projectV2?.id ?? null;
+}
+
 // Flags that take a separate-arg value (`--flag value` form). Required so
 // parseArgs does not consume the value as a positional title.
-const VALUE_FLAGS = new Set(['--scope', '--repo', '--lang', '--body']);
+const VALUE_FLAGS = new Set(['--scope', '--repo', '--lang', '--body', '--project']);
 
 function parseArgs(argv: readonly string[]): ParsedArgs {
   let title: string | null = null;
