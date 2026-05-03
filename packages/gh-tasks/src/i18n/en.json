@@ -32,6 +32,7 @@
   "error.link.argsRequired": "Both PR and task numbers are required. Run `gh tasks link <pr> <task>`",
   "link.added": "Appended Closes link to the PR body",
   "link.alreadyLinked": "Already linked",
+  "link.added.project": "Linked PR and task on the project",
   "triage.empty": "No untriaged issues",
   "triage.found": "Untriaged issues",
   "plan.proposed": "Proposed milestone",

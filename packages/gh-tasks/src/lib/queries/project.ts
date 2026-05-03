@@ -343,6 +343,35 @@ export interface ListProjectV2ItemsResponse {
 }
 
 /**
+ * Add an existing Issue or PullRequest (referenced by node id) as a Projects v2
+ * item. Idempotent: when the content is already an item on the project, the
+ * mutation returns the existing item rather than failing.
+ *
+ * Variables:
+ *   - $input: AddProjectV2ItemByIdInput { projectId, contentId }
+ *
+ * Used by `gh tasks link` (org / user scope) to surface a PR + task pair on
+ * the same Project — Project v2 has no explicit "linked PRs" mutation, so we
+ * rely on (1) being added to the same project and (2) the repository-level
+ * `Closes #N` relation that GitHub derives automatically.
+ */
+export const ADD_PROJECT_V2_ITEM_BY_ID = /* GraphQL */ `
+  mutation AddProjectV2ItemById($input: AddProjectV2ItemByIdInput!) {
+    addProjectV2ItemById(input: $input) {
+      item {
+        id
+      }
+    }
+  }
+`;
+
+export interface AddProjectV2ItemByIdResponse {
+  addProjectV2ItemById: {
+    item: { id: string };
+  };
+}
+
+/**
  * Update a single field value on a Projects v2 item. The `value` shape
  * varies by field type:
  *   - single-select: `{ singleSelectOptionId }`
