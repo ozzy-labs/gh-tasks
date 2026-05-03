@@ -2,10 +2,16 @@ import { graphql } from '@octokit/graphql';
 import { request } from '@octokit/request';
 import { RequestError } from '@octokit/request-error';
 
+export type I18nArgs = Readonly<Record<string, string | number>>;
+
 export class AuthError extends Error {
-  constructor(message: string) {
-    super(message);
+  readonly i18nKey: string;
+  readonly i18nArgs: I18nArgs;
+  constructor(i18nKey: string, args: I18nArgs = {}) {
+    super(i18nKey);
     this.name = 'AuthError';
+    this.i18nKey = i18nKey;
+    this.i18nArgs = args;
   }
 }
 
@@ -44,7 +50,7 @@ export interface RestClient {
 export function resolveToken(env: NodeJS.ProcessEnv = process.env): string {
   const token = env.GH_TOKEN ?? env.GITHUB_TOKEN;
   if (!token) {
-    throw new AuthError('GH_TOKEN / GITHUB_TOKEN が未設定。`gh auth login` を実行してください。');
+    throw new AuthError('error.auth.tokenMissing');
   }
   return token;
 }

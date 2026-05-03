@@ -15,6 +15,7 @@ fields:
   - name: Status
     type: single_select
     options:
+      - Triage
       - Todo
       - In Progress
       - Done

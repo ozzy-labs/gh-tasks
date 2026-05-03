@@ -1,13 +1,18 @@
 import { execFileSync } from 'node:child_process';
+import type { I18nArgs } from './github.ts';
 
 export type Scope = 'repo' | 'org' | 'user';
 
 const VALID: readonly Scope[] = ['repo', 'org', 'user'];
 
 export class ScopeError extends Error {
-  constructor(message: string) {
-    super(message);
+  readonly i18nKey: string;
+  readonly i18nArgs: I18nArgs;
+  constructor(i18nKey: string, args: I18nArgs = {}) {
+    super(i18nKey);
     this.name = 'ScopeError';
+    this.i18nKey = i18nKey;
+    this.i18nArgs = args;
   }
 }
 
@@ -50,7 +55,7 @@ export function parseScopeFlag(argv: readonly string[]): Scope | null {
     if (arg === '--scope') {
       const next = argv[i + 1];
       if (next === undefined) {
-        throw new ScopeError('--scope フラグに値が指定されていません');
+        throw new ScopeError('error.scope.flagMissingValue');
       }
       return assertScope(next);
     }
@@ -62,7 +67,7 @@ function assertScope(value: string): Scope {
   if ((VALID as readonly string[]).includes(value)) {
     return value as Scope;
   }
-  throw new ScopeError(`不正な --scope 値: '${value}' (有効値: ${VALID.join(' | ')})`);
+  throw new ScopeError('error.scope.invalid', { value, valid: VALID.join(' | ') });
 }
 
 function defaultHasGitRemote(): boolean {

@@ -23,6 +23,7 @@ gh tasks add '<title>' [--scope repo|org|user] [--repo <owner>/<name>] [--projec
 
 - `repo` scope: creates a GitHub Issue
 - `org` / `user` scope: creates a Projects v2 draft item on the resolved project
+- `--body '<detail>'` / `--body=<detail>`: body content for the Issue / draft item (no body when omitted)
 
 Returns: prints the URL of the created Issue / draft item id to stdout, exits 0.
 
@@ -55,9 +56,13 @@ gh tasks plan [--period daily|weekly|sprint] [--scope ...] [--repo ...] [--proje
 ```
 
 - `repo` scope: finds-or-creates a Milestone for the period and binds open Issues whose `updatedAt` falls in the period
-- `org` / `user` scope: finds the matching Projects v2 Iteration (or falls back to the iteration containing today) and updates the Iteration field on items in the period
+- `org` / `user` scope: finds the matching Projects v2 Iteration and updates the Iteration field on items in the period. Iteration selection priority:
+  1. exact title match for the period
+  2. iteration containing today
+  3. iteration starting in the nearest future
+  4. otherwise the last available iteration
 - `--dry-run`: preview without mutating
-- Period boundaries are anchored at local midnight in the resolved IANA timezone (`TZ` env → system tz → UTC fallback)
+- Period boundaries are anchored at local midnight in the resolved IANA timezone (`TZ` env → system tz → UTC fallback). `daily` is 1 day, `weekly` is 7 days from Monday, `sprint` is 14 days from today
 - `--period` defaults to `weekly`
 
 ### `gh tasks triage` ✅

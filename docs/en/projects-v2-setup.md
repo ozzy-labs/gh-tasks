@@ -9,7 +9,7 @@ Define these fields on a personal Project v2:
 | Field | Type | Purpose |
 | --- | --- | --- |
 | Title | (built-in) | One-line item summary |
-| Status | Single select | `Todo` / `In Progress` / `Done` |
+| Status | Single select | `Triage` / `Todo` / `In Progress` / `Done` (`Triage` flags items for `gh tasks triage`; items with `Status` unset also count as untriaged) |
 | Iteration | Iteration | Weekly / sprint planning (target of `gh tasks plan`) |
 
 ## Team (`org` scope)

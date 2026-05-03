@@ -25,7 +25,7 @@
 - `/ship` — lint・コミット・PR 作成を一括実行
 - `/drive` — implement + ship + review loop（Issue から merge-ready な PR まで自律駆動）
 
-リポ固有の skill(本リポの `src/skills/` SSOT。CLI は `gh tasks` で実装済、adapter 配信パイプラインは整備中):
+リポ固有の skill(本リポの `src/skills/` SSOT。CLI は `gh tasks` で実装済、adapter 配信パイプラインは `pnpm run build:skills` → `dist/{adapter}/` で確立済):
 
 - `/task-add` — 会話文脈からタスク化
 - `/task-plan` — 日次 / 週次 / スプリント計画
