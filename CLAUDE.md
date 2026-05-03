@@ -6,6 +6,12 @@
 
 - ユーザーへの確認には `AskUserQuestion` を使用する（テキスト出力で選択肢を列挙しない）
 
+## エージェント委譲
+
+- 本リポは外部委譲を許容（機密ファイルなし、`.no-external-delegation` 不在）
+- 公開 docs / Web リサーチ / 巨大ファイル要約は `gemini-delegate` を第一選択
+- 詳細な判断基準は `~/.claude/CLAUDE.md` の「エージェント委譲」セクションを参照
+
 ## Available Skills
 
 `@ozzylabs/skills` から sync される共通 skill:
