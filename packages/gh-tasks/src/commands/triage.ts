@@ -1,12 +1,21 @@
 import { resolveLocale, t } from '../i18n/index.ts';
 import type { AppConfig } from '../lib/config.ts';
 import { createClient, type GraphQLClient, resolveToken } from '../lib/github.ts';
+import { ProjectError, type ProjectRef, resolveProjectRef } from '../lib/project.ts';
 import {
+  GET_ORG_PROJECT_V2,
+  GET_USER_PROJECT_V2,
+  type GetOrgProjectV2Response,
+  type GetUserProjectV2Response,
+  LIST_PROJECT_V2_ITEMS,
   LIST_REPO_ISSUES_WITH_LABELS,
+  type ListProjectV2ItemsResponse,
   type ListRepoIssuesWithLabelsResponse,
+  type ProjectV2FieldValue,
+  type ProjectV2ItemNode,
 } from '../lib/queries/index.ts';
 import { resolveRepo } from '../lib/repo.ts';
-import { detectScope } from '../lib/scope.ts';
+import { detectScope, type Scope } from '../lib/scope.ts';
 
 export interface TriageCommandDeps {
   client?: GraphQLClient;
@@ -29,12 +38,26 @@ export async function triage(
   const locale = resolveLocale(argv, process.env, deps.config);
 
   const scope = detectScope({ argv, hasGitRemote: deps.hasGitRemote, config: deps.config });
-  if (scope !== 'repo') {
-    stderr.write(`${t(locale, 'error.scope.notImplemented')}: --scope ${scope}\n`);
-    return 2;
+  const limit = parseLimit(argv) ?? DEFAULT_LIMIT;
+
+  if (scope === 'repo') {
+    return await triageRepo({ argv, deps, locale, stdout, stderr, limit });
   }
 
-  const limit = parseLimit(argv) ?? DEFAULT_LIMIT;
+  return await triageProject({ argv, deps, locale, scope, stdout, stderr, limit });
+}
+
+interface TriageRepoContext {
+  argv: readonly string[];
+  deps: TriageCommandDeps;
+  locale: 'ja' | 'en';
+  stdout: NodeJS.WritableStream;
+  stderr: NodeJS.WritableStream;
+  limit: number;
+}
+
+async function triageRepo(ctx: TriageRepoContext): Promise<number> {
+  const { argv, deps, locale, stdout, stderr, limit } = ctx;
   const repo = resolveRepo({ argv, getRemoteUrl: deps.getRemoteUrl });
   const client = deps.client ?? createClient(resolveToken());
 
@@ -61,6 +84,123 @@ export async function triage(
     stdout.write(`#${issue.number}  ${issue.title}\n  ${issue.url}\n`);
   }
   return 0;
+}
+
+interface TriageProjectContext {
+  argv: readonly string[];
+  deps: TriageCommandDeps;
+  locale: 'ja' | 'en';
+  scope: Exclude<Scope, 'repo'>;
+  stdout: NodeJS.WritableStream;
+  stderr: NodeJS.WritableStream;
+  limit: number;
+}
+
+async function triageProject(ctx: TriageProjectContext): Promise<number> {
+  const { argv, deps, locale, scope, stdout, stderr, limit } = ctx;
+
+  let projectRef: ProjectRef;
+  try {
+    projectRef = resolveProjectRef({ scope, argv, config: deps.config });
+  } catch (err) {
+    if (err instanceof ProjectError) {
+      stderr.write(`${err.message}\n`);
+      return 2;
+    }
+    throw err;
+  }
+
+  const client = deps.client ?? createClient(resolveToken());
+  const projectId = await resolveProjectNodeId({ client, scope, projectRef });
+  if (!projectId) {
+    stderr.write(
+      `project not found: ${projectRef.owner}/${projectRef.number} (--scope ${scope})\n`
+    );
+    return 1;
+  }
+
+  const data = await client.request<ListProjectV2ItemsResponse>(LIST_PROJECT_V2_ITEMS, {
+    projectId,
+    first: FETCH_LIMIT,
+  });
+  if (!data.node) {
+    stderr.write(
+      `project not found: ${projectRef.owner}/${projectRef.number} (--scope ${scope})\n`
+    );
+    return 1;
+  }
+
+  const untriaged = data.node.items.nodes.filter(isUntriaged).slice(0, limit);
+
+  if (untriaged.length === 0) {
+    stdout.write(`${t(locale, 'triage.empty.project')}\n`);
+    return 0;
+  }
+
+  stdout.write(`${t(locale, 'triage.found.project')} (${untriaged.length})\n`);
+  for (const item of untriaged) {
+    stdout.write(formatItem(item));
+  }
+  return 0;
+}
+
+/**
+ * An item is considered untriaged when its `Status` field is unset, or when the
+ * value is the literal `Triage` (case-insensitive).
+ */
+function isUntriaged(item: ProjectV2ItemNode): boolean {
+  const status = findStatus(item.fieldValues.nodes);
+  if (status === null) return true;
+  return status.toLowerCase() === 'triage';
+}
+
+function formatItem(item: ProjectV2ItemNode): string {
+  const status = findStatus(item.fieldValues.nodes);
+  const statusSuffix = status ? `  [${status}]` : '';
+  const content = item.content;
+  if (!content) {
+    return `(no content)${statusSuffix}\n`;
+  }
+  if (content.__typename === 'Issue' || content.__typename === 'PullRequest') {
+    const prefix = content.__typename === 'PullRequest' ? 'PR' : '';
+    return `${prefix}#${content.number}  ${content.title}${statusSuffix}\n  ${content.url}\n`;
+  }
+  // DraftIssue: no number/url.
+  return `(draft)  ${content.title}${statusSuffix}\n`;
+}
+
+function findStatus(values: readonly ProjectV2FieldValue[]): string | null {
+  for (const v of values) {
+    if (
+      v.__typename === 'ProjectV2ItemFieldSingleSelectValue' &&
+      v.field.name.toLowerCase() === 'status'
+    ) {
+      return v.name;
+    }
+  }
+  return null;
+}
+
+interface ResolveProjectNodeIdOptions {
+  client: GraphQLClient;
+  scope: Exclude<Scope, 'repo'>;
+  projectRef: ProjectRef;
+}
+
+async function resolveProjectNodeId(opts: ResolveProjectNodeIdOptions): Promise<string | null> {
+  const { client, scope, projectRef } = opts;
+  if (scope === 'org') {
+    const data = await client.request<GetOrgProjectV2Response>(GET_ORG_PROJECT_V2, {
+      login: projectRef.owner,
+      number: projectRef.number,
+    });
+    return data.organization?.projectV2?.id ?? null;
+  }
+  const data = await client.request<GetUserProjectV2Response>(GET_USER_PROJECT_V2, {
+    login: projectRef.owner,
+    number: projectRef.number,
+  });
+  return data.user?.projectV2?.id ?? null;
 }
 
 function parseLimit(argv: readonly string[]): number | null {
