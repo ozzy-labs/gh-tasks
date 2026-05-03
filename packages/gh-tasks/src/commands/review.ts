@@ -1,7 +1,13 @@
 import { resolveLocale, t } from '../i18n/index.ts';
 import type { AppConfig } from '../lib/config.ts';
 import { createClient, type GraphQLClient, resolveToken } from '../lib/github.ts';
-import { type DateRange, type Period, parsePeriodFlag, rangeOf } from '../lib/period.ts';
+import {
+  type DateRange,
+  formatLocalIsoDate,
+  type Period,
+  parsePeriodFlag,
+  rangeOf,
+} from '../lib/period.ts';
 import { ProjectError, type ProjectRef, resolveProjectRef } from '../lib/project.ts';
 import { findStatus, formatItemLineCompact, resolveProjectNodeId } from '../lib/projectItem.ts';
 import {
@@ -178,8 +184,8 @@ interface RenderRepoInput {
 
 function renderRepoMarkdown(input: RenderRepoInput): string {
   const { period, range, closedIssues, mergedPRs, locale } = input;
-  const startStr = range.start.toISOString().slice(0, 10);
-  const endStr = range.end.toISOString().slice(0, 10);
+  const startStr = formatLocalIsoDate(range.start);
+  const endStr = formatLocalIsoDate(range.end);
   const lines: string[] = [];
   lines.push(`# ${t(locale, 'review.heading')} (${period})`);
   lines.push(`${startStr} → ${endStr}`);
@@ -214,8 +220,8 @@ interface RenderProjectInput {
 
 function renderProjectMarkdown(input: RenderProjectInput): string {
   const { period, range, completed, locale } = input;
-  const startStr = range.start.toISOString().slice(0, 10);
-  const endStr = range.end.toISOString().slice(0, 10);
+  const startStr = formatLocalIsoDate(range.start);
+  const endStr = formatLocalIsoDate(range.end);
   const lines: string[] = [];
   lines.push(`# ${t(locale, 'review.heading')} (${period})`);
   lines.push(`${startStr} → ${endStr}`);
