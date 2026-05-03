@@ -1,5 +1,4 @@
 import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { resolveLocale, t } from '../i18n/index.ts';
 import type { AppConfig } from '../lib/config.ts';
@@ -16,15 +15,14 @@ import {
   LIST_PROJECT_V2_FIELDS,
   type ListProjectV2FieldsResponse,
 } from '../lib/queries/index.ts';
+import { BUNDLED_ORG_TEMPLATE, BUNDLED_USER_TEMPLATE } from './projectsInitTemplates.ts';
 
 export interface ProjectsInitDeps {
   client?: GraphQLClient;
   stdout?: NodeJS.WritableStream;
   stderr?: NodeJS.WritableStream;
   config?: AppConfig;
-  /** Override the bundled-template directory (used by tests). */
-  templatesDir?: string;
-  /** Read a YAML file. Defaults to `node:fs/promises#readFile`. */
+  /** Read a YAML file. Defaults to `node:fs/promises#readFile`. Tests inject. */
   readYaml?: (path: string) => Promise<string>;
 }
 
@@ -92,15 +90,14 @@ export async function projectsInit(
     return 2;
   }
 
-  const yamlPath = args.yamlPath ?? resolveBundledTemplate(args.template as 'user' | 'org', deps);
-  const reader = deps.readYaml ?? defaultReadYaml;
   let template: ParsedTemplate;
   try {
-    const raw = await reader(yamlPath);
+    const raw = await loadTemplateRaw(args, deps);
     template = parseTemplate(raw);
   } catch (err) {
+    const source = args.yamlPath ?? `--template ${args.template}`;
     stderr.write(
-      `${t(locale, 'error.projectsInit.yamlRead', { path: yamlPath, reason: errMessage(err) })}\n`
+      `${t(locale, 'error.projectsInit.yamlRead', { path: source, reason: errMessage(err) })}\n`
     );
     return 1;
   }
@@ -249,12 +246,21 @@ function parseTemplate(raw: string): ParsedTemplate {
   return { fields };
 }
 
-function resolveBundledTemplate(template: 'user' | 'org', deps: ProjectsInitDeps): string {
-  // Resolve relative to packages/templates/projects-v2/ in the source tree.
-  // `deps.templatesDir` lets tests point at a fixture without traversing the
-  // real templates directory.
-  const dir = deps.templatesDir ?? resolve(import.meta.dirname, '../../../templates/projects-v2');
-  return resolve(dir, `${template}.yaml`);
+/**
+ * Resolve the YAML content for the requested source.
+ *
+ * - `--template user|org` returns the inlined string constant. The constants
+ *   are checked against the on-disk YAML by `projectsInitTemplates.test.ts`,
+ *   so they cannot drift silently.
+ * - A positional YAML path goes through `deps.readYaml` (defaulting to
+ *   `fs.readFile`) so users can point at any file.
+ */
+async function loadTemplateRaw(args: ParsedArgs, deps: ProjectsInitDeps): Promise<string> {
+  if (args.template === 'user') return BUNDLED_USER_TEMPLATE;
+  if (args.template === 'org') return BUNDLED_ORG_TEMPLATE;
+  // args.yamlPath must be set here per the earlier validation.
+  const reader = deps.readYaml ?? defaultReadYaml;
+  return reader(args.yamlPath as string);
 }
 
 function defaultReadYaml(path: string): Promise<string> {
