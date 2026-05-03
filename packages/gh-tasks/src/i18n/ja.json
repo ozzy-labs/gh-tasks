@@ -62,9 +62,9 @@
   "review.empty.project": "期間内に完了した Project アイテムはありません",
   "review.none": "該当なし",
   "standup.heading": "スタンドアップ",
-  "standup.yesterday": "Yesterday",
-  "standup.today": "Today",
-  "standup.blockers": "Blockers",
+  "standup.yesterday": "昨日",
+  "standup.today": "本日",
+  "standup.blockers": "ブロッカー",
   "standup.none": "(なし)",
   "standup.blockersHint": "(現在ブロッカーは検出していません — 手動で記入してください)",
   "standup.empty.project": "(期間内に該当する Project アイテムはありません)"
