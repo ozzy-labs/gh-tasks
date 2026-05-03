@@ -1,4 +1,5 @@
 import { resolveLocale, t } from '../i18n/index.ts';
+import type { AppConfig } from '../lib/config.ts';
 import {
   createClient,
   createRestClient,
@@ -29,6 +30,7 @@ export interface PlanCommandDeps {
   stderr?: NodeJS.WritableStream;
   /** Override `now` for deterministic testing. */
   now?: () => Date;
+  config?: AppConfig;
 }
 
 const FETCH_LIMIT = 100;
@@ -50,12 +52,12 @@ const DEFAULT_PERIOD: Period = 'weekly';
 export async function plan(argv: readonly string[], deps: PlanCommandDeps = {}): Promise<number> {
   const stdout = deps.stdout ?? process.stdout;
   const stderr = deps.stderr ?? process.stderr;
-  const locale = resolveLocale(argv);
+  const locale = resolveLocale(argv, process.env, deps.config);
 
   const period = parsePeriodFlag(argv) ?? DEFAULT_PERIOD;
   const dryRun = argv.includes('--dry-run');
 
-  const scope = detectScope({ argv, hasGitRemote: deps.hasGitRemote });
+  const scope = detectScope({ argv, hasGitRemote: deps.hasGitRemote, config: deps.config });
   if (scope !== 'repo') {
     stderr.write(`${t(locale, 'error.scope.notImplemented')}: --scope ${scope}\n`);
     return 2;

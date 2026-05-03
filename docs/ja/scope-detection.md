@@ -7,8 +7,8 @@
 1. **`--scope` フラグ**(明示)
    - `--scope repo` / `--scope=repo` 両形式をサポート
    - 同様に `--scope org` / `--scope user`
-2. **`~/.config/ozzylabs/gh-tasks.toml` の `default_scope`**(v0.2.0 予定、v0.1.0 では skip)
-3. **git remote `origin`** が存在 → `repo`
+2. **git remote `origin`** が存在 → `repo`
+3. **`~/.config/ozzylabs/gh-tasks.toml` の `default_scope`**(`repo` / `org` / `user`)
 4. **fallback** → `user`
 
 ## 不正値の扱い

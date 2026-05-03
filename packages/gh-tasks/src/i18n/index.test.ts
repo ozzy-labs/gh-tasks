@@ -23,6 +23,21 @@ describe('resolveLocale — flag', () => {
   });
 });
 
+describe('resolveLocale — config', () => {
+  it('honors config.lang when no flag is set', () => {
+    expect(resolveLocale([], {}, { lang: 'ja' })).toBe('ja');
+  });
+
+  it('flag outranks config.lang', () => {
+    expect(resolveLocale(['--lang=en'], {}, { lang: 'ja' })).toBe('en');
+  });
+
+  it('config.lang outranks env', () => {
+    expect(resolveLocale([], { LANG: 'ja_JP.UTF-8' }, { lang: 'en' })).toBe('en');
+    expect(resolveLocale([], { LC_ALL: 'en_US.UTF-8' }, { lang: 'ja' })).toBe('ja');
+  });
+});
+
 describe('resolveLocale — env', () => {
   it('uses LC_ALL when no flag', () => {
     expect(resolveLocale([], { LC_ALL: 'ja_JP.UTF-8' })).toBe('ja');

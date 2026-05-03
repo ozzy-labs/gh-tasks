@@ -7,7 +7,7 @@
 1. **`--lang` フラグ**(明示)
    - `--lang ja` / `--lang=ja` 両形式をサポート
    - 同様に `--lang en` / `--lang=en`
-2. **`~/.config/ozzylabs/gh-tasks.toml` の `lang`**(v0.2.0 予定、v0.1.0 では skip)
+2. **`~/.config/ozzylabs/gh-tasks.toml` の `lang`**(`ja` / `en`)
 3. **`LC_ALL` 環境変数** が `ja` で始まる(大小無視)→ `ja`
 4. **`LANG` 環境変数** が `ja` で始まる(大小無視)→ `ja`
 5. **fallback** → `en`
@@ -27,8 +27,8 @@ $ gh tasks add 'foo' --scope=repo --repo=owner/name --lang=fr
 
 ## 実装
 
-`packages/gh-tasks/src/i18n/index.ts` の `resolveLocale(argv, env?)` 関数。
-`env` は引数で注入可能でテストは決定論的。
+`packages/gh-tasks/src/i18n/index.ts` の `resolveLocale(argv, env?, config?)` 関数。
+`env` / `config` は引数で注入可能でテストは決定論的。`config` は `lib/config.ts` の `loadConfig()` で `~/.config/ozzylabs/gh-tasks.toml` から読み込まれる。
 
 ## SSOT 言語と出力言語
 

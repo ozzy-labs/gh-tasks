@@ -1,4 +1,5 @@
 import { resolveLocale, t } from '../i18n/index.ts';
+import type { AppConfig } from '../lib/config.ts';
 import { createClient, type GraphQLClient, resolveToken } from '../lib/github.ts';
 import { LIST_REPO_ISSUES, type ListRepoIssuesResponse } from '../lib/queries/index.ts';
 import { resolveRepo } from '../lib/repo.ts';
@@ -10,6 +11,7 @@ export interface ListCommandDeps {
   getRemoteUrl?: () => string | null;
   stdout?: NodeJS.WritableStream;
   stderr?: NodeJS.WritableStream;
+  config?: AppConfig;
 }
 
 const DEFAULT_LIMIT = 30;
@@ -17,9 +19,9 @@ const DEFAULT_LIMIT = 30;
 export async function list(argv: readonly string[], deps: ListCommandDeps = {}): Promise<number> {
   const stdout = deps.stdout ?? process.stdout;
   const stderr = deps.stderr ?? process.stderr;
-  const locale = resolveLocale(argv);
+  const locale = resolveLocale(argv, process.env, deps.config);
 
-  const scope = detectScope({ argv, hasGitRemote: deps.hasGitRemote });
+  const scope = detectScope({ argv, hasGitRemote: deps.hasGitRemote, config: deps.config });
   if (scope !== 'repo') {
     stderr.write(`${t(locale, 'error.scope.notImplemented')}: --scope ${scope}\n`);
     return 2;
