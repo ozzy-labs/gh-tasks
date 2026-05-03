@@ -30,12 +30,16 @@ In automated environments (e.g. GitHub Actions), `GITHUB_TOKEN` works as well.
 ```toml
 lang = "ja"
 default_scope = "repo"
+org_project = "ozzy-labs/5"
+user_project = "ozzy-3/2"
 ```
 
 Optional keys:
 
 - `lang`: `ja` / `en`. Default output language (see [locale-detection.md](./locale-detection.md))
 - `default_scope`: `repo` / `org` / `user`. Default scope (see [scope-detection.md](./scope-detection.md))
+- `org_project`: `<owner>/<number>`. Default Project v2 for `--scope=org`
+- `user_project`: `<owner>/<number>`. Default Project v2 for `--scope=user`
 
 A missing config file is silently ignored — flags, env vars, and auto-detection still apply. A malformed TOML or invalid value exits with a clear error message.
 

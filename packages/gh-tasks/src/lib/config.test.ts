@@ -85,4 +85,29 @@ describe('loadConfig', () => {
     });
     expect(cfg).toEqual({ lang: 'ja' });
   });
+
+  it('parses org_project and user_project as ProjectRef', () => {
+    const cfg = loadConfig({
+      env,
+      readFile: makeReader({
+        [PATH]: 'org_project = "ozzy-labs/5"\nuser_project = "ozzy-3/2"\n',
+      }),
+    });
+    expect(cfg).toEqual({
+      orgProject: { owner: 'ozzy-labs', number: 5 },
+      userProject: { owner: 'ozzy-3', number: 2 },
+    });
+  });
+
+  it('throws ConfigError on malformed org_project', () => {
+    expect(() =>
+      loadConfig({ env, readFile: makeReader({ [PATH]: 'org_project = "ozzy-labs"\n' }) })
+    ).toThrow(ConfigError);
+  });
+
+  it('throws ConfigError on non-string user_project', () => {
+    expect(() =>
+      loadConfig({ env, readFile: makeReader({ [PATH]: 'user_project = 5\n' }) })
+    ).toThrow(ConfigError);
+  });
 });

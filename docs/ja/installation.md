@@ -30,12 +30,16 @@ GitHub Actions 等の自動環境では `GITHUB_TOKEN` env でも動作する。
 ```toml
 lang = "ja"
 default_scope = "repo"
+org_project = "ozzy-labs/5"
+user_project = "ozzy-3/2"
 ```
 
 省略可能なキー:
 
 - `lang`: `ja` / `en`。出力言語の既定値([locale-detection.md](./locale-detection.md))
 - `default_scope`: `repo` / `org` / `user`。スコープの既定値([scope-detection.md](./scope-detection.md))
+- `org_project`: `<owner>/<number>` 形式。`--scope=org` の既定 Project v2
+- `user_project`: `<owner>/<number>` 形式。`--scope=user` の既定 Project v2
 
 設定ファイルが存在しない場合は無視され、フラグ / 環境変数 / 自動推定にフォールバックする。TOML が壊れている / キーが不正値のときは分かりやすいエラーで終了する。
 

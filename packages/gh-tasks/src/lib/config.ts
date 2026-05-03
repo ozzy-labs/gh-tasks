@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { parse as parseToml, TomlError } from 'smol-toml';
 
 import type { Locale } from '../i18n/index.ts';
+import { type ProjectRef, parseProjectIdentifier } from './project.ts';
 import type { Scope } from './scope.ts';
 
 export class ConfigError extends Error {
@@ -16,6 +17,8 @@ export class ConfigError extends Error {
 export interface AppConfig {
   lang?: Locale;
   defaultScope?: Scope;
+  orgProject?: ProjectRef;
+  userProject?: ProjectRef;
 }
 
 const VALID_LANG: readonly Locale[] = ['ja', 'en'];
@@ -92,7 +95,28 @@ export function loadConfig(options: LoadConfigOptions = {}): AppConfig {
     }
     config.defaultScope = value as Scope;
   }
+  if ('org_project' in parsed) {
+    config.orgProject = parseProjectKey(parsed.org_project, 'org_project', path);
+  }
+  if ('user_project' in parsed) {
+    config.userProject = parseProjectKey(parsed.user_project, 'user_project', path);
+  }
   return config;
+}
+
+function parseProjectKey(value: unknown, key: string, path: string): ProjectRef {
+  if (typeof value !== 'string') {
+    throw new ConfigError(
+      `config の ${key} が不正です (${path}): '${String(value)}' (期待形式: <owner>/<number>)`
+    );
+  }
+  const ref = parseProjectIdentifier(value);
+  if (!ref) {
+    throw new ConfigError(
+      `config の ${key} が不正です (${path}): '${value}' (期待形式: <owner>/<number>)`
+    );
+  }
+  return ref;
 }
 
 function defaultReadFile(path: string): string | null {
