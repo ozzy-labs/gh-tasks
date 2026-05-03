@@ -39,7 +39,28 @@ locale: ja
 | `allowed-tools` | ✅ | `Bash(gh:*)`(本リポの skill は `gh tasks <subcmd>` を呼ぶため) |
 | `locale` | ✅ | SSOT 言語。本リポでは固定で `ja` |
 
-`SKILL.en.md` は adapter 生成物で、`description` フィールドに `description_en` の値が入り、本文は英訳される(初期は手動翻訳)。
+### `SKILL.en.md`(en mirror)のスキーマ
+
+`SKILL.en.md` は SSOT に併設する英訳 reference で、現状は build adapter の対象外(`scripts/build-skills.mjs` は ja SSOT のみを dist へ配信)。手動メンテナンスのため、frontmatter は SSOT を踏襲しつつ次の差分を持つ:
+
+```yaml
+---
+name: task-add
+description: Add a task from conversation context. Auto-detects GitHub Issue / Project draft / repo Milestone.
+allowed-tools: Bash(gh:*)
+locale: en
+---
+```
+
+| フィールド | en mirror での扱い |
+| --- | --- |
+| `name` | SSOT と同一(kebab-case、`task-` prefix) |
+| `description` | SSOT の `description_en` の値を入れる(en の 1 行説明) |
+| `description_en` | en mirror では省略(`description` 自体が en) |
+| `allowed-tools` | SSOT と同一(`Bash(gh:*)`) |
+| `locale` | `en` 固定(SSOT は `ja`) |
+
+将来 locale adapter を実装したら SSOT から自動生成に切り替える(現状は Issue で追跡)。それまでは ja を更新したら手動で en mirror も更新する運用とする。
 
 ## Consequences
 

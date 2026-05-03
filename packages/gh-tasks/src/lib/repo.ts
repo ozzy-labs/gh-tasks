@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import type { I18nArgs } from './github.ts';
 
 export interface RepoIdent {
   owner: string;
@@ -6,9 +7,13 @@ export interface RepoIdent {
 }
 
 export class RepoError extends Error {
-  constructor(message: string) {
-    super(message);
+  readonly i18nKey: string;
+  readonly i18nArgs: I18nArgs;
+  constructor(i18nKey: string, args: I18nArgs = {}) {
+    super(i18nKey);
     this.name = 'RepoError';
+    this.i18nKey = i18nKey;
+    this.i18nArgs = args;
   }
 }
 
@@ -33,7 +38,7 @@ export function resolveRepo(opts: ResolveRepoOptions): RepoIdent {
   const getter = opts.getRemoteUrl ?? defaultGetRemoteUrl;
   const remote = getter();
   if (!remote) {
-    throw new RepoError('--repo フラグも git remote origin も解決できません');
+    throw new RepoError('error.repo.notResolved');
   }
   return parseOwnerName(extractFromRemote(remote));
 }
@@ -48,7 +53,7 @@ export function parseRepoFlag(argv: readonly string[]): string | null {
     if (arg === '--repo') {
       const next = argv[i + 1];
       if (next === undefined) {
-        throw new RepoError('--repo フラグに値が指定されていません');
+        throw new RepoError('error.repo.flagMissingValue');
       }
       return next;
     }
@@ -59,7 +64,7 @@ export function parseRepoFlag(argv: readonly string[]): string | null {
 export function parseOwnerName(value: string): RepoIdent {
   const match = value.match(/^([^/]+)\/([^/]+)$/);
   if (!match) {
-    throw new RepoError(`不正なリポジトリ識別子: '${value}' (期待: '<owner>/<name>')`);
+    throw new RepoError('error.repo.invalidIdentifier', { value });
   }
   return { owner: match[1] as string, name: match[2] as string };
 }
@@ -75,7 +80,7 @@ export function parseOwnerName(value: string): RepoIdent {
 export function extractFromRemote(url: string): string {
   const match = url.trim().match(/[:/]([^/:]+)\/([^/]+?)(?:\.git)?\/?$/);
   if (!match) {
-    throw new RepoError(`git remote URL から owner/name を抽出できません: '${url}'`);
+    throw new RepoError('error.repo.cannotExtractFromRemote', { url });
   }
   return `${match[1]}/${match[2]}`;
 }

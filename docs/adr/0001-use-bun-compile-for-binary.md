@@ -24,9 +24,10 @@
 CLI 本体は **TypeScript で記述し、Bun の `--compile` でクロスプラットフォーム単一バイナリを生成する**。
 
 - Entry: `packages/gh-tasks/src/cli.ts`
-- Build: `bun build --compile --target=<triple> --outfile=bin/gh-tasks-{os}-{arch}`
+- Release build: `bun build --compile --target=<triple> --outfile=bin/gh-tasks-{os}-{arch}`(`scripts/build-cli.mjs` 経由、`pnpm run build:all` で全 5 ターゲットを発行)
+- Dev build: `pnpm run build`(`packages/gh-tasks/package.json`)はホスト 1 ターゲットのみを `bin/gh-tasks` に発行する開発用ショートカット。CI / release では使わない
 - Targets: `bun-darwin-x64` / `bun-darwin-arm64` / `bun-linux-x64` / `bun-linux-arm64` / `bun-windows-x64`
-- Release ワークフローは GitHub Releases に上記バイナリを attach
+- Release ワークフローは GitHub Releases に上記 5 バイナリを attach
 - gh extension entry shim(リポ直下 `gh-tasks`)が `uname -s` / `uname -m` から該当バイナリを exec
 
 ## Consequences

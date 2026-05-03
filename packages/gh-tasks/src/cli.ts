@@ -10,6 +10,9 @@ import { today } from './commands/today.ts';
 import { triage } from './commands/triage.ts';
 import { resolveLocale, t } from './i18n/index.ts';
 import { type AppConfig, ConfigError, loadConfig } from './lib/config.ts';
+import { AuthError } from './lib/github.ts';
+import { RepoError } from './lib/repo.ts';
+import { ScopeError } from './lib/scope.ts';
 
 const VERSION = '0.0.0';
 
@@ -70,33 +73,42 @@ async function main(argv: string[]): Promise<number> {
   }
 
   const rest = args.slice(1);
-  // Subcommand dispatch — implementations land in src/commands/{cmd}.ts
-  if (cmd === 'add') {
-    return add(rest, { config });
-  }
-  if (cmd === 'list') {
-    return list(rest, { config });
-  }
-  if (cmd === 'today') {
-    return today(rest, { config });
-  }
-  if (cmd === 'done') {
-    return done(rest, { config });
-  }
-  if (cmd === 'link') {
-    return link(rest, { config });
-  }
-  if (cmd === 'triage') {
-    return triage(rest, { config });
-  }
-  if (cmd === 'plan') {
-    return plan(rest, { config });
-  }
-  if (cmd === 'review') {
-    return review(rest, { config });
-  }
-  if (cmd === 'standup') {
-    return standup(rest, { config });
+  try {
+    // Subcommand dispatch — implementations land in src/commands/{cmd}.ts
+    if (cmd === 'add') {
+      return await add(rest, { config });
+    }
+    if (cmd === 'list') {
+      return await list(rest, { config });
+    }
+    if (cmd === 'today') {
+      return await today(rest, { config });
+    }
+    if (cmd === 'done') {
+      return await done(rest, { config });
+    }
+    if (cmd === 'link') {
+      return await link(rest, { config });
+    }
+    if (cmd === 'triage') {
+      return await triage(rest, { config });
+    }
+    if (cmd === 'plan') {
+      return await plan(rest, { config });
+    }
+    if (cmd === 'review') {
+      return await review(rest, { config });
+    }
+    if (cmd === 'standup') {
+      return await standup(rest, { config });
+    }
+  } catch (err) {
+    if (err instanceof AuthError || err instanceof RepoError || err instanceof ScopeError) {
+      const locale = resolveLocale(argv, process.env, config);
+      process.stderr.write(`${err.name}: ${t(locale, err.i18nKey, err.i18nArgs)}\n`);
+      return 2;
+    }
+    throw err;
   }
 
   const locale = resolveLocale(argv, process.env, config);

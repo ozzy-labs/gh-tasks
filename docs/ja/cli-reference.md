@@ -23,6 +23,7 @@ gh tasks add '<title>' [--scope repo|org|user] [--repo <owner>/<name>] [--projec
 
 - `repo` scope: GitHub Issue を作成
 - `org` / `user` scope: 解決された Project に draft item を作成
+- `--body '<detail>'` / `--body=<detail>`: Issue / draft item の本文を指定(省略時は body なし)
 
 戻り値: 作成した Issue の URL / draft item id を stdout に出力、exit 0。
 
@@ -55,9 +56,13 @@ gh tasks plan [--period daily|weekly|sprint] [--scope ...] [--repo ...] [--proje
 ```
 
 - `repo` scope: 期間に対応する Milestone を作成 / 再利用し、`updatedAt` が期間内の open Issue を bind
-- `org` / `user` scope: 期間に対応する Projects v2 Iteration を選択(無ければ今日を含む iteration にフォールバック)し、期間内のアイテムの Iteration field を更新
+- `org` / `user` scope: 期間に対応する Projects v2 Iteration を選択し、期間内のアイテムの Iteration field を更新。Iteration の選択は次の優先順:
+  1. 期間タイトルに完全一致する iteration
+  2. today を含む iteration
+  3. 開始日が直近未来の iteration
+  4. 上記いずれもなければ最後に利用可能な iteration
 - `--dry-run`: 候補表示のみで mutation は行わない
-- 期間境界は IANA タイムゾーン(`TZ` env → システム tz → UTC フォールバック)のローカル 0 時に揃える
+- 期間境界は IANA タイムゾーン(`TZ` env → システム tz → UTC フォールバック)のローカル 0 時に揃える。`daily` は 1 日、`weekly` は月曜開始 7 日、`sprint` は今日始まり 14 日
 - `--period` のデフォルトは `weekly`
 
 ### `gh tasks triage` ✅

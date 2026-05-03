@@ -9,7 +9,7 @@
 | Field | Type | 用途 |
 | --- | --- | --- |
 | Title | (built-in) | item の 1 行サマリ |
-| Status | Single select | `Todo` / `In Progress` / `Done` |
+| Status | Single select | `Triage` / `Todo` / `In Progress` / `Done`(`Triage` は `gh tasks triage` の明示マーカー、`Status` 未設定のアイテムも triage 対象) |
 | Iteration | Iteration | 週次 / sprint 計画(`gh tasks plan` の対象) |
 
 ## チーム(`org` scope)

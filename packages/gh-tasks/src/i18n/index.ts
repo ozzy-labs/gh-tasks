@@ -64,6 +64,16 @@ function toLocale(value: string): Locale | null {
   return value === 'ja' || value === 'en' ? value : null;
 }
 
-export function t(locale: Locale, key: string): string {
-  return TABLES[locale][key] ?? TABLES.en[key] ?? key;
+export function t(
+  locale: Locale,
+  key: string,
+  args?: Readonly<Record<string, string | number>>
+): string {
+  let msg = TABLES[locale][key] ?? TABLES.en[key] ?? key;
+  if (args) {
+    for (const [k, v] of Object.entries(args)) {
+      msg = msg.replaceAll(`{${k}}`, String(v));
+    }
+  }
+  return msg;
 }
