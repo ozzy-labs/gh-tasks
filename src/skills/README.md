@@ -24,4 +24,4 @@ pnpm run build:skills
 
 [handbook ADR-0018](https://github.com/ozzy-labs/handbook/blob/main/adr/0018-agent-adapter-architecture.md) の adapter 機構を再利用し、`dist/{claude-code,codex-cli,gemini-cli,copilot}/.agents/skills/{name}/SKILL.md` を生成する。
 
-> v0.1.0 では実装スタブ。adapter 統合は @ozzylabs/skills の lib 抽出と並行で進める。
+> adapter 配信パイプライン(`scripts/build-skills.mjs`)は @ozzylabs/skills の lib 抽出と並行整備中。SKILL.md 自体は CLI(`gh tasks ...`)を呼ぶラッパーとして利用可能。

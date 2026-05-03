@@ -1,6 +1,6 @@
 ---
 name: task-review
-description: Generate a retrospective summary. Invokes `gh tasks review --daily|--weekly|--sprint` to summarize Issues closed / PRs merged / diffs within the period.
+description: Generate a retrospective summary. Invokes `gh tasks review --period daily|weekly|sprint` to summarize Issues closed, PRs merged, and Project items completed within the period.
 allowed-tools: Bash(gh:*)
 locale: en
 ---
@@ -24,5 +24,3 @@ Generate a daily / weekly / sprint retrospective summary.
 
 - Empty result: re-confirm period / scope with the user
 - API rate limit: shrink the period and retry
-
-> v0.1.0 stub. Awaits the `gh tasks review` CLI implementation.

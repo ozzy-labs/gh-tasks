@@ -24,5 +24,3 @@ Establish a relation between a PR and its tracking Issue or Project draft item.
 
 - PR / task live in different scopes: confirm whether cross-scope linking is allowed
 - Already linked: surface the existing link and exit
-
-> v0.1.0 stub. Awaits the `gh tasks link` CLI implementation.

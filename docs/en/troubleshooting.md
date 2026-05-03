@@ -24,11 +24,19 @@ gh tasks add 'title' --repo=<owner>/<name>
 git remote add origin git@github.com:<owner>/<name>.git
 ```
 
-## `--scope user` / `--scope org` returns "not implemented"
+## `--scope org|user` reports "Project の指定が必要です"
 
-**Cause**: v0.1.0 only implements `repo` scope. `org` / `user` are gated on the projectId resolver landing.
+**Cause**: `org` / `user` scope needs a Projects v2 reference but neither `--project` nor the matching config key (`org_project` / `user_project`) is set.
 
-**Fix**: Use `--scope repo` for now or wait for the follow-up release. Track progress via handbook ADR-0022 and related PRs.
+**Fix**:
+
+```bash
+gh tasks list --scope=user --project=<owner>/<number>
+# or persist the default in ~/.config/ozzylabs/gh-tasks.toml
+echo 'user_project = "<owner>/<number>"' >> ~/.config/ozzylabs/gh-tasks.toml
+```
+
+See [installation.md](./installation.md) for the full config schema.
 
 ## Semantic clash with `gh agent-task`
 
@@ -41,7 +49,7 @@ GitHub's official `gh agent-task` (preview) is close in name to this extension's
 **Fix**:
 
 - Wait a few minutes and retry
-- For heavy enumerations, use `--limit` (planned) to cap result size
+- For heavy enumerations, use `--limit` to cap result size (`gh tasks list` / `gh tasks triage`)
 - In CI, ensure `GITHUB_TOKEN` is exported so requests run on the authenticated quota
 
 ## `gh extension install` fails

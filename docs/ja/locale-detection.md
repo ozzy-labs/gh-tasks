@@ -32,7 +32,7 @@ $ gh tasks add 'foo' --scope=repo --repo=owner/name --lang=fr
 
 ## SSOT 言語と出力言語
 
-`gh-tasks` のメッセージは ja を SSOT(repo-internal [ADR-0002](../adr/0002-i18n-japanese-ssot.md))としており、`en` キーが欠けている場合は ja の値が出力される。逆に `ja` キーが欠けていて `en` キーが存在する場合は `t()` のフォールバックで en が出力される。両方欠けている場合はキー文字列そのものが出力される(デバッグ用)。
+`gh-tasks` のメッセージは ja を SSOT(repo-internal [ADR-0002](../adr/0002-i18n-japanese-ssot.md))。実行時の `t(locale, key)` はまず指定 locale を引き、見つからなければ `en` にフォールバックし、両方欠けていればキー文字列そのものを返す(デバッグ用)。フォールバックは非対称で、バックストップは常に `en` テーブルのみ。`en` キーに ja 翻訳が存在しない場合は ja 出力にも英語がそのまま出るため、両言語をセットで追加すること。
 
 ## 関連
 

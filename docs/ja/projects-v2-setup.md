@@ -2,9 +2,7 @@
 
 `gh-tasks` の `org` / `user` scope は GitHub Projects v2 を backing storage として使う。最低限必要なフィールド定義をここに記載する。
 
-> v0.1.0 では `org` / `user` scope は未実装。本ドキュメントは設計仕様の先取り記述。
-
-## v0.1.0 ターゲット(個人 / `user` scope)
+## 個人(`user` scope)
 
 個人 Project v2 に以下のフィールドを定義:
 
@@ -14,7 +12,7 @@
 | Status | Single select | `Todo` / `In Progress` / `Done` |
 | Iteration | Iteration | 週次 / sprint 計画(`gh tasks plan` の対象) |
 
-## v0.1.0 ターゲット(チーム / `org` scope)
+## チーム(`org` scope)
 
 OzzyLabs Platform Project v2 に上記 + 以下を追加:
 

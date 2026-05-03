@@ -22,7 +22,7 @@
 - Binary build: `bun build --compile`(repo-internal ADR-0001)
 - Package manager: pnpm 10
 - GraphQL client: Octokit(`gh api graphql` shell-out は不採用、repo-internal ADR-0003)
-- Linting: Biome(TS/JS/JSON)、prettier(YAML/Markdown)、shellcheck/shfmt(Shell)、markdownlint-cli2
+- Linting: Biome(TS/JS/JSON)、yamllint + yamlfmt(YAML)、markdownlint-cli2(Markdown)、shellcheck + shfmt(Shell)
 - Git hooks: lefthook(commit-msg: commitlint、pre-commit: linters、pre-push: typecheck)
 - Testing: Vitest
 
@@ -45,7 +45,7 @@ scripts/                → build / sync スクリプト
 pnpm install              # 依存関係インストール
 pnpm run build            # CLI バイナリ + skills dist 生成
 pnpm run lint             # Biome
-pnpm run lint:all         # Biome + markdownlint + yamllint + gitleaks
+pnpm run lint:all         # Biome + markdownlint + yamllint(gitleaks/trivy/shellcheck 等は lefthook hook 側)
 pnpm run typecheck        # tsc --noEmit
 pnpm test                 # Vitest
 ```

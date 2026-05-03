@@ -25,5 +25,3 @@ PR と該当 Issue / Project draft item を紐付ける。
 
 - PR / task が異なる scope に属す: scope 跨ぎを許可するか確認
 - 既に紐付け済: 既存リンクを表示して終了
-
-> v0.1.0 スタブ。`gh tasks link` の CLI 実装が完成するまで実用不可。

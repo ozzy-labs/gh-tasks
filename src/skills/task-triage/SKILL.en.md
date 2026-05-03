@@ -28,5 +28,3 @@ Sweep through untriaged Issues / draft items in batch.
 
 - Backlog too large: shrink `--limit` and run in batches
 - Ambiguous item: ask the user directly
-
-> v0.1.0 stub. Awaits the `gh tasks triage` CLI implementation.
