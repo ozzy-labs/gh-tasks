@@ -2,17 +2,14 @@ import { resolveLocale, t } from '../i18n/index.ts';
 import type { AppConfig } from '../lib/config.ts';
 import { createClient, type GraphQLClient, resolveToken } from '../lib/github.ts';
 import { ProjectError, type ProjectRef, resolveProjectRef } from '../lib/project.ts';
+import { resolveProjectNodeId } from '../lib/projectItem.ts';
 import {
   ADD_PROJECT_V2_ITEM_BY_ID,
   type AddProjectV2ItemByIdResponse,
   GET_ISSUE_BY_NUMBER,
-  GET_ORG_PROJECT_V2,
   GET_PULL_REQUEST_BY_NUMBER,
-  GET_USER_PROJECT_V2,
   type GetIssueByNumberResponse,
-  type GetOrgProjectV2Response,
   type GetPullRequestByNumberResponse,
-  type GetUserProjectV2Response,
   UPDATE_PULL_REQUEST,
   type UpdatePullRequestResponse,
 } from '../lib/queries/index.ts';
@@ -172,28 +169,6 @@ async function linkProjectItems(ctx: LinkProjectContext): Promise<number> {
 
   stdout.write(`${t(locale, 'link.added.project')}: ${prNode.url} ↔ ${issueNode.url}\n`);
   return 0;
-}
-
-interface ResolveProjectNodeIdOptions {
-  client: GraphQLClient;
-  scope: Exclude<Scope, 'repo'>;
-  projectRef: ProjectRef;
-}
-
-async function resolveProjectNodeId(opts: ResolveProjectNodeIdOptions): Promise<string | null> {
-  const { client, scope, projectRef } = opts;
-  if (scope === 'org') {
-    const data = await client.request<GetOrgProjectV2Response>(GET_ORG_PROJECT_V2, {
-      login: projectRef.owner,
-      number: projectRef.number,
-    });
-    return data.organization?.projectV2?.id ?? null;
-  }
-  const data = await client.request<GetUserProjectV2Response>(GET_USER_PROJECT_V2, {
-    login: projectRef.owner,
-    number: projectRef.number,
-  });
-  return data.user?.projectV2?.id ?? null;
 }
 
 const CLOSE_KEYWORDS = ['Closes', 'Fixes', 'Resolves'] as const;
