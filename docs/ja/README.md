@@ -13,9 +13,10 @@
 | [projects-v2-setup.md](./projects-v2-setup.md) | 個人 / チーム両用途のフィールド定義 |
 | [cli-reference.md](./cli-reference.md) | 全コマンド / フラグ |
 | [troubleshooting.md](./troubleshooting.md) | 認証エラー、`--repo` 解決失敗、`gh agent-task` collision、API rate limit |
-| recipes/{agent}.md | 各エージェントでの使用例(v0.1.0 後続) |
-
-> v0.1.0 初版。実装と並走して内容を充実化していく。recipes は v0.1.0 後続で追加。
+| [recipes/claude-code.md](./recipes/claude-code.md) | Claude Code での skill 取り込みと利用シーン |
+| [recipes/codex-cli.md](./recipes/codex-cli.md) | Codex CLI での skill 取り込みと利用シーン |
+| [recipes/gemini-cli.md](./recipes/gemini-cli.md) | Gemini CLI での skill 取り込みと利用シーン |
+| [recipes/copilot.md](./recipes/copilot.md) | GitHub Copilot での skill 取り込みと利用シーン |
 
 ## 設計の根拠
 
