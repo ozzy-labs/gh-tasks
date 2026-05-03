@@ -21,6 +21,7 @@
   "list.empty": "オープンの Issue はありません",
   "list.empty.project": "Project にアイテムがありません",
   "today.empty": "今日更新された Issue はありません",
+  "today.empty.project": "今日更新された Project アイテムはありません",
   "error.done.idRequired": "Issue 番号が必須です。`gh tasks done <id>` の形式で実行してください",
   "done.closed": "Issue を CLOSED にしました",
   "done.alreadyClosed": "既に CLOSED です",

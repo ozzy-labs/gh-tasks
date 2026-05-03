@@ -21,6 +21,7 @@
   "list.empty": "No open issues",
   "list.empty.project": "No items in this project",
   "today.empty": "No issues updated today",
+  "today.empty.project": "No project items updated today",
   "error.done.idRequired": "Issue id is required. Run `gh tasks done <id>`",
   "done.closed": "Issue closed",
   "done.alreadyClosed": "Issue is already closed",
