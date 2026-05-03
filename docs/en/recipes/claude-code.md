@@ -13,11 +13,17 @@ Recipes for using `gh-tasks` (CLI + skills) from Claude Code.
 
 Claude Code reads skill definitions from `.claude/skills/{name}/SKILL.md`. The `gh-tasks` adapter places `task-add` / `task-plan` / `task-triage` / `task-review` / `task-standup` / `task-link-pr` at the same paths.
 
-> **Note**: as of v0.1.0 the consumer-side delivery pipeline is still being wired up ([Issue #16](https://github.com/ozzy-labs/gh-tasks/issues/16)). Until that lands, build locally and copy `dist/claude-code/.claude/skills/` into the consumer's `.claude/skills/` manually.
-
 ```bash
-pnpm run build:skills        # generates dist/claude-code/.claude/skills/{name}/SKILL.md
+# 1. Build the adapter outputs in gh-tasks
+pnpm run build:skills    # generates dist/claude-code/.claude/skills/{name}/SKILL.md
+
+# 2. From the consumer repo root, run commons' sync-skills.sh with MARKER_TAG override
+MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \
+  /path/to/gh-tasks/dist \
+  .
 ```
+
+See [`skills-sync/README.md`](../../../skills-sync/README.md) for the full procedure including CI workflow examples.
 
 The skill SSOT lives in `src/skills/{name}/SKILL.md`. Claude Code reads the frontmatter (`name`, `description`, `allowed-tools`) and may auto-trigger the skill when relevant. To invoke explicitly, use slash-command form like `/task-add`.
 

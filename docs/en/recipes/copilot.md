@@ -13,11 +13,17 @@ Recipes for using `gh-tasks` (CLI + skills) from GitHub Copilot.
 
 GitHub Copilot reads `.github/copilot-instructions.md` as its top-level instruction file. The `gh-tasks` adapter ships `.github/copilot-instructions.md.snippet`, which is merged into the marker block in `copilot-instructions.md`. Copilot does not load `SKILL.md` directly, so skills are surfaced as a list of names + descriptions only.
 
-> **Note**: as of v0.1.0 the consumer-side delivery pipeline is still being wired up ([Issue #16](https://github.com/ozzy-labs/gh-tasks/issues/16)). Until that lands, build locally and merge the snippet into the consumer's `.github/copilot-instructions.md` marker block manually.
-
 ```bash
+# 1. Build the adapter outputs in gh-tasks
 pnpm run build:skills    # emits dist/copilot/.github/copilot-instructions.md.snippet
+
+# 2. From the consumer repo root, run commons' sync-skills.sh with MARKER_TAG override
+MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \
+  /path/to/gh-tasks/dist \
+  .
 ```
+
+The snippet is merged into the marker block in the consumer's `.github/copilot-instructions.md`. See [`skills-sync/README.md`](../../../skills-sync/README.md) for details.
 
 Either include AGENTS.md by reference from `copilot-instructions.md`, or place the skill marker block alongside AGENTS.md. Snippet shape:
 
@@ -103,7 +109,7 @@ Copilot Coding Agent can run `gh` CLI in its environment, which combines well wi
 
 - Confirm the marker block exists in `.github/copilot-instructions.md`
 - Reopen the repo so Copilot reloads instructions
-- Re-inject the snippet from `pnpm run build:skills` into the marker block
+- Re-run `MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y /path/to/gh-tasks/dist .` (idempotent)
 
 ### `--scope` auto-detection fails
 
@@ -118,7 +124,7 @@ Copilot Coding Agent can run `gh` CLI in its environment, which combines well wi
 
 ### `copilot-instructions.md` snippet corrupted
 
-- Re-inject the snippet from `pnpm run build:skills` into the marker block
+- Re-run `MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y /path/to/gh-tasks/dist .` (idempotent)
 - The snippet update is idempotent — safe to run repeatedly
 
 ### Projects v2 fields missing

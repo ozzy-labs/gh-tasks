@@ -33,7 +33,61 @@ Renovate がこの行の SHA を更新する PR を発行する。`gh_tasks_adap
 
 ### 3. file materialisation の sync スクリプト
 
-Renovate 自身は `.commons/sync.yaml` の SHA を bump するだけで、`dist/` 内容を consumer に展開する作業は別経路で実施する。`@ozzylabs/commons` の `sync-skills.sh` 相当を gh-tasks 専用にも対応させる作業は本 PR のスコープ外で、後続 Issue で tracking する。
+Renovate は `.commons/sync.yaml` の `gh_tasks_commit:` を bump するだけで、`dist/{adapter}/` 内容を consumer に展開する作業は別途実施する。`@ozzylabs/commons` の `sync-skills.sh` を `MARKER_TAG` 環境変数で上書きして再利用する([commons#91](https://github.com/ozzy-labs/commons/pull/91))。
+
+```bash
+# consumer リポのルートで実行
+MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \
+  /path/to/gh-tasks-clone/dist \
+  .
+```
+
+これで `<!-- begin: @ozzylabs/gh-tasks -->...<!-- end: @ozzylabs/gh-tasks -->` 形式の marker block で skill / snippet が consumer リポに展開される(`@ozzylabs/skills` 既存 marker と並存)。
+
+#### consumer 側 workflow への組み込み例
+
+`.github/workflows/sync-gh-tasks.yaml` 等で Renovate PR への自動展開を実装する例:
+
+```yaml
+name: sync gh-tasks adapters
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - .commons/sync.yaml
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Resolve gh_tasks_commit and clone gh-tasks
+        run: |
+          GH_TASKS_SHA=$(yq '.gh_tasks_commit' .commons/sync.yaml)
+          git clone https://github.com/ozzy-labs/gh-tasks /tmp/gh-tasks
+          (cd /tmp/gh-tasks && git checkout "$GH_TASKS_SHA" && pnpm install --frozen-lockfile && pnpm run build:skills)
+      - name: Clone commons (sync-skills.sh)
+        run: git clone https://github.com/ozzy-labs/commons /tmp/commons
+      - name: Sync gh-tasks adapter outputs
+        env:
+          MARKER_TAG: '@ozzylabs/gh-tasks'
+        run: bash /tmp/commons/sync-skills.sh -y /tmp/gh-tasks/dist .
+      - name: Commit sync result
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A && git diff --cached --quiet || git commit -m "chore: sync @ozzylabs/gh-tasks adapter outputs"
+          git push
+```
+
+`MARKER_TAG` 未指定時は default `@ozzylabs/skills` で動作するため、`@ozzylabs/skills` 用と `@ozzylabs/gh-tasks` 用の workflow を並走させても互いに干渉しない。
 
 ## ファイル構成
 
