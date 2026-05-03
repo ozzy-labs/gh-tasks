@@ -66,5 +66,6 @@
   "standup.today": "Today",
   "standup.blockers": "Blockers",
   "standup.none": "(none)",
-  "standup.blockersHint": "(no blockers detected — fill in manually)"
+  "standup.blockersHint": "(no blockers detected — fill in manually)",
+  "standup.empty.project": "(no project items in this range)"
 }
