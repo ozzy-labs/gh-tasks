@@ -44,6 +44,5 @@
   "standup.today": "Today",
   "standup.blockers": "Blockers",
   "standup.none": "(none)",
-  "standup.blockersHint": "(no blockers detected — fill in manually)",
-  "standup.mineNote": "(--mine: author/assignee filtering lands in v0.2.0; for now only the viewer login is annotated in the heading)"
+  "standup.blockersHint": "(no blockers detected — fill in manually)"
 }

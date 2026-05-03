@@ -44,6 +44,5 @@
   "standup.today": "Today",
   "standup.blockers": "Blockers",
   "standup.none": "(なし)",
-  "standup.blockersHint": "(現在ブロッカーは検出していません — 手動で記入してください)",
-  "standup.mineNote": "(--mine 指定時、author / assignee による絞り込みは v0.2.0 以降。現状は viewer login をヘッダに表示するのみ)"
+  "standup.blockersHint": "(現在ブロッカーは検出していません — 手動で記入してください)"
 }

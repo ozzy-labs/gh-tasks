@@ -43,6 +43,14 @@ export const LIST_REPO_ISSUES = /* GraphQL */ `
           title
           url
           updatedAt
+          author {
+            login
+          }
+          assignees(first: 10) {
+            nodes {
+              login
+            }
+          }
         }
       }
     }
@@ -55,6 +63,8 @@ export interface RepoIssueNode {
   title: string;
   url: string;
   updatedAt: string;
+  author?: { login: string } | null;
+  assignees?: { nodes: Array<{ login: string }> };
 }
 
 export interface ListRepoIssuesResponse {
@@ -178,6 +188,14 @@ export const LIST_CLOSED_ISSUES = /* GraphQL */ `
           title
           url
           closedAt
+          author {
+            login
+          }
+          assignees(first: 10) {
+            nodes {
+              login
+            }
+          }
         }
       }
     }
@@ -190,6 +208,8 @@ export interface ClosedIssueNode {
   title: string;
   url: string;
   closedAt: string;
+  author?: { login: string } | null;
+  assignees?: { nodes: Array<{ login: string }> };
 }
 
 export interface ListClosedIssuesResponse {
