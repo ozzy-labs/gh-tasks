@@ -67,6 +67,14 @@ export const LIST_MERGED_PRS = /* GraphQL */ `
           title
           url
           mergedAt
+          author {
+            login
+          }
+          assignees(first: 10) {
+            nodes {
+              login
+            }
+          }
         }
       }
     }
@@ -79,6 +87,8 @@ export interface MergedPRNode {
   title: string;
   url: string;
   mergedAt: string;
+  author?: { login: string } | null;
+  assignees?: { nodes: Array<{ login: string }> };
 }
 
 export interface ListMergedPRsResponse {

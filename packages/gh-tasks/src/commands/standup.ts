@@ -68,16 +68,27 @@ export async function standup(
     }),
   ]);
 
+  const matchesViewer = (n: {
+    author?: { login: string } | null;
+    assignees?: { nodes: Array<{ login: string }> };
+  }): boolean => {
+    if (!viewerLogin) return true;
+    if (n.author?.login === viewerLogin) return true;
+    return n.assignees?.nodes.some((a) => a.login === viewerLogin) ?? false;
+  };
+
   const closedIssues =
-    issuesData.repository?.issues.nodes.filter((n) => new Date(n.closedAt).getTime() >= since) ??
-    [];
+    issuesData.repository?.issues.nodes
+      .filter((n) => new Date(n.closedAt).getTime() >= since)
+      .filter(matchesViewer) ?? [];
   const mergedPRs =
-    prsData.repository?.pullRequests.nodes.filter((n) => new Date(n.mergedAt).getTime() >= since) ??
-    [];
+    prsData.repository?.pullRequests.nodes
+      .filter((n) => new Date(n.mergedAt).getTime() >= since)
+      .filter(matchesViewer) ?? [];
   const openIssues =
-    openIssuesData.repository?.issues.nodes.filter(
-      (n) => new Date(n.updatedAt).getTime() >= since
-    ) ?? [];
+    openIssuesData.repository?.issues.nodes
+      .filter((n) => new Date(n.updatedAt).getTime() >= since)
+      .filter(matchesViewer) ?? [];
 
   const lines: string[] = [];
   lines.push(`# ${t(locale, 'standup.heading')}${mine && viewerLogin ? ` (@${viewerLogin})` : ''}`);
@@ -101,10 +112,6 @@ export async function standup(
   lines.push(`## ${t(locale, 'standup.blockers')}`);
   lines.push(`- ${t(locale, 'standup.blockersHint')}`);
   lines.push('');
-  if (mine) {
-    lines.push(t(locale, 'standup.mineNote'));
-    lines.push('');
-  }
   stdout.write(lines.join('\n'));
   return 0;
 }
