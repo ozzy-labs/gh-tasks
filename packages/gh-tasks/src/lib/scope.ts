@@ -14,14 +14,26 @@ export class ScopeError extends Error {
 export interface DetectScopeOptions {
   argv: readonly string[];
   hasGitRemote?: () => boolean;
+  config?: { defaultScope?: Scope };
 }
 
+/**
+ * Resolve the working scope.
+ *
+ * Order:
+ *   1. `--scope repo|org|user` flag
+ *   2. git remote `origin` exists → `repo`
+ *   3. `~/.config/ozzylabs/gh-tasks.toml` `default_scope` (passed via `config`)
+ *   4. fallback → `user`
+ */
 export function detectScope(opts: DetectScopeOptions): Scope {
   const fromFlag = parseScopeFlag(opts.argv);
   if (fromFlag) return fromFlag;
 
   const detector = opts.hasGitRemote ?? defaultHasGitRemote;
   if (detector()) return 'repo';
+
+  if (opts.config?.defaultScope) return opts.config.defaultScope;
 
   return 'user';
 }

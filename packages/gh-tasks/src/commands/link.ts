@@ -1,4 +1,5 @@
 import { resolveLocale, t } from '../i18n/index.ts';
+import type { AppConfig } from '../lib/config.ts';
 import { createClient, type GraphQLClient, resolveToken } from '../lib/github.ts';
 import {
   GET_PULL_REQUEST_BY_NUMBER,
@@ -15,12 +16,13 @@ export interface LinkCommandDeps {
   getRemoteUrl?: () => string | null;
   stdout?: NodeJS.WritableStream;
   stderr?: NodeJS.WritableStream;
+  config?: AppConfig;
 }
 
 export async function link(argv: readonly string[], deps: LinkCommandDeps = {}): Promise<number> {
   const stdout = deps.stdout ?? process.stdout;
   const stderr = deps.stderr ?? process.stderr;
-  const locale = resolveLocale(argv);
+  const locale = resolveLocale(argv, process.env, deps.config);
 
   const positionals = parsePositionalNumbers(argv);
   if (positionals.length < 2) {
@@ -29,7 +31,7 @@ export async function link(argv: readonly string[], deps: LinkCommandDeps = {}):
   }
   const [pr, task] = positionals as [number, number, ...number[]];
 
-  const scope = detectScope({ argv, hasGitRemote: deps.hasGitRemote });
+  const scope = detectScope({ argv, hasGitRemote: deps.hasGitRemote, config: deps.config });
   if (scope !== 'repo') {
     stderr.write(`${t(locale, 'error.scope.notImplemented')}: --scope ${scope}\n`);
     return 2;

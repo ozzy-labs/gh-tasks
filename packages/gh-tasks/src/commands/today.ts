@@ -1,4 +1,5 @@
 import { resolveLocale, t } from '../i18n/index.ts';
+import type { AppConfig } from '../lib/config.ts';
 import { createClient, type GraphQLClient, resolveToken } from '../lib/github.ts';
 import {
   LIST_REPO_ISSUES,
@@ -16,6 +17,7 @@ export interface TodayCommandDeps {
   stderr?: NodeJS.WritableStream;
   /** Override of `now` for deterministic testing. */
   now?: () => Date;
+  config?: AppConfig;
 }
 
 const FETCH_LIMIT = 100;
@@ -23,9 +25,9 @@ const FETCH_LIMIT = 100;
 export async function today(argv: readonly string[], deps: TodayCommandDeps = {}): Promise<number> {
   const stdout = deps.stdout ?? process.stdout;
   const stderr = deps.stderr ?? process.stderr;
-  const locale = resolveLocale(argv);
+  const locale = resolveLocale(argv, process.env, deps.config);
 
-  const scope = detectScope({ argv, hasGitRemote: deps.hasGitRemote });
+  const scope = detectScope({ argv, hasGitRemote: deps.hasGitRemote, config: deps.config });
   if (scope !== 'repo') {
     stderr.write(`${t(locale, 'error.scope.notImplemented')}: --scope ${scope}\n`);
     return 2;

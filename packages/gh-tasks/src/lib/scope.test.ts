@@ -40,4 +40,26 @@ describe('detectScope', () => {
   it('falls back to user when no git remote', () => {
     expect(detectScope({ argv: [], hasGitRemote: () => false })).toBe('user');
   });
+
+  it('honors config.defaultScope when no flag and no git remote', () => {
+    expect(
+      detectScope({ argv: [], hasGitRemote: () => false, config: { defaultScope: 'org' } })
+    ).toBe('org');
+  });
+
+  it('flag outranks config.defaultScope', () => {
+    expect(
+      detectScope({
+        argv: ['--scope=user'],
+        hasGitRemote: () => false,
+        config: { defaultScope: 'org' },
+      })
+    ).toBe('user');
+  });
+
+  it('git remote outranks config.defaultScope', () => {
+    expect(
+      detectScope({ argv: [], hasGitRemote: () => true, config: { defaultScope: 'user' } })
+    ).toBe('repo');
+  });
 });

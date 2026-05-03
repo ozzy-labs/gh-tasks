@@ -1,4 +1,5 @@
 import { resolveLocale, t } from '../i18n/index.ts';
+import type { AppConfig } from '../lib/config.ts';
 import { createClient, type GraphQLClient, resolveToken } from '../lib/github.ts';
 import {
   GET_VIEWER_LOGIN,
@@ -20,6 +21,7 @@ export interface StandupCommandDeps {
   stdout?: NodeJS.WritableStream;
   stderr?: NodeJS.WritableStream;
   now?: () => Date;
+  config?: AppConfig;
 }
 
 const FETCH_LIMIT = 100;
@@ -30,9 +32,9 @@ export async function standup(
 ): Promise<number> {
   const stdout = deps.stdout ?? process.stdout;
   const stderr = deps.stderr ?? process.stderr;
-  const locale = resolveLocale(argv);
+  const locale = resolveLocale(argv, process.env, deps.config);
 
-  const scope = detectScope({ argv, hasGitRemote: deps.hasGitRemote });
+  const scope = detectScope({ argv, hasGitRemote: deps.hasGitRemote, config: deps.config });
   if (scope !== 'repo') {
     stderr.write(`${t(locale, 'error.scope.notImplemented')}: --scope ${scope}\n`);
     return 2;

@@ -1,4 +1,5 @@
 import { resolveLocale, t } from '../i18n/index.ts';
+import type { AppConfig } from '../lib/config.ts';
 import { createClient, type GraphQLClient, resolveToken } from '../lib/github.ts';
 import {
   CLOSE_ISSUE,
@@ -15,12 +16,13 @@ export interface DoneCommandDeps {
   getRemoteUrl?: () => string | null;
   stdout?: NodeJS.WritableStream;
   stderr?: NodeJS.WritableStream;
+  config?: AppConfig;
 }
 
 export async function done(argv: readonly string[], deps: DoneCommandDeps = {}): Promise<number> {
   const stdout = deps.stdout ?? process.stdout;
   const stderr = deps.stderr ?? process.stderr;
-  const locale = resolveLocale(argv);
+  const locale = resolveLocale(argv, process.env, deps.config);
 
   const id = parseIssueId(argv);
   if (id === null) {
@@ -28,7 +30,7 @@ export async function done(argv: readonly string[], deps: DoneCommandDeps = {}):
     return 2;
   }
 
-  const scope = detectScope({ argv, hasGitRemote: deps.hasGitRemote });
+  const scope = detectScope({ argv, hasGitRemote: deps.hasGitRemote, config: deps.config });
   if (scope !== 'repo') {
     stderr.write(`${t(locale, 'error.scope.notImplemented')}: --scope ${scope}\n`);
     return 2;

@@ -1,4 +1,5 @@
 import { resolveLocale, t } from '../i18n/index.ts';
+import type { AppConfig } from '../lib/config.ts';
 import { createClient, type GraphQLClient, resolveToken } from '../lib/github.ts';
 import {
   LIST_REPO_ISSUES_WITH_LABELS,
@@ -13,6 +14,7 @@ export interface TriageCommandDeps {
   getRemoteUrl?: () => string | null;
   stdout?: NodeJS.WritableStream;
   stderr?: NodeJS.WritableStream;
+  config?: AppConfig;
 }
 
 const DEFAULT_LIMIT = 20;
@@ -24,9 +26,9 @@ export async function triage(
 ): Promise<number> {
   const stdout = deps.stdout ?? process.stdout;
   const stderr = deps.stderr ?? process.stderr;
-  const locale = resolveLocale(argv);
+  const locale = resolveLocale(argv, process.env, deps.config);
 
-  const scope = detectScope({ argv, hasGitRemote: deps.hasGitRemote });
+  const scope = detectScope({ argv, hasGitRemote: deps.hasGitRemote, config: deps.config });
   if (scope !== 'repo') {
     stderr.write(`${t(locale, 'error.scope.notImplemented')}: --scope ${scope}\n`);
     return 2;

@@ -23,15 +23,21 @@ gh alias set task tasks
 
 In automated environments (e.g. GitHub Actions), `GITHUB_TOKEN` works as well.
 
-## Config file (planned for v0.2.0)
+## Config file
 
-`~/.config/ozzylabs/gh-tasks.toml`:
+`~/.config/ozzylabs/gh-tasks.toml` (honors `$XDG_CONFIG_HOME`):
 
 ```toml
+lang = "ja"
 default_scope = "repo"
 ```
 
-Not yet wired in v0.1.0. Use `--scope` explicitly or rely on git-remote auto-detection (see [scope-detection.md](./scope-detection.md)).
+Optional keys:
+
+- `lang`: `ja` / `en`. Default output language (see [locale-detection.md](./locale-detection.md))
+- `default_scope`: `repo` / `org` / `user`. Default scope (see [scope-detection.md](./scope-detection.md))
+
+A missing config file is silently ignored — flags, env vars, and auto-detection still apply. A malformed TOML or invalid value exits with a clear error message.
 
 ## Projects v2 setup
 

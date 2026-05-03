@@ -7,8 +7,8 @@ Every `gh-tasks` command can omit `--scope`. It is resolved in this order:
 1. **`--scope` flag** (explicit)
    - Both `--scope repo` and `--scope=repo` forms supported
    - Same for `--scope org` / `--scope user`
-2. **`~/.config/ozzylabs/gh-tasks.toml` `default_scope`** (planned for v0.2.0; skipped in v0.1.0)
-3. **git remote `origin`** present → `repo`
+2. **git remote `origin`** present → `repo`
+3. **`~/.config/ozzylabs/gh-tasks.toml` `default_scope`** (`repo` / `org` / `user`)
 4. **Fallback** → `user`
 
 ## Invalid values

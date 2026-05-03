@@ -6,12 +6,16 @@ type Messages = Record<string, string>;
 
 const TABLES: Record<Locale, Messages> = { ja, en };
 
+export interface LocaleConfig {
+  lang?: Locale;
+}
+
 /**
  * Resolve the output locale.
  *
  * Order:
  *   1. `--lang ja|en` / `--lang=ja|en` flag (both forms)
- *   2. (planned v0.2.0) `~/.config/ozzylabs/gh-tasks.toml` `lang`
+ *   2. `~/.config/ozzylabs/gh-tasks.toml` `lang` (passed via `config`)
  *   3. `LC_ALL` env (`ja*` → ja)
  *   4. `LANG` env (`ja*` → ja)
  *   5. fallback → en
@@ -20,10 +24,13 @@ const TABLES: Record<Locale, Messages> = { ja, en };
  */
 export function resolveLocale(
   argv: readonly string[] = [],
-  env: NodeJS.ProcessEnv = process.env
+  env: NodeJS.ProcessEnv = process.env,
+  config: LocaleConfig = {}
 ): Locale {
   const flag = parseLangFlag(argv);
   if (flag) return flag;
+
+  if (config.lang) return config.lang;
 
   // LC_ALL outranks LANG per POSIX: when LC_ALL is set, it is the only env
   // consulted (LANG is not used as a further fallback).

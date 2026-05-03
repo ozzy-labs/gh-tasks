@@ -7,7 +7,7 @@
 1. **`--lang` flag** (explicit)
    - Both `--lang ja` and `--lang=ja` forms supported
    - Same for `--lang en` / `--lang=en`
-2. **`~/.config/ozzylabs/gh-tasks.toml` `lang`** (planned for v0.2.0; skipped in v0.1.0)
+2. **`~/.config/ozzylabs/gh-tasks.toml` `lang`** (`ja` / `en`)
 3. **`LC_ALL` env**: starts with `ja` (case-insensitive) → `ja`
 4. **`LANG` env**: starts with `ja` → `ja`
 5. **Fallback** → `en`
@@ -27,7 +27,7 @@ When multiple `--lang` flags appear, the **first occurrence** wins.
 
 ## Implementation
 
-`packages/gh-tasks/src/i18n/index.ts` `resolveLocale(argv, env?)`. The `env` argument is injectable so tests stay deterministic.
+`packages/gh-tasks/src/i18n/index.ts` `resolveLocale(argv, env?, config?)`. Both `env` and `config` are injectable so tests stay deterministic. `config` is loaded from `~/.config/ozzylabs/gh-tasks.toml` via `lib/config.ts`'s `loadConfig()`.
 
 ## SSOT language vs output language
 
