@@ -27,7 +27,21 @@ OzzyLabs Platform Project v2 needs the personal set plus:
 
 Create a Project in the GitHub UI and add the fields above under Settings → Custom fields. The `gh project` CLI works too, but the Iteration field is easier in the UI.
 
-A YAML template (`gh project create --from-yaml`) will land under `packages/templates/` in v0.2.0.
+### YAML templates
+
+The field-set source of truth ships with the repository under
+`packages/templates/projects-v2/`:
+
+| File | Scope |
+| --- | --- |
+| [`packages/templates/projects-v2/user.yaml`](../../packages/templates/projects-v2/user.yaml) | Personal / `user` scope (Status, Iteration) |
+| [`packages/templates/projects-v2/org.yaml`](../../packages/templates/projects-v2/org.yaml) | Team / `org` scope (user set + Repository, Project) |
+
+The GitHub CLI does not currently implement `gh project create --from-yaml`,
+so the templates are applied through a sequence of
+`gh project field-create` calls. See
+[`packages/templates/README.md`](../../packages/templates/README.md) for
+ready-to-run command snippets.
 
 ## Per-scope mapping
 

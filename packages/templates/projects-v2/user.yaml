@@ -1,0 +1,21 @@
+# GitHub Projects v2 field template - user (personal) scope
+#
+# Used by `gh-tasks` user scope (personal Project v2). Defines the minimum
+# fields required for `gh tasks plan` (Iteration) and standup/review
+# (Status) to operate.
+#
+# Iteration field duration / start date are intentionally omitted: the
+# GitHub UI is the authoritative configuration surface for those (the
+# REST/GraphQL API only accepts the iteration list, not the cadence).
+# Configure them under Project settings -> Iteration after creation.
+name: gh-tasks user scope
+description: Personal Project v2 fields for gh-tasks (user scope)
+fields:
+  - name: Status
+    type: single_select
+    options:
+      - Todo
+      - In Progress
+      - Done
+  - name: Iteration
+    type: iteration
