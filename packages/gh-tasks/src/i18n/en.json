@@ -19,6 +19,7 @@
   "add.created.repo": "Issue created",
   "add.created.project": "Draft item added to project",
   "list.empty": "No open issues",
+  "list.empty.project": "No items in this project",
   "today.empty": "No issues updated today",
   "error.done.idRequired": "Issue id is required. Run `gh tasks done <id>`",
   "done.closed": "Issue closed",
