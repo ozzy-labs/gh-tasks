@@ -204,17 +204,18 @@ describe('plan command (dry-run)', () => {
     expect(stdout.written).toMatch(/(候補|no candidates)/i);
   });
 
-  it('returns 2 for non-repo scopes', async () => {
+  it('returns 2 when --scope user is given without a project ref', async () => {
     const stderr = makeStream();
     const code = await plan(['--period=daily', '--dry-run', '--scope=user'], {
       client: makeMockClient([]),
       rest: makeMockRest({ node_id: 'unused', id: 0, number: 0, title: '' }),
       stdout: makeStream(),
       stderr,
+      hasGitRemote: () => false,
       now: () => NOW,
     });
     expect(code).toBe(2);
-    expect(stderr.written).toContain('--scope user');
+    expect(stderr.written.toLowerCase()).toContain('project');
   });
 });
 
@@ -329,5 +330,258 @@ describe('plan command (write mode)', () => {
     expect(updates[0]?.vars.input).toMatchObject({ id: 'I_1' });
     expect(stdout.written).toContain('Skipped');
     expect(stdout.written).toContain('#2');
+  });
+});
+
+interface ProjectMockOptions {
+  orgProjectId?: string | null;
+  userProjectId?: string | null;
+  /** Items returned by ListProjectV2Items. */
+  items?: Array<unknown>;
+  /** Field nodes returned by ListProjectV2Fields. */
+  fields?: Array<unknown>;
+}
+
+function defaultIterationFieldNodes(): Array<unknown> {
+  return [
+    {
+      id: 'F_iter',
+      name: 'Iteration',
+      dataType: 'ITERATION',
+      configuration: {
+        iterations: [
+          // Iteration containing 2026-05-03 (Sun): starts 2026-05-03, 7-day duration.
+          {
+            id: 'iter-current',
+            title: 'Iteration W19',
+            startDate: '2026-05-03',
+            duration: 7,
+          },
+          {
+            id: 'iter-next',
+            title: 'Iteration W20',
+            startDate: '2026-05-10',
+            duration: 7,
+          },
+        ],
+        completedIterations: [],
+      },
+    },
+  ];
+}
+
+function makeProjectMockClient(
+  recorded: RecordedRequest[],
+  opts: ProjectMockOptions = {}
+): GraphQLClient {
+  const orgProjectId = opts.orgProjectId === undefined ? 'PVT_ORG' : opts.orgProjectId;
+  const userProjectId = opts.userProjectId === undefined ? 'PVT_USER' : opts.userProjectId;
+  const items = opts.items ?? [];
+  const fields = opts.fields ?? defaultIterationFieldNodes();
+
+  return {
+    async request<T>(query: string, vars: Record<string, unknown> = {}): Promise<T> {
+      recorded.push({ query, vars });
+      if (query.includes('GetOrgProjectV2')) {
+        return {
+          organization: orgProjectId
+            ? { projectV2: { id: orgProjectId, number: 7, title: 'Org' } }
+            : { projectV2: null },
+        } as T;
+      }
+      if (query.includes('GetUserProjectV2')) {
+        return {
+          user: userProjectId
+            ? { projectV2: { id: userProjectId, number: 3, title: 'User' } }
+            : { projectV2: null },
+        } as T;
+      }
+      if (query.includes('ListProjectV2Fields')) {
+        return { node: { fields: { nodes: fields } } } as T;
+      }
+      if (query.includes('ListProjectV2Items')) {
+        return { node: { items: { nodes: items } } } as T;
+      }
+      if (query.includes('updateProjectV2ItemFieldValue')) {
+        return { updateProjectV2ItemFieldValue: { projectV2Item: { id: 'PVTI_1' } } } as T;
+      }
+      throw new Error(`unexpected query: ${query}`);
+    },
+  };
+}
+
+function projectIssueItem(args: {
+  id: string;
+  number: number;
+  title: string;
+  updatedAt: string;
+  iterationId?: string;
+}): unknown {
+  const fieldValues = args.iterationId
+    ? [
+        {
+          __typename: 'ProjectV2ItemFieldIterationValue',
+          iterationId: args.iterationId,
+          title: 'X',
+          startDate: '2026-05-03',
+          duration: 7,
+          field: { id: 'F_iter', name: 'Iteration' },
+        },
+      ]
+    : [];
+  return {
+    id: args.id,
+    updatedAt: args.updatedAt,
+    content: {
+      __typename: 'Issue',
+      id: `I_${args.number}`,
+      number: args.number,
+      title: args.title,
+      url: `https://github.com/o/n/issues/${args.number}`,
+      state: 'OPEN',
+      updatedAt: args.updatedAt,
+      closedAt: null,
+      author: { login: 'o' },
+      assignees: { nodes: [] },
+    },
+    fieldValues: { nodes: fieldValues },
+  };
+}
+
+describe('plan command (org / user scope)', () => {
+  // 2026-05-03 is Sunday. The default iteration fixture has W19 starting that
+  // day with duration 7 → "current iteration" for `now` and the daily/weekly
+  // fallback target.
+  const NOW = new Date('2026-05-03T12:00:00Z');
+
+  it('previews candidate project items in dry-run without writes', async () => {
+    const recorded: RecordedRequest[] = [];
+    const stdout = makeStream();
+    const stderr = makeStream();
+
+    const code = await plan(
+      ['--period=daily', '--dry-run', '--scope=org', '--project=ozzy-labs/7', '--lang=en'],
+      {
+        client: makeProjectMockClient(recorded, {
+          items: [
+            projectIssueItem({
+              id: 'PVTI_1',
+              number: 11,
+              title: 'in-range',
+              updatedAt: '2026-05-03T08:00:00Z',
+            }),
+            projectIssueItem({
+              id: 'PVTI_2',
+              number: 12,
+              title: 'old',
+              updatedAt: '2026-04-25T08:00:00Z',
+            }),
+          ],
+        }),
+        hasGitRemote: () => false,
+        stdout,
+        stderr,
+        now: () => NOW,
+      }
+    );
+
+    expect(code).toBe(0);
+    // No mutation in dry-run.
+    for (const r of recorded) {
+      expect(r.query).not.toContain('updateProjectV2ItemFieldValue');
+    }
+    expect(stdout.written).toContain('#11');
+    expect(stdout.written).not.toContain('#12');
+    expect(stdout.written).toContain('--dry-run');
+  });
+
+  it('updates the iteration field on every in-range item in write mode', async () => {
+    const recorded: RecordedRequest[] = [];
+    const stdout = makeStream();
+    const stderr = makeStream();
+
+    const code = await plan(
+      ['--period=daily', '--scope=org', '--project=ozzy-labs/7', '--lang=en'],
+      {
+        client: makeProjectMockClient(recorded, {
+          items: [
+            projectIssueItem({
+              id: 'PVTI_1',
+              number: 11,
+              title: 'a',
+              updatedAt: '2026-05-03T08:00:00Z',
+            }),
+            projectIssueItem({
+              id: 'PVTI_2',
+              number: 12,
+              title: 'b',
+              updatedAt: '2026-05-03T09:00:00Z',
+            }),
+            // Already on the target iteration → should be skipped (no mutation).
+            projectIssueItem({
+              id: 'PVTI_3',
+              number: 13,
+              title: 'already-on',
+              updatedAt: '2026-05-03T10:00:00Z',
+              iterationId: 'iter-current',
+            }),
+          ],
+        }),
+        hasGitRemote: () => false,
+        stdout,
+        stderr,
+        now: () => NOW,
+      }
+    );
+
+    expect(code).toBe(0);
+    const updates = recorded.filter((r) => r.query.includes('updateProjectV2ItemFieldValue'));
+    expect(updates).toHaveLength(2);
+    for (const u of updates) {
+      expect(u.vars.input).toMatchObject({
+        projectId: 'PVT_ORG',
+        fieldId: 'F_iter',
+        value: { iterationId: 'iter-current' },
+      });
+    }
+    const updatedItemIds = updates.map((u) => (u.vars.input as { itemId: string }).itemId).sort();
+    expect(updatedItemIds).toEqual(['PVTI_1', 'PVTI_2']);
+    expect(stdout.written).toContain('#11');
+    expect(stdout.written).toContain('#12');
+  });
+
+  it('exits 1 when the project has no Iteration field', async () => {
+    const recorded: RecordedRequest[] = [];
+    const stderr = makeStream();
+    const stdout = makeStream();
+
+    const code = await plan(
+      ['--period=daily', '--scope=org', '--project=ozzy-labs/7', '--lang=en'],
+      {
+        client: makeProjectMockClient(recorded, {
+          // No ITERATION field — only a Status SINGLE_SELECT.
+          fields: [
+            {
+              id: 'F_status',
+              name: 'Status',
+              dataType: 'SINGLE_SELECT',
+              options: [{ id: 'opt-todo', name: 'Todo' }],
+            },
+          ],
+        }),
+        hasGitRemote: () => false,
+        stdout,
+        stderr,
+        now: () => NOW,
+      }
+    );
+
+    expect(code).toBe(1);
+    expect(stderr.written.toLowerCase()).toContain('iteration');
+    // Should NOT issue any mutation or list items.
+    for (const r of recorded) {
+      expect(r.query).not.toContain('updateProjectV2ItemFieldValue');
+      expect(r.query).not.toContain('ListProjectV2Items');
+    }
   });
 });
