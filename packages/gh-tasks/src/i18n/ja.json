@@ -19,6 +19,7 @@
   "add.created.repo": "Issue を作成しました",
   "add.created.project": "Project に draft item を追加しました",
   "list.empty": "オープンの Issue はありません",
+  "list.empty.project": "Project にアイテムがありません",
   "today.empty": "今日更新された Issue はありません",
   "error.done.idRequired": "Issue 番号が必須です。`gh tasks done <id>` の形式で実行してください",
   "done.closed": "Issue を CLOSED にしました",
