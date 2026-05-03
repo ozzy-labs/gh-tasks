@@ -2,12 +2,9 @@ import { resolveLocale, t } from '../i18n/index.ts';
 import type { AppConfig } from '../lib/config.ts';
 import { createClient, type GraphQLClient, resolveToken } from '../lib/github.ts';
 import { ProjectError, type ProjectRef, resolveProjectRef } from '../lib/project.ts';
+import { findStatus, formatItemLineCompact, resolveProjectNodeId } from '../lib/projectItem.ts';
 import {
-  GET_ORG_PROJECT_V2,
-  GET_USER_PROJECT_V2,
   GET_VIEWER_LOGIN,
-  type GetOrgProjectV2Response,
-  type GetUserProjectV2Response,
   type GetViewerLoginResponse,
   LIST_CLOSED_ISSUES,
   LIST_MERGED_PRS,
@@ -17,7 +14,6 @@ import {
   type ListMergedPRsResponse,
   type ListProjectV2ItemsResponse,
   type ListRepoIssuesResponse,
-  type ProjectV2FieldValue,
   type ProjectV2ItemNode,
 } from '../lib/queries/index.ts';
 import { resolveRepo } from '../lib/repo.ts';
@@ -227,14 +223,14 @@ async function standupProject(ctx: StandupProjectContext): Promise<number> {
   if (yesterday.length === 0) {
     lines.push(`- ${t(locale, 'standup.empty.project')}`);
   } else {
-    for (const item of yesterday) lines.push(`- done: ${formatItemLine(item)}`);
+    for (const item of yesterday) lines.push(`- done: ${formatItemLineCompact(item)}`);
   }
   lines.push('');
   lines.push(`## ${t(locale, 'standup.today')}`);
   if (today.length === 0) {
     lines.push(`- ${t(locale, 'standup.empty.project')}`);
   } else {
-    for (const item of today) lines.push(`- in-progress: ${formatItemLine(item)}`);
+    for (const item of today) lines.push(`- in-progress: ${formatItemLineCompact(item)}`);
   }
   lines.push('');
   lines.push(`## ${t(locale, 'standup.blockers')}`);
@@ -262,50 +258,6 @@ function isDone(item: ProjectV2ItemNode): boolean {
   const status = findStatus(item.fieldValues.nodes);
   if (status === null) return false;
   return status.toLowerCase() === 'done';
-}
-
-function findStatus(values: readonly ProjectV2FieldValue[]): string | null {
-  for (const v of values) {
-    if (
-      v.__typename === 'ProjectV2ItemFieldSingleSelectValue' &&
-      v.field.name.toLowerCase() === 'status'
-    ) {
-      return v.name;
-    }
-  }
-  return null;
-}
-
-function formatItemLine(item: ProjectV2ItemNode): string {
-  const c = item.content;
-  if (!c) return '(no content)';
-  if (c.__typename === 'Issue' || c.__typename === 'PullRequest') {
-    const prefix = c.__typename === 'PullRequest' ? 'PR' : '';
-    return `${prefix}#${c.number} ${c.title} (${c.url})`;
-  }
-  return `(draft) ${c.title}`;
-}
-
-interface ResolveProjectNodeIdOptions {
-  client: GraphQLClient;
-  scope: Exclude<Scope, 'repo'>;
-  projectRef: ProjectRef;
-}
-
-async function resolveProjectNodeId(opts: ResolveProjectNodeIdOptions): Promise<string | null> {
-  const { client, scope, projectRef } = opts;
-  if (scope === 'org') {
-    const data = await client.request<GetOrgProjectV2Response>(GET_ORG_PROJECT_V2, {
-      login: projectRef.owner,
-      number: projectRef.number,
-    });
-    return data.organization?.projectV2?.id ?? null;
-  }
-  const data = await client.request<GetUserProjectV2Response>(GET_USER_PROJECT_V2, {
-    login: projectRef.owner,
-    number: projectRef.number,
-  });
-  return data.user?.projectV2?.id ?? null;
 }
 
 function parseSince(argv: readonly string[], now: Date): number {

@@ -2,20 +2,17 @@ import { resolveLocale, t } from '../i18n/index.ts';
 import type { AppConfig } from '../lib/config.ts';
 import { createClient, type GraphQLClient, resolveToken } from '../lib/github.ts';
 import { ProjectError, type ProjectRef, resolveProjectRef } from '../lib/project.ts';
+import { resolveProjectNodeId } from '../lib/projectItem.ts';
 import {
   ADD_PROJECT_V2_DRAFT_ISSUE,
   type AddProjectV2DraftIssueResponse,
   CREATE_ISSUE,
   type CreateIssueResponse,
-  GET_ORG_PROJECT_V2,
   GET_REPOSITORY_ID,
-  GET_USER_PROJECT_V2,
-  type GetOrgProjectV2Response,
   type GetRepositoryIdResponse,
-  type GetUserProjectV2Response,
 } from '../lib/queries/index.ts';
 import { resolveRepo } from '../lib/repo.ts';
-import { detectScope, type Scope } from '../lib/scope.ts';
+import { detectScope } from '../lib/scope.ts';
 
 export interface AddCommandDeps {
   client?: GraphQLClient;
@@ -120,28 +117,6 @@ async function addRepoIssue(ctx: AddRepoIssueContext): Promise<number> {
 
   stdout.write(`${t(locale, 'add.created.repo')}: ${issueData.createIssue.issue.url}\n`);
   return 0;
-}
-
-interface ResolveProjectNodeIdOptions {
-  client: GraphQLClient;
-  scope: Exclude<Scope, 'repo'>;
-  projectRef: ProjectRef;
-}
-
-async function resolveProjectNodeId(opts: ResolveProjectNodeIdOptions): Promise<string | null> {
-  const { client, scope, projectRef } = opts;
-  if (scope === 'org') {
-    const data = await client.request<GetOrgProjectV2Response>(GET_ORG_PROJECT_V2, {
-      login: projectRef.owner,
-      number: projectRef.number,
-    });
-    return data.organization?.projectV2?.id ?? null;
-  }
-  const data = await client.request<GetUserProjectV2Response>(GET_USER_PROJECT_V2, {
-    login: projectRef.owner,
-    number: projectRef.number,
-  });
-  return data.user?.projectV2?.id ?? null;
 }
 
 // Flags that take a separate-arg value (`--flag value` form). Required so

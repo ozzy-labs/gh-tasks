@@ -9,12 +9,9 @@ import {
 } from '../lib/github.ts';
 import { type Period, parsePeriodFlag, rangeOf, suggestMilestoneTitle } from '../lib/period.ts';
 import { ProjectError, type ProjectRef, resolveProjectRef } from '../lib/project.ts';
+import { resolveProjectNodeId } from '../lib/projectItem.ts';
 import {
   createMilestone,
-  GET_ORG_PROJECT_V2,
-  GET_USER_PROJECT_V2,
-  type GetOrgProjectV2Response,
-  type GetUserProjectV2Response,
   LIST_MILESTONES,
   LIST_PROJECT_V2_FIELDS,
   LIST_PROJECT_V2_ITEMS,
@@ -435,26 +432,4 @@ function describeItem(item: ProjectV2ItemNode): string {
     return `${prefix}#${c.number}`;
   }
   return item.id;
-}
-
-interface ResolveProjectNodeIdOptions {
-  client: GraphQLClient;
-  scope: Exclude<Scope, 'repo'>;
-  projectRef: ProjectRef;
-}
-
-async function resolveProjectNodeId(opts: ResolveProjectNodeIdOptions): Promise<string | null> {
-  const { client, scope, projectRef } = opts;
-  if (scope === 'org') {
-    const data = await client.request<GetOrgProjectV2Response>(GET_ORG_PROJECT_V2, {
-      login: projectRef.owner,
-      number: projectRef.number,
-    });
-    return data.organization?.projectV2?.id ?? null;
-  }
-  const data = await client.request<GetUserProjectV2Response>(GET_USER_PROJECT_V2, {
-    login: projectRef.owner,
-    number: projectRef.number,
-  });
-  return data.user?.projectV2?.id ?? null;
 }

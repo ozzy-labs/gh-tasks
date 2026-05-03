@@ -3,12 +3,9 @@ import type { AppConfig } from '../lib/config.ts';
 import { createClient, type GraphQLClient, resolveToken } from '../lib/github.ts';
 import { type DateRange, type Period, parsePeriodFlag, rangeOf } from '../lib/period.ts';
 import { ProjectError, type ProjectRef, resolveProjectRef } from '../lib/project.ts';
+import { findStatus, formatItemLineCompact, resolveProjectNodeId } from '../lib/projectItem.ts';
 import {
   type ClosedIssueNode,
-  GET_ORG_PROJECT_V2,
-  GET_USER_PROJECT_V2,
-  type GetOrgProjectV2Response,
-  type GetUserProjectV2Response,
   LIST_CLOSED_ISSUES,
   LIST_MERGED_PRS,
   LIST_PROJECT_V2_ITEMS,
@@ -16,7 +13,6 @@ import {
   type ListMergedPRsResponse,
   type ListProjectV2ItemsResponse,
   type MergedPRNode,
-  type ProjectV2FieldValue,
   type ProjectV2ItemNode,
 } from '../lib/queries/index.ts';
 import { resolveRepo } from '../lib/repo.ts';
@@ -172,18 +168,6 @@ function isDone(item: ProjectV2ItemNode): boolean {
   return status.toLowerCase() === 'done';
 }
 
-function findStatus(values: readonly ProjectV2FieldValue[]): string | null {
-  for (const v of values) {
-    if (
-      v.__typename === 'ProjectV2ItemFieldSingleSelectValue' &&
-      v.field.name.toLowerCase() === 'status'
-    ) {
-      return v.name;
-    }
-  }
-  return null;
-}
-
 interface RenderRepoInput {
   period: Period;
   range: DateRange;
@@ -241,41 +225,9 @@ function renderProjectMarkdown(input: RenderProjectInput): string {
     lines.push(`- ${t(locale, 'review.empty.project')}`);
   } else {
     for (const item of completed) {
-      lines.push(`- ${formatItemLine(item)}`);
+      lines.push(`- ${formatItemLineCompact(item)}`);
     }
   }
   lines.push('');
   return lines.join('\n');
-}
-
-function formatItemLine(item: ProjectV2ItemNode): string {
-  const c = item.content;
-  if (!c) return '(no content)';
-  if (c.__typename === 'Issue' || c.__typename === 'PullRequest') {
-    const prefix = c.__typename === 'PullRequest' ? 'PR' : '';
-    return `${prefix}#${c.number} ${c.title} (${c.url})`;
-  }
-  return `(draft) ${c.title}`;
-}
-
-interface ResolveProjectNodeIdOptions {
-  client: GraphQLClient;
-  scope: Exclude<Scope, 'repo'>;
-  projectRef: ProjectRef;
-}
-
-async function resolveProjectNodeId(opts: ResolveProjectNodeIdOptions): Promise<string | null> {
-  const { client, scope, projectRef } = opts;
-  if (scope === 'org') {
-    const data = await client.request<GetOrgProjectV2Response>(GET_ORG_PROJECT_V2, {
-      login: projectRef.owner,
-      number: projectRef.number,
-    });
-    return data.organization?.projectV2?.id ?? null;
-  }
-  const data = await client.request<GetUserProjectV2Response>(GET_USER_PROJECT_V2, {
-    login: projectRef.owner,
-    number: projectRef.number,
-  });
-  return data.user?.projectV2?.id ?? null;
 }

@@ -2,17 +2,12 @@ import { resolveLocale, t } from '../i18n/index.ts';
 import type { AppConfig } from '../lib/config.ts';
 import { createClient, type GraphQLClient, resolveToken } from '../lib/github.ts';
 import { ProjectError, type ProjectRef, resolveProjectRef } from '../lib/project.ts';
+import { formatItem, resolveProjectNodeId } from '../lib/projectItem.ts';
 import {
-  GET_ORG_PROJECT_V2,
-  GET_USER_PROJECT_V2,
-  type GetOrgProjectV2Response,
-  type GetUserProjectV2Response,
   LIST_PROJECT_V2_ITEMS,
   LIST_REPO_ISSUES,
   type ListProjectV2ItemsResponse,
   type ListRepoIssuesResponse,
-  type ProjectV2FieldValue,
-  type ProjectV2ItemNode,
   type RepoIssueNode,
 } from '../lib/queries/index.ts';
 import { resolveRepo } from '../lib/repo.ts';
@@ -131,7 +126,7 @@ async function todayProject(ctx: TodayProjectContext): Promise<number> {
   }
 
   const { start, end } = todayRange(now);
-  const items = data.node.items.nodes.filter((item: ProjectV2ItemNode) => {
+  const items = data.node.items.nodes.filter((item) => {
     const updated = new Date(item.updatedAt).getTime();
     return updated >= start && updated < end;
   });
@@ -145,55 +140,6 @@ async function todayProject(ctx: TodayProjectContext): Promise<number> {
     stdout.write(formatItem(item));
   }
   return 0;
-}
-
-function formatItem(item: ProjectV2ItemNode): string {
-  const status = findStatus(item.fieldValues.nodes);
-  const statusSuffix = status ? `  [${status}]` : '';
-  const content = item.content;
-  if (!content) {
-    return `(no content)${statusSuffix}\n`;
-  }
-  if (content.__typename === 'Issue' || content.__typename === 'PullRequest') {
-    const prefix = content.__typename === 'PullRequest' ? 'PR' : '';
-    return `${prefix}#${content.number}  ${content.title}${statusSuffix}\n  ${content.url}\n`;
-  }
-  // DraftIssue: no number/url.
-  return `(draft)  ${content.title}${statusSuffix}\n`;
-}
-
-function findStatus(values: readonly ProjectV2FieldValue[]): string | null {
-  for (const v of values) {
-    if (
-      v.__typename === 'ProjectV2ItemFieldSingleSelectValue' &&
-      v.field.name.toLowerCase() === 'status'
-    ) {
-      return v.name;
-    }
-  }
-  return null;
-}
-
-interface ResolveProjectNodeIdOptions {
-  client: GraphQLClient;
-  scope: Exclude<Scope, 'repo'>;
-  projectRef: ProjectRef;
-}
-
-async function resolveProjectNodeId(opts: ResolveProjectNodeIdOptions): Promise<string | null> {
-  const { client, scope, projectRef } = opts;
-  if (scope === 'org') {
-    const data = await client.request<GetOrgProjectV2Response>(GET_ORG_PROJECT_V2, {
-      login: projectRef.owner,
-      number: projectRef.number,
-    });
-    return data.organization?.projectV2?.id ?? null;
-  }
-  const data = await client.request<GetUserProjectV2Response>(GET_USER_PROJECT_V2, {
-    login: projectRef.owner,
-    number: projectRef.number,
-  });
-  return data.user?.projectV2?.id ?? null;
 }
 
 /**
