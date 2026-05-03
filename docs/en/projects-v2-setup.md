@@ -35,11 +35,18 @@ The field-set source of truth ships with the repository under
 | [`packages/templates/projects-v2/user.yaml`](../../packages/templates/projects-v2/user.yaml) | Personal / `user` scope (Status, Iteration) |
 | [`packages/templates/projects-v2/org.yaml`](../../packages/templates/projects-v2/org.yaml) | Team / `org` scope (user set + Repository, Project) |
 
-The GitHub CLI does not currently implement `gh project create --from-yaml`,
-so the templates are applied through a sequence of
-`gh project field-create` calls. See
-[`packages/templates/README.md`](../../packages/templates/README.md) for
-ready-to-run command snippets.
+`gh tasks projects init` consumes the YAML directly and creates the
+Project + custom fields in one shot:
+
+```bash
+gh tasks projects init --template user --title "gh-tasks personal"
+gh tasks projects init --template org --owner <org> --title "team board"
+gh tasks projects init packages/templates/projects-v2/user.yaml --title "from path"
+```
+
+Use `--dry-run` to preview the field set. The hand-rolled
+`gh project field-create` fallback is documented in
+[`packages/templates/README.md`](../../packages/templates/README.md).
 
 ## Per-scope mapping
 

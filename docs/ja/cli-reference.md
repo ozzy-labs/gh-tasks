@@ -106,6 +106,24 @@ gh tasks standup [--mine] [--since <iso8601>] [--scope ...] [--repo ...] [--proj
 - `--since` のデフォルトは 24h 前
 - `--mine` は viewer が author または assignee のアイテムに絞る。DraftIssue は author/assignee を持たず `--mine` 下では除外される
 
+### `gh tasks projects init` ✅
+
+Projects v2 ボードを YAML テンプレートから作成し、custom field を一括追加する。
+
+```bash
+gh tasks projects init [<yaml-path> | --template user|org] --title '<project-title>' [--owner <login>|@me] [--dry-run]
+```
+
+- 位置引数: YAML パス(`packages/templates/projects-v2/{user,org}.yaml` 形式)
+- `--template user|org`: バンドル済み YAML を使う(位置引数と排他)
+- `--owner <login>`: project owner(user / org login、デフォルト `@me`)
+- `--title <string>`: 必須
+- `--dry-run`: 作成予定の field 一覧のみを表示し、mutation を発行しない
+- field type: `text` / `number` / `date` / `single_select` / `iteration` / `repository`(`repository` は built-in のため自動でスキップ)
+- `single_select` の options は `color: GRAY` 固定で作成(UI で色変更可)
+
+戻り値: 作成した Project の URL を stdout に出力、exit 0。
+
 ### `gh tasks link <pr> <task>` ✅
 
 PR と Issue / Project アイテムの紐付け。

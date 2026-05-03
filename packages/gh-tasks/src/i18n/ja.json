@@ -12,6 +12,7 @@
   "help.cmd.review": "振り返り",
   "help.cmd.standup": "活動サマリ",
   "help.cmd.link": "PR と Issue / Project 項目の紐付け",
+  "help.cmd.projects": "Projects v2 のセットアップ(init 等)",
   "error.unknownCommand": "不明なコマンド",
   "error.notImplemented": "未実装",
   "error.auth.tokenMissing": "GH_TOKEN / GITHUB_TOKEN が未設定。`gh auth login` を実行してください。",
@@ -73,5 +74,16 @@
   "standup.blockers": "ブロッカー",
   "standup.none": "(なし)",
   "standup.blockersHint": "(現在ブロッカーは検出していません — 手動で記入してください)",
-  "standup.empty.project": "(期間内に該当する Project アイテムはありません)"
+  "standup.empty.project": "(期間内に該当する Project アイテムはありません)",
+  "error.projects.subcommandRequired": "サブコマンドが必要です。例: `gh tasks projects init --template user --title '...'`",
+  "error.projects.unknownSubcommand": "不明なサブコマンド: '{sub}' (有効値: init)",
+  "error.projectsInit.titleRequired": "--title が必須です。例: `gh tasks projects init --template user --title 'my todo'`",
+  "error.projectsInit.templateRequired": "--template <user|org> または YAML パスのいずれかが必要です",
+  "error.projectsInit.templateConflict": "--template と YAML パスは同時指定できません",
+  "error.projectsInit.yamlRead": "YAML 読み込みに失敗しました: '{path}' ({reason})",
+  "error.projectsInit.ownerNotFound": "owner が解決できません: '{owner}'",
+  "projectsInit.dryRunHeader": "(--dry-run) Project '{title}' を owner '{owner}' に作成し、以下の field を追加します:",
+  "projectsInit.created": "Project を作成しました: {url}",
+  "projectsInit.fieldCreated": "  field 追加: {name} ({dataType})",
+  "projectsInit.fieldSkipped": "  field スキップ(既に存在): {name}"
 }
