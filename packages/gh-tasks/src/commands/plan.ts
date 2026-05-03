@@ -7,7 +7,13 @@ import {
   type RestClient,
   resolveToken,
 } from '../lib/github.ts';
-import { type Period, parsePeriodFlag, rangeOf, suggestMilestoneTitle } from '../lib/period.ts';
+import {
+  formatLocalIsoDate,
+  type Period,
+  parsePeriodFlag,
+  rangeOf,
+  suggestMilestoneTitle,
+} from '../lib/period.ts';
 import { ProjectError, type ProjectRef, resolveProjectRef } from '../lib/project.ts';
 import { resolveProjectNodeId } from '../lib/projectItem.ts';
 import {
@@ -120,9 +126,7 @@ async function planRepo(ctx: PlanRepoContext): Promise<number> {
 
   const title = suggestMilestoneTitle(period, now);
   stdout.write(`${t(locale, 'plan.proposed')}: ${title}\n`);
-  stdout.write(
-    `  ${range.start.toISOString().slice(0, 10)} → ${range.end.toISOString().slice(0, 10)}\n\n`
-  );
+  stdout.write(`  ${formatLocalIsoDate(range.start)} → ${formatLocalIsoDate(range.end)}\n\n`);
 
   if (inRange.length === 0) {
     stdout.write(`${t(locale, 'plan.empty')}\n`);
@@ -251,9 +255,7 @@ async function planProject(ctx: PlanProjectContext): Promise<number> {
 
   // Header: proposed iteration + period range.
   stdout.write(`${t(locale, 'plan.proposed.project')}: ${resolved.iteration.title}\n`);
-  stdout.write(
-    `  ${range.start.toISOString().slice(0, 10)} → ${range.end.toISOString().slice(0, 10)}\n`
-  );
+  stdout.write(`  ${formatLocalIsoDate(range.start)} → ${formatLocalIsoDate(range.end)}\n`);
   if (resolved.matched) {
     stdout.write(`  ${t(locale, 'plan.iterationMatched.project')}: ${targetTitle}\n\n`);
   } else {
