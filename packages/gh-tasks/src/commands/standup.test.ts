@@ -270,16 +270,318 @@ describe('standup command', () => {
     expect(stdout.written).not.toMatch(/v0\.2\.0/);
     expect(stdout.written).not.toMatch(/lands in/);
   });
+});
 
-  it('returns 2 for non-repo scopes', async () => {
+interface RecordedRequest {
+  query: string;
+  vars: Record<string, unknown>;
+}
+
+interface ProjectMockOptions {
+  orgProjectId?: string | null;
+  userProjectId?: string | null;
+  items?: Array<unknown>;
+  viewerLogin?: string;
+  nodeMissing?: boolean;
+}
+
+/**
+ * Build a Projects v2 item fixture with a Status single-select value and an
+ * Issue / PullRequest content node carrying author + assignees. Mirrors the
+ * shape returned by `LIST_PROJECT_V2_ITEMS`.
+ */
+function projectIssueItem(args: {
+  id: string;
+  number: number;
+  title: string;
+  updatedAt: string;
+  status?: string | null;
+  author?: string;
+  assignees?: string[];
+  contentType?: 'Issue' | 'PullRequest' | 'DraftIssue';
+}): unknown {
+  const fieldValues = args.status
+    ? [
+        {
+          __typename: 'ProjectV2ItemFieldSingleSelectValue',
+          optionId: `opt-${args.status.toLowerCase()}`,
+          name: args.status,
+          field: { id: 'F_status', name: 'Status' },
+        },
+      ]
+    : [];
+  const typename = args.contentType ?? 'Issue';
+  if (typename === 'DraftIssue') {
+    return {
+      id: args.id,
+      updatedAt: args.updatedAt,
+      content: {
+        __typename: 'DraftIssue',
+        id: `D_${args.number}`,
+        title: args.title,
+        body: null,
+      },
+      fieldValues: { nodes: fieldValues },
+    };
+  }
+  const baseContent = {
+    __typename: typename,
+    id: `I_${args.number}`,
+    number: args.number,
+    title: args.title,
+    url:
+      typename === 'PullRequest'
+        ? `https://github.com/o/n/pull/${args.number}`
+        : `https://github.com/o/n/issues/${args.number}`,
+    state: typename === 'PullRequest' ? 'OPEN' : 'OPEN',
+    updatedAt: args.updatedAt,
+    author: { login: args.author ?? 'someone' },
+    assignees: { nodes: (args.assignees ?? []).map((login) => ({ login })) },
+  };
+  const content =
+    typename === 'PullRequest'
+      ? { ...baseContent, mergedAt: null }
+      : { ...baseContent, closedAt: null };
+  return {
+    id: args.id,
+    updatedAt: args.updatedAt,
+    content,
+    fieldValues: { nodes: fieldValues },
+  };
+}
+
+function makeProjectMockClient(
+  recorded: RecordedRequest[],
+  opts: ProjectMockOptions = {}
+): GraphQLClient {
+  const orgProjectId = opts.orgProjectId === undefined ? 'PVT_ORG' : opts.orgProjectId;
+  const userProjectId = opts.userProjectId === undefined ? 'PVT_USER' : opts.userProjectId;
+  const items = opts.items ?? [];
+
+  return {
+    async request<T>(query: string, vars: Record<string, unknown> = {}): Promise<T> {
+      recorded.push({ query, vars });
+      if (query.includes('GetViewerLogin')) {
+        return { viewer: { login: opts.viewerLogin ?? 'me' } } as T;
+      }
+      if (query.includes('GetOrgProjectV2')) {
+        return {
+          organization: orgProjectId
+            ? { projectV2: { id: orgProjectId, number: 7, title: 'Org' } }
+            : { projectV2: null },
+        } as T;
+      }
+      if (query.includes('GetUserProjectV2')) {
+        return {
+          user: userProjectId
+            ? { projectV2: { id: userProjectId, number: 3, title: 'User' } }
+            : { projectV2: null },
+        } as T;
+      }
+      if (query.includes('ListProjectV2Items')) {
+        if (opts.nodeMissing) {
+          return { node: null } as T;
+        }
+        return { node: { items: { nodes: items } } } as T;
+      }
+      throw new Error(`unexpected query: ${query}`);
+    },
+  };
+}
+
+describe('standup command (org / user scope)', () => {
+  // 24h ago = 2026-05-02T12:00:00Z
+  const NOW = new Date('2026-05-03T12:00:00Z');
+
+  it('splits in-range project items by Status (Done → Yesterday, others → Today)', async () => {
+    const recorded: RecordedRequest[] = [];
+    const stdout = makeStream();
     const stderr = makeStream();
-    const code = await standup(['--scope=user'], {
-      client: makeMockClient({}),
+
+    const code = await standup(['--scope=org', '--project=ozzy-labs/7', '--lang=en'], {
+      client: makeProjectMockClient(recorded, {
+        items: [
+          projectIssueItem({
+            id: 'PVTI_done',
+            number: 11,
+            title: 'wrapped-up',
+            updatedAt: '2026-05-03T08:00:00Z',
+            status: 'Done',
+          }),
+          projectIssueItem({
+            id: 'PVTI_inprog',
+            number: 12,
+            title: 'still-going',
+            updatedAt: '2026-05-03T09:00:00Z',
+            status: 'In Progress',
+          }),
+          projectIssueItem({
+            id: 'PVTI_unset',
+            number: 13,
+            title: 'no-status',
+            updatedAt: '2026-05-03T10:00:00Z',
+            status: null,
+          }),
+          // Out-of-range → excluded entirely.
+          projectIssueItem({
+            id: 'PVTI_old',
+            number: 14,
+            title: 'last-week',
+            updatedAt: '2026-04-30T08:00:00Z',
+            status: 'Done',
+          }),
+        ],
+      }),
+      hasGitRemote: () => false,
+      stdout,
+      stderr,
+      now: () => NOW,
+    });
+
+    expect(code).toBe(0);
+    expect(stderr.written).toBe('');
+    expect(recorded[0]?.query).toContain('GetOrgProjectV2');
+    expect(recorded[0]?.vars).toEqual({ login: 'ozzy-labs', number: 7 });
+    expect(recorded[1]?.query).toContain('ListProjectV2Items');
+    expect(recorded[1]?.vars).toEqual({ projectId: 'PVT_ORG', first: 100 });
+
+    const out = stdout.written;
+    expect(out).toContain('Yesterday');
+    expect(out).toContain('Today');
+    expect(out).toContain('Blockers');
+    // Yesterday section: Done item present.
+    expect(out).toContain('done: #11 wrapped-up');
+    // Today section: non-Done + unset both shown.
+    expect(out).toContain('in-progress: #12 still-going');
+    expect(out).toContain('in-progress: #13 no-status');
+    // Out-of-range item filtered out.
+    expect(out).not.toContain('#14');
+    expect(out).not.toContain('last-week');
+  });
+
+  it('--mine filters items to viewer author / assignee and excludes DraftIssues', async () => {
+    const recorded: RecordedRequest[] = [];
+    const stdout = makeStream();
+
+    const code = await standup(['--scope=user', '--project=ozzy3/3', '--mine', '--lang=en'], {
+      client: makeProjectMockClient(recorded, {
+        viewerLogin: 'me',
+        items: [
+          // Authored by viewer → kept.
+          projectIssueItem({
+            id: 'PVTI_mine_done',
+            number: 21,
+            title: 'mine-done',
+            updatedAt: '2026-05-03T08:00:00Z',
+            status: 'Done',
+            author: 'me',
+          }),
+          // Assigned to viewer → kept.
+          projectIssueItem({
+            id: 'PVTI_mine_assigned',
+            number: 22,
+            title: 'mine-assigned',
+            updatedAt: '2026-05-03T08:00:00Z',
+            status: 'In Progress',
+            author: 'other',
+            assignees: ['me'],
+          }),
+          // Author / assignee both not viewer → excluded.
+          projectIssueItem({
+            id: 'PVTI_theirs',
+            number: 23,
+            title: 'theirs',
+            updatedAt: '2026-05-03T08:00:00Z',
+            status: 'In Progress',
+            author: 'other',
+          }),
+          // DraftIssue: no author/assignee → excluded under --mine.
+          projectIssueItem({
+            id: 'PVTI_draft',
+            number: 24,
+            title: 'draft-item',
+            updatedAt: '2026-05-03T08:00:00Z',
+            status: 'In Progress',
+            contentType: 'DraftIssue',
+          }),
+        ],
+      }),
+      hasGitRemote: () => false,
+      stdout,
+      stderr: makeStream(),
+      now: () => NOW,
+    });
+
+    expect(code).toBe(0);
+    const out = stdout.written;
+    expect(out).toContain('@me');
+    expect(out).toContain('#21 mine-done');
+    expect(out).toContain('#22 mine-assigned');
+    expect(out).not.toContain('#23');
+    expect(out).not.toContain('theirs');
+    expect(out).not.toContain('draft-item');
+    expect(recorded[0]?.query).toContain('GetViewerLogin');
+    expect(recorded[1]?.query).toContain('GetUserProjectV2');
+    expect(recorded[1]?.vars).toEqual({ login: 'ozzy3', number: 3 });
+  });
+
+  it('returns 2 when --scope org is given without a project ref', async () => {
+    const recorded: RecordedRequest[] = [];
+    const stderr = makeStream();
+    const code = await standup(['--scope=org'], {
+      client: makeProjectMockClient(recorded),
+      hasGitRemote: () => false,
       stdout: makeStream(),
       stderr,
       now: () => NOW,
     });
+
     expect(code).toBe(2);
-    expect(stderr.written).toContain('--scope user');
+    expect(stderr.written.toLowerCase()).toContain('project');
+    // Project ref unresolvable → must not call GraphQL.
+    expect(recorded).toHaveLength(0);
+  });
+
+  it('returns 1 when the org project cannot be resolved', async () => {
+    const recorded: RecordedRequest[] = [];
+    const stderr = makeStream();
+    const code = await standup(['--scope=org', '--project=ozzy-labs/999', '--lang=en'], {
+      client: makeProjectMockClient(recorded, { orgProjectId: null }),
+      hasGitRemote: () => false,
+      stdout: makeStream(),
+      stderr,
+      now: () => NOW,
+    });
+
+    expect(code).toBe(1);
+    expect(stderr.written).toContain('project not found');
+  });
+
+  it('honors --since for org scope', async () => {
+    const stdout = makeStream();
+    const code = await standup(
+      ['--scope=org', '--project=ozzy-labs/7', '--since=2026-04-01T00:00:00Z', '--lang=en'],
+      {
+        client: makeProjectMockClient([], {
+          items: [
+            // Without --since this would be out of the default 24h window.
+            projectIssueItem({
+              id: 'PVTI_april',
+              number: 31,
+              title: 'april-done',
+              updatedAt: '2026-04-15T08:00:00Z',
+              status: 'Done',
+            }),
+          ],
+        }),
+        hasGitRemote: () => false,
+        stdout,
+        stderr: makeStream(),
+        now: () => NOW,
+      }
+    );
+
+    expect(code).toBe(0);
+    expect(stdout.written).toContain('done: #31 april-done');
   });
 });

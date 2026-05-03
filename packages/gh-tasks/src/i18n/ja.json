@@ -66,5 +66,6 @@
   "standup.today": "Today",
   "standup.blockers": "Blockers",
   "standup.none": "(なし)",
-  "standup.blockersHint": "(現在ブロッカーは検出していません — 手動で記入してください)"
+  "standup.blockersHint": "(現在ブロッカーは検出していません — 手動で記入してください)",
+  "standup.empty.project": "(期間内に該当する Project アイテムはありません)"
 }
