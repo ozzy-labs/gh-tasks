@@ -32,6 +32,7 @@
   "error.link.argsRequired": "PR 番号と Issue 番号の 2 つが必要です。`gh tasks link <pr> <task>` の形式で実行してください",
   "link.added": "PR body に Closes リンクを追加しました",
   "link.alreadyLinked": "既にリンク済",
+  "link.added.project": "PR と task を Project にリンクしました",
   "triage.empty": "未トリアージの Issue はありません",
   "triage.found": "未トリアージの Issue",
   "plan.proposed": "提案 Milestone",
