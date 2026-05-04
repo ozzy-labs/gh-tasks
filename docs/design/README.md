@@ -25,4 +25,7 @@
 
 ## Index
 
-(現状エントリなし — 必要に応じて追加する)
+| File | 用途 |
+| --- | --- |
+| [architecture.md](./architecture.md) | 全体俯瞰・モジュール境界・ディレクトリ構成・配布モデル |
+| [adapter-pipeline.md](./adapter-pipeline.md) | skill SSOT → dist/{adapter}/ → consumer の処理連鎖、4 adapter の出力仕様 |
