@@ -6,6 +6,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -82,6 +84,11 @@ func runBuildSkills(c *cobra.Command, deps Deps) error {
 	}
 
 	all := adapters.All()
+
+	if checkDiff {
+		return runCheckDiff(c, distRoot, all, loaded)
+	}
+
 	for _, adapter := range all {
 		adapterRoot := filepath.Join(distRoot, adapter.ID())
 		if err := os.RemoveAll(adapterRoot); err != nil {
@@ -144,13 +151,108 @@ func runBuildSkills(c *cobra.Command, deps Deps) error {
 		fmt.Fprintf(out, "  - %s\n", s.Name)
 	}
 
-	if checkDiff {
-		// --check-diff is currently informational. CI dogfooding will compare
-		// dist/ against the prior committed state via a follow-up integration
-		// once the skill SSOT is fully maintained from the Go pipeline.
-		fmt.Fprintln(out, "(check-diff mode requested; no diff implementation yet)")
-	}
 	return nil
+}
+
+// runCheckDiff compares the in-memory output for each adapter against the
+// existing files under <distRoot>/<adapter>/. It does not modify the working
+// tree. If any difference is found it prints "<file>: <reason>" plus a
+// first-line diff to stderr and returns ErrSilent so cobra prints nothing
+// extra. On success it prints a single OK line to stdout.
+func runCheckDiff(c *cobra.Command, distRoot string, all []adapters.Adapter, loaded []skills.Skill) error {
+	out := c.OutOrStdout()
+	stderr := c.ErrOrStderr()
+	totalDiffs := 0
+	for _, adapter := range all {
+		adapterRoot := filepath.Join(distRoot, adapter.ID())
+		generated := adapter.Generate(loaded)
+		expected := make(map[string]string, len(generated))
+		for _, g := range generated {
+			expected[filepath.Clean(g.RelativePath)] = g.Content
+		}
+
+		// Walk on-disk files under adapterRoot.
+		actual := map[string]string{}
+		if _, statErr := os.Stat(adapterRoot); !errors.Is(statErr, os.ErrNotExist) {
+			walkErr := filepath.Walk(adapterRoot, func(p string, info os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+				if info.IsDir() {
+					return nil
+				}
+				rel, err := filepath.Rel(adapterRoot, p)
+				if err != nil {
+					return err
+				}
+				body, err := os.ReadFile(p) //nolint:gosec // p comes from filepath.Walk under controlled distRoot
+				if err != nil {
+					return err
+				}
+				actual[filepath.Clean(rel)] = string(body)
+				return nil
+			})
+			if walkErr != nil {
+				return fmt.Errorf("walk %s: %w", adapterRoot, walkErr)
+			}
+		}
+
+		// Collect all keys.
+		keys := map[string]struct{}{}
+		for k := range expected {
+			keys[k] = struct{}{}
+		}
+		for k := range actual {
+			keys[k] = struct{}{}
+		}
+		sortedKeys := make([]string, 0, len(keys))
+		for k := range keys {
+			sortedKeys = append(sortedKeys, k)
+		}
+		sort.Strings(sortedKeys)
+
+		for _, k := range sortedKeys {
+			full := filepath.Join(adapterRoot, k)
+			want, hasWant := expected[k]
+			got, hasGot := actual[k]
+			switch {
+			case hasWant && !hasGot:
+				totalDiffs++
+				fmt.Fprintf(stderr, "%s: missing on disk; expected from SSOT\n", full)
+				fmt.Fprintf(stderr, "  + %s\n", firstLine(want))
+			case !hasWant && hasGot:
+				totalDiffs++
+				fmt.Fprintf(stderr, "%s: present on disk but not generated from SSOT\n", full)
+				fmt.Fprintf(stderr, "  - %s\n", firstLine(got))
+			case want != got:
+				totalDiffs++
+				fmt.Fprintf(stderr, "%s: content differs\n", full)
+				fmt.Fprintf(stderr, "  - %s\n", firstLine(got))
+				fmt.Fprintf(stderr, "  + %s\n", firstLine(want))
+			}
+		}
+	}
+
+	if totalDiffs > 0 {
+		fmt.Fprintf(stderr, "FAIL: %d file(s) differ between dist/ and source SSOT; run `gh tasks build-skills` and commit\n", totalDiffs)
+		return ErrSilent
+	}
+	fmt.Fprintln(out, "OK: dist/ matches source SSOT")
+	return nil
+}
+
+// firstLine returns the first non-empty line of s, with a trailing marker if
+// the content has more lines.
+func firstLine(s string) string {
+	idx := strings.IndexByte(s, '\n')
+	if idx < 0 {
+		return s
+	}
+	head := s[:idx]
+	if idx < len(s)-1 {
+		return head + " ..."
+	}
+	return head
 }
 
 // copyDir mirrors src into dst preserving relative paths. All files are written
