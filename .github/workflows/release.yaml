@@ -5,12 +5,14 @@ on:
     branches: [main]
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
@@ -24,6 +26,10 @@ jobs:
   build-binaries:
     needs: release-please
     if: needs.release-please.outputs.release_created == 'true'
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
     strategy:
       matrix:
         include:
@@ -50,7 +56,32 @@ jobs:
           bun-version: latest
       - run: bun build packages/gh-tasks/src/cli.ts --compile --target=${{ matrix.target }} --outfile=${{ matrix.name }}
         shell: bash
+      - name: Generate SLSA build provenance attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: ${{ matrix.name }}
       - run: gh release upload ${{ needs.release-please.outputs.tag_name }} ${{ matrix.name }}
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  checksums:
+    needs: [release-please, build-binaries]
+    if: needs.release-please.outputs.release_created == 'true'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download ${{ needs.release-please.outputs.tag_name }} \
+            --pattern 'gh-tasks-*' \
+            --repo ${{ github.repository }}
+      - name: Compute SHA256 checksums
+        run: sha256sum gh-tasks-* > checksums.txt
+      - name: Upload checksums to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ needs.release-please.outputs.tag_name }} checksums.txt
