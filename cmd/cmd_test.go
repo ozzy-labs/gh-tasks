@@ -16,7 +16,10 @@ import (
 )
 
 // fakeGraphQL implements github.GraphQLClient for tests. Each call is matched
-// against responses keyed by query substring, in registration order.
+// against responses keyed by query substring, in registration order. To
+// disambiguate prefix-overlapping operations (e.g. ListRepoIssues vs
+// ListRepoIssuesWithLabels), matchSubstring values use the
+// `query <Name>(` form.
 type fakeGraphQL struct {
 	responses []fakeResponse
 	idx       int
@@ -78,7 +81,7 @@ func TestList_RepoEmpty(t *testing.T) {
 
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{
-			matchSubstring: "ListRepoIssues",
+			matchSubstring: "query ListRepoIssues(",
 			data: map[string]any{
 				"repository": map[string]any{
 					"issues": map[string]any{"nodes": []any{}},
@@ -105,7 +108,7 @@ func TestList_RepoIssues(t *testing.T) {
 
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{
-			matchSubstring: "ListRepoIssues",
+			matchSubstring: "query ListRepoIssues(",
 			data: map[string]any{
 				"repository": map[string]any{
 					"issues": map[string]any{
@@ -143,7 +146,7 @@ func TestToday_FiltersByUTC(t *testing.T) {
 
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{
-			matchSubstring: "ListRepoIssues",
+			matchSubstring: "query ListRepoIssues(",
 			data: map[string]any{
 				"repository": map[string]any{
 					"issues": map[string]any{
@@ -180,7 +183,7 @@ func TestReview_RepoMarkdown(t *testing.T) {
 
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{
-			matchSubstring: "ListClosedIssues",
+			matchSubstring: "query ListClosedIssues(",
 			data: map[string]any{
 				"repository": map[string]any{
 					"issues": map[string]any{
@@ -192,7 +195,7 @@ func TestReview_RepoMarkdown(t *testing.T) {
 			},
 		},
 		{
-			matchSubstring: "ListMergedPRs",
+			matchSubstring: "query ListMergedPRs(",
 			data: map[string]any{
 				"repository": map[string]any{
 					"pullRequests": map[string]any{"nodes": []any{}},
@@ -225,9 +228,9 @@ func TestStandup_RepoStructure(t *testing.T) {
 		"repository": map[string]any{"pullRequests": map[string]any{"nodes": []any{}}},
 	}
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "ListClosedIssues", data: emptyRepoIssues},
-		{matchSubstring: "ListMergedPRs", data: emptyPRs},
-		{matchSubstring: "ListRepoIssues", data: emptyRepoIssues},
+		{matchSubstring: "query ListClosedIssues(", data: emptyRepoIssues},
+		{matchSubstring: "query ListMergedPRs(", data: emptyPRs},
+		{matchSubstring: "query ListRepoIssues(", data: emptyRepoIssues},
 	}}
 	out := new(bytes.Buffer)
 	deps := testDeps(g, func(d *cmd.Deps) { d.Stdout = out })
