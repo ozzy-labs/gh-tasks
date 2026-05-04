@@ -32,7 +32,7 @@ CLI 本体は **TypeScript で記述し、Bun の `--compile` でクロスプラ
 
 - TypeScript 中心の開発環境と整合
 - Octokit / GraphQL の型を CLI / scripts / tests で再利用可能
-- Vitest テスト基盤を他リポと共有
+- Node 互換 API のテストツール(Vitest)を CLI / scripts 双方で利用可能
 - 開発時は `bun run src/cli.ts` で即起動、ビルド不要
 - 単一バイナリのため、ユーザー側に Node.js / Bun 環境を要求しない
 

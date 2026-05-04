@@ -12,7 +12,7 @@
 前提:
 
 - README は `README.md`(en)+ `README.ja.md`(ja) のパターンを採用
-- AGENTS.md / CLAUDE.md は ja 単一(社内エージェント向け)
+- AGENTS.md / CLAUDE.md は ja 単一(repo-internal エージェント instructions)
 - 設計ドキュメント / SKILL.md / CLI 出力 / エラーメッセージは i18n 対応する
 
 ## Decision
@@ -23,7 +23,7 @@ i18n の SSOT 言語と配置は以下のとおりに固定する。
 | --- | --- | --- | --- |
 | README | `README.md`(en)+ `README.ja.md`(ja) | en | 手動同期 |
 | 設計 docs | `docs/ja/` + `docs/en/` 並列 | **ja** | 手動同期(初期)、将来 LLM 半自動化 |
-| ADR(本ディレクトリ) | `docs/adr/{NNNN}-*.md`(ja 単一) | ja | **翻訳しない**(社内意思決定文書) |
+| ADR(本ディレクトリ) | `docs/adr/{NNNN}-*.md`(ja 単一) | ja | **翻訳しない**(repo-internal な意思決定記録) |
 | SKILL.md | `SKILL.md`(ja)+ `SKILL.en.md`(en) | **ja** | adapter で `--locale en` 出力 |
 | CLI 出力 | `src/i18n/ja.json` + `en.json` | **ja** | キーベース |
 | エラーメッセージ | i18n 対象 | **ja** | 同上 |
@@ -31,7 +31,7 @@ i18n の SSOT 言語と配置は以下のとおりに固定する。
 例外:
 
 - README のみ en SSOT(国際的な入口を確保)
-- ADR は ja 単一で翻訳しない(意思決定文脈は社内のみで読まれる)
+- ADR は ja 単一で翻訳しない(意思決定記録はメンテナのみが読む前提)
 
 CLI locale 解決順:
 
@@ -44,7 +44,7 @@ CLI locale 解決順:
 
 ### Positive
 
-- ozzy(主たるメンテナ)が ja で書くため、SSOT が常に最新(英訳の翻訳遅延が SSOT 鮮度に影響しない)
+- 主メンテナが ja で書くため、SSOT が常に最新(英訳の翻訳遅延が SSOT 鮮度に影響しない)
 - 設計 docs / SKILL.md / CLI 出力で SSOT 言語を統一(ja)し、「どっちが正?」の判断コストを排除
 - 既存 README 規約を温存し、海外ユーザーに対して最低限の英語入口を確保
 - ADR を翻訳しないことで、意思決定の速度を維持
@@ -57,7 +57,7 @@ CLI locale 解決順:
 
 ## Alternatives considered
 
-- **English SSOT 統一** — README 規約には合うが、ozzy(主メンテナ)の起稿言語が ja のため翻訳遅延が SSOT 鮮度を直撃。不採用
+- **English SSOT 統一** — README 規約には合うが、主メンテナの起稿言語が ja のため翻訳遅延が SSOT 鮮度を直撃。不採用
 - **ja 単一(en 廃止)** — gh extension は GitHub 経由で全世界に配布されうるため、最低限の英語入口は必要。不採用
 - **DeepL / LLM 自動翻訳のみで運用** — レビュー無しの自動翻訳は意味取り違えリスクが高い、初期は手動同期、将来 LLM 半自動化を検討
 

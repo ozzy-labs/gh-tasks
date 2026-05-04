@@ -53,7 +53,7 @@ pnpm test                 # Vitest
 - README: `README.md`(en SSOT)+ `README.ja.md`(ja mirror)
 - 設計 docs: `docs/ja/`(SSOT)+ `docs/en/`(mirror)
 - SKILL.md: `SKILL.md`(ja SSOT)+ `SKILL.en.md`(en mirror)
-- ADR(`docs/adr/`): ja のみ(社内意思決定文書、翻訳しない)
+- ADR(`docs/adr/`): ja のみ(repo-internal な意思決定記録、翻訳しない)
 
 repo-internal ADR-0002 で根拠記録。
 

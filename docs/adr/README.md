@@ -5,7 +5,7 @@
 ## 構成方針
 
 - 番号は `0001` から連番、ファイル名は `NNNN-{kebab-case-title}.md`
-- 言語は日本語(社内意思決定文書、翻訳しない — repo-internal ADR-0002)
+- 言語は日本語(repo-internal な意思決定記録、翻訳しない — ADR-0002)
 - template は [template.md](./template.md) を使用
 
 ## Index
