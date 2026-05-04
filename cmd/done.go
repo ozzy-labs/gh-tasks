@@ -72,10 +72,10 @@ func runDoneRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, r
 	if err := clients.GraphQL.Do(ctx, queries.GetIssueByNumber, map[string]any{
 		"owner": id.Owner, "name": id.Name, "number": num,
 	}, &resp); err != nil {
-		return err
+		return fmt.Errorf("get issue: %w", err)
 	}
 	if resp.Repository == nil || resp.Repository.Issue == nil {
-		fmt.Fprintf(c.ErrOrStderr(), "Issue not found: %s/%s#%d\n", id.Owner, id.Name, num)
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.issue.notFound", "owner", id.Owner, "name", id.Name, "number", num))
 		return ErrSilent
 	}
 	if resp.Repository.Issue.State == "CLOSED" {
@@ -86,7 +86,7 @@ func runDoneRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, r
 	if err := clients.GraphQL.Do(ctx, queries.CloseIssue, map[string]any{
 		"input": map[string]any{"issueId": resp.Repository.Issue.ID},
 	}, &closed); err != nil {
-		return err
+		return fmt.Errorf("close issue: %w", err)
 	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("done.closed"), closed.CloseIssue.Issue.URL)
 	return nil
@@ -111,17 +111,17 @@ func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		return err
 	}
 	if pid == "" {
-		fmt.Fprintf(c.ErrOrStderr(), "project not found: %s/%d (--scope %s)\n", pref.Owner, pref.Number, sc)
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilent
 	}
 	var fieldsResp queries.ListProjectV2FieldsResponse
 	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Fields, map[string]any{
 		"projectId": pid, "first": doneFieldsLimit,
 	}, &fieldsResp); err != nil {
-		return err
+		return fmt.Errorf("list project fields: %w", err)
 	}
 	if fieldsResp.Node == nil {
-		fmt.Fprintf(c.ErrOrStderr(), "project not found: %s/%d (--scope %s)\n", pref.Owner, pref.Number, sc)
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilent
 	}
 	statusField := findStatusField(fieldsResp.Node.Fields.Nodes)
@@ -139,7 +139,7 @@ func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Items, map[string]any{
 		"projectId": pid, "first": doneItemsLimit,
 	}, &itemsResp); err != nil {
-		return err
+		return fmt.Errorf("list project items: %w", err)
 	}
 	var target *queries.ProjectV2ItemNode
 	if itemsResp.Node != nil {
@@ -151,7 +151,7 @@ func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		}
 	}
 	if target == nil {
-		fmt.Fprintf(c.ErrOrStderr(), "item not found in project: %s\n", itemID)
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.projectItem.notFound", "id", itemID))
 		return ErrSilent
 	}
 	if isAlreadyDone(*target, statusField.ID, doneOption.ID) {
@@ -167,7 +167,7 @@ func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 			"value":     map[string]any{"singleSelectOptionId": doneOption.ID},
 		},
 	}, &update); err != nil {
-		return err
+		return fmt.Errorf("update item field value: %w", err)
 	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("done.statusUpdated.project"), itemID)
 	return nil
