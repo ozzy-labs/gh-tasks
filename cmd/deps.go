@@ -12,8 +12,11 @@ import (
 	"github.com/ozzy-labs/gh-tasks/internal/i18n"
 )
 
-// Deps groups dependencies that can be overridden in tests. Any field left
-// zero falls back to the production default.
+// Deps groups dependencies that can be overridden in tests. DefaultDeps
+// populates all fields; tests should use testDeps or set fields explicitly
+// before passing Deps to RootWithDeps. Commands assume non-nil callbacks
+// (Now, Env, HasGitRemote, GetRemoteURL, NewClients, LoadConfig) and will
+// panic on a zero-value Deps.
 type Deps struct {
 	Stdout       io.Writer
 	Stderr       io.Writer

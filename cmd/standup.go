@@ -43,11 +43,7 @@ func runStandup(ctx context.Context, c *cobra.Command, deps Deps) error {
 	if err != nil {
 		return localizedError(c, r, err)
 	}
-	now := time.Now()
-	if deps.Now != nil {
-		now = deps.Now()
-	}
-	since := standupSince(c, now)
+	since := standupSince(c, deps.Now())
 	mine, _ := c.Flags().GetBool("mine")
 	if sc == scope.Repo {
 		return runStandupRepo(ctx, c, deps, r, since, mine)
