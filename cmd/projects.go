@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -22,6 +23,11 @@ const bundledUserTemplate = `# GitHub Projects v2 field template - user (persona
 # Used by ` + "`gh-tasks`" + ` user scope (personal Project v2). Defines the minimum
 # fields required for ` + "`gh tasks plan`" + ` (Iteration) and standup/review
 # (Status) to operate.
+#
+# Iteration field duration / start date are intentionally omitted: the
+# GitHub UI is the authoritative configuration surface for those (the
+# REST/GraphQL API only accepts the iteration list, not the cadence).
+# Configure them under Project settings -> Iteration after creation.
 name: gh-tasks user scope
 description: Personal Project v2 fields for gh-tasks (user scope)
 fields:
@@ -39,6 +45,14 @@ fields:
 const bundledOrgTemplate = `# GitHub Projects v2 field template - org (team) scope
 #
 # Used by ` + "`gh-tasks`" + ` org scope (organization-wide Project v2).
+# Extends the user template with cross-repo coordination fields:
+#
+# - Repository: built-in field type for the owning repo of an item.
+# - Project: free-form single_select identifying a logical project that
+#   spans multiple repos (e.g. "Platform", "Docs", "Infra"). Edit the
+#   options list to match your org's project taxonomy.
+#
+# Iteration cadence is configured in the GitHub UI (see user.yaml note).
 name: gh-tasks org scope
 description: Team Project v2 fields for gh-tasks (org scope)
 fields:
@@ -63,8 +77,9 @@ fields:
 
 func newProjectsCmd(deps Deps) *cobra.Command {
 	c := &cobra.Command{
-		Use:   "projects",
-		Short: "Manage Projects v2",
+		Use:          "projects",
+		Short:        "Manage Projects v2",
+		SilenceUsage: true,
 		RunE: func(c *cobra.Command, _ []string) error {
 			r, err := deps.Resolve()
 			if err != nil {
@@ -247,9 +262,7 @@ func runProjectsInit(ctx context.Context, c *cobra.Command, deps Deps, yamlPath 
 			"dataType":  f.DataType,
 		}
 		if len(f.SingleSelectOptions) > 0 {
-			opts := make([]map[string]string, len(f.SingleSelectOptions))
-			copy(opts, f.SingleSelectOptions)
-			input["singleSelectOptions"] = opts
+			input["singleSelectOptions"] = f.SingleSelectOptions
 		}
 		var created queries.CreateProjectV2FieldResponse
 		if err := clients.GraphQL.Do(ctx, queries.CreateProjectV2Field, map[string]any{
@@ -275,7 +288,12 @@ func loadTemplateRaw(yamlPath, tpl string) ([]byte, string, error) {
 	if yamlPath == "" {
 		return nil, "", errors.New("no source")
 	}
-	raw, err := os.ReadFile(yamlPath) //nolint:gosec // user-supplied template path
+	// Defense-in-depth: clean the path before opening it so that any
+	// traversal sequences are normalized away. The CLI is operator-trusted
+	// (the user supplies the path interactively), so the residual gosec
+	// G304 finding is suppressed below.
+	yamlPath = filepath.Clean(yamlPath)
+	raw, err := os.ReadFile(yamlPath) //nolint:gosec // operator-trusted CLI; user supplies the path interactively
 	if err != nil {
 		return nil, yamlPath, err
 	}
