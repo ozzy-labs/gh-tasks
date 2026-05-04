@@ -67,11 +67,12 @@ func (d Deps) Resolve() (Resolved, error) {
 	cfg, err := d.LoadConfig()
 	if err != nil {
 		// Even on config load failure, resolve locale from argv + env so the
-		// returned error message can still be localized by the caller.
-		loc := i18n.ResolveLocale(d.Argv, d.Env, i18n.LocaleConfig{})
+		// returned error message can still be localized by the caller. The
+		// nil provider tells ResolveLocaleFor to skip the config step.
+		loc := i18n.ResolveLocaleFor(d.Argv, d.Env, nil)
 		return Resolved{Locale: loc}, err
 	}
-	loc := i18n.ResolveLocale(d.Argv, d.Env, i18n.LocaleConfig{Lang: cfg.Lang})
+	loc := i18n.ResolveLocaleFor(d.Argv, d.Env, cfg)
 	return Resolved{Locale: loc, Config: cfg}, nil
 }
 

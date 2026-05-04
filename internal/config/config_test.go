@@ -42,7 +42,7 @@ user_project = "ozzy-3/1"
 		t.Fatalf("err: %v", err)
 	}
 	want := config.AppConfig{
-		Lang:         i18n.LocaleJA,
+		Locale:       i18n.LocaleJA,
 		DefaultScope: scope.Org,
 		OrgProject:   project.Ref{Owner: "ozzy-labs", Number: 3},
 		UserProject:  project.Ref{Owner: "ozzy-3", Number: 1},
@@ -196,7 +196,7 @@ default_scope = "org"
 		t.Fatalf("err: %v", err)
 	}
 	want := config.AppConfig{
-		Lang:         i18n.LocaleJA,
+		Locale:       i18n.LocaleJA,
 		DefaultScope: scope.Org,
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
