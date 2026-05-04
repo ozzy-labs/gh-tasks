@@ -12,15 +12,22 @@ func TestHasNonASCII(t *testing.T) {
 	t.Parallel()
 
 	cases := map[string]bool{
-		"plain ascii":      false,
-		"こんにちは":            true,
-		"item → next":      false, // decorative arrow
-		"a — b":            false, // em-dash
-		"hello 世界":         true,
-		"":                 false,
-		"key.with.dots":    false,
-		"emoji 🎉":          true, // non-decorative
-		"box ┌──┐ drawing": false,
+		"plain ascii":       false,
+		"こんにちは":             true,
+		"item → next":       false, // decorative arrow
+		"a — b":             false, // em-dash
+		"hello 世界":          true,
+		"":                  false,
+		"key.with.dots":     false,
+		"emoji 🎉":           true, // non-decorative
+		"box ┌──┐ drawing":  false,
+		"café":              true,
+		"naïve":             true,
+		"Zürich":            true,
+		"한국어":               true,
+		"中文":                true,
+		"only decorative ✓": false, // Dingbats whitelist
+		"item ▀ block":      true,  // Block Elements is flagged (#144 reject)
 	}
 	for in, want := range cases {
 		got := i18ncheck.HasNonASCII(in)
@@ -85,5 +92,42 @@ func TestScan_SkipsTestFilesAndI18n(t *testing.T) {
 	}
 	if filepath.Base(hits[0].File) != "main.go" {
 		t.Errorf("hit on wrong file: %s", hits[0].File)
+	}
+}
+
+func TestScanFile_PositionIs1Indexed(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	src := "package x\n\nvar S = \"こんにちは\"\n"
+	path := filepath.Join(dir, "src.go")
+	if err := os.WriteFile(path, []byte(src), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	hits, err := i18ncheck.ScanFile(path)
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if len(hits) != 1 {
+		t.Fatalf("got %d hits", len(hits))
+	}
+	if hits[0].Line != 3 {
+		t.Errorf("Line = %d, want 3 (1-indexed)", hits[0].Line)
+	}
+	if hits[0].Col != 9 {
+		// "var S = " is 8 chars before the opening quote
+		t.Errorf("Col = %d, want 9", hits[0].Col)
+	}
+}
+
+func TestScanFile_EmptyFile(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "empty.go")
+	if err := os.WriteFile(path, []byte("package x\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	hits, err := i18ncheck.ScanFile(path)
+	if err != nil || len(hits) != 0 {
+		t.Errorf("hits=%v err=%v", hits, err)
 	}
 }
