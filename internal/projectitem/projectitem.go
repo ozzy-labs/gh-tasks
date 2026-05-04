@@ -5,12 +5,12 @@ package projectitem
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/ozzy-labs/gh-tasks/internal/github"
 	"github.com/ozzy-labs/gh-tasks/internal/github/queries"
+	"github.com/ozzy-labs/gh-tasks/internal/i18n"
 	"github.com/ozzy-labs/gh-tasks/internal/project"
 	"github.com/ozzy-labs/gh-tasks/internal/scope"
 )
@@ -19,9 +19,13 @@ import (
 // issuing the appropriate GraphQL query for the scope. Returns ("", nil) when
 // the project cannot be found (wrong owner, wrong number, or insufficient
 // scopes on the token).
+//
+// Calling this with [scope.Repo] is a programmer error (Projects v2 are not
+// used in repo scope) and returns a localizable [scope.ScopeError]. Callers
+// should resolve the project ahead of this call via [project.Resolve].
 func ResolveProjectNodeID(ctx context.Context, gql github.GraphQLClient, sc scope.Scope, ref project.Ref) (string, error) {
 	if sc == scope.Repo {
-		return "", errors.New("project node resolution called for repo scope")
+		return "", &scope.ScopeError{Payload: i18n.NewPayload("error.scope.invalidForProjectResolution")}
 	}
 	vars := map[string]any{"login": ref.Owner, "number": ref.Number}
 

@@ -10,8 +10,16 @@ import (
 	"sort"
 	"strings"
 
+	"golang.org/x/text/collate"
+	"golang.org/x/text/language"
+
 	"github.com/ozzy-labs/gh-tasks/internal/skills"
 )
+
+// skillNameLanguage selects the locale used to compare skill names. We use a
+// Unicode-aware collator (matching TypeScript's `String.prototype.localeCompare`)
+// instead of Go's byte-wise `<` so non-ASCII names sort consistently.
+var skillNameLanguage = language.English
 
 // Adapter is the contract every per-agent renderer implements.
 type Adapter interface {
@@ -46,7 +54,12 @@ func wrapSnippet(body string) string {
 func sortByName(in []skills.Skill) []skills.Skill {
 	out := make([]skills.Skill, len(in))
 	copy(out, in)
-	sort.SliceStable(out, func(i, j int) bool { return out[i].Name < out[j].Name })
+	// collate.Collator is not safe for concurrent use, so allocate a fresh
+	// instance per call rather than sharing a package-level singleton.
+	c := collate.New(skillNameLanguage)
+	sort.SliceStable(out, func(i, j int) bool {
+		return c.CompareString(out[i].Name, out[j].Name) < 0
+	})
 	return out
 }
 

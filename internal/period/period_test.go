@@ -16,6 +16,41 @@ func mustLoadLocation(t *testing.T, name string) *time.Location {
 	return loc
 }
 
+func TestParse(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		value string
+		want  period.Period
+		err   bool
+	}{
+		{"daily", period.Daily, false},
+		{"weekly", period.Weekly, false},
+		{"sprint", period.Sprint, false},
+		{"", "", false},
+		{"monthly", "", true},
+		{"DAILY", "", true},
+	}
+	for _, tc := range cases {
+		t.Run(tc.value, func(t *testing.T) {
+			t.Parallel()
+			got, err := period.Parse(tc.value)
+			if tc.err {
+				if err == nil {
+					t.Fatalf("want error, got %v", got)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("err: %v", err)
+			}
+			if got != tc.want {
+				t.Errorf("got %v want %v", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestParseFlag(t *testing.T) {
 	t.Parallel()
 

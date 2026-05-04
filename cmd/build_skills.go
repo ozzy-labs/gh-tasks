@@ -24,8 +24,26 @@ func newBuildSkillsCmd(deps Deps) *cobra.Command {
 	}
 	c.Flags().Bool("check-diff", false, "fail if dist/ output differs from source SSOT (CI dogfooding)")
 	c.Flags().String("src", "src/skills", "skill SSOT directory")
-	c.Flags().String("dist", "dist", "output directory root")
+	c.Flags().String("dist", "dist", "output directory root (WARNING: contents of <dist>/<adapter>/ are wiped before regeneration)")
 	return c
+}
+
+// sanitizeDist rejects --dist values that would be unsafe to RemoveAll under,
+// such as "", ".", "/", or "..". Programmer-facing (the build-skills cmd is
+// Hidden) so the message is plain ASCII.
+func sanitizeDist(raw string) (string, error) {
+	if raw == "" {
+		return "", fmt.Errorf("refusing to use unsafe --dist value: empty string")
+	}
+	cleaned := filepath.Clean(raw)
+	switch cleaned {
+	case ".", "..", "/":
+		return "", fmt.Errorf("refusing to use unsafe --dist value %q (resolves to %q)", raw, cleaned)
+	}
+	if cleaned == string(filepath.Separator) {
+		return "", fmt.Errorf("refusing to use unsafe --dist value %q (resolves to root separator)", raw)
+	}
+	return cleaned, nil
 }
 
 // LocalStage is a (dist subpath, repo path) pair used to mirror generated
@@ -48,6 +66,11 @@ func runBuildSkills(c *cobra.Command, deps Deps) error {
 	distRoot, _ := c.Flags().GetString("dist")
 	checkDiff, _ := c.Flags().GetBool("check-diff")
 
+	distRoot, err := sanitizeDist(distRoot)
+	if err != nil {
+		return err
+	}
+
 	if _, err := os.Stat(src); errors.Is(err, os.ErrNotExist) {
 		fmt.Fprintln(c.OutOrStdout(), "[build-skills] no src/skills/ — nothing to build")
 		return nil
@@ -69,6 +92,11 @@ func runBuildSkills(c *cobra.Command, deps Deps) error {
 			if err := os.MkdirAll(filepath.Dir(dest), 0o750); err != nil {
 				return fmt.Errorf("mkdir %s: %w", dest, err)
 			}
+			// 0o600 cap: skill outputs are text (SKILL.md / SKILL.en.md / settings.json)
+			// that never need exec bit. Pinning a conservative mode keeps gosec happy
+			// and matches the trust model that this dist/ tree is consumed by humans
+			// (committed to the repo) rather than executed directly. If we ever stage
+			// binary assets that need 0o755 (or preserve source mode), revisit this.
 			if err := os.WriteFile(dest, []byte(out.Content), 0o600); err != nil {
 				return fmt.Errorf("write %s: %w", dest, err)
 			}
@@ -125,6 +153,11 @@ func runBuildSkills(c *cobra.Command, deps Deps) error {
 	return nil
 }
 
+// copyDir mirrors src into dst preserving relative paths. All files are written
+// with mode 0o600 regardless of source mode: skill assets are text (SKILL.md
+// etc.) and never need an exec bit, so pinning a conservative mode keeps gosec
+// satisfied and matches the trust model (human-readable repo content, not
+// executables). Revisit if binary assets requiring 0o755 are ever staged.
 func copyDir(src, dst string) error {
 	return filepath.Walk(src, func(p string, info os.FileInfo, err error) error {
 		if err != nil {

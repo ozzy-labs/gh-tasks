@@ -22,6 +22,7 @@
   "error.repo.cannotExtractFromRemote": "Could not extract owner/name from git remote URL: '{url}'",
   "error.scope.flagMissingValue": "--scope flag requires a value",
   "error.scope.invalid": "Invalid --scope value: '{value}' (valid: {valid})",
+  "error.scope.invalidForProjectResolution": "Project node resolution is not supported in repo scope",
   "error.project.flagMissingValue": "--project flag requires a value",
   "error.project.invalidIdentifier": "Invalid --project value: '{value}' (expected '<owner>/<number>')",
   "error.project.repoScope": "Projects v2 are not used in repo scope",

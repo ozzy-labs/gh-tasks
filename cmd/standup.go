@@ -92,7 +92,7 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 			if !timeAtOrAfter(n.ClosedAt, since) {
 				continue
 			}
-			if !matchesViewerClosed(n, viewerLogin) {
+			if !matchesViewer(n.Author, n.Assignees.Nodes, viewerLogin) {
 				continue
 			}
 			closed = append(closed, n)
@@ -104,7 +104,7 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 			if !timeAtOrAfter(n.MergedAt, since) {
 				continue
 			}
-			if !matchesViewerMerged(n, viewerLogin) {
+			if !matchesViewer(n.Author, n.Assignees.Nodes, viewerLogin) {
 				continue
 			}
 			merged = append(merged, n)
@@ -116,7 +116,7 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 			if !timeAtOrAfter(n.UpdatedAt, since) {
 				continue
 			}
-			if !matchesViewerOpen(n, viewerLogin) {
+			if !matchesViewer(n.Author, n.Assignees.Nodes, viewerLogin) {
 				continue
 			}
 			open = append(open, n)
@@ -149,7 +149,7 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 			fmt.Fprintf(out, "- in-progress: #%d %s (%s)\n", i.Number, i.Title, i.URL)
 		}
 	}
-	fmt.Fprintf(out, "\n## %s\n- %s\n\n", r.T("standup.blockers"), r.T("standup.blockersHint"))
+	fmt.Fprintf(out, "\n## %s\n- %s\n", r.T("standup.blockers"), r.T("standup.blockersHint"))
 	return nil
 }
 
@@ -231,7 +231,7 @@ func runStandupProject(ctx context.Context, c *cobra.Command, deps Deps, r Resol
 			fmt.Fprintf(out, "- in-progress: %s\n", projectitem.FormatItemLineCompact(item))
 		}
 	}
-	fmt.Fprintf(out, "\n## %s\n- %s\n\n", r.T("standup.blockers"), r.T("standup.blockersHint"))
+	fmt.Fprintf(out, "\n## %s\n- %s\n", r.T("standup.blockers"), r.T("standup.blockersHint"))
 	return nil
 }
 
@@ -256,44 +256,14 @@ func timeAtOrAfter(iso string, threshold time.Time) bool {
 	return t.Equal(threshold) || t.After(threshold)
 }
 
-func matchesViewerClosed(n queries.ClosedIssueNode, viewer string) bool {
+func matchesViewer(author *queries.Login, assignees []queries.Login, viewer string) bool {
 	if viewer == "" {
 		return true
 	}
-	if n.Author != nil && n.Author.Login == viewer {
+	if author != nil && author.Login == viewer {
 		return true
 	}
-	for _, a := range n.Assignees.Nodes {
-		if a.Login == viewer {
-			return true
-		}
-	}
-	return false
-}
-
-func matchesViewerMerged(n queries.MergedPRNode, viewer string) bool {
-	if viewer == "" {
-		return true
-	}
-	if n.Author != nil && n.Author.Login == viewer {
-		return true
-	}
-	for _, a := range n.Assignees.Nodes {
-		if a.Login == viewer {
-			return true
-		}
-	}
-	return false
-}
-
-func matchesViewerOpen(n queries.RepoIssueNode, viewer string) bool {
-	if viewer == "" {
-		return true
-	}
-	if n.Author != nil && n.Author.Login == viewer {
-		return true
-	}
-	for _, a := range n.Assignees.Nodes {
+	for _, a := range assignees {
 		if a.Login == viewer {
 			return true
 		}

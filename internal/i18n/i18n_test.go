@@ -78,6 +78,46 @@ func TestT(t *testing.T) {
 	})
 }
 
+type stubLangProvider struct{ loc i18n.Locale }
+
+func (s stubLangProvider) Lang() i18n.Locale { return s.loc }
+
+func TestResolveLocaleFor(t *testing.T) {
+	t.Parallel()
+
+	t.Run("provider-empty-falls-through-to-env", func(t *testing.T) {
+		t.Parallel()
+		got := i18n.ResolveLocaleFor(nil, lookupFn(map[string]string{"LANG": "ja_JP.UTF-8"}), stubLangProvider{})
+		if got != i18n.LocaleJA {
+			t.Errorf("got %q, want ja", got)
+		}
+	})
+
+	t.Run("provider-set-wins-over-env", func(t *testing.T) {
+		t.Parallel()
+		got := i18n.ResolveLocaleFor(nil, lookupFn(map[string]string{"LANG": "ja_JP.UTF-8"}), stubLangProvider{loc: i18n.LocaleEN})
+		if got != i18n.LocaleEN {
+			t.Errorf("got %q, want en", got)
+		}
+	})
+
+	t.Run("flag-wins-over-provider", func(t *testing.T) {
+		t.Parallel()
+		got := i18n.ResolveLocaleFor([]string{"--lang=en"}, nil, stubLangProvider{loc: i18n.LocaleJA})
+		if got != i18n.LocaleEN {
+			t.Errorf("got %q, want en", got)
+		}
+	})
+
+	t.Run("nil-provider-falls-through", func(t *testing.T) {
+		t.Parallel()
+		got := i18n.ResolveLocaleFor(nil, lookupFn(map[string]string{"LANG": "ja_JP.UTF-8"}), nil)
+		if got != i18n.LocaleJA {
+			t.Errorf("got %q, want ja", got)
+		}
+	})
+}
+
 func TestSubstitute(t *testing.T) {
 	t.Parallel()
 

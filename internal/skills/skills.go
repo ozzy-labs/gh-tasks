@@ -31,6 +31,7 @@ type OutputFile struct {
 
 // frontmatterRe matches a leading YAML frontmatter block. Mirrors the TS
 // implementation: `^---\n(...)\n---\n`.
+// Strict LF + bare "---" fences; matches scripts/lib/frontmatter.mjs.
 var frontmatterRe = regexp.MustCompile(`(?s)^---\n(.*?)\n---\n`)
 
 // ParseDocument splits frontmatter (key: value lines) from body. fileLabel is

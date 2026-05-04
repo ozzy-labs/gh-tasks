@@ -19,12 +19,22 @@ import (
 )
 
 // AppConfig is the parsed config file.
+//
+// AppConfig satisfies i18n.LangProvider via the Lang() method, so callers
+// (cmd/deps.go) can pass the config directly to i18n.ResolveLocaleFor
+// without wrapping it into a separate i18n.LocaleConfig shim.
 type AppConfig struct {
-	Lang         i18n.Locale
+	// Locale is the user's configured output locale (from `lang =` in
+	// gh-tasks.toml). Empty when not set; callers should fall through to env
+	// vars / the en default.
+	Locale       i18n.Locale
 	DefaultScope scope.Scope
 	OrgProject   project.Ref
 	UserProject  project.Ref
 }
+
+// Lang implements i18n.LangProvider.
+func (c AppConfig) Lang() i18n.Locale { return c.Locale }
 
 // ConfigError is returned when a config file is present but malformed or
 // holds invalid values, so the user sees a specific message instead of a
@@ -123,7 +133,7 @@ func parse(raw []byte, path string) (AppConfig, error) {
 				"valid", strings.Join(localeNames(), " | "),
 			)
 		}
-		out.Lang = loc
+		out.Locale = loc
 	}
 	if v, present := doc["default_scope"]; present {
 		s, ok := v.(string)
@@ -213,6 +223,6 @@ func scopeNames() []string {
 func (c AppConfig) String() string {
 	return fmt.Sprintf(
 		"AppConfig{Lang:%q DefaultScope:%q OrgProject:%v UserProject:%v}",
-		c.Lang, c.DefaultScope, c.OrgProject, c.UserProject,
+		c.Locale, c.DefaultScope, c.OrgProject, c.UserProject,
 	)
 }

@@ -48,18 +48,39 @@ func init() {
 	}
 }
 
-// LocaleConfig is the subset of AppConfig consumed by ResolveLocale, kept
-// here to avoid an import cycle with internal/config.
+// LangProvider is the small interface ResolveLocaleFor consumes. Any caller
+// that can answer "what locale did the user configure?" satisfies it; this
+// lets callers (e.g. internal/config.AppConfig) pass themselves in directly
+// without wrapping into i18n.LocaleConfig.
+//
+// Implementers should return the empty Locale when the user has not
+// configured one, in which case ResolveLocaleFor falls through to env vars
+// and the en default.
+type LangProvider interface {
+	Lang() Locale
+}
+
+// LocaleConfig is the legacy struct-shaped LangProvider, kept for backward
+// compatibility with callers that constructed it directly. New code should
+// pass any LangProvider implementation (typically the AppConfig itself).
 type LocaleConfig struct {
 	Lang Locale
 }
 
+// langProviderFunc adapts a Locale value into a LangProvider. Used by
+// ResolveLocale so the legacy struct-shaped API can delegate to the new
+// interface-shaped implementation.
+type langProviderFunc func() Locale
+
+func (f langProviderFunc) Lang() Locale { return f() }
+
 // EnvLookup mirrors os.Getenv but lets tests inject a fake env.
 type EnvLookup func(key string) string
 
-// ResolveLocale picks the output locale.
+// ResolveLocale picks the output locale, taking the legacy LocaleConfig
+// shape for backward compatibility. New code should prefer ResolveLocaleFor.
 //
-// Order:
+// Order (shared with ResolveLocaleFor):
 //  1. --lang ja|en / --lang=ja|en flag (both forms)
 //  2. config.Lang (from gh-tasks.toml)
 //  3. LC_ALL env (ja* → ja)
@@ -68,14 +89,31 @@ type EnvLookup func(key string) string
 //
 // Unknown --lang values are silently ignored and fall through to env.
 func ResolveLocale(argv []string, env EnvLookup, config LocaleConfig) Locale {
+	return ResolveLocaleFor(argv, env, langProviderFunc(func() Locale { return config.Lang }))
+}
+
+// ResolveLocaleFor picks the output locale.
+//
+// Order:
+//  1. --lang ja|en / --lang=ja|en flag (both forms)
+//  2. provider.Lang() (typically from gh-tasks.toml)
+//  3. LC_ALL env (ja* → ja)
+//  4. LANG env (ja* → ja)
+//  5. fallback → en
+//
+// A nil provider is treated as "no configured lang" and falls through to env
+// resolution. Unknown --lang values are silently ignored and fall through.
+func ResolveLocaleFor(argv []string, env EnvLookup, provider LangProvider) Locale {
 	if env == nil {
 		env = func(string) string { return "" }
 	}
 	if loc, ok := parseLangFlag(argv); ok {
 		return loc
 	}
-	if config.Lang != "" {
-		return config.Lang
+	if provider != nil {
+		if loc := provider.Lang(); loc != "" {
+			return loc
+		}
 	}
 	if v := env("LC_ALL"); v != "" {
 		if strings.HasPrefix(strings.ToLower(v), "ja") {
@@ -111,6 +149,11 @@ func parseLangFlag(argv []string) (Locale, bool) {
 
 // T renders the localized message for key, substituting {name} placeholders
 // with values from args. Missing translations fall back to en, then key.
+//
+// args is treated as alternating (key string, value any) pairs, the same
+// shape ToArgsMap consumes. Pairs whose key is not a string are silently
+// dropped, and an odd-length args (a trailing unpaired key) is silently
+// truncated. Callers must always pass complete (string-key, value) pairs.
 func T(locale Locale, key string, args ...any) string {
 	msg := lookup(locale, key)
 	if len(args) == 0 {
@@ -120,7 +163,12 @@ func T(locale Locale, key string, args ...any) string {
 }
 
 // ToArgsMap converts a flat key1, value1, key2, value2, ... varargs sequence
-// into a map. Odd-length input drops the trailing key.
+// into a map. Pairs whose key is not a string are silently dropped (the
+// value is also discarded), and an odd-length input silently drops the
+// trailing unpaired key. The flat varargs shape is intentional for ergonomic
+// call sites, so callers must always pass complete (string-key, value)
+// pairs — non-string keys are a programmer error and produce missing
+// substitutions rather than runtime errors.
 func ToArgsMap(args []any) map[string]any {
 	m := map[string]any{}
 	for i := 0; i+1 < len(args); i += 2 {
@@ -145,6 +193,11 @@ var placeholderPattern = regexp.MustCompile(`\{(\w+)\}`)
 // The replacement is a single left-to-right regex pass, so the result is
 // deterministic regardless of Go map iteration order and `{name}` tokens
 // that appear inside an already-substituted value are not re-expanded.
+//
+// args is keyed by string. When callers build args via T/NewPayload's
+// flat varargs interface, any non-string key in that varargs is dropped at
+// the ToArgsMap boundary before reaching Substitute, so its placeholder is
+// left as `{name}` in the output (silent — never a runtime error).
 func Substitute(msg string, args map[string]any) string {
 	if len(args) == 0 {
 		return msg

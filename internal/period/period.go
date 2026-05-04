@@ -52,37 +52,41 @@ func newError(key string, args ...any) *PeriodError {
 	return &PeriodError{Payload: i18n.NewPayload(key, args...)}
 }
 
-// ParseFlag scans argv for --period=<value> or --period <value>.
+// Parse validates value as a recognized [Period]. Empty values return the
+// zero Period without error so callers can apply their own default.
+func Parse(value string) (Period, error) {
+	if value == "" {
+		return "", nil
+	}
+	for _, p := range Periods {
+		if string(p) == value {
+			return p, nil
+		}
+	}
+	return "", newError("error.period.invalid", "value", value, "valid", joinPipe(Periods))
+}
+
+// ParseFlag scans argv for --period=<value> or --period <value> and
+// delegates validation to [Parse]. The bool return reports whether the
+// flag was present with a non-empty value.
 func ParseFlag(argv []string) (Period, bool, error) {
 	for i, arg := range argv {
 		if strings.HasPrefix(arg, "--period=") {
-			p, err := toPeriod(strings.TrimPrefix(arg, "--period="))
-			return p, err == nil, err
+			value := strings.TrimPrefix(arg, "--period=")
+			p, err := Parse(value)
+			return p, err == nil && value != "", err
 		}
 		if arg == "--period" {
 			if i+1 >= len(argv) {
 				return "", false, newError("error.period.flagMissingValue")
 			}
-			p, err := toPeriod(argv[i+1])
-			return p, err == nil, err
+			value := argv[i+1]
+			p, err := Parse(value)
+			return p, err == nil && value != "", err
 		}
 	}
 	return "", false, nil
 }
-
-func toPeriod(v string) (Period, error) {
-	for _, p := range Periods {
-		if string(p) == v {
-			return p, nil
-		}
-	}
-	return "", newError("error.period.invalid", "value", v, "valid", joinPipe(Periods))
-}
-
-// LocationLookup resolves an IANA timezone name to a *time.Location. Tests
-// override this via [Range]Of{}-style options if needed; production callers
-// pass nil to use [time.LoadLocation].
-type LocationLookup func(name string) (*time.Location, error)
 
 // Of returns the local-midnight-anchored Range for the given period at now.
 //
