@@ -49,10 +49,7 @@ func runPlan(ctx context.Context, c *cobra.Command, deps Deps) error {
 	if p == "" {
 		p = period.Weekly
 	}
-	now := time.Now()
-	if deps.Now != nil {
-		now = deps.Now()
-	}
+	now := deps.Now()
 	rng := period.Of(p, now, "", deps.Env)
 	sc, err := scope.Detect(scope.DetectOptions{
 		Argv:         deps.Argv,
