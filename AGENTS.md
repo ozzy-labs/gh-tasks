@@ -50,12 +50,17 @@ pnpm test                 # Vitest
 
 ## i18n SSOT
 
+読み手ベース SSOT(repo-internal ADR-0005、ADR-0002 を Superseded):
+
 - README: `README.md`(en SSOT)+ `README.ja.md`(ja mirror)
-- 設計 docs: `docs/ja/`(SSOT)+ `docs/en/`(mirror)
+- ユーザーマニュアル: `docs/manual/en/`(en SSOT、後続フェーズで反転)+ `docs/manual/ja/`(ja mirror)
 - SKILL.md: `SKILL.md`(ja SSOT)+ `SKILL.en.md`(en mirror)
 - ADR(`docs/adr/`): ja のみ(repo-internal な意思決定記録、翻訳しない)
+- 設計ドキュメント(`docs/design/`): ja のみ(living な設計メモ、翻訳しない)
+- CLI 出力 / エラー(`packages/gh-tasks/src/i18n/`): en SSOT(後続フェーズで反転、現状 ja SSOT)
+- AGENTS.md / CLAUDE.md: ja のみ
 
-repo-internal ADR-0002 で根拠記録。
+ハードコード文字列禁止(非 ASCII を含むリテラルは i18n key 経由必須、後続フェーズで lint 強制)。
 
 ## 規約
 

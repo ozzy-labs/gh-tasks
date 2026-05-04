@@ -1,9 +1,11 @@
 # 0002. i18n は Japanese SSOT + English mirror で運用する
 
-- Status: Accepted
+- Status: Superseded by [ADR-0005](./0005-i18n-reader-based-ssot.md)
 - Date: 2026-04-30
 - Deciders: ozzy
 - Tags: i18n, docs, skills
+
+> **Note**: 本 ADR は [ADR-0005](./0005-i18n-reader-based-ssot.md) で **読み手ベース SSOT** に再設計された。`docs/manual/` 配下のユーザーマニュアルと `src/i18n/` の CLI 出力は **en SSOT + ja mirror** に反転、`docs/adr/` `docs/design/` `AGENTS.md` `CLAUDE.md` `SKILL.md` は ja 単一を維持。詳細は ADR-0005 を参照。
 
 ## Context
 
