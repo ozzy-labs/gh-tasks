@@ -37,7 +37,7 @@ func runDone(ctx context.Context, c *cobra.Command, deps Deps, args []string) er
 	}
 	if len(args) == 0 || args[0] == "" {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.done.idRequired"))
-		return errSilent
+		return ErrSilent
 	}
 	rawID := args[0]
 	sc, err := scope.Detect(scope.DetectOptions{
@@ -58,7 +58,7 @@ func runDoneRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, r
 	num, ok := parseIssueNumber(rawID)
 	if !ok {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.done.idRequired"))
-		return errSilent
+		return ErrSilent
 	}
 	id, err := repo.Resolve(repo.ResolveOptions{Argv: deps.Argv, GetRemoteURL: deps.GetRemoteURL})
 	if err != nil {
@@ -76,7 +76,7 @@ func runDoneRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, r
 	}
 	if resp.Repository == nil || resp.Repository.Issue == nil {
 		fmt.Fprintf(c.ErrOrStderr(), "Issue not found: %s/%s#%d\n", id.Owner, id.Name, num)
-		return errSilent
+		return ErrSilent
 	}
 	if resp.Repository.Issue.State == "CLOSED" {
 		fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("done.alreadyClosed"), resp.Repository.Issue.URL)
@@ -112,7 +112,7 @@ func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	if pid == "" {
 		fmt.Fprintf(c.ErrOrStderr(), "project not found: %s/%d (--scope %s)\n", pref.Owner, pref.Number, sc)
-		return errSilent
+		return ErrSilent
 	}
 	var fieldsResp queries.ListProjectV2FieldsResponse
 	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Fields, map[string]any{
@@ -122,17 +122,17 @@ func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	if fieldsResp.Node == nil {
 		fmt.Fprintf(c.ErrOrStderr(), "project not found: %s/%d (--scope %s)\n", pref.Owner, pref.Number, sc)
-		return errSilent
+		return ErrSilent
 	}
 	statusField := findStatusField(fieldsResp.Node.Fields.Nodes)
 	if statusField == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.done.statusFieldMissing"))
-		return errSilent
+		return ErrSilent
 	}
 	doneOption := findOption(statusField.Options, "done")
 	if doneOption == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.done.doneOptionMissing"))
-		return errSilent
+		return ErrSilent
 	}
 
 	var itemsResp queries.ListProjectV2ItemsResponse
@@ -152,7 +152,7 @@ func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	if target == nil {
 		fmt.Fprintf(c.ErrOrStderr(), "item not found in project: %s\n", itemID)
-		return errSilent
+		return ErrSilent
 	}
 	if isAlreadyDone(*target, statusField.ID, doneOption.ID) {
 		fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("done.alreadyDone.project"), itemID)

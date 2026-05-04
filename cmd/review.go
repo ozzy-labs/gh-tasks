@@ -138,7 +138,7 @@ func runReviewProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 	}
 	if pid == "" {
 		fmt.Fprintf(c.ErrOrStderr(), "project not found: %s/%d (--scope %s)\n", pref.Owner, pref.Number, sc)
-		return errSilent
+		return ErrSilent
 	}
 	var resp queries.ListProjectV2ItemsResponse
 	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Items, map[string]any{
@@ -148,7 +148,7 @@ func runReviewProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 	}
 	if resp.Node == nil {
 		fmt.Fprintf(c.ErrOrStderr(), "project not found: %s/%d (--scope %s)\n", pref.Owner, pref.Number, sc)
-		return errSilent
+		return ErrSilent
 	}
 	completed := []queries.ProjectV2ItemNode{}
 	for _, item := range resp.Node.Items.Nodes {
