@@ -22,6 +22,7 @@
   "error.repo.cannotExtractFromRemote": "git remote URL から owner/name を抽出できません: '{url}'",
   "error.scope.flagMissingValue": "--scope フラグに値が指定されていません",
   "error.scope.invalid": "不正な --scope 値: '{value}' (有効値: {valid})",
+  "error.scope.invalidForProjectResolution": "repo scope では Project node の解決はサポートされていません",
   "error.project.flagMissingValue": "--project フラグに値が指定されていません",
   "error.project.invalidIdentifier": "不正な --project 値: '{value}' (期待形式: '<owner>/<number>')",
   "error.project.repoScope": "repo scope は Projects v2 を使いません",
