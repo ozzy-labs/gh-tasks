@@ -94,7 +94,11 @@ func TestOf_DailyJST(t *testing.T) {
 
 	// Wed 2026-04-29 10:00 JST (= 2026-04-29 01:00 UTC)
 	now := time.Date(2026, 4, 29, 10, 0, 0, 0, jst)
-	r := period.Of(period.Daily, now, "Asia/Tokyo", func(string) string { return "" })
+	r := period.Of(period.Daily, period.Options{
+		Tz:     "Asia/Tokyo",
+		Getenv: func(string) string { return "" },
+		Now:    now,
+	})
 
 	wantStart := time.Date(2026, 4, 29, 0, 0, 0, 0, jst)
 	wantEnd := time.Date(2026, 4, 30, 0, 0, 0, 0, jst)
@@ -109,7 +113,7 @@ func TestOf_WeeklyAnchorsOnMonday_JST(t *testing.T) {
 
 	// Wed 2026-04-29 (any time)
 	now := time.Date(2026, 4, 29, 15, 30, 0, 0, jst)
-	r := period.Of(period.Weekly, now, "Asia/Tokyo", nil)
+	r := period.Of(period.Weekly, period.Options{Tz: "Asia/Tokyo", Now: now})
 
 	// Monday this week is 2026-04-27.
 	wantStart := time.Date(2026, 4, 27, 0, 0, 0, 0, jst)
@@ -125,7 +129,7 @@ func TestOf_WeeklySundayBacksUpOneWeek(t *testing.T) {
 
 	// Sun 2026-05-03 10:00 JST → week starts Mon 2026-04-27.
 	now := time.Date(2026, 5, 3, 10, 0, 0, 0, jst)
-	r := period.Of(period.Weekly, now, "Asia/Tokyo", nil)
+	r := period.Of(period.Weekly, period.Options{Tz: "Asia/Tokyo", Now: now})
 
 	wantStart := time.Date(2026, 4, 27, 0, 0, 0, 0, jst)
 	if !r.Start.Equal(wantStart) {
@@ -138,7 +142,7 @@ func TestOf_Sprint(t *testing.T) {
 	jst := mustLoadLocation(t, "Asia/Tokyo")
 
 	now := time.Date(2026, 4, 29, 10, 0, 0, 0, jst)
-	r := period.Of(period.Sprint, now, "Asia/Tokyo", nil)
+	r := period.Of(period.Sprint, period.Options{Tz: "Asia/Tokyo", Now: now})
 
 	wantStart := time.Date(2026, 4, 29, 0, 0, 0, 0, jst)
 	wantEnd := time.Date(2026, 5, 13, 0, 0, 0, 0, jst)
@@ -150,7 +154,7 @@ func TestOf_Sprint(t *testing.T) {
 func TestOf_UTCFallbackWhenTZInvalid(t *testing.T) {
 	t.Parallel()
 	now := time.Date(2026, 4, 29, 1, 0, 0, 0, time.UTC)
-	r := period.Of(period.Daily, now, "Not/A_TZ", nil)
+	r := period.Of(period.Daily, period.Options{Tz: "Not/A_TZ", Now: now})
 	wantStart := time.Date(2026, 4, 29, 0, 0, 0, 0, time.UTC)
 	if !r.Start.Equal(wantStart) {
 		t.Errorf("got %s, want %s", r.Start, wantStart)
@@ -165,7 +169,7 @@ func TestOf_PanicsOnUnrecognizedPeriod(t *testing.T) {
 		}
 	}()
 	now := time.Date(2026, 4, 29, 10, 0, 0, 0, time.UTC)
-	_ = period.Of(period.Period("monthly"), now, "UTC", nil)
+	_ = period.Of(period.Period("monthly"), period.Options{Tz: "UTC", Now: now})
 }
 
 func TestSuggestMilestoneTitle_PanicsOnUnrecognizedPeriod(t *testing.T) {
@@ -176,7 +180,7 @@ func TestSuggestMilestoneTitle_PanicsOnUnrecognizedPeriod(t *testing.T) {
 		}
 	}()
 	now := time.Date(2026, 4, 29, 10, 0, 0, 0, time.UTC)
-	_ = period.SuggestMilestoneTitle(period.Period("monthly"), now, "UTC", nil)
+	_ = period.SuggestMilestoneTitle(period.Period("monthly"), period.Options{Tz: "UTC", Now: now})
 }
 
 func TestSuggestMilestoneTitle(t *testing.T) {
@@ -192,7 +196,7 @@ func TestSuggestMilestoneTitle(t *testing.T) {
 	for p, want := range cases {
 		t.Run(string(p), func(t *testing.T) {
 			t.Parallel()
-			got := period.SuggestMilestoneTitle(p, now, "Asia/Tokyo", nil)
+			got := period.SuggestMilestoneTitle(p, period.Options{Tz: "Asia/Tokyo", Now: now})
 			if got != want {
 				t.Errorf("got %q want %q", got, want)
 			}
