@@ -21,8 +21,10 @@ build/
 # Logs
 *.log
 
-# Bun --compile binaries (committed only at release time via CI, repo-internal ADR-0001)
-packages/gh-tasks/bin/gh-tasks-*
+# Bun --compile binaries (release binaries are attached to GitHub Releases by
+# CI; dev binary is the host-only `pnpm run build` output. Neither is committed
+# — repo-internal ADR-0001).
+packages/gh-tasks/bin/
 
 # Re-include team-shared VS Code config from commons sync
 # (overrides any global .vscode/ ignore in user's ~/.gitignore_global)
