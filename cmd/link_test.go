@@ -25,6 +25,9 @@ func TestContainsCloseLink(t *testing.T) {
 		{"", 42, false},
 		{"Closes #4", 42, false},
 		{"Closes #420", 42, false},
+		{"Fixes #1, Closes #42", 42, true},
+		{"Closes #1, Fixes #42", 1, true},
+		{"Resolves #99\nCloses #42", 42, true},
 	}
 	for _, tc := range cases {
 		got := cmd.ContainsCloseLink(tc.body, tc.num)
