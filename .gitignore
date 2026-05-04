@@ -26,6 +26,14 @@ build/
 # — repo-internal ADR-0001).
 packages/gh-tasks/bin/
 
+# Go build artifacts (Go 移行: ADR-0006)
+/gh-tasks-bin
+/bin/
+*.test
+*.out
+coverage.txt
+coverage.html
+
 # Re-include team-shared VS Code config from commons sync
 # (overrides any global .vscode/ ignore in user's ~/.gitignore_global)
 !.vscode/

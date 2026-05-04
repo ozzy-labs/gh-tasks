@@ -12,8 +12,11 @@
 
 | # | Title | Status |
 | --- | --- | --- |
-| 0001 | [Bun `--compile` をバイナリビルドに採用](./0001-use-bun-compile-for-binary.md) | Accepted |
+| 0001 | [Bun `--compile` をバイナリビルドに採用](./0001-use-bun-compile-for-binary.md) | Superseded by [0006](./0006-go-and-cobra-migration.md) |
 | 0002 | [i18n は Japanese SSOT + English mirror](./0002-i18n-japanese-ssot.md) | Superseded by [0005](./0005-i18n-reader-based-ssot.md) |
-| 0003 | [GraphQL は Octokit 経由、`gh api` shell-out 不採用](./0003-graphql-via-octokit.md) | Accepted |
+| 0003 | [GraphQL は Octokit 経由、`gh api` shell-out 不採用](./0003-graphql-via-octokit.md) | Superseded by [0007](./0007-go-gh-graphql-client.md) |
 | 0004 | [SKILL.md frontmatter 最小スキーマ](./0004-skill-frontmatter-schema.md) | Accepted |
 | 0005 | [i18n SSOT を読み手ベースに再設計し docs/ を再構成](./0005-i18n-reader-based-ssot.md) | Accepted |
+| 0006 | [Go 1.25 + cobra + `cli/gh-extension-precompile@v2` への完全移行](./0006-go-and-cobra-migration.md) | Accepted |
+| 0007 | [GitHub API は `cli/go-gh/v2` 経由で叩く](./0007-go-gh-graphql-client.md) | Accepted |
+| 0008 | [Go テスト・品質チェーン: `testing` + `go-cmp` + `golangci-lint v2` + `govulncheck`](./0008-go-test-and-quality-chain.md) | Accepted |

@@ -1,6 +1,6 @@
 # 0003. GraphQL は Octokit 経由で叩き、`gh api graphql` shell-out は採用しない
 
-- Status: Accepted
+- Status: Superseded by [ADR-0007](./0007-go-gh-graphql-client.md)
 - Date: 2026-04-30
 - Deciders: ozzy
 - Tags: cli, github-projects, graphql, auth

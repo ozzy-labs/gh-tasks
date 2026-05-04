@@ -3,12 +3,15 @@
 node = "24"
 pnpm = "10"
 bun = "1.2"
+go = "1.25"
 
 # Git hooks & commit conventions
 lefthook = "2"
 
 # Linters & formatters
 biome = "2"
+golangci-lint = "latest"
+"go:golang.org/x/vuln/cmd/govulncheck" = "latest"
 shellcheck = "0.11"
 shfmt = "3"
 "npm:markdownlint-cli2" = "0.21"

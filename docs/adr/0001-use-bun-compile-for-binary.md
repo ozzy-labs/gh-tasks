@@ -1,6 +1,6 @@
 # 0001. Bun `--compile` をバイナリビルドに採用する
 
-- Status: Accepted
+- Status: Superseded by [ADR-0006](./0006-go-and-cobra-migration.md)
 - Date: 2026-04-30
 - Deciders: ozzy
 - Tags: cli, build, language, distribution
