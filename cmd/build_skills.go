@@ -24,8 +24,26 @@ func newBuildSkillsCmd(deps Deps) *cobra.Command {
 	}
 	c.Flags().Bool("check-diff", false, "fail if dist/ output differs from source SSOT (CI dogfooding)")
 	c.Flags().String("src", "src/skills", "skill SSOT directory")
-	c.Flags().String("dist", "dist", "output directory root")
+	c.Flags().String("dist", "dist", "output directory root (WARNING: contents of <dist>/<adapter>/ are wiped before regeneration)")
 	return c
+}
+
+// sanitizeDist rejects --dist values that would be unsafe to RemoveAll under,
+// such as "", ".", "/", or "..". Programmer-facing (the build-skills cmd is
+// Hidden) so the message is plain ASCII.
+func sanitizeDist(raw string) (string, error) {
+	if raw == "" {
+		return "", fmt.Errorf("refusing to use unsafe --dist value: empty string")
+	}
+	cleaned := filepath.Clean(raw)
+	switch cleaned {
+	case ".", "..", "/":
+		return "", fmt.Errorf("refusing to use unsafe --dist value %q (resolves to %q)", raw, cleaned)
+	}
+	if cleaned == string(filepath.Separator) {
+		return "", fmt.Errorf("refusing to use unsafe --dist value %q (resolves to root separator)", raw)
+	}
+	return cleaned, nil
 }
 
 // LocalStage is a (dist subpath, repo path) pair used to mirror generated
@@ -47,6 +65,11 @@ func runBuildSkills(c *cobra.Command, deps Deps) error {
 	src, _ := c.Flags().GetString("src")
 	distRoot, _ := c.Flags().GetString("dist")
 	checkDiff, _ := c.Flags().GetBool("check-diff")
+
+	distRoot, err := sanitizeDist(distRoot)
+	if err != nil {
+		return err
+	}
 
 	if _, err := os.Stat(src); errors.Is(err, os.ErrNotExist) {
 		fmt.Fprintln(c.OutOrStdout(), "[build-skills] no src/skills/ — nothing to build")
