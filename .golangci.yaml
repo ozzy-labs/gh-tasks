@@ -1,0 +1,42 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  default: standard
+  enable:
+    - revive
+    - errorlint
+    - gosec
+    - bodyclose
+    - paralleltest
+    - misspell
+    - gocritic
+  exclusions:
+    warn-unused: true
+    rules:
+      - path: _test\.go
+        linters:
+          - gosec
+          - paralleltest
+  settings:
+    revive:
+      rules:
+        - name: var-naming
+        - name: exported
+        - name: unused-parameter
+          disabled: true
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+    - gci
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/ozzy-labs/gh-tasks)

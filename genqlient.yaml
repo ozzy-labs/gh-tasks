@@ -1,0 +1,14 @@
+schema: internal/github/queries/schema.graphql
+operations:
+  - internal/github/queries/*.graphql
+generated: internal/github/queries/genqlient.go
+package: queries
+use_struct_references: true
+optional: pointer
+bindings:
+  DateTime:
+    type: time.Time
+  GitObjectID:
+    type: string
+  URI:
+    type: string
