@@ -2,7 +2,6 @@
 package project
 
 import (
-	"errors"
 	"strconv"
 	"strings"
 
@@ -27,19 +26,15 @@ func (r Ref) IsZero() bool { return r == Ref{} }
 
 // ProjectError is returned when a project flag or config value is malformed,
 // or when a scope is asked for a project it cannot have (e.g. repo).
+//
+// Use errors.As(err, &target) to test for this type:
+//
+//	var pe *project.ProjectError
+//	if errors.As(err, &pe) { ... }
 type ProjectError struct{ i18n.Payload }
 
 // Error satisfies the error interface.
 func (e *ProjectError) Error() string { return e.Key }
-
-// AsProjectError unwraps err into a ProjectError.
-func AsProjectError(err error) (*ProjectError, bool) {
-	var pe *ProjectError
-	if errors.As(err, &pe) {
-		return pe, true
-	}
-	return nil, false
-}
 
 func newError(key string, args ...any) *ProjectError {
 	return &ProjectError{Payload: i18n.NewPayload(key, args...)}
