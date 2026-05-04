@@ -29,3 +29,4 @@
 | --- | --- |
 | [architecture.md](./architecture.md) | 全体俯瞰・モジュール境界・ディレクトリ構成・配布モデル |
 | [adapter-pipeline.md](./adapter-pipeline.md) | skill SSOT → dist/{adapter}/ → consumer の処理連鎖、4 adapter の出力仕様 |
+| [release-process.md](./release-process.md) | release.yaml の 3 job 構成、release-please 連携、attestations / checksums、暫定 pin の経緯 |
