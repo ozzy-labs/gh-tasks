@@ -1,0 +1,49 @@
+package i18n
+
+import "fmt"
+
+// Localized is implemented by errors that carry an i18n key + args. Callers at
+// the CLI boundary can render them with [T] to produce a human-readable
+// message in the active locale.
+type Localized interface {
+	error
+	I18nKey() string
+	I18nArgs() map[string]any
+}
+
+// Payload carries an i18n key and its arguments. Domain error types embed it
+// (or compose it as a value field) so they all satisfy [Localized] without
+// duplicating boilerplate.
+type Payload struct {
+	Key  string
+	Args map[string]any
+}
+
+// NewPayload builds a Payload from alternating key/value pairs.
+func NewPayload(key string, args ...any) Payload {
+	return Payload{Key: key, Args: ToArgsMap(args)}
+}
+
+// I18nKey reports the message key.
+func (p Payload) I18nKey() string { return p.Key }
+
+// I18nArgs returns the placeholder map.
+func (p Payload) I18nArgs() map[string]any { return p.Args }
+
+// Localize renders the payload into the given locale.
+func (p Payload) Localize(loc Locale) string {
+	return T(loc, p.Key, Flat(p.Args)...)
+}
+
+// String renders the payload for debug/log output.
+func (p Payload) String() string { return fmt.Sprintf("%s: %v", p.Key, p.Args) }
+
+// Flat converts an args map back into the alternating-key/value flattened
+// slice that [T] consumes.
+func Flat(m map[string]any) []any {
+	out := make([]any, 0, len(m)*2)
+	for k, v := range m {
+		out = append(out, k, v)
+	}
+	return out
+}
