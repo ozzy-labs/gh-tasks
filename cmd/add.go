@@ -1,17 +1,117 @@
 package cmd
 
 import (
-	"errors"
+	"context"
+	"fmt"
 
 	"github.com/spf13/cobra"
+
+	"github.com/ozzy-labs/gh-tasks/internal/github/queries"
+	"github.com/ozzy-labs/gh-tasks/internal/project"
+	"github.com/ozzy-labs/gh-tasks/internal/projectitem"
+	"github.com/ozzy-labs/gh-tasks/internal/repo"
+	"github.com/ozzy-labs/gh-tasks/internal/scope"
 )
 
-func newAddCmd(_ Deps) *cobra.Command {
-	return &cobra.Command{
+func newAddCmd(deps Deps) *cobra.Command {
+	c := &cobra.Command{
 		Use:   "add <title>",
-		Short: "Add a task (Issue / Project draft / Milestone)",
-		RunE: func(_ *cobra.Command, _ []string) error {
-			return errors.New("not implemented yet (phase 2c)")
+		Short: "Add a task (Issue or Project draft item)",
+		RunE: func(c *cobra.Command, args []string) error {
+			return runAdd(c.Context(), c, deps, args)
 		},
 	}
+	c.Flags().String("body", "", "Issue / draft item body")
+	return c
+}
+
+func runAdd(ctx context.Context, c *cobra.Command, deps Deps, args []string) error {
+	r, err := deps.Resolve()
+	if err != nil {
+		return localizedError(c, r, err)
+	}
+	if len(args) == 0 || args[0] == "" {
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.add.titleRequired"))
+		return errSilent
+	}
+	title := args[0]
+	body, _ := c.Flags().GetString("body")
+
+	sc, err := scope.Detect(scope.DetectOptions{
+		Argv:         deps.Argv,
+		HasGitRemote: deps.HasGitRemote,
+		DefaultScope: r.Config.DefaultScope,
+	})
+	if err != nil {
+		return localizedError(c, r, err)
+	}
+	if sc == scope.Repo {
+		return runAddRepo(ctx, c, deps, r, title, body)
+	}
+	return runAddProject(ctx, c, deps, r, sc, title, body)
+}
+
+func runAddRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, title, body string) error {
+	id, err := repo.Resolve(repo.ResolveOptions{Argv: deps.Argv, GetRemoteURL: deps.GetRemoteURL})
+	if err != nil {
+		return localizedError(c, r, err)
+	}
+	clients, err := deps.NewClients()
+	if err != nil {
+		return localizedError(c, r, err)
+	}
+	var idResp queries.GetRepositoryIDResponse
+	if err := clients.GraphQL.Do(ctx, queries.GetRepositoryID, map[string]any{
+		"owner": id.Owner, "name": id.Name,
+	}, &idResp); err != nil {
+		return err
+	}
+	if idResp.Repository == nil {
+		fmt.Fprintf(c.ErrOrStderr(), "repository not found: %s/%s\n", id.Owner, id.Name)
+		return errSilent
+	}
+	input := map[string]any{"repositoryId": idResp.Repository.ID, "title": title}
+	if body != "" {
+		input["body"] = body
+	}
+	var resp queries.CreateIssueResponse
+	if err := clients.GraphQL.Do(ctx, queries.CreateIssue, map[string]any{"input": input}, &resp); err != nil {
+		return err
+	}
+	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("add.created.repo"), resp.CreateIssue.Issue.URL)
+	return nil
+}
+
+func runAddProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, title, body string) error {
+	pref, err := project.Resolve(project.ResolveOptions{
+		Scope:       sc,
+		Argv:        deps.Argv,
+		OrgProject:  r.Config.OrgProject,
+		UserProject: r.Config.UserProject,
+	})
+	if err != nil {
+		return localizedError(c, r, err)
+	}
+	clients, err := deps.NewClients()
+	if err != nil {
+		return localizedError(c, r, err)
+	}
+	pid, err := projectitem.ResolveProjectNodeID(ctx, clients.GraphQL, sc, pref)
+	if err != nil {
+		return err
+	}
+	if pid == "" {
+		fmt.Fprintf(c.ErrOrStderr(), "project not found: %s/%d (--scope %s)\n", pref.Owner, pref.Number, sc)
+		return errSilent
+	}
+	input := map[string]any{"projectId": pid, "title": title}
+	if body != "" {
+		input["body"] = body
+	}
+	var resp queries.AddProjectV2DraftIssueResponse
+	if err := clients.GraphQL.Do(ctx, queries.AddProjectV2DraftIssue, map[string]any{"input": input}, &resp); err != nil {
+		return err
+	}
+	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("add.created.project"), resp.AddProjectV2DraftIssue.ProjectItem.ID)
+	return nil
 }
