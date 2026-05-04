@@ -2,13 +2,19 @@ package i18n
 
 import "fmt"
 
-// Localized is implemented by errors that carry an i18n key + args. Callers at
-// the CLI boundary can render them with [T] to produce a human-readable
-// message in the active locale.
+// Localized is implemented by errors that carry an i18n key + args. Callers
+// at the CLI boundary call Localize(loc) to render a human-readable message
+// in the active locale. I18nKey / I18nArgs remain on the interface so
+// callers that want to inspect or re-key the payload can still do so.
+//
+// All in-tree implementations embed [Payload], which provides Localize for
+// free, so adding a new domain error type only requires composing Payload
+// without re-implementing Localize.
 type Localized interface {
 	error
 	I18nKey() string
 	I18nArgs() map[string]any
+	Localize(Locale) string
 }
 
 // Payload carries an i18n key and its arguments. Domain error types embed it

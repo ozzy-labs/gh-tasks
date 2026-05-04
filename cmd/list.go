@@ -133,7 +133,7 @@ var ErrSilent = errors.New("silent error")
 func localizedError(c *cobra.Command, r Resolved, err error) error {
 	var loc i18n.Localized
 	if errors.As(err, &loc) {
-		fmt.Fprintln(c.ErrOrStderr(), i18n.T(r.Locale, loc.I18nKey(), i18n.Flat(loc.I18nArgs())...))
+		fmt.Fprintln(c.ErrOrStderr(), loc.Localize(r.Locale))
 		return ErrSilent
 	}
 	return err
