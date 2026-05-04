@@ -43,6 +43,11 @@ func runList(ctx context.Context, c *cobra.Command, deps Deps) error {
 		return localizedError(c, r, err)
 	}
 	limit, _ := c.Flags().GetInt("limit")
+	// Defensive default-back: cobra's IntFlag default is defaultListLimit, but
+	// explicit `--limit=0` or negative values are not valid and were never
+	// honoured by the legacy TS implementation either, so fall back to the
+	// default. Kept as documentation rather than a pflag.Var validator to
+	// preserve the TS toLimit() parity.
 	if limit <= 0 {
 		limit = defaultListLimit
 	}
