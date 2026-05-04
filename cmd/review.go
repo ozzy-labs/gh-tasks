@@ -35,7 +35,7 @@ func runReview(ctx context.Context, c *cobra.Command, deps Deps) error {
 		return localizedError(c, r, err)
 	}
 	pflag, _ := c.Flags().GetString("period")
-	p, _, err := period.ParseFlag([]string{"--period=" + pflag})
+	p, err := period.Parse(pflag)
 	if err != nil {
 		return localizedError(c, r, err)
 	}
