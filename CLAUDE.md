@@ -25,14 +25,14 @@
 - `/ship` — lint・コミット・PR 作成を一括実行
 - `/drive` — implement + ship + review loop（Issue から merge-ready な PR まで自律駆動）
 
-リポ固有の skill(本リポの `src/skills/` SSOT。CLI は `gh tasks` で実装済、adapter 配信パイプラインは `pnpm run build:skills` → `dist/{adapter}/` で確立済):
+リポ固有の skill(本リポの `src/skills/` SSOT。CLI は `gh tasks` で実装済、adapter 配信パイプラインは `pnpm run build:skills` → `dist/{adapter}/` → `.claude/skills/` 自動 stage で確立済):
 
-- `/task-add` — 会話文脈からタスク化
-- `/task-plan` — 日次 / 週次 / スプリント計画
-- `/task-triage` — inbox triage
-- `/task-review` — daily / weekly retrospective
-- `/task-standup` — 活動サマリ
-- `/task-link-pr` — PR と項目の紐付け
+- `/task-add` — 会話文脈からタスクを追加する。GitHub Issue / Project draft item / repo Milestone を自動判定し、`gh tasks add` を呼び出す。
+- `/task-plan` — 日次 / 週次 / イテレーション計画を実行する。`gh tasks plan` を呼び出して該当 scope の Milestone (repo) または Iteration (org/user) で計画項目を整理する。
+- `/task-triage` — 未トリアージの Issue / Project draft item を整理する。`gh tasks triage` を呼び出してラベル付け、scope 振り分け、close 判断を補助する。
+- `/task-review` — 振り返りサマリを生成する。`gh tasks review --period daily|weekly|sprint` を呼び出して期間内の Issue close / PR merge / Project アイテムの完了を要約する。
+- `/task-standup` — 直近活動のスタンドアップ用サマリを生成する。`gh tasks standup [--mine]` を呼び出してチーム / 個人の動きを共有可能な形に整形する。
+- `/task-link-pr` — PR を Issue / Project 項目と紐付ける。`gh tasks link <pr> <task>` を呼び出して GitHub の relation を作成する。
 
 ## Skills の共通ルール
 

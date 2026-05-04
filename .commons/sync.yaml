@@ -19,3 +19,15 @@ pinned:
   - lefthook.yaml
   - .gitignore
   - .github/copilot-instructions.md
+  - .claude/skills/task-add
+  - .claude/skills/task-link-pr
+  - .claude/skills/task-plan
+  - .claude/skills/task-review
+  - .claude/skills/task-standup
+  - .claude/skills/task-triage
+  - .agents/skills/task-add
+  - .agents/skills/task-link-pr
+  - .agents/skills/task-plan
+  - .agents/skills/task-review
+  - .agents/skills/task-standup
+  - .agents/skills/task-triage

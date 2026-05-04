@@ -30,16 +30,17 @@ gh alias set task tasks
 
 | コマンド | 用途 |
 | --- | --- |
-| `gh tasks add <title>` | Issue / Project draft item の追加(`--scope repo\|org\|user`、`--repo <name>`) |
-| `gh tasks list` / `gh tasks today` | 一覧表示(`--scope` でスコープ切替) |
-| `gh tasks plan` | 週次 / イテレーション計画(repo は Milestone、org/user は Iteration) |
-| `gh tasks triage` | 未トリアージ Issue / draft の整理 |
+| `gh tasks add <title>` | Issue / Project draft item の追加(`--scope repo\|org\|user`、`--repo <name>`、`--project <id>`) |
+| `gh tasks list` / `gh tasks today` | 一覧表示(`--scope` でスコープ切替、`--limit <N>` 既定 30) |
+| `gh tasks plan [--period daily\|weekly\|sprint] [--dry-run]` | 週次 / イテレーション計画(repo は Milestone、org/user は Iteration) |
+| `gh tasks triage [--limit <N>]` | 未トリアージ Issue / draft の整理(既定 20) |
 | `gh tasks done <id>` | 完了化(repo: Issue close、org/user: Status → Done) |
 | `gh tasks review [--period daily\|weekly\|sprint]` | 振り返り |
-| `gh tasks standup [--mine]` | 個人 / チーム活動サマリ |
+| `gh tasks standup [--mine] [--since <iso8601>]` | 個人 / チーム活動サマリ(既定 直近 24h) |
 | `gh tasks link <pr> <task>` | PR と Issue / Project 項目の紐付け |
+| `gh tasks projects init` | yaml テンプレートから Project v2 を bootstrap(`--template`、`--owner`、`--title`) |
 
-`--scope` の解決順は「明示の `--scope` フラグ → 作業ディレクトリの git remote(`origin` があれば `repo`)→ `~/.config/ozzylabs/gh-tasks.toml` の `default_scope` → `user`」。
+`--scope` の解決順は「明示の `--scope` フラグ → 作業ディレクトリの git remote(`origin` があれば `repo`)→ `~/.config/ozzylabs/gh-tasks.toml` の `default_scope` → `user`」。フラグの詳細は [docs/ja/cli-reference.md](docs/ja/cli-reference.md) を参照。
 
 ## Skills
 

@@ -30,16 +30,17 @@ The extension inherits authentication from `gh auth login` — no separate token
 
 | Command | Purpose |
 | --- | --- |
-| `gh tasks add <title>` | Add an Issue or Project draft item. `--scope repo\|org\|user`, `--repo <name>` |
-| `gh tasks list` / `gh tasks today` | List filtered tasks (scope-aware) |
-| `gh tasks plan` | Plan a week / iteration (Milestone for repo, Iteration for org/user) |
-| `gh tasks triage` | Triage untriaged Issues / draft items |
+| `gh tasks add <title>` | Add an Issue or Project draft item. `--scope repo\|org\|user`, `--repo <name>`, `--project <id>` |
+| `gh tasks list` / `gh tasks today` | List filtered tasks (scope-aware). `--limit <N>` (default 30) |
+| `gh tasks plan [--period daily\|weekly\|sprint] [--dry-run]` | Plan a week / iteration (Milestone for repo, Iteration for org/user) |
+| `gh tasks triage [--limit <N>]` | Triage untriaged Issues / draft items (default 20) |
 | `gh tasks done <id>` | Close an Issue (repo) or set Status → Done (org/user) |
 | `gh tasks review [--period daily\|weekly\|sprint]` | Retrospective summary |
-| `gh tasks standup [--mine]` | Activity summary |
+| `gh tasks standup [--mine] [--since <iso8601>]` | Activity summary (default last 24h) |
 | `gh tasks link <pr> <task>` | Link a PR to an Issue / Project item |
+| `gh tasks projects init` | Bootstrap a Project v2 from a yaml template (`--template`, `--owner`, `--title`) |
 
-Default `--scope` resolves in this order: explicit `--scope` flag → current working directory's git remote (`origin` present → `repo`) → `~/.config/ozzylabs/gh-tasks.toml` `default_scope` → `user`.
+Default `--scope` resolves in this order: explicit `--scope` flag → current working directory's git remote (`origin` present → `repo`) → `~/.config/ozzylabs/gh-tasks.toml` `default_scope` → `user`. Full flag reference: [docs/en/cli-reference.md](docs/en/cli-reference.md).
 
 ## Skills
 
