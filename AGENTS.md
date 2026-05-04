@@ -49,24 +49,20 @@ docs/manual/{en,ja}/    → ユーザーマニュアル(en SSOT、ja mirror)
 docs/adr/               → repo-internal ADR(ja 単一)
 docs/design/            → repo-internal な living 設計ドキュメント(ja 単一)
 .agents/ ・ .claude/    → commons + skills sync 配置先
-packages/gh-tasks/      → 旧 TS 実装(Phase 7 で削除予定、現在は freeze 中)
-scripts/                → 旧 TS scripts(Phase 7 で削除予定)
 ```
 
 ## 主要コマンド
 
 ```bash
-mise install                          # toolchain (go / golangci-lint / govulncheck / 旧 ts ツール)
+mise install                          # toolchain (go / golangci-lint / govulncheck 等)
 go build ./...                        # CLI バイナリ
 go run . build-skills                 # adapter pipeline 実行(dist/{adapter}/ 生成)
 go run . check-i18n                   # ハードコード非 ASCII 検知
 go test -race -shuffle=on ./...       # テスト
 golangci-lint run --timeout 5m ./...  # lint v2
 govulncheck ./...                     # 脆弱性スキャン
-yamllint . && yamlfmt . && markdownlint-cli2 '**/*.md'   # 旧 ts と共有の lint
+yamllint . && yamlfmt . && markdownlint-cli2 '**/*.md'   # 共有 lint
 ```
-
-旧 TS toolchain (`pnpm run lint / typecheck / test`) は Phase 7 のカットオーバーまで併走可能。
 
 ## i18n SSOT
 
@@ -77,7 +73,7 @@ yamllint . && yamlfmt . && markdownlint-cli2 '**/*.md'   # 旧 ts と共有の l
 - SKILL.md: `SKILL.md`(ja SSOT)+ `SKILL.en.md`(en mirror)
 - ADR(`docs/adr/`): ja のみ(repo-internal な意思決定記録、翻訳しない)
 - 設計ドキュメント(`docs/design/`): ja のみ(living な設計メモ、翻訳しない)
-- CLI 出力 / エラー(`packages/gh-tasks/src/i18n/`): **en SSOT** + ja translation(新規キーは en に書き、ja を追従させる)
+- CLI 出力 / エラー(`internal/i18n/`): **en SSOT** + ja translation(新規キーは en に書き、ja を追従させる)
 - AGENTS.md / CLAUDE.md: ja のみ
 
 **ハードコード文字列禁止**: 非 ASCII を含むリテラルは `i18n.T(locale, "key", args...)` 経由必須(`internal/i18n/{en,ja}.json` に定義)。`gh tasks check-i18n`(`internal/i18ncheck`、`go/parser` ベース)が pre-commit / CI で強制。エラー型は `i18n.Payload` を埋め込んで `i18n.Localized` インタフェースを満たし、上位 (`cmd/list.go` 等の `localizedError`) で resolve した locale を使い localize する(例: `scope.ScopeError`、`repo.RepoError`、`project.ProjectError`、`period.PeriodError`、`config.ConfigError`、`github.AuthError`)。

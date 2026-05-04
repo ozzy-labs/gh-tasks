@@ -21,11 +21,12 @@ rules:
     - 2
     - always
     - - cli
+      - cmd
+      - internal
       - skills
       - templates
       - docs
       - adr
-      - scripts
       - ci
       - deps
       - '*'

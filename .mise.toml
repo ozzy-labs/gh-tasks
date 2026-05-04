@@ -1,17 +1,16 @@
 [tools]
-# Runtime & package managers
-node = "24"
-pnpm = "10"
-bun = "1.2"
+# Runtime
+node = "24"            # used by markdownlint-cli2 (npm:) and commitlint (npx)
 go = "1.25"
 
 # Git hooks & commit conventions
 lefthook = "2"
 
-# Linters & formatters
-biome = "2"
+# Go quality chain
 golangci-lint = "latest"
 "go:golang.org/x/vuln/cmd/govulncheck" = "latest"
+
+# Linters & formatters (language-agnostic)
 shellcheck = "0.11"
 shfmt = "3"
 "npm:markdownlint-cli2" = "0.21"

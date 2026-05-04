@@ -12,13 +12,14 @@ pre-commit:
     check-yaml-extension:
       glob: '**/*.yml'
       run: 'echo "❌ .yml files found. Use .yaml extension instead." && exit 1'
-    biome-check:
-      glob: '*.{ts,tsx,js,jsx,json}'
-      run: biome check --write --files-ignore-unknown=true --diagnostic-level=error {staged_files}
+    gofumpt:
+      glob: '**/*.go'
+      run: mise exec -- gofmt -w {staged_files}
       stage_fixed: true
-    check-no-hardcoded-i18n:
-      glob: 'packages/gh-tasks/src/**/*.ts'
-      run: node scripts/check-no-hardcoded-i18n.mjs
+    golangci-lint:
+      glob: '**/*.go'
+      run: mise exec -- golangci-lint run --fix --timeout 5m
+      stage_fixed: true
     check-no-hardcoded-i18n-go:
       glob: '{cmd,internal}/**/*.go'
       run: mise exec -- go run . check-i18n
@@ -58,8 +59,8 @@ pre-commit:
 
 pre-push:
   commands:
-    typecheck:
-      run: pnpm -r typecheck
+    go-test:
+      run: mise exec -- go test ./...
     check-branch-name:
       run: |-
         BRANCH=$(git rev-parse --abbrev-ref HEAD)
