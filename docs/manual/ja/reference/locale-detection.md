@@ -27,8 +27,7 @@ $ gh tasks add 'foo' --scope=repo --repo=owner/name --lang=fr
 
 ## 実装
 
-`packages/gh-tasks/src/i18n/index.ts` の `resolveLocale(argv, env?, config?)` 関数。
-`env` / `config` は引数で注入可能でテストは決定論的。`config` は `lib/config.ts` の `loadConfig()` で `~/.config/ozzylabs/gh-tasks.toml` から読み込まれる。
+`packages/gh-tasks/src/i18n/index.ts` の `resolveLocale(argv, env?, config?)` 関数。`env` / `config` は引数で注入可能でテストは決定論的。`config` は `lib/config.ts` の `loadConfig()` で `~/.config/ozzylabs/gh-tasks.toml` から読み込まれる。
 
 ## SSOT 言語と出力言語
 
