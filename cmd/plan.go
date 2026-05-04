@@ -42,7 +42,7 @@ func runPlan(ctx context.Context, c *cobra.Command, deps Deps) error {
 	}
 	pflag, _ := c.Flags().GetString("period")
 	dryRun, _ := c.Flags().GetBool("dry-run")
-	p, _, err := period.ParseFlag([]string{"--period=" + pflag})
+	p, err := period.Parse(pflag)
 	if err != nil {
 		return localizedError(c, r, err)
 	}
