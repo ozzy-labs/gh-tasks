@@ -93,7 +93,7 @@ func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 		}
 	}
 	out := c.OutOrStdout()
-	fmt.Fprintf(out, "# %s (%s)\n", r.T("review.heading"), p)
+	fmt.Fprintf(out, "# %s (%s)\n", r.T("review.heading"), r.T("review.period."+string(p)))
 	fmt.Fprintf(out, "%s → %s\n\n", rng.Start.Format("2006-01-02"), rng.End.Format("2006-01-02"))
 	fmt.Fprintf(out, "## %s (%d)\n", r.T("review.closedIssues"), len(closed))
 	if len(closed) == 0 {
@@ -154,7 +154,7 @@ func runReviewProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 		}
 	}
 	out := c.OutOrStdout()
-	fmt.Fprintf(out, "# %s (%s)\n", r.T("review.heading"), p)
+	fmt.Fprintf(out, "# %s (%s)\n", r.T("review.heading"), r.T("review.period."+string(p)))
 	fmt.Fprintf(out, "%s → %s\n\n", rng.Start.Format("2006-01-02"), rng.End.Format("2006-01-02"))
 	fmt.Fprintf(out, "## %s (%d)\n", r.T("review.completedProjectItems"), len(completed))
 	if len(completed) == 0 {
