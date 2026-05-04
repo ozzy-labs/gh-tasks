@@ -82,7 +82,11 @@ func FindFiles(roots []string) ([]string, error) {
 			}
 			if d.IsDir() {
 				name := d.Name()
-				if name == "vendor" || name == "node_modules" || name == ".git" || name == "dist" {
+				// `.claude` hosts sibling worktrees under .claude/worktrees/ that
+				// share this go module; walking into them false-flags other
+				// agents' WIP code (#226). dist/ is generated adapter output.
+				if name == "vendor" || name == "node_modules" ||
+					name == ".git" || name == "dist" || name == ".claude" {
 					return filepath.SkipDir
 				}
 				return nil

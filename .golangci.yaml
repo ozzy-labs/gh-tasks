@@ -16,6 +16,12 @@ linters:
     - gocritic
   exclusions:
     warn-unused: true
+    # Sibling worktrees under .claude/worktrees/ share this go module, so a
+    # `./...` invocation walks into other agents' WIP code and false-flags it
+    # (#226). dist/ is generated adapter output that should never be linted.
+    paths:
+      - \.claude/worktrees/
+      - dist/
     rules:
       - path: _test\.go
         linters:
