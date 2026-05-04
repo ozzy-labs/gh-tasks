@@ -26,6 +26,12 @@ linters:
       rules:
         - name: var-naming
         - name: exported
+          # The TS-mirroring `XxxError` type names (ScopeError, RepoError,
+          # PeriodError, ProjectError, ConfigError, AuthError) are kept as-is
+          # to preserve the 1:1 mapping with the source-of-truth TS errors,
+          # so suppress revive's stutter warning.
+          arguments:
+            - disableStutteringCheck
         - name: unused-parameter
           disabled: true
 
