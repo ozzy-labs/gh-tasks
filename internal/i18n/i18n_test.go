@@ -78,6 +78,59 @@ func TestT(t *testing.T) {
 	})
 }
 
+func TestSubstitute(t *testing.T) {
+	t.Parallel()
+
+	t.Run("nested-placeholder-not-re-expanded", func(t *testing.T) {
+		t.Parallel()
+		// If the implementation iterated the map and called strings.ReplaceAll
+		// per entry, expanding `outer` first would leave `{inner}` to be
+		// substituted on the next pass — non-deterministic across map order.
+		// The single-pass regex implementation must leave the literal `{inner}`
+		// from the value untouched.
+		msg := "{outer}"
+		args := map[string]any{
+			"outer": "value-{inner}",
+			"inner": "REPLACED",
+		}
+		got := i18n.Substitute(msg, args)
+		want := "value-{inner}"
+		if got != want {
+			t.Errorf("Substitute deterministic mismatch: got %q, want %q", got, want)
+		}
+	})
+
+	t.Run("multiple-placeholders-stable-across-runs", func(t *testing.T) {
+		t.Parallel()
+		msg := "{a}-{b}-{c}-{a}"
+		args := map[string]any{"a": "1", "b": "2", "c": "3"}
+		// Run many iterations; map iteration order randomization should not
+		// affect the result.
+		want := "1-2-3-1"
+		for i := 0; i < 100; i++ {
+			if got := i18n.Substitute(msg, args); got != want {
+				t.Fatalf("iteration %d: got %q, want %q", i, got, want)
+			}
+		}
+	})
+
+	t.Run("unknown-placeholder-left-intact", func(t *testing.T) {
+		t.Parallel()
+		got := i18n.Substitute("hello {name}", map[string]any{"other": "x"})
+		if got != "hello {name}" {
+			t.Errorf("unknown placeholder should be untouched, got %q", got)
+		}
+	})
+
+	t.Run("empty-args-returns-msg-unchanged", func(t *testing.T) {
+		t.Parallel()
+		got := i18n.Substitute("hello {name}", nil)
+		if got != "hello {name}" {
+			t.Errorf("empty args should return msg unchanged, got %q", got)
+		}
+	})
+}
+
 func TestValidate(t *testing.T) {
 	t.Parallel()
 

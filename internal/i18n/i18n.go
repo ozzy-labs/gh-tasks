@@ -8,6 +8,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -132,17 +133,31 @@ func ToArgsMap(args []any) map[string]any {
 	return m
 }
 
+// placeholderPattern matches `{name}` tokens where `name` is one or more
+// word characters (letters, digits, underscore). Used by Substitute for a
+// single deterministic pass over the message.
+var placeholderPattern = regexp.MustCompile(`\{(\w+)\}`)
+
 // Substitute replaces every `{name}` token in msg with the matching value
 // from args (rendered via fmt.Sprint). Tokens with no matching entry are
 // left untouched.
+//
+// The replacement is a single left-to-right regex pass, so the result is
+// deterministic regardless of Go map iteration order and `{name}` tokens
+// that appear inside an already-substituted value are not re-expanded.
 func Substitute(msg string, args map[string]any) string {
 	if len(args) == 0 {
 		return msg
 	}
-	for k, v := range args {
-		msg = strings.ReplaceAll(msg, "{"+k+"}", fmt.Sprint(v))
-	}
-	return msg
+	return placeholderPattern.ReplaceAllStringFunc(msg, func(match string) string {
+		// match is `{name}`; strip the braces to get the key.
+		key := match[1 : len(match)-1]
+		v, ok := args[key]
+		if !ok {
+			return match
+		}
+		return fmt.Sprint(v)
+	})
 }
 
 func lookup(locale Locale, key string) string {
