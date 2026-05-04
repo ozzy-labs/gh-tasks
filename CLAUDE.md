@@ -25,7 +25,7 @@
 - `/ship` — lint・コミット・PR 作成を一括実行
 - `/drive` — implement + ship + review loop（Issue から merge-ready な PR まで自律駆動）
 
-リポ固有の skill(本リポの `src/skills/` SSOT。CLI は `gh tasks` で実装済、adapter 配信パイプラインは `pnpm run build:skills` → `dist/{adapter}/` → `.claude/skills/` 自動 stage で確立済):
+リポ固有の skill(本リポの `src/skills/` SSOT。CLI は `gh tasks` で実装済、adapter 配信パイプラインは `gh tasks build-skills` → `dist/{adapter}/` → `.claude/skills/` 自動 stage で確立済):
 
 - `/task-add` — 会話文脈からタスクを追加する。GitHub Issue / Project draft item / repo Milestone を自動判定し、`gh tasks add` を呼び出す。
 - `/task-plan` — 日次 / 週次 / イテレーション計画を実行する。`gh tasks plan` を呼び出して該当 scope の Milestone (repo) または Iteration (org/user) で計画項目を整理する。

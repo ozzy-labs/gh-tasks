@@ -15,39 +15,58 @@
 
 ## Tech Stack
 
-- Runtime: Bun(CLI)+ Node.js(scripts、tooling)
-- Language: TypeScript(strict、ESM)
-- Binary build: `bun build --compile`(repo-internal ADR-0001)
-- Package manager: pnpm 10
-- GraphQL client: Octokit(`gh api graphql` shell-out は不採用、repo-internal ADR-0003)
-- Linting: Biome(TS/JS/JSON)、yamllint + yamlfmt(YAML)、markdownlint-cli2(Markdown)、shellcheck + shfmt(Shell)
-- Git hooks: lefthook(commit-msg: commitlint、pre-commit: linters、pre-push: typecheck)
-- Testing: Vitest
+- Language / runtime: **Go 1.25** + toolchain go1.26.0(repo-internal ADR-0006)
+- CLI framework: `spf13/cobra`
+- GitHub API: `cli/go-gh/v2` (auth + GraphQL + REST、repo-internal ADR-0007)
+- GraphQL types: hand-written under `internal/github/queries/`(genqlient adoption は follow-up issue)
+- Binary build / release: `cli/gh-extension-precompile@v2`(SLSA attestations、manifest.yml 自動生成)
+- Linting / formatting: `golangci-lint` v2(`gofumpt` + `goimports` + `gci`)、yamllint + yamlfmt、markdownlint-cli2、shellcheck + shfmt
+- Vulnerability scan: `govulncheck`(text + SARIF を Code Scanning に出力)
+- Git hooks: lefthook(commit-msg: commitlint、pre-commit: linters + `gh tasks check-i18n`、pre-push: `go test`)
+- Testing: 標準 `testing` + `google/go-cmp`、`go test -race -shuffle=on` を CI 必須(repo-internal ADR-0008)
+
+> 移行履歴: 2026-04 までは Bun --compile + TypeScript で実装(ADR-0001 / 0003)。2026-05 から Go へ完全移行(計画書: `docs/design/go-migration-plan.md`、後継 ADR-0006 / 0007 / 0008)。
 
 ## ディレクトリ構成
 
 ```text
-packages/gh-tasks/      → CLI 本体(TS、Bun --compile 対象)
-packages/templates/     → Projects v2 フィールド定義 / Issue templates
+main.go                 → cobra root エントリ(リポルート、gh extension 慣習)
+cmd/                    → cobra コマンド定義(add/list/today/done/standup/
+                         review/plan/triage/link/projects、build-skills /
+                         check-i18n は Hidden)
+internal/               → ドメインロジック
+  ├── github/           → cli/go-gh ラッパ(GraphQL + REST)
+  │   └── queries/      → ハンドコードされた GraphQL クエリ + 型
+  ├── i18n/             → embed 済 en/ja JSON catalog + ResolveLocale + T
+  ├── i18ncheck/        → ハードコード非 ASCII 検知 (gh tasks check-i18n)
+  ├── scope/ repo/      → 3-scope (repo/org/user) 抽象 + リポ解決
+  ├── project/ projectitem/ period/ config/ → ドメイン helpers
+  ├── skills/           → SKILL.md frontmatter parse + Load
+  └── adapters/         → 4 エージェント向け OutputFile 生成
 src/skills/             → skill SSOT(SKILL.md = ja、SKILL.en.md = en)
-dist/{adapter}/         → 4 エージェント向け adapter 出力
+dist/{adapter}/         → adapter 出力(`gh tasks build-skills` で生成)
 docs/manual/{en,ja}/    → ユーザーマニュアル(en SSOT、ja mirror)
 docs/adr/               → repo-internal ADR(ja 単一)
 docs/design/            → repo-internal な living 設計ドキュメント(ja 単一)
-scripts/                → build / sync スクリプト
 .agents/ ・ .claude/    → commons + skills sync 配置先
+packages/gh-tasks/      → 旧 TS 実装(Phase 7 で削除予定、現在は freeze 中)
+scripts/                → 旧 TS scripts(Phase 7 で削除予定)
 ```
 
 ## 主要コマンド
 
 ```bash
-pnpm install              # 依存関係インストール
-pnpm run build            # CLI バイナリ + skills dist 生成
-pnpm run lint             # Biome
-pnpm run lint:all         # Biome + markdownlint + yamllint(gitleaks/trivy/shellcheck 等は lefthook hook 側)
-pnpm run typecheck        # tsc --noEmit
-pnpm test                 # Vitest
+mise install                          # toolchain (go / golangci-lint / govulncheck / 旧 ts ツール)
+go build ./...                        # CLI バイナリ
+go run . build-skills                 # adapter pipeline 実行(dist/{adapter}/ 生成)
+go run . check-i18n                   # ハードコード非 ASCII 検知
+go test -race -shuffle=on ./...       # テスト
+golangci-lint run --timeout 5m ./...  # lint v2
+govulncheck ./...                     # 脆弱性スキャン
+yamllint . && yamlfmt . && markdownlint-cli2 '**/*.md'   # 旧 ts と共有の lint
 ```
+
+旧 TS toolchain (`pnpm run lint / typecheck / test`) は Phase 7 のカットオーバーまで併走可能。
 
 ## i18n SSOT
 
@@ -61,7 +80,7 @@ pnpm test                 # Vitest
 - CLI 出力 / エラー(`packages/gh-tasks/src/i18n/`): **en SSOT** + ja translation(新規キーは en に書き、ja を追従させる)
 - AGENTS.md / CLAUDE.md: ja のみ
 
-**ハードコード文字列禁止**: 非 ASCII を含むリテラルは `t(locale, 'key', args)` 経由必須(`packages/gh-tasks/src/i18n/{en,ja}.json` に定義)。`scripts/check-no-hardcoded-i18n.mjs` が CI / pre-commit で強制(`pnpm run lint:i18n`)。エラー型は `i18nKey` + `i18nArgs` を保持して上位で `t()` で localize する(例: `ScopeError`、`RepoError`、`ProjectError`、`PeriodError`、`ConfigError`、`AuthError`)。
+**ハードコード文字列禁止**: 非 ASCII を含むリテラルは `i18n.T(locale, "key", args...)` 経由必須(`internal/i18n/{en,ja}.json` に定義)。`gh tasks check-i18n`(`internal/i18ncheck`、`go/parser` ベース)が pre-commit / CI で強制。エラー型は `i18n.Payload` を埋め込んで `i18n.Localized` インタフェースを満たし、上位 (`cmd/list.go` 等の `localizedError`) で resolve した locale を使い localize する(例: `scope.ScopeError`、`repo.RepoError`、`project.ProjectError`、`period.PeriodError`、`config.ConfigError`、`github.AuthError`)。
 
 ## 規約
 
