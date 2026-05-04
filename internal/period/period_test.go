@@ -122,6 +122,28 @@ func TestOf_UTCFallbackWhenTZInvalid(t *testing.T) {
 	}
 }
 
+func TestOf_PanicsOnUnrecognizedPeriod(t *testing.T) {
+	t.Parallel()
+	defer func() {
+		if r := recover(); r == nil {
+			t.Fatal("expected panic for unrecognized period")
+		}
+	}()
+	now := time.Date(2026, 4, 29, 10, 0, 0, 0, time.UTC)
+	_ = period.Of(period.Period("monthly"), now, "UTC", nil)
+}
+
+func TestSuggestMilestoneTitle_PanicsOnUnrecognizedPeriod(t *testing.T) {
+	t.Parallel()
+	defer func() {
+		if r := recover(); r == nil {
+			t.Fatal("expected panic for unrecognized period")
+		}
+	}()
+	now := time.Date(2026, 4, 29, 10, 0, 0, 0, time.UTC)
+	_ = period.SuggestMilestoneTitle(period.Period("monthly"), now, "UTC", nil)
+}
+
 func TestSuggestMilestoneTitle(t *testing.T) {
 	t.Parallel()
 	jst := mustLoadLocation(t, "Asia/Tokyo")

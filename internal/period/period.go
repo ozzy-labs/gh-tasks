@@ -110,7 +110,10 @@ func Of(period Period, now time.Time, tz string, getenv func(string) string) Ran
 	case Sprint:
 		return Range{Start: startOfToday, End: startOfToday.AddDate(0, 0, 14)}
 	}
-	return Range{}
+	// Unrecognized Period values are a programmer error: ParseFlag /
+	// toPeriod gate user-supplied input. Returning a zero Range would let
+	// downstream filters silently treat the window as empty.
+	panic(fmt.Sprintf("period: unrecognized Period value %q", string(period)))
 }
 
 // SuggestMilestoneTitle returns a human label for a period anchored at now.
@@ -125,7 +128,7 @@ func SuggestMilestoneTitle(period Period, now time.Time, tz string, getenv func(
 	case Sprint:
 		return "Sprint " + iso
 	}
-	return iso
+	panic(fmt.Sprintf("period: unrecognized Period value %q", string(period)))
 }
 
 // FormatLocalISODate renders d as YYYY-MM-DD in the resolved timezone.
