@@ -6,12 +6,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newAddCmd() *cobra.Command {
+func newAddCmd(_ Deps) *cobra.Command {
 	return &cobra.Command{
 		Use:   "add <title>",
 		Short: "Add a task (Issue / Project draft / Milestone)",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return errors.New("not implemented yet (phase 2)")
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return errors.New("not implemented yet (phase 2c)")
 		},
 	}
 }
