@@ -32,10 +32,10 @@ $ gh tasks add 'foo' --scope=repo --repo=owner/name --lang=fr
 
 ## SSOT 言語と出力言語
 
-`gh-tasks` のメッセージは現状 ja を SSOT(当初は repo-internal [ADR-0002](../../../adr/0002-i18n-japanese-ssot.md)、現在は [ADR-0005](../../../adr/0005-i18n-reader-based-ssot.md) で Superseded、後続フェーズで CLI i18n は en SSOT に反転予定)。実行時の `t(locale, key)` はまず指定 locale を引き、見つからなければ `en` にフォールバックし、両方欠けていればキー文字列そのものを返す(デバッグ用)。フォールバックは非対称で、バックストップは常に `en` テーブルのみ。`en` キーに ja 翻訳が存在しない場合は ja 出力にも英語がそのまま出るため、両言語をセットで追加すること。
+`gh-tasks` のメッセージは **英語(en)を SSOT** とする(repo-internal [ADR-0005](../../../adr/0005-i18n-reader-based-ssot.md)、[ADR-0002](../../../adr/0002-i18n-japanese-ssot.md) を Superseded)。実行時の `t(locale, key)` はまず指定 locale を引き、見つからなければ `en` にフォールバックし、両方欠けていればキー文字列そのものを返す(デバッグ用)。フォールバックは非対称で、バックストップは常に `en` テーブルのみ。`en` キーに ja 翻訳が存在しない場合は ja 出力にも英語がそのまま出るため、新規キーは en に書いてから ja に翻訳をペアで追加すること。ハードコードされた非 ASCII 文字列リテラルは禁止で、`scripts/check-no-hardcoded-i18n.mjs`(`pnpm run lint:i18n`、lefthook `pre-commit` hook)が検知して reject する。
 
 ## 関連
 
 - [scope-detection.md](./scope-detection.md): 同様の優先順設計(`--scope` フラグ)
 - [cli.md](./cli.md): `--lang` フラグ
-- [docs/adr/0005-i18n-reader-based-ssot.md](../../../adr/0005-i18n-reader-based-ssot.md): 現行 i18n 方針(ADR-0002 を Superseded)
+- [docs/adr/0005-i18n-reader-based-ssot.md](../../../adr/0005-i18n-reader-based-ssot.md): 現行 i18n 方針(en SSOT、ADR-0002 を Superseded)

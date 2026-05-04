@@ -4,13 +4,18 @@ import { join } from 'node:path';
 import { parse as parseToml, TomlError } from 'smol-toml';
 
 import type { Locale } from '../i18n/index.ts';
+import type { I18nArgs } from './github.ts';
 import { type ProjectRef, parseProjectIdentifier } from './project.ts';
 import type { Scope } from './scope.ts';
 
 export class ConfigError extends Error {
-  constructor(message: string) {
-    super(message);
+  readonly i18nKey: string;
+  readonly i18nArgs: I18nArgs;
+  constructor(i18nKey: string, args: I18nArgs = {}) {
+    super(i18nKey);
     this.name = 'ConfigError';
+    this.i18nKey = i18nKey;
+    this.i18nArgs = args;
   }
 }
 
@@ -62,7 +67,7 @@ export function loadConfig(options: LoadConfigOptions = {}): AppConfig {
     raw = reader(path);
   } catch (err) {
     if (isFileNotFound(err)) return {};
-    throw new ConfigError(`config 読み込みに失敗しました: ${path}: ${describeError(err)}`);
+    throw new ConfigError('error.config.readFailed', { path, reason: describeError(err) });
   }
   if (raw === null) return {};
 
@@ -71,7 +76,7 @@ export function loadConfig(options: LoadConfigOptions = {}): AppConfig {
     parsed = parseToml(raw) as Record<string, unknown>;
   } catch (err) {
     if (err instanceof TomlError) {
-      throw new ConfigError(`config の TOML 解析に失敗しました: ${path}: ${err.message}`);
+      throw new ConfigError('error.config.tomlParseFailed', { path, reason: err.message });
     }
     throw err;
   }
@@ -80,18 +85,22 @@ export function loadConfig(options: LoadConfigOptions = {}): AppConfig {
   if ('lang' in parsed) {
     const value = parsed.lang;
     if (typeof value !== 'string' || !(VALID_LANG as readonly string[]).includes(value)) {
-      throw new ConfigError(
-        `config の lang が不正です (${path}): '${String(value)}' (有効値: ${VALID_LANG.join(' | ')})`
-      );
+      throw new ConfigError('error.config.invalidLang', {
+        path,
+        value: String(value),
+        valid: VALID_LANG.join(' | '),
+      });
     }
     config.lang = value as Locale;
   }
   if ('default_scope' in parsed) {
     const value = parsed.default_scope;
     if (typeof value !== 'string' || !(VALID_SCOPE as readonly string[]).includes(value)) {
-      throw new ConfigError(
-        `config の default_scope が不正です (${path}): '${String(value)}' (有効値: ${VALID_SCOPE.join(' | ')})`
-      );
+      throw new ConfigError('error.config.invalidDefaultScope', {
+        path,
+        value: String(value),
+        valid: VALID_SCOPE.join(' | '),
+      });
     }
     config.defaultScope = value as Scope;
   }
@@ -106,15 +115,15 @@ export function loadConfig(options: LoadConfigOptions = {}): AppConfig {
 
 function parseProjectKey(value: unknown, key: string, path: string): ProjectRef {
   if (typeof value !== 'string') {
-    throw new ConfigError(
-      `config の ${key} が不正です (${path}): '${String(value)}' (期待形式: <owner>/<number>)`
-    );
+    throw new ConfigError('error.config.invalidProjectRef', {
+      key,
+      path,
+      value: String(value),
+    });
   }
   const ref = parseProjectIdentifier(value);
   if (!ref) {
-    throw new ConfigError(
-      `config の ${key} が不正です (${path}): '${value}' (期待形式: <owner>/<number>)`
-    );
+    throw new ConfigError('error.config.invalidProjectRef', { key, path, value });
   }
   return ref;
 }

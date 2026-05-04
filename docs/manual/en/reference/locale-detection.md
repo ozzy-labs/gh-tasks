@@ -31,7 +31,7 @@ When multiple `--lang` flags appear, the **first occurrence** wins.
 
 ## SSOT language vs output language
 
-Messages are currently written with **ja as SSOT** (originally per repo-internal [ADR-0002](../../../adr/0002-i18n-japanese-ssot.md), now Superseded by [ADR-0005](../../../adr/0005-i18n-reader-based-ssot.md) which inverts CLI i18n to en SSOT in a follow-up phase). At runtime `t(locale, key)` looks up the requested locale first, then falls back to `en` if the key is missing, and finally returns the key string itself for debugging when both are missing. The fallback is asymmetric: only the `en` table acts as a backstop, so an `en` key with no Japanese counterpart will leak the English string into `ja` output. Author both translations together.
+Messages are written with **English as SSOT** (repo-internal [ADR-0005](../../../adr/0005-i18n-reader-based-ssot.md), Supersedes [ADR-0002](../../../adr/0002-i18n-japanese-ssot.md)). At runtime `t(locale, key)` looks up the requested locale first, then falls back to `en` if the key is missing, and finally returns the key string itself for debugging when both are missing. The fallback is asymmetric: only the `en` table acts as a backstop, so an `en` key with no Japanese counterpart will leak the English string into `ja` output. Author the English entry first, then add the Japanese translation alongside it. Hardcoded non-ASCII string literals in source code are forbidden and rejected by `scripts/check-no-hardcoded-i18n.mjs` (run via `pnpm run lint:i18n` and the lefthook `pre-commit` hook).
 
 ## Related
 

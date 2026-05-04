@@ -1,10 +1,15 @@
 import type { AppConfig } from './config.ts';
+import type { I18nArgs } from './github.ts';
 import type { Scope } from './scope.ts';
 
 export class ProjectError extends Error {
-  constructor(message: string) {
-    super(message);
+  readonly i18nKey: string;
+  readonly i18nArgs: I18nArgs;
+  constructor(i18nKey: string, args: I18nArgs = {}) {
+    super(i18nKey);
     this.name = 'ProjectError';
+    this.i18nKey = i18nKey;
+    this.i18nArgs = args;
   }
 }
 
@@ -55,11 +60,11 @@ export function parseProjectFlag(argv: readonly string[]): ProjectRef | null {
       continue;
     }
     if (value === undefined) {
-      throw new ProjectError('--project フラグに値が指定されていません');
+      throw new ProjectError('error.project.flagMissingValue');
     }
     const ref = parseProjectIdentifier(value);
     if (!ref) {
-      throw new ProjectError(`不正な --project 値: '${value}' (期待形式: <owner>/<number>)`);
+      throw new ProjectError('error.project.invalidIdentifier', { value });
     }
     return ref;
   }
@@ -85,7 +90,7 @@ export interface ResolveProjectRefOptions {
  */
 export function resolveProjectRef(opts: ResolveProjectRefOptions): ProjectRef {
   if (opts.scope === 'repo') {
-    throw new ProjectError('repo scope は Projects v2 を使いません');
+    throw new ProjectError('error.project.repoScope');
   }
   const fromFlag = parseProjectFlag(opts.argv);
   if (fromFlag) return fromFlag;
@@ -94,7 +99,5 @@ export function resolveProjectRef(opts: ResolveProjectRefOptions): ProjectRef {
   if (fromConfig) return fromConfig;
 
   const configKey = opts.scope === 'org' ? 'org_project' : 'user_project';
-  throw new ProjectError(
-    `--scope ${opts.scope} には Project の指定が必要です。--project=<owner>/<number> フラグか、config の ${configKey} を設定してください`
-  );
+  throw new ProjectError('error.project.notSpecified', { scope: opts.scope, configKey });
 }

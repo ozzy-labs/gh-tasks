@@ -121,7 +121,7 @@ async function linkProjectItems(ctx: LinkProjectContext): Promise<number> {
     projectRef = resolveProjectRef({ scope, argv, config: deps.config });
   } catch (err) {
     if (err instanceof ProjectError) {
-      stderr.write(`${err.message}\n`);
+      stderr.write(`${t(locale, err.i18nKey, err.i18nArgs)}\n`);
       return 2;
     }
     throw err;

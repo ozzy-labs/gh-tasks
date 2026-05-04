@@ -14,10 +14,16 @@ export type Period = 'daily' | 'weekly' | 'sprint';
 
 export const PERIODS: readonly Period[] = ['daily', 'weekly', 'sprint'];
 
+import type { I18nArgs } from './github.ts';
+
 export class PeriodError extends Error {
-  constructor(message: string) {
-    super(message);
+  readonly i18nKey: string;
+  readonly i18nArgs: I18nArgs;
+  constructor(i18nKey: string, args: I18nArgs = {}) {
+    super(i18nKey);
     this.name = 'PeriodError';
+    this.i18nKey = i18nKey;
+    this.i18nArgs = args;
   }
 }
 
@@ -44,12 +50,12 @@ export function parsePeriodFlag(argv: readonly string[]): Period | null {
 
 function toPeriod(value: string | undefined): Period {
   if (value === undefined) {
-    throw new PeriodError('--period フラグに値が指定されていません');
+    throw new PeriodError('error.period.flagMissingValue');
   }
   if ((PERIODS as readonly string[]).includes(value)) {
     return value as Period;
   }
-  throw new PeriodError(`不正な --period 値: '${value}' (有効値: ${PERIODS.join(' | ')})`);
+  throw new PeriodError('error.period.invalid', { value, valid: PERIODS.join(' | ') });
 }
 
 /**
