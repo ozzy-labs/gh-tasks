@@ -19,6 +19,9 @@ pre-commit:
     check-no-hardcoded-i18n:
       glob: 'packages/gh-tasks/src/**/*.ts'
       run: node scripts/check-no-hardcoded-i18n.mjs
+    check-no-hardcoded-i18n-go:
+      glob: '{cmd,internal}/**/*.go'
+      run: mise exec -- go run . check-i18n
     markdownlint:
       glob: '*.md'
       exclude:
