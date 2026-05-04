@@ -43,9 +43,9 @@ export interface RestClient {
 /**
  * Resolve the GitHub token from the environment.
  *
- * gh extensions inherit `gh auth token` via the `GH_TOKEN` env per
- * handbook ADR-0022. We also fall back to `GITHUB_TOKEN` so this works in
- * GitHub Actions runners and local shells where users export it directly.
+ * gh extensions inherit `gh auth token` via the `GH_TOKEN` env. We also
+ * fall back to `GITHUB_TOKEN` so this works in GitHub Actions runners and
+ * local shells where users export it directly.
  */
 export function resolveToken(env: NodeJS.ProcessEnv = process.env): string {
   const token = env.GH_TOKEN ?? env.GITHUB_TOKEN;

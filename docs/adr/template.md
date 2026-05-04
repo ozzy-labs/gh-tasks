@@ -30,6 +30,5 @@
 
 ## References
 
-- Related handbook ADR: [ADR-XXXX](https://github.com/ozzy-labs/handbook/blob/main/adr/XXXX-*.md)
 - Related repo ADR: [ADR-XXXX](./XXXX-*.md)
 - External: {URLs}

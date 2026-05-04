@@ -14,7 +14,7 @@ Define these fields on a personal Project v2:
 
 ## Team (`org` scope)
 
-OzzyLabs Platform Project v2 needs the personal set plus:
+An organization Project v2 needs the personal set plus:
 
 | Field | Type | Purpose |
 | --- | --- | --- |
@@ -53,11 +53,10 @@ Use `--dry-run` to preview the field set. The hand-rolled
 | scope | Project | Required fields |
 | --- | --- | --- |
 | `repo` | (unused, Milestones instead) | — |
-| `org` | OzzyLabs Platform Project | team set (above) |
+| `org` | Organization Project | team set (above) |
 | `user` | Personal Project | personal set (above) |
 
 ## Related
 
-- [handbook ADR-0022](https://github.com/ozzy-labs/handbook/blob/main/adr/0022-create-gh-tasks-repo.md): adopting Projects v2
 - [concepts.md](./concepts.md): scope / iteration terminology
 - [cli-reference.md](./cli-reference.md): how `gh tasks plan` etc. behave

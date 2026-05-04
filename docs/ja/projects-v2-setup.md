@@ -14,7 +14,7 @@
 
 ## チーム(`org` scope)
 
-OzzyLabs Platform Project v2 に上記 + 以下を追加:
+組織の Project v2 に上記 + 以下を追加:
 
 | Field | Type | 用途 |
 | --- | --- | --- |
@@ -49,11 +49,10 @@ gh tasks projects init packages/templates/projects-v2/user.yaml --title "from pa
 | scope | Project | フィールド要求 |
 | --- | --- | --- |
 | `repo` | (未使用、Milestones を使う) | — |
-| `org` | OzzyLabs Platform Project | 上記の team セット |
+| `org` | Organization Project | 上記の team セット |
 | `user` | 個人 Project | 上記の personal セット |
 
 ## 関連
 
-- [handbook ADR-0022](https://github.com/ozzy-labs/handbook/blob/main/adr/0022-create-gh-tasks-repo.md): Projects v2 採用の意思決定
 - [concepts.md](./concepts.md): scope / iteration の用語
 - [cli-reference.md](./cli-reference.md): `gh tasks plan` 等の挙動

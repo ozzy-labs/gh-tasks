@@ -16,7 +16,7 @@ body:
       multiple: true
       options:
         - repo (Issue / Milestone)
-        - org (OzzyLabs Platform Project)
+        - org (Organization Project)
         - user (Personal Project)
     validations:
       required: true

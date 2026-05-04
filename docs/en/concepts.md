@@ -9,7 +9,7 @@ Every `gh-tasks` command runs in one of three **scopes**:
 | Scope | Use case | Backing storage |
 | --- | --- | --- |
 | `repo` | Single-repo implementation work | GitHub Issues + Milestones |
-| `org` | Cross-project coordination | `OzzyLabs Platform` Project v2 |
+| `org` | Cross-project coordination | Organization Project v2 |
 | `user` | Personal todos / daily plans | Personal Project v2 |
 
 Scope is either passed via `--scope` or auto-detected. See [scope-detection.md](./scope-detection.md).
@@ -34,11 +34,9 @@ The "planning period" unit per scope:
 
 ## personal vs team
 
-`user` scope is the personal project (todo only you see); `org` scope coordinates the OzzyLabs Platform as a whole. The same commands (`gh tasks add` etc.) work for both. This is the core design of [handbook ADR-0022](https://github.com/ozzy-labs/handbook/blob/main/adr/0022-create-gh-tasks-repo.md).
+`user` scope is the personal project (a todo only you see); `org` scope coordinates an organization-wide Project v2. The same commands (`gh tasks add` etc.) work for both — this unified abstraction is the core design of the CLI.
 
 ## Related ADRs
 
-- [handbook ADR-0022](https://github.com/ozzy-labs/handbook/blob/main/adr/0022-create-gh-tasks-repo.md): repo creation, the unified 3-scope abstraction
-- [handbook reviews/2026-04-30-gh-tasks-design.md](https://github.com/ozzy-labs/handbook/blob/main/reviews/2026-04-30-gh-tasks-design.md): v0.1.0 spec
 - [docs/adr/0001](../adr/0001-use-bun-compile-for-binary.md): adopting Bun --compile
 - [docs/adr/0003](../adr/0003-graphql-via-octokit.md): GraphQL via Octokit

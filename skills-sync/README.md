@@ -101,6 +101,4 @@ jobs:
 
 ## 関連
 
-- [handbook ADR-0018](https://github.com/ozzy-labs/handbook/blob/main/adr/0018-agent-adapter-architecture.md): 4 エージェント adapter 機構
-- [handbook ADR-0019](https://github.com/ozzy-labs/handbook/blob/main/adr/0019-adapter-aware-sync-conventions.md): consumer の `extends` パターン
 - [@ozzylabs/skills の skills-sync](https://github.com/ozzy-labs/skills/tree/main/skills-sync): 並走する preset

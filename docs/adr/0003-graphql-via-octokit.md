@@ -7,12 +7,12 @@
 
 ## Context
 
-`gh tasks` の中核は GitHub Projects v2 GraphQL API へのアクセス([handbook ADR-0022](https://github.com/ozzy-labs/handbook/blob/main/adr/0022-create-gh-tasks-repo.md) Decision 1)。GraphQL クライアントの実装方法に 2 案ある。
+`gh tasks` の中核は GitHub Projects v2 GraphQL API へのアクセス。GraphQL クライアントの実装方法に 2 案ある。
 
 1. **Octokit GraphQL クライアント**(`@octokit/graphql`)を直接使う
 2. `gh api graphql` への shell-out で `gh` のリクエスト処理を再利用する
 
-認証は handbook ADR-0022 で「`gh auth login` 取得済トークンを `GH_TOKEN` 環境変数で extension が継承」と確定済。トークン取得導線は固定なので、本 ADR は「取得済トークンで GraphQL を叩く方法」を扱う。
+認証は gh extension の慣例どおり、`gh auth login` で取得済トークンを `GH_TOKEN` 環境変数経由で extension が継承する設計とする。トークン取得導線は固定なので、本 ADR は「取得済トークンで GraphQL を叩く方法」を扱う。
 
 ## Decision
 
@@ -48,6 +48,5 @@ CLI 内部の GraphQL リクエストは **Octokit GraphQL クライアント(`@
 
 ## References
 
-- Related handbook ADR: [ADR-0022](https://github.com/ozzy-labs/handbook/blob/main/adr/0022-create-gh-tasks-repo.md)(Decision 1: 認証は `GH_TOKEN` 継承)
-- Related design review: [reviews/2026-04-30-gh-tasks-design.md](https://github.com/ozzy-labs/handbook/blob/main/reviews/2026-04-30-gh-tasks-design.md) 6
-- External: [Octokit graphql.js](https://github.com/octokit/graphql.js)、[GitHub Projects v2 GraphQL](https://docs.github.com/en/graphql/reference/objects#projectv2)
+- [Octokit graphql.js](https://github.com/octokit/graphql.js)
+- [GitHub Projects v2 GraphQL](https://docs.github.com/en/graphql/reference/objects#projectv2)
