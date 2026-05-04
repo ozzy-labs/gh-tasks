@@ -12,6 +12,8 @@ import { triage } from './commands/triage.ts';
 import { resolveLocale, t } from './i18n/index.ts';
 import { type AppConfig, ConfigError, loadConfig } from './lib/config.ts';
 import { AuthError } from './lib/github.ts';
+import { PeriodError } from './lib/period.ts';
+import { ProjectError } from './lib/project.ts';
 import { RepoError } from './lib/repo.ts';
 import { ScopeError } from './lib/scope.ts';
 
@@ -51,7 +53,10 @@ async function main(argv: string[]): Promise<number> {
     config = loadConfig();
   } catch (err) {
     if (err instanceof ConfigError) {
-      process.stderr.write(`${err.message}\n`);
+      // Locale cannot be drawn from config (config load failed). Resolve
+      // from argv + env only.
+      const locale = resolveLocale(argv, process.env);
+      process.stderr.write(`${err.name}: ${t(locale, err.i18nKey, err.i18nArgs)}\n`);
       return 2;
     }
     throw err;
@@ -108,7 +113,13 @@ async function main(argv: string[]): Promise<number> {
       return await projects(rest, { config });
     }
   } catch (err) {
-    if (err instanceof AuthError || err instanceof RepoError || err instanceof ScopeError) {
+    if (
+      err instanceof AuthError ||
+      err instanceof RepoError ||
+      err instanceof ScopeError ||
+      err instanceof ProjectError ||
+      err instanceof PeriodError
+    ) {
       const locale = resolveLocale(argv, process.env, config);
       process.stderr.write(`${err.name}: ${t(locale, err.i18nKey, err.i18nArgs)}\n`);
       return 2;

@@ -57,10 +57,10 @@ pnpm test                 # Vitest
 - SKILL.md: `SKILL.md`(ja SSOT)+ `SKILL.en.md`(en mirror)
 - ADR(`docs/adr/`): ja のみ(repo-internal な意思決定記録、翻訳しない)
 - 設計ドキュメント(`docs/design/`): ja のみ(living な設計メモ、翻訳しない)
-- CLI 出力 / エラー(`packages/gh-tasks/src/i18n/`): en SSOT(後続フェーズで反転、現状 ja SSOT)
+- CLI 出力 / エラー(`packages/gh-tasks/src/i18n/`): **en SSOT** + ja translation(新規キーは en に書き、ja を追従させる)
 - AGENTS.md / CLAUDE.md: ja のみ
 
-ハードコード文字列禁止(非 ASCII を含むリテラルは i18n key 経由必須、後続フェーズで lint 強制)。
+**ハードコード文字列禁止**: 非 ASCII を含むリテラルは `t(locale, 'key', args)` 経由必須(`packages/gh-tasks/src/i18n/{en,ja}.json` に定義)。`scripts/check-no-hardcoded-i18n.mjs` が CI / pre-commit で強制(`pnpm run lint:i18n`)。エラー型は `i18nKey` + `i18nArgs` を保持して上位で `t()` で localize する(例: `ScopeError`、`RepoError`、`ProjectError`、`PeriodError`、`ConfigError`、`AuthError`)。
 
 ## 規約
 

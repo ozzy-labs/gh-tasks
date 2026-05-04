@@ -24,7 +24,8 @@
     "lint:check": "biome check .",
     "lint:md": "markdownlint-cli2 \"**/*.md\" \"#**/node_modules\" \"#**/dist\" \"#**/CHANGELOG.md\"",
     "lint:yaml": "yamllint .",
-    "lint:all": "pnpm run lint:check && pnpm run lint:md && pnpm run lint:yaml",
+    "lint:i18n": "node scripts/check-no-hardcoded-i18n.mjs",
+    "lint:all": "pnpm run lint:check && pnpm run lint:md && pnpm run lint:yaml && pnpm run lint:i18n",
     "typecheck": "pnpm -r run typecheck",
     "test": "pnpm -r run test",
     "prepare": "lefthook install"
