@@ -6,12 +6,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newBuildSkillsCmd() *cobra.Command {
+func newBuildSkillsCmd(_ Deps) *cobra.Command {
 	c := &cobra.Command{
 		Use:    "build-skills",
 		Short:  "Build skill bundles for adapter agents",
 		Hidden: true,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			return errors.New("not implemented yet (phase 3)")
 		},
 	}

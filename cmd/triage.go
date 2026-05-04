@@ -6,12 +6,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newTriageCmd() *cobra.Command {
+func newTriageCmd(_ Deps) *cobra.Command {
 	return &cobra.Command{
 		Use:   "triage",
 		Short: "Triage untriaged Issues / Project draft items",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return errors.New("not implemented yet (phase 2)")
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return errors.New("not implemented yet (phase 2d)")
 		},
 	}
 }

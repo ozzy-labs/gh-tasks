@@ -6,12 +6,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newProjectsCmd() *cobra.Command {
+func newProjectsCmd(_ Deps) *cobra.Command {
 	c := &cobra.Command{
 		Use:   "projects",
 		Short: "Manage Projects v2",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return errors.New("not implemented yet (phase 2)")
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return errors.New("not implemented yet (phase 2e)")
 		},
 	}
 
@@ -19,15 +19,15 @@ func newProjectsCmd() *cobra.Command {
 		&cobra.Command{
 			Use:   "init",
 			Short: "Initialize Projects v2 fields and templates",
-			RunE: func(cmd *cobra.Command, args []string) error {
-				return errors.New("not implemented yet (phase 2)")
+			RunE: func(_ *cobra.Command, _ []string) error {
+				return errors.New("not implemented yet (phase 2e)")
 			},
 		},
 		&cobra.Command{
 			Use:   "init-templates",
 			Short: "Sync Issue templates",
-			RunE: func(cmd *cobra.Command, args []string) error {
-				return errors.New("not implemented yet (phase 2)")
+			RunE: func(_ *cobra.Command, _ []string) error {
+				return errors.New("not implemented yet (phase 2e)")
 			},
 		},
 	)

@@ -7,8 +7,15 @@ import (
 // Version is overridden at build time via -ldflags.
 var Version = "0.0.0-dev"
 
-// Root constructs the gh-tasks cobra root command with all subcommands attached.
+// Root constructs the gh-tasks cobra root command using DefaultDeps.
 func Root() *cobra.Command {
+	return RootWithDeps(DefaultDeps())
+}
+
+// RootWithDeps constructs the root command with the provided dependencies.
+// Tests use this to inject fakes for the GraphQL client, env, time source,
+// etc.
+func RootWithDeps(deps Deps) *cobra.Command {
 	root := &cobra.Command{
 		Use:           "gh-tasks",
 		Short:         "GitHub Projects v2 / Issues / Milestone task management CLI",
@@ -19,19 +26,21 @@ func Root() *cobra.Command {
 
 	root.PersistentFlags().String("scope", "", "scope to operate on (repo|org|user)")
 	root.PersistentFlags().String("locale", "", "locale override (en|ja)")
+	root.PersistentFlags().String("repo", "", "repository (<owner>/<name>) override")
+	root.PersistentFlags().String("project", "", "project (<owner>/<number>) override")
 
 	root.AddCommand(
-		newAddCmd(),
-		newListCmd(),
-		newTodayCmd(),
-		newDoneCmd(),
-		newStandupCmd(),
-		newReviewCmd(),
-		newPlanCmd(),
-		newTriageCmd(),
-		newLinkCmd(),
-		newProjectsCmd(),
-		newBuildSkillsCmd(),
+		newAddCmd(deps),
+		newListCmd(deps),
+		newTodayCmd(deps),
+		newDoneCmd(deps),
+		newStandupCmd(deps),
+		newReviewCmd(deps),
+		newPlanCmd(deps),
+		newTriageCmd(deps),
+		newLinkCmd(deps),
+		newProjectsCmd(deps),
+		newBuildSkillsCmd(deps),
 	)
 
 	return root

@@ -21,6 +21,11 @@ linters:
         linters:
           - gosec
           - paralleltest
+      # fmt.Fprint* into cobra OutOrStdout / ErrOrStderr or *bytes.Buffer
+      # cannot return a meaningful error in practice. The codebase uses these
+      # heavily in command output, so suppress the noisy errcheck signal here.
+      - linters: [errcheck]
+        text: 'Error return value of `fmt\.(Fprint|Fprintln|Fprintf)` is not checked'
   settings:
     revive:
       rules:

@@ -6,12 +6,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newPlanCmd() *cobra.Command {
+func newPlanCmd(_ Deps) *cobra.Command {
 	return &cobra.Command{
 		Use:   "plan",
 		Short: "Plan tasks for a period (daily / weekly / sprint)",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return errors.New("not implemented yet (phase 2)")
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return errors.New("not implemented yet (phase 2d)")
 		},
 	}
 }
