@@ -39,11 +39,7 @@ func runToday(ctx context.Context, c *cobra.Command, deps Deps) error {
 	if err != nil {
 		return localizedError(c, r, err)
 	}
-	now := time.Now()
-	if deps.Now != nil {
-		now = deps.Now()
-	}
-	startUTC, endUTC := todayRange(now)
+	startUTC, endUTC := todayRange(deps.Now())
 	if sc == scope.Repo {
 		return runTodayRepo(ctx, c, deps, r, startUTC, endUTC)
 	}
