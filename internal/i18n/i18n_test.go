@@ -23,6 +23,8 @@ func TestResolveLocale(t *testing.T) {
 		{name: "lang-flag-space-ja", argv: []string{"--lang", "ja"}, want: i18n.LocaleJA},
 		{name: "lang-flag-equals-en", argv: []string{"--lang=en"}, want: i18n.LocaleEN},
 		{name: "lang-flag-unknown-falls-through-to-env", argv: []string{"--lang=fr"}, env: map[string]string{"LANG": "ja_JP.UTF-8"}, want: i18n.LocaleJA},
+		{name: "lang-flag-no-value-falls-through-to-env", argv: []string{"--lang"}, env: map[string]string{"LANG": "ja_JP.UTF-8"}, want: i18n.LocaleJA},
+		{name: "lang-flag-separate-unknown-falls-through-to-env", argv: []string{"--lang", "xx"}, env: map[string]string{"LANG": "ja_JP.UTF-8"}, want: i18n.LocaleJA},
 		{name: "config-ja", config: i18n.LocaleConfig{Lang: i18n.LocaleJA}, want: i18n.LocaleJA},
 		{name: "config-overridden-by-flag", argv: []string{"--lang=en"}, config: i18n.LocaleConfig{Lang: i18n.LocaleJA}, want: i18n.LocaleEN},
 		{name: "lc-all-ja", env: map[string]string{"LC_ALL": "ja_JP.UTF-8"}, want: i18n.LocaleJA},
@@ -74,6 +76,17 @@ func TestT(t *testing.T) {
 		got := i18n.T(i18n.LocaleEN, "error.repo.invalidIdentifier", "value", "broken-input")
 		if !contains(got, "broken-input") {
 			t.Errorf("expected substituted value in %q", got)
+		}
+	})
+
+	t.Run("no-args-leaves-placeholder-intact", func(t *testing.T) {
+		t.Parallel()
+		// When called without args, T must not run substitution at all, so
+		// any `{name}` placeholders in the catalog string must survive
+		// verbatim in the output.
+		got := i18n.T(i18n.LocaleEN, "error.repo.invalidIdentifier")
+		if !contains(got, "{value}") {
+			t.Errorf("expected literal {value} placeholder in %q", got)
 		}
 	})
 }
