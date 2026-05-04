@@ -3,6 +3,7 @@
 package repo
 
 import (
+	"context"
 	"errors"
 	"os/exec"
 	"regexp"
@@ -42,6 +43,10 @@ func newError(key string, args ...any) *RepoError {
 
 // ResolveOptions configures Resolve.
 type ResolveOptions struct {
+	// Context bounds the default git remote lookup. When nil,
+	// context.Background() is used. When GetRemoteURL is set, callers are
+	// responsible for honouring any context themselves.
+	Context      context.Context
 	Argv         []string
 	GetRemoteURL func() (string, bool) // returns ("", false) when no remote
 }
@@ -60,9 +65,13 @@ func Resolve(opts ResolveOptions) (Ident, error) {
 	if present && value != "" {
 		return ParseOwnerName(value)
 	}
+	ctx := opts.Context
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	getRemote := opts.GetRemoteURL
 	if getRemote == nil {
-		getRemote = defaultGetRemoteURL
+		getRemote = func() (string, bool) { return defaultGetRemoteURL(ctx) }
 	}
 	url, ok := getRemote()
 	if !ok {
@@ -126,8 +135,11 @@ func ExtractFromRemote(url string) (string, error) {
 	return m[1] + "/" + m[2], nil
 }
 
-func defaultGetRemoteURL() (string, bool) {
-	cmd := exec.Command("git", "remote", "get-url", "origin")
+// defaultGetRemoteURL invokes `git remote get-url origin` bounded by ctx so
+// a stuck or hanging git process cannot block the CLI indefinitely. Callers
+// that already supply ResolveOptions.GetRemoteURL bypass this entirely.
+func defaultGetRemoteURL(ctx context.Context) (string, bool) {
+	cmd := exec.CommandContext(ctx, "git", "remote", "get-url", "origin")
 	out, err := cmd.Output()
 	if err != nil {
 		return "", false
