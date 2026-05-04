@@ -95,6 +95,36 @@ func TestScan_SkipsTestFilesAndI18n(t *testing.T) {
 	}
 }
 
+func TestScan_SkipsClaudeWorktreesAndDist(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	files := map[string]string{
+		"main.go":                              "package x\n\nvar S = \"こんにちは\"\n",
+		".claude/worktrees/agent-x/sibling.go": "package x\n\nvar T = \"さようなら\"\n",
+		"dist/codex/skills/generated.go":       "package x\n\nvar U = \"おはよう\"\n",
+	}
+	for rel, body := range files {
+		full := filepath.Join(dir, rel)
+		if err := os.MkdirAll(filepath.Dir(full), 0o750); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(full, []byte(body), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	hits, err := i18ncheck.Scan([]string{dir})
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if len(hits) != 1 {
+		t.Fatalf("got %d hits, want 1: %+v", len(hits), hits)
+	}
+	if filepath.Base(hits[0].File) != "main.go" {
+		t.Errorf("hit on wrong file: %s (sibling worktree / dist must be skipped)", hits[0].File)
+	}
+}
+
 func TestScanFile_PositionIs1Indexed(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
