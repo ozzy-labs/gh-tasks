@@ -43,7 +43,7 @@ export interface LoadConfigOptions {
  *   `${HOME}/.config/ozzylabs/gh-tasks.toml`.
  *
  * The trailing path segment matches the CLI's documented config (see
- * README and `docs/{ja,en}/installation.md`).
+ * README and `docs/manual/{en,ja}/guides/installation.md`).
  */
 export function resolveConfigPath(env: NodeJS.ProcessEnv = process.env): string {
   const xdg = env.XDG_CONFIG_HOME;
