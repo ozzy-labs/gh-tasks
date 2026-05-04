@@ -41,6 +41,7 @@ func RootWithDeps(deps Deps) *cobra.Command {
 		newLinkCmd(deps),
 		newProjectsCmd(deps),
 		newBuildSkillsCmd(deps),
+		newCheckI18nCmd(deps),
 	)
 
 	return root
