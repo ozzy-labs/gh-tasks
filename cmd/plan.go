@@ -307,19 +307,28 @@ func resolveTargetIteration(iterations []queries.ProjectV2IterationOption, targe
 			return &resolvedIteration{iteration: it, matched: false}
 		}
 	}
-	upcoming := []queries.ProjectV2IterationOption{}
+	type parsedIteration struct {
+		iteration queries.ProjectV2IterationOption
+		start     time.Time
+	}
+	upcoming := []parsedIteration{}
 	for _, it := range iterations {
-		if start, err := parseIterationStart(it.StartDate); err == nil && (start.Equal(now) || start.After(now)) {
-			upcoming = append(upcoming, it)
+		start, err := parseIterationStart(it.StartDate)
+		if err != nil {
+			continue
+		}
+		if start.Equal(now) || start.After(now) {
+			upcoming = append(upcoming, parsedIteration{iteration: it, start: start})
 		}
 	}
-	sort.Slice(upcoming, func(i, j int) bool {
-		ai, _ := parseIterationStart(upcoming[i].StartDate)
-		aj, _ := parseIterationStart(upcoming[j].StartDate)
-		return ai.Before(aj)
+	// Use SliceStable to preserve catalog order for iterations sharing a start
+	// date; the parsed time is captured at filter time, so the comparator never
+	// re-parses (and therefore never silently treats a parse error as epoch).
+	sort.SliceStable(upcoming, func(i, j int) bool {
+		return upcoming[i].start.Before(upcoming[j].start)
 	})
 	if len(upcoming) > 0 {
-		return &resolvedIteration{iteration: upcoming[0], matched: false}
+		return &resolvedIteration{iteration: upcoming[0].iteration, matched: false}
 	}
 	return &resolvedIteration{iteration: iterations[len(iterations)-1], matched: false}
 }
