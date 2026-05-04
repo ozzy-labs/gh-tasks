@@ -36,10 +36,10 @@ async function findFiles() {
 // (arrows, em-dashes, ellipses, math operators, bullets). Anything outside
 // this whitelist that is also non-ASCII is flagged as a likely-untranslated
 // message.
-const DECORATIVE_NON_ASCII = /[‐-‧←-⇿∀-⋿─-╿■-◿☀-⛿]/g;
+export const DECORATIVE_NON_ASCII = /[‐-‧←-⇿∀-⋿─-╿■-◿☀-⛿]/g;
 
 /** @param {string} text */
-function hasNonAscii(text) {
+export function hasNonAscii(text) {
   const stripped = text.replace(DECORATIVE_NON_ASCII, '');
   // Match anything outside the ASCII range (U+0000–U+007F) using a
   // codepoint comparison; avoids embedding control characters in the regex
@@ -54,7 +54,7 @@ function hasNonAscii(text) {
  * @param {ts.SourceFile} sf
  * @returns {{ line: number; column: number; text: string }[]}
  */
-function findViolations(sf) {
+export function findViolations(sf) {
   const hits = [];
   /** @param {ts.Node} node */
   function visit(node) {
@@ -105,4 +105,8 @@ async function main() {
   console.log(`OK: scanned ${files.length} files, no hardcoded non-ASCII literals`);
 }
 
-await main();
+// Skip running main() when this file is imported as a module (e.g. by tests).
+const ENTRY = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
+if (ENTRY) {
+  await main();
+}
