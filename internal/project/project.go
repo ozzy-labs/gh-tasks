@@ -65,9 +65,17 @@ func ParseIdentifier(value string) (Ref, bool) {
 	return Ref{Owner: owner, Number: n}, true
 }
 
-// ParseFlag scans argv for --project=<value> or --project <value>. Returns
-// (ref, true, nil) on success, (Ref{}, false, nil) when absent, and
-// (_, _, err) when present but malformed.
+// ParseFlag scans argv for --project=<value> or --project <value>.
+//
+// The returned bool reports whether the --project flag was *present* in argv,
+// independent of whether its value parsed successfully. Always check err
+// first; a non-nil err means the flag was present but malformed (missing
+// value or invalid identifier).
+//
+// Result combinations:
+//   - (Ref{}, false, nil): flag absent.
+//   - (ref, true, nil): flag present with a valid value.
+//   - (Ref{}, true, err): flag present but malformed.
 func ParseFlag(argv []string) (Ref, bool, error) {
 	for i, arg := range argv {
 		var value string
@@ -76,7 +84,7 @@ func ParseFlag(argv []string) (Ref, bool, error) {
 			value = strings.TrimPrefix(arg, "--project=")
 		case arg == "--project":
 			if i+1 >= len(argv) {
-				return Ref{}, false, newError("error.project.flagMissingValue")
+				return Ref{}, true, newError("error.project.flagMissingValue")
 			}
 			value = argv[i+1]
 		default:
@@ -84,7 +92,7 @@ func ParseFlag(argv []string) (Ref, bool, error) {
 		}
 		ref, ok := ParseIdentifier(value)
 		if !ok {
-			return Ref{}, false, newError("error.project.invalidIdentifier", "value", value)
+			return Ref{}, true, newError("error.project.invalidIdentifier", "value", value)
 		}
 		return ref, true, nil
 	}
@@ -111,9 +119,11 @@ func Resolve(opts ResolveOptions) (Ref, error) {
 	if opts.Scope == scope.Repo {
 		return Ref{}, newError("error.project.repoScope")
 	}
-	if ref, ok, err := ParseFlag(opts.Argv); err != nil {
+	ref, present, err := ParseFlag(opts.Argv)
+	if err != nil {
 		return Ref{}, err
-	} else if ok {
+	}
+	if present {
 		return ref, nil
 	}
 	switch opts.Scope {

@@ -97,9 +97,12 @@ func TestParseFlag(t *testing.T) {
 
 	t.Run("missing-value", func(t *testing.T) {
 		t.Parallel()
-		_, _, err := repo.ParseFlag([]string{"--repo"})
+		_, ok, err := repo.ParseFlag([]string{"--repo"})
 		if err == nil {
 			t.Fatalf("want error")
+		}
+		if !ok {
+			t.Errorf("present=false on malformed flag; want true (flag was present)")
 		}
 	})
 

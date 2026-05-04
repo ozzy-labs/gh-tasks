@@ -33,6 +33,9 @@ func TestParseFlag(t *testing.T) {
 				if err == nil {
 					t.Fatalf("want error, got nil; result=%q", got)
 				}
+				if !ok {
+					t.Errorf("present=false on malformed flag; want true (flag was present)")
+				}
 				return
 			}
 			if err != nil {
