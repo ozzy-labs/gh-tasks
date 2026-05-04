@@ -15,7 +15,7 @@ packages/templates/
 
 YAML descriptors for the custom fields that `gh-tasks` expects on a
 Projects v2 board. They are the source of truth for the field schemas
-referenced by [`docs/{ja,en}/projects-v2-setup.md`](../../docs/en/projects-v2-setup.md).
+referenced by [`docs/manual/{ja,en}/guides/projects-v2-setup.md`](../../docs/manual/en/guides/projects-v2-setup.md).
 
 ### Schema
 
@@ -110,6 +110,6 @@ yamllint's structural checks.
 
 ## See also
 
-- [`docs/en/projects-v2-setup.md`](../../docs/en/projects-v2-setup.md) /
-  [`docs/ja/projects-v2-setup.md`](../../docs/ja/projects-v2-setup.md)
+- [`docs/manual/en/guides/projects-v2-setup.md`](../../docs/manual/en/guides/projects-v2-setup.md) /
+  [`docs/manual/ja/guides/projects-v2-setup.md`](../../docs/manual/ja/guides/projects-v2-setup.md)
 - [GraphQL `ProjectV2FieldType` reference](https://docs.github.com/en/graphql/reference/enums#projectv2fieldtype)

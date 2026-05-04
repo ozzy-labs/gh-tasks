@@ -26,5 +26,5 @@ locale: ja
 ## 失敗時のフォールバック
 
 - 計画候補が多すぎる: 対象を絞る条件(label / assignee 等)をユーザーに確認
-- Iteration field が未定義: `docs/ja/projects-v2-setup.md` の手順を提示
+- Iteration field が未定義: `docs/manual/ja/guides/projects-v2-setup.md` の手順を提示
 - 既に別 Milestone に紐付いた Issue: CLI 側で skip され通知されるので、必要に応じて `--dry-run` で事前確認

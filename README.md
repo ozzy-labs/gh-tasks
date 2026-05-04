@@ -10,7 +10,7 @@ The CLI consolidates Projects v2 access into a single binary + skill bundle, dis
 
 ## Status
 
-v0.1.0 — feature-complete. The CLI commands and skills described below are implemented and tested across all three scopes (`repo` / `org` / `user`); the release tag is published via release-please. See [docs/adr/](docs/adr/) for repo-internal decisions and [docs/en/](docs/en/) for design documentation.
+v0.1.0 — feature-complete. The CLI commands and skills described below are implemented and tested across all three scopes (`repo` / `org` / `user`); the release tag is published via release-please. See [docs/adr/](docs/adr/) for repo-internal decisions and [docs/manual/en/](docs/manual/en/) for the user manual.
 
 ## Install
 
@@ -40,7 +40,7 @@ The extension inherits authentication from `gh auth login` — no separate token
 | `gh tasks link <pr> <task>` | Link a PR to an Issue / Project item |
 | `gh tasks projects init` | Bootstrap a Project v2 from a yaml template (`--template`, `--owner`, `--title`) |
 
-Default `--scope` resolves in this order: explicit `--scope` flag → current working directory's git remote (`origin` present → `repo`) → `~/.config/ozzylabs/gh-tasks.toml` `default_scope` → `user`. Full flag reference: [docs/en/cli-reference.md](docs/en/cli-reference.md).
+Default `--scope` resolves in this order: explicit `--scope` flag → current working directory's git remote (`origin` present → `repo`) → `~/.config/ozzylabs/gh-tasks.toml` `default_scope` → `user`. Full flag reference: [docs/manual/en/reference/cli.md](docs/manual/en/reference/cli.md).
 
 ## Skills
 
