@@ -98,52 +98,77 @@ func Load(opts LoadOptions) (AppConfig, error) {
 	return parse(raw, path)
 }
 
-type rawConfig struct {
-	Lang         *string `toml:"lang"`
-	DefaultScope *string `toml:"default_scope"`
-	OrgProject   *string `toml:"org_project"`
-	UserProject  *string `toml:"user_project"`
-}
-
 func parse(raw []byte, path string) (AppConfig, error) {
-	var rc rawConfig
-	if err := toml.Unmarshal(raw, &rc); err != nil {
+	var doc map[string]any
+	if err := toml.Unmarshal(raw, &doc); err != nil {
 		return AppConfig{}, newError("error.config.tomlParseFailed", "path", path, "reason", err.Error())
 	}
 	out := AppConfig{}
-	if rc.Lang != nil {
-		loc, ok := i18n.Validate(*rc.Lang)
+	if v, present := doc["lang"]; present {
+		s, ok := v.(string)
 		if !ok {
 			return AppConfig{}, newError(
 				"error.config.invalidLang",
 				"path", path,
-				"value", *rc.Lang,
+				"value", fmt.Sprint(v),
+				"valid", strings.Join(localeNames(), " | "),
+			)
+		}
+		loc, ok := i18n.Validate(s)
+		if !ok {
+			return AppConfig{}, newError(
+				"error.config.invalidLang",
+				"path", path,
+				"value", s,
 				"valid", strings.Join(localeNames(), " | "),
 			)
 		}
 		out.Lang = loc
 	}
-	if rc.DefaultScope != nil {
-		s, ok := validateScope(*rc.DefaultScope)
+	if v, present := doc["default_scope"]; present {
+		s, ok := v.(string)
 		if !ok {
 			return AppConfig{}, newError(
 				"error.config.invalidDefaultScope",
 				"path", path,
-				"value", *rc.DefaultScope,
+				"value", fmt.Sprint(v),
 				"valid", strings.Join(scopeNames(), " | "),
 			)
 		}
-		out.DefaultScope = s
+		sc, ok := validateScope(s)
+		if !ok {
+			return AppConfig{}, newError(
+				"error.config.invalidDefaultScope",
+				"path", path,
+				"value", s,
+				"valid", strings.Join(scopeNames(), " | "),
+			)
+		}
+		out.DefaultScope = sc
 	}
-	if rc.OrgProject != nil {
-		ref, err := parseProjectKey(*rc.OrgProject, "org_project", path)
+	if v, present := doc["org_project"]; present {
+		s, ok := v.(string)
+		if !ok {
+			return AppConfig{}, newError(
+				"error.config.invalidProjectRef",
+				"key", "org_project", "path", path, "value", fmt.Sprint(v),
+			)
+		}
+		ref, err := parseProjectKey(s, "org_project", path)
 		if err != nil {
 			return AppConfig{}, err
 		}
 		out.OrgProject = ref
 	}
-	if rc.UserProject != nil {
-		ref, err := parseProjectKey(*rc.UserProject, "user_project", path)
+	if v, present := doc["user_project"]; present {
+		s, ok := v.(string)
+		if !ok {
+			return AppConfig{}, newError(
+				"error.config.invalidProjectRef",
+				"key", "user_project", "path", path, "value", fmt.Sprint(v),
+			)
+		}
+		ref, err := parseProjectKey(s, "user_project", path)
 		if err != nil {
 			return AppConfig{}, err
 		}
