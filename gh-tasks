@@ -20,6 +20,15 @@ binary="${EXTENSION_DIR}/packages/gh-tasks/bin/gh-tasks-${os}-${arch}"
 [ "$os" = "windows" ] && binary="${binary}.exe"
 
 if [ ! -x "$binary" ]; then
+  # Fallback to the host-only dev build (`pnpm run build`, no os/arch
+  # suffix — repo-internal ADR-0001). Lets `./gh-tasks <cmd>` and
+  # `gh extension install /local/path` work right after a single-target
+  # local build, without requiring `pnpm run build:all` first.
+  dev_binary="${EXTENSION_DIR}/packages/gh-tasks/bin/gh-tasks"
+  [ "$os" = "windows" ] && dev_binary="${dev_binary}.exe"
+  if [ -x "$dev_binary" ]; then
+    exec "$dev_binary" "$@"
+  fi
   echo "gh-tasks binary not found for ${os}-${arch}: ${binary}" >&2
   echo "Install via: gh extension install ozzy-labs/gh-tasks" >&2
   exit 1
