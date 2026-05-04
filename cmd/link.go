@@ -34,7 +34,7 @@ func runLink(ctx context.Context, c *cobra.Command, deps Deps, args []string) er
 	pr, task, ok := parseLinkArgs(args)
 	if !ok {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.link.argsRequired"))
-		return errSilent
+		return ErrSilent
 	}
 	sc, err := scope.Detect(scope.DetectOptions{
 		Argv:         deps.Argv,
@@ -67,7 +67,7 @@ func runLinkRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 	}
 	if prResp.Repository == nil || prResp.Repository.PullRequest == nil {
 		fmt.Fprintf(c.ErrOrStderr(), "PR not found: %s/%s#%d\n", id.Owner, id.Name, pr)
-		return errSilent
+		return ErrSilent
 	}
 	prNode := prResp.Repository.PullRequest
 	if ContainsCloseLink(prNode.Body, task) {
@@ -109,7 +109,7 @@ func runLinkProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	if pid == "" {
 		fmt.Fprintf(c.ErrOrStderr(), "project not found: %s/%d (--scope %s)\n", pref.Owner, pref.Number, sc)
-		return errSilent
+		return ErrSilent
 	}
 	var prResp queries.GetPullRequestByNumberResponse
 	if err := clients.GraphQL.Do(ctx, queries.GetPullRequestByNumber, map[string]any{
@@ -119,7 +119,7 @@ func runLinkProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	if prResp.Repository == nil || prResp.Repository.PullRequest == nil {
 		fmt.Fprintf(c.ErrOrStderr(), "PR not found: %s/%s#%d\n", id.Owner, id.Name, pr)
-		return errSilent
+		return ErrSilent
 	}
 	var issueResp queries.GetIssueByNumberResponse
 	if err := clients.GraphQL.Do(ctx, queries.GetIssueByNumber, map[string]any{
@@ -129,7 +129,7 @@ func runLinkProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	if issueResp.Repository == nil || issueResp.Repository.Issue == nil {
 		fmt.Fprintf(c.ErrOrStderr(), "Issue not found: %s/%s#%d\n", id.Owner, id.Name, task)
-		return errSilent
+		return ErrSilent
 	}
 	var addResp queries.AddProjectV2ItemByIDResponse
 	if err := clients.GraphQL.Do(ctx, queries.AddProjectV2ItemByID, map[string]any{

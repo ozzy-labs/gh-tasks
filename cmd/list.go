@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ozzy-labs/gh-tasks/internal/config"
 	"github.com/ozzy-labs/gh-tasks/internal/github/queries"
 	"github.com/ozzy-labs/gh-tasks/internal/i18n"
 	"github.com/ozzy-labs/gh-tasks/internal/project"
@@ -70,7 +69,7 @@ func runListRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, l
 	}
 	if resp.Repository == nil {
 		fmt.Fprintf(c.ErrOrStderr(), "repository not found: %s/%s\n", id.Owner, id.Name)
-		return errSilent
+		return ErrSilent
 	}
 	if len(resp.Repository.Issues.Nodes) == 0 {
 		fmt.Fprintln(c.OutOrStdout(), r.T("list.empty"))
@@ -102,7 +101,7 @@ func runListProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	if pid == "" {
 		fmt.Fprintf(c.ErrOrStderr(), "project not found: %s/%d (--scope %s)\n", pref.Owner, pref.Number, sc)
-		return errSilent
+		return ErrSilent
 	}
 	var resp queries.ListProjectV2ItemsResponse
 	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Items, map[string]any{
@@ -112,7 +111,7 @@ func runListProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	if resp.Node == nil {
 		fmt.Fprintf(c.ErrOrStderr(), "project not found: %s/%d (--scope %s)\n", pref.Owner, pref.Number, sc)
-		return errSilent
+		return ErrSilent
 	}
 	if len(resp.Node.Items.Nodes) == 0 {
 		fmt.Fprintln(c.OutOrStdout(), r.T("list.empty.project"))
@@ -124,24 +123,18 @@ func runListProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	return nil
 }
 
-// errSilent signals that an error has already been written to stderr and the
+// ErrSilent signals that an error has already been written to stderr and the
 // caller should exit non-zero without a duplicate error print.
-var errSilent = errors.New("silent error")
+var ErrSilent = errors.New("silent error")
 
 // localizedError renders any internal error carrying an i18n.Localized payload
-// using the resolved locale, prints it to stderr, and returns errSilent.
+// using the resolved locale, prints it to stderr, and returns ErrSilent.
 // Errors that don't implement Localized are returned as-is.
 func localizedError(c *cobra.Command, r Resolved, err error) error {
 	var loc i18n.Localized
 	if errors.As(err, &loc) {
 		fmt.Fprintln(c.ErrOrStderr(), i18n.T(r.Locale, loc.I18nKey(), i18n.Flat(loc.I18nArgs())...))
-		return errSilent
-	}
-	// Config errors loaded before locale is fully resolved still have the key.
-	var ce *config.ConfigError
-	if errors.As(err, &ce) {
-		fmt.Fprintln(c.ErrOrStderr(), i18n.T(r.Locale, ce.Key, i18n.Flat(ce.Args)...))
-		return errSilent
+		return ErrSilent
 	}
 	return err
 }

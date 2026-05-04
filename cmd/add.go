@@ -32,7 +32,7 @@ func runAdd(ctx context.Context, c *cobra.Command, deps Deps, args []string) err
 	}
 	if len(args) == 0 || args[0] == "" {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.add.titleRequired"))
-		return errSilent
+		return ErrSilent
 	}
 	title := args[0]
 	body, _ := c.Flags().GetString("body")
@@ -68,7 +68,7 @@ func runAddRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, ti
 	}
 	if idResp.Repository == nil {
 		fmt.Fprintf(c.ErrOrStderr(), "repository not found: %s/%s\n", id.Owner, id.Name)
-		return errSilent
+		return ErrSilent
 	}
 	input := map[string]any{"repositoryId": idResp.Repository.ID, "title": title}
 	if body != "" {
@@ -102,7 +102,7 @@ func runAddProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 	}
 	if pid == "" {
 		fmt.Fprintf(c.ErrOrStderr(), "project not found: %s/%d (--scope %s)\n", pref.Owner, pref.Number, sc)
-		return errSilent
+		return ErrSilent
 	}
 	input := map[string]any{"projectId": pid, "title": title}
 	if body != "" {

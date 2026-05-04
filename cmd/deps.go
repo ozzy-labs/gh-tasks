@@ -66,7 +66,10 @@ func DefaultDeps() Deps {
 func (d Deps) Resolve() (Resolved, error) {
 	cfg, err := d.LoadConfig()
 	if err != nil {
-		return Resolved{}, err
+		// Even on config load failure, resolve locale from argv + env so the
+		// returned error message can still be localized by the caller.
+		loc := i18n.ResolveLocale(d.Argv, d.Env, i18n.LocaleConfig{})
+		return Resolved{Locale: loc}, err
 	}
 	loc := i18n.ResolveLocale(d.Argv, d.Env, i18n.LocaleConfig{Lang: cfg.Lang})
 	return Resolved{Locale: loc, Config: cfg}, nil

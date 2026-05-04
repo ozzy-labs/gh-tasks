@@ -67,7 +67,7 @@ func runTodayRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, 
 	}
 	if resp.Repository == nil {
 		fmt.Fprintf(c.ErrOrStderr(), "repository not found: %s/%s\n", id.Owner, id.Name)
-		return errSilent
+		return ErrSilent
 	}
 	hits := []queries.RepoIssueNode{}
 	for _, issue := range resp.Repository.Issues.Nodes {
@@ -109,7 +109,7 @@ func runTodayProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolve
 	}
 	if pid == "" {
 		fmt.Fprintf(c.ErrOrStderr(), "project not found: %s/%d (--scope %s)\n", pref.Owner, pref.Number, sc)
-		return errSilent
+		return ErrSilent
 	}
 	var resp queries.ListProjectV2ItemsResponse
 	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Items, map[string]any{
@@ -119,7 +119,7 @@ func runTodayProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolve
 	}
 	if resp.Node == nil {
 		fmt.Fprintf(c.ErrOrStderr(), "project not found: %s/%d (--scope %s)\n", pref.Owner, pref.Number, sc)
-		return errSilent
+		return ErrSilent
 	}
 	hits := []queries.ProjectV2ItemNode{}
 	for _, item := range resp.Node.Items.Nodes {
