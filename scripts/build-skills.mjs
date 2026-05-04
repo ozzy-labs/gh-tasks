@@ -14,7 +14,7 @@
 // tracked separately.
 
 import { existsSync } from 'node:fs';
-import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ClaudeCodeAdapter } from './adapters/claude-code.mjs';
@@ -27,6 +27,15 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 const SRC = join(ROOT, 'src', 'skills');
 const DIST = join(ROOT, 'dist');
+
+// Local staging targets for dogfooding: this repo's own Claude Code / Codex CLI
+// sessions read from .claude/skills/ and .agents/skills/. Commons skills land
+// there via sync-commons; task-* skills are produced by this script and must be
+// mirrored explicitly so /task-* are usable while developing gh-tasks itself.
+const LOCAL_STAGES = [
+  { distSubpath: '.claude/skills', localPath: join(ROOT, '.claude', 'skills') },
+  { distSubpath: '.agents/skills', localPath: join(ROOT, '.agents', 'skills') },
+];
 
 const ADAPTERS = [
   new ClaudeCodeAdapter(),
@@ -100,6 +109,27 @@ async function writeAdapterOutputs(skills) {
   }
 }
 
+async function stageLocalCopies(skills) {
+  const skillNames = new Set(skills.map((s) => s.name));
+  for (const adapter of ADAPTERS) {
+    const adapterRoot = join(DIST, adapter.constructor.id);
+    for (const stage of LOCAL_STAGES) {
+      const distSkillsDir = join(adapterRoot, stage.distSubpath);
+      if (!existsSync(distSkillsDir)) continue;
+      await mkdir(stage.localPath, { recursive: true });
+      for (const name of skillNames) {
+        const src = join(distSkillsDir, name);
+        if (!existsSync(src)) continue;
+        const dest = join(stage.localPath, name);
+        if (existsSync(dest)) {
+          await rm(dest, { recursive: true, force: true });
+        }
+        await cp(src, dest, { recursive: true });
+      }
+    }
+  }
+}
+
 async function main() {
   if (!existsSync(SRC)) {
     console.log('[build-skills] no src/skills/ — nothing to build');
@@ -107,11 +137,13 @@ async function main() {
   }
   const skills = await loadSkills();
   await writeAdapterOutputs(skills);
+  await stageLocalCopies(skills);
 
   console.log(`✓ Built ${skills.length} skill(s) for ${ADAPTERS.length} adapters`);
   for (const adapter of ADAPTERS) {
     console.log(`  dist/${adapter.constructor.id}/`);
   }
+  console.log('  staged into .claude/skills/, .agents/skills/');
   for (const skill of skills) {
     console.log(`  - ${skill.name}`);
   }
