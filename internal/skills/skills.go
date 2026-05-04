@@ -73,8 +73,10 @@ type LoadOptions struct {
 	Required []string
 }
 
-// DefaultRequiredFields mirrors ADR-0004 + the TS build-skills.mjs gate.
-var DefaultRequiredFields = []string{
+// defaultRequiredFields mirrors ADR-0004 + the TS build-skills.mjs gate.
+// Kept unexported so external callers cannot mutate the slice; injection is
+// available via LoadOptions.Required.
+var defaultRequiredFields = []string{
 	"name",
 	"description",
 	"description_en",
@@ -87,7 +89,7 @@ var DefaultRequiredFields = []string{
 func Load(srcDir string, opts LoadOptions) ([]Skill, error) {
 	required := opts.Required
 	if len(required) == 0 {
-		required = DefaultRequiredFields
+		required = defaultRequiredFields
 	}
 	entries, err := os.ReadDir(srcDir)
 	if err != nil {
