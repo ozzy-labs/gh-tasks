@@ -62,6 +62,8 @@ Copilot proposes `gh tasks triage --scope org --limit 10` and helps you triage b
 
 ### 3. Capturing a task mid-conversation
 
+When a side todo comes up in chat:
+
 ```text
 @workspace Capture "Refactor scope-detection cache to use LRU" as a repo-scope task.
 ```
