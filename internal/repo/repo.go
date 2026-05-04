@@ -4,7 +4,6 @@ package repo
 
 import (
 	"context"
-	"errors"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -23,19 +22,15 @@ func (i Ident) String() string { return i.Owner + "/" + i.Name }
 
 // RepoError is returned by [Resolve] / [ParseFlag] / [ParseOwnerName] /
 // [ExtractFromRemote] when an input cannot be parsed.
+//
+// Use errors.As(err, &target) to test for this type:
+//
+//	var re *repo.RepoError
+//	if errors.As(err, &re) { ... }
 type RepoError struct{ i18n.Payload }
 
 // Error satisfies the error interface.
 func (e *RepoError) Error() string { return e.Key }
-
-// AsRepoError unwraps err into a RepoError.
-func AsRepoError(err error) (*RepoError, bool) {
-	var re *RepoError
-	if errors.As(err, &re) {
-		return re, true
-	}
-	return nil, false
-}
 
 func newError(key string, args ...any) *RepoError {
 	return &RepoError{Payload: i18n.NewPayload(key, args...)}

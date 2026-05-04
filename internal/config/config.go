@@ -9,7 +9,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 
 	toml "github.com/pelletier/go-toml/v2"
 
@@ -39,19 +38,15 @@ func (c AppConfig) Lang() i18n.Locale { return c.Locale }
 // ConfigError is returned when a config file is present but malformed or
 // holds invalid values, so the user sees a specific message instead of a
 // silent fallback.
+//
+// Use errors.As(err, &target) to test for this type:
+//
+//	var ce *config.ConfigError
+//	if errors.As(err, &ce) { ... }
 type ConfigError struct{ i18n.Payload }
 
 // Error satisfies the error interface.
 func (e *ConfigError) Error() string { return e.Key }
-
-// AsConfigError unwraps err into a ConfigError.
-func AsConfigError(err error) (*ConfigError, bool) {
-	var ce *ConfigError
-	if errors.As(err, &ce) {
-		return ce, true
-	}
-	return nil, false
-}
 
 func newError(key string, args ...any) *ConfigError {
 	return &ConfigError{Payload: i18n.NewPayload(key, args...)}
@@ -121,7 +116,7 @@ func parse(raw []byte, path string) (AppConfig, error) {
 				"error.config.invalidLang",
 				"path", path,
 				"value", fmt.Sprint(v),
-				"valid", strings.Join(localeNames(), " | "),
+				"valid", i18n.JoinPipe(i18n.Locales),
 			)
 		}
 		loc, ok := i18n.Validate(s)
@@ -130,7 +125,7 @@ func parse(raw []byte, path string) (AppConfig, error) {
 				"error.config.invalidLang",
 				"path", path,
 				"value", s,
-				"valid", strings.Join(localeNames(), " | "),
+				"valid", i18n.JoinPipe(i18n.Locales),
 			)
 		}
 		out.Locale = loc
@@ -142,7 +137,7 @@ func parse(raw []byte, path string) (AppConfig, error) {
 				"error.config.invalidDefaultScope",
 				"path", path,
 				"value", fmt.Sprint(v),
-				"valid", strings.Join(scopeNames(), " | "),
+				"valid", i18n.JoinPipe(scope.Valid),
 			)
 		}
 		sc, ok := validateScope(s)
@@ -151,7 +146,7 @@ func parse(raw []byte, path string) (AppConfig, error) {
 				"error.config.invalidDefaultScope",
 				"path", path,
 				"value", s,
-				"valid", strings.Join(scopeNames(), " | "),
+				"valid", i18n.JoinPipe(scope.Valid),
 			)
 		}
 		out.DefaultScope = sc
@@ -205,18 +200,6 @@ func validateScope(v string) (scope.Scope, bool) {
 		}
 	}
 	return "", false
-}
-
-func localeNames() []string {
-	return []string{string(i18n.LocaleJA), string(i18n.LocaleEN)}
-}
-
-func scopeNames() []string {
-	out := make([]string, len(scope.Valid))
-	for i, s := range scope.Valid {
-		out[i] = string(s)
-	}
-	return out
 }
 
 // String renders the config for debug logs.

@@ -1,6 +1,7 @@
 package config_test
 
 import (
+	"errors"
 	"io/fs"
 	"testing"
 
@@ -62,8 +63,8 @@ func TestLoad_InvalidLang(t *testing.T) {
 	if err == nil {
 		t.Fatal("want error")
 	}
-	ce, ok := config.AsConfigError(err)
-	if !ok {
+	var ce *config.ConfigError
+	if !errors.As(err, &ce) {
 		t.Fatalf("not a ConfigError: %T", err)
 	}
 	if ce.I18nKey() != "error.config.invalidLang" {
@@ -78,8 +79,8 @@ func TestLoad_InvalidProjectRef(t *testing.T) {
 		Path:     "/test.toml",
 		ReadFile: func(string) ([]byte, error) { return body, nil },
 	})
-	ce, ok := config.AsConfigError(err)
-	if !ok {
+	var ce *config.ConfigError
+	if !errors.As(err, &ce) {
 		t.Fatalf("got %T", err)
 	}
 	if ce.I18nKey() != "error.config.invalidProjectRef" {
@@ -94,8 +95,8 @@ func TestLoad_MalformedTOML(t *testing.T) {
 		Path:     "/test.toml",
 		ReadFile: func(string) ([]byte, error) { return body, nil },
 	})
-	ce, ok := config.AsConfigError(err)
-	if !ok {
+	var ce *config.ConfigError
+	if !errors.As(err, &ce) {
 		t.Fatalf("got %T", err)
 	}
 	if ce.I18nKey() != "error.config.tomlParseFailed" {
@@ -124,8 +125,8 @@ func TestLoad_DefaultScopeInvalid(t *testing.T) {
 		Path:     "/test.toml",
 		ReadFile: func(string) ([]byte, error) { return body, nil },
 	})
-	ce, ok := config.AsConfigError(err)
-	if !ok {
+	var ce *config.ConfigError
+	if !errors.As(err, &ce) {
 		t.Fatalf("got %T", err)
 	}
 	if ce.I18nKey() != "error.config.invalidDefaultScope" {
@@ -140,8 +141,8 @@ func TestLoad_LangNonString(t *testing.T) {
 		Path:     "/test.toml",
 		ReadFile: func(string) ([]byte, error) { return body, nil },
 	})
-	ce, ok := config.AsConfigError(err)
-	if !ok {
+	var ce *config.ConfigError
+	if !errors.As(err, &ce) {
 		t.Fatalf("got %T", err)
 	}
 	if ce.I18nKey() != "error.config.invalidLang" {
@@ -156,8 +157,8 @@ func TestLoad_OrgProjectNonString(t *testing.T) {
 		Path:     "/test.toml",
 		ReadFile: func(string) ([]byte, error) { return body, nil },
 	})
-	ce, ok := config.AsConfigError(err)
-	if !ok {
+	var ce *config.ConfigError
+	if !errors.As(err, &ce) {
 		t.Fatalf("got %T", err)
 	}
 	if ce.I18nKey() != "error.config.invalidProjectRef" {
@@ -172,8 +173,8 @@ func TestLoad_DefaultScopeNonString(t *testing.T) {
 		Path:     "/test.toml",
 		ReadFile: func(string) ([]byte, error) { return body, nil },
 	})
-	ce, ok := config.AsConfigError(err)
-	if !ok {
+	var ce *config.ConfigError
+	if !errors.As(err, &ce) {
 		t.Fatalf("got %T", err)
 	}
 	if ce.I18nKey() != "error.config.invalidDefaultScope" {

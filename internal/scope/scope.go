@@ -2,7 +2,6 @@
 package scope
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/ozzy-labs/gh-tasks/internal/i18n"
@@ -23,20 +22,15 @@ var Valid = []Scope{Repo, Org, User}
 
 // ScopeError is returned when a --scope flag is missing a value or has an
 // unrecognized value.
+//
+// Use errors.As(err, &target) to test for this type:
+//
+//	var se *scope.ScopeError
+//	if errors.As(err, &se) { ... }
 type ScopeError struct{ i18n.Payload }
 
 // Error satisfies the error interface.
 func (e *ScopeError) Error() string { return e.Key }
-
-// AsScopeError unwraps err into a ScopeError, returning nil + false when err
-// is not one.
-func AsScopeError(err error) (*ScopeError, bool) {
-	var se *ScopeError
-	if errors.As(err, &se) {
-		return se, true
-	}
-	return nil, false
-}
 
 func newError(key string, args ...any) *ScopeError {
 	return &ScopeError{Payload: i18n.NewPayload(key, args...)}
@@ -113,13 +107,5 @@ func assertScope(v string) (Scope, error) {
 			return s, nil
 		}
 	}
-	return "", newError("error.scope.invalid", "value", v, "valid", joinPipe(Valid))
-}
-
-func joinPipe(vals []Scope) string {
-	out := make([]string, len(vals))
-	for i, v := range vals {
-		out[i] = string(v)
-	}
-	return strings.Join(out, " | ")
+	return "", newError("error.scope.invalid", "value", v, "valid", i18n.JoinPipe(Valid))
 }

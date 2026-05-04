@@ -420,8 +420,8 @@ func TestResolveProjectNodeID(t *testing.T) {
 		if id != "" {
 			t.Errorf("got id %q, want empty on error", id)
 		}
-		se, ok := scope.AsScopeError(err)
-		if !ok {
+		var se *scope.ScopeError
+		if !errors.As(err, &se) {
 			t.Fatalf("expected scope.ScopeError, got %T: %v", err, err)
 		}
 		if se.I18nKey() != "error.scope.invalidForProjectResolution" {

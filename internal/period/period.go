@@ -4,7 +4,6 @@
 package period
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -34,19 +33,15 @@ type Range struct {
 
 // PeriodError is returned when a --period flag is missing a value or has an
 // unrecognized value.
+//
+// Use errors.As(err, &target) to test for this type:
+//
+//	var pe *period.PeriodError
+//	if errors.As(err, &pe) { ... }
 type PeriodError struct{ i18n.Payload }
 
 // Error satisfies the error interface.
 func (e *PeriodError) Error() string { return e.Key }
-
-// AsPeriodError unwraps err into a PeriodError.
-func AsPeriodError(err error) (*PeriodError, bool) {
-	var pe *PeriodError
-	if errors.As(err, &pe) {
-		return pe, true
-	}
-	return nil, false
-}
 
 func newError(key string, args ...any) *PeriodError {
 	return &PeriodError{Payload: i18n.NewPayload(key, args...)}
@@ -63,7 +58,7 @@ func Parse(value string) (Period, error) {
 			return p, nil
 		}
 	}
-	return "", newError("error.period.invalid", "value", value, "valid", joinPipe(Periods))
+	return "", newError("error.period.invalid", "value", value, "valid", i18n.JoinPipe(Periods))
 }
 
 // ParseFlag scans argv for --period=<value> or --period <value> and
@@ -189,14 +184,6 @@ func localMidnight(t time.Time, loc *time.Location) time.Time {
 func daysSinceMonday(w time.Weekday) int {
 	// Sunday=0, Monday=1, ..., Saturday=6.
 	return (int(w) + 6) % 7
-}
-
-func joinPipe(periods []Period) string {
-	out := make([]string, len(periods))
-	for i, p := range periods {
-		out[i] = string(p)
-	}
-	return strings.Join(out, " | ")
 }
 
 // String renders a range for debug/log output.

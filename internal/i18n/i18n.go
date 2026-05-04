@@ -21,13 +21,33 @@ const (
 	LocaleJA Locale = "ja"
 )
 
+// Locales lists the accepted locales in canonical order. It is the single
+// source of truth for the supported set, consumed by [Validate] and by
+// callers that need to render the list (e.g. config error messages via
+// [JoinPipe]).
+var Locales = []Locale{LocaleJA, LocaleEN}
+
 // Validate reports whether v is a known Locale.
 func Validate(v string) (Locale, bool) {
-	switch Locale(v) {
-	case LocaleEN, LocaleJA:
-		return Locale(v), true
+	for _, loc := range Locales {
+		if string(loc) == v {
+			return loc, true
+		}
 	}
 	return "", false
+}
+
+// JoinPipe renders a slice of string-typed values as " | "-separated text.
+//
+// The generic constraint `~string` accepts any named string type (e.g.
+// [Locale], scope.Scope, period.Period), so callers can share one helper
+// for "list the valid values" rendering without per-package duplicates.
+func JoinPipe[T ~string](vals []T) string {
+	out := make([]string, len(vals))
+	for i, v := range vals {
+		out[i] = string(v)
+	}
+	return strings.Join(out, " | ")
 }
 
 //go:embed en.json
