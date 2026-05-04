@@ -182,8 +182,8 @@ func resolveLocation(tz string, getenv func(string) string) *time.Location {
 }
 
 func localMidnight(t time.Time, loc *time.Location) time.Time {
-	t = t.In(loc)
-	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, loc)
+	tl := t.In(loc)
+	return time.Date(tl.Year(), tl.Month(), tl.Day(), 0, 0, 0, 0, loc)
 }
 
 func daysSinceMonday(w time.Weekday) int {
