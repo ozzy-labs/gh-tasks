@@ -145,3 +145,31 @@ func TestResolve_NoSourceFails(t *testing.T) {
 		t.Fatalf("want error")
 	}
 }
+
+func TestResolve_EmptyFlagFallsThroughToRemote(t *testing.T) {
+	t.Parallel()
+	got, err := repo.Resolve(repo.ResolveOptions{
+		Argv:         []string{"--repo="},
+		GetRemoteURL: func() (string, bool) { return "git@github.com:foo/bar.git", true },
+	})
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if got.String() != "foo/bar" {
+		t.Errorf("got %q; want fallthrough to remote", got.String())
+	}
+}
+
+func TestResolve_EmptySpaceFlagFallsThroughToRemote(t *testing.T) {
+	t.Parallel()
+	got, err := repo.Resolve(repo.ResolveOptions{
+		Argv:         []string{"--repo", ""},
+		GetRemoteURL: func() (string, bool) { return "git@github.com:foo/bar.git", true },
+	})
+	if err != nil {
+		t.Fatalf("err: %v", err)
+	}
+	if got.String() != "foo/bar" {
+		t.Errorf("got %q; want fallthrough to remote", got.String())
+	}
+}

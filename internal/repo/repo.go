@@ -47,10 +47,15 @@ type ResolveOptions struct {
 }
 
 // Resolve picks a repo identifier from --repo flag or git remote origin.
+//
+// An empty --repo= value (e.g. from an unset shell variable expansion like
+// `--repo=$VAR`) falls through to git remote resolution rather than surfacing
+// a confusing invalidIdentifier error. This matches the prior TS behavior
+// where parseRepoFlag returning "" was treated as falsy in resolveRepo.
 func Resolve(opts ResolveOptions) (Ident, error) {
 	if value, ok, err := ParseFlag(opts.Argv); err != nil {
 		return Ident{}, err
-	} else if ok {
+	} else if ok && value != "" {
 		return ParseOwnerName(value)
 	}
 	getRemote := opts.GetRemoteURL
