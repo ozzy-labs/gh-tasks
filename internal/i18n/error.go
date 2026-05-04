@@ -20,6 +20,11 @@ type Payload struct {
 }
 
 // NewPayload builds a Payload from alternating key/value pairs.
+//
+// args follows the same flat (string-key, value) varargs shape as T: pairs
+// with a non-string key are silently dropped at the ToArgsMap boundary, and
+// an odd-length args silently drops the trailing unpaired key. Callers must
+// always pass complete (string-key, value) pairs.
 func NewPayload(key string, args ...any) Payload {
 	return Payload{Key: key, Args: ToArgsMap(args)}
 }
