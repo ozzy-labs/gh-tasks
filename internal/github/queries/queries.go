@@ -577,6 +577,17 @@ type ProjectV2IterationOption struct {
 
 // ProjectV2FieldNode represents a Projects v2 field definition. Different
 // field types carry different extras; consumers branch on DataType.
+//
+// Invariants from the GraphQL schema and the inline-fragment selection set in
+// [ListProjectV2Fields]:
+//   - Options is non-nil only when DataType=SINGLE_SELECT (populated by the
+//     ProjectV2SingleSelectField fragment).
+//   - Configuration is non-nil only when DataType=ITERATION (populated by the
+//     ProjectV2IterationField fragment).
+//
+// For every other DataType (TEXT / NUMBER / DATE / TITLE / ASSIGNEES / …)
+// both fields are absent and the response carries only the
+// ProjectV2FieldCommon shape (id / name / dataType).
 type ProjectV2FieldNode struct {
 	ID            string                    `json:"id"`
 	Name          string                    `json:"name"`
@@ -678,11 +689,29 @@ query ListProjectV2Items($projectId: ID!, $first: Int!) {
 
 // ProjectV2ItemContent is the union content returned for each Projects v2
 // item. The Typename discriminator selects which fields are populated.
+//
+// The selection set in [ListProjectV2Items] requests:
+//   - Issue        → id, number, title, url, state, updatedAt, closedAt,
+//     author, assignees
+//   - PullRequest  → id, number, title, url, state, updatedAt, mergedAt,
+//     author, assignees
+//   - DraftIssue   → id, title, body
+//
+// Fields shared by Issue and PullRequest (ID, Number, Title, URL, State,
+// UpdatedAt, Author, Assignees) are always populated for those two variants
+// and only absent for DraftIssue, which itself populates ID, Title, and
+// Body. The remaining fields (ClosedAt, MergedAt, Body, Number, URL, State,
+// UpdatedAt, Author, Assignees) are variant-specific and modeled as
+// pointers / value types whose zero value is meaningful — branch on
+// Typename before reading them. omitempty is intentionally omitted for the
+// always-present fields on the Issue/PullRequest path so the struct
+// signature reflects the schema invariant; this struct is decode-only and
+// never marshaled back, so the tag has no runtime effect.
 type ProjectV2ItemContent struct {
 	Typename  string     `json:"__typename"`
-	ID        string     `json:"id,omitempty"`
+	ID        string     `json:"id"`
 	Number    int        `json:"number,omitempty"`
-	Title     string     `json:"title,omitempty"`
+	Title     string     `json:"title"`
 	URL       string     `json:"url,omitempty"`
 	State     string     `json:"state,omitempty"`
 	UpdatedAt string     `json:"updatedAt,omitempty"`
@@ -702,6 +731,15 @@ type ProjectV2FieldRef struct {
 // ProjectV2FieldValue is the union of single-select / iteration / text / date
 // values on a Projects v2 item. The Typename selects which fields are
 // populated.
+//
+// Field is always populated for every union variant since the GraphQL
+// selection set in [ListProjectV2Items] requests
+// `field { ... on ProjectV2FieldCommon { id name } }` on every branch. It
+// is therefore kept as a value type rather than a pointer; a zero
+// {ID:"", Name:""} would only appear if GitHub silently omitted the
+// selection, which would be a schema-level breakage rather than a
+// per-item nil. genqlient adoption (tracked separately) may revisit this
+// when each variant gets its own generated struct.
 type ProjectV2FieldValue struct {
 	Typename    string            `json:"__typename"`
 	OptionID    string            `json:"optionId,omitempty"`
