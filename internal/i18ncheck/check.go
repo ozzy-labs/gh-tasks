@@ -38,7 +38,6 @@ func Decorative(r rune) bool {
 	//   Arrows (U+2190..U+21FF)
 	//   Mathematical Operators (U+2200..U+22FF)
 	//   Box Drawing (U+2500..U+257F)
-	//   Block Elements (U+2580..U+259F)
 	//   Geometric Shapes (U+25A0..U+25FF)
 	//   Misc Symbols (U+2600..U+26FF)
 	//   Dingbats (U+2700..U+27BF) — checkmarks, crosses, status indicators
@@ -50,8 +49,6 @@ func Decorative(r rune) bool {
 	case r >= 0x2200 && r <= 0x22FF:
 		return true
 	case r >= 0x2500 && r <= 0x257F:
-		return true
-	case r >= 0x2580 && r <= 0x259F:
 		return true
 	case r >= 0x25A0 && r <= 0x25FF:
 		return true
@@ -85,7 +82,7 @@ func FindFiles(roots []string) ([]string, error) {
 			}
 			if d.IsDir() {
 				name := d.Name()
-				if name == "vendor" || name == "node_modules" || name == ".git" {
+				if name == "vendor" || name == "node_modules" || name == ".git" || name == "dist" {
 					return filepath.SkipDir
 				}
 				return nil
