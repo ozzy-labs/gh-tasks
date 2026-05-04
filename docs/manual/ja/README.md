@@ -1,6 +1,6 @@
-# ユーザーマニュアル(日本語、SSOT)
+# ユーザーマニュアル(日本語、mirror)
 
-`gh-tasks` のユーザーマニュアル。本ディレクトリが現状 SSOT、`docs/manual/en/` は mirror(repo-internal [ADR-0005](../../adr/0005-i18n-reader-based-ssot.md))。SSOT は後続フェーズで英語に反転予定。
+`gh-tasks` のユーザーマニュアル。本ディレクトリは **mirror**、SSOT は `docs/manual/en/`(repo-internal [ADR-0005](../../adr/0005-i18n-reader-based-ssot.md))。新規コンテンツは英語版に先行追加し、本ディレクトリで日本語訳を追従させる。
 
 ## 構成(Diátaxis 簡易版)
 

@@ -29,10 +29,11 @@
 ```text
 packages/gh-tasks/      → CLI 本体(TS、Bun --compile 対象)
 packages/templates/     → Projects v2 フィールド定義 / Issue templates
-src/skills/             → SSOT(SKILL.md = ja、SKILL.en.md = en)
+src/skills/             → skill SSOT(SKILL.md = ja、SKILL.en.md = en)
 dist/{adapter}/         → 4 エージェント向け adapter 出力
-docs/{ja,en}/           → 設計ドキュメント(ja SSOT、en mirror)
-docs/adr/               → repo-internal ADR
+docs/manual/{en,ja}/    → ユーザーマニュアル(en SSOT、ja mirror)
+docs/adr/               → repo-internal ADR(ja 単一)
+docs/design/            → repo-internal な living 設計ドキュメント(ja 単一)
 scripts/                → build / sync スクリプト
 .agents/ ・ .claude/    → commons + skills sync 配置先
 ```
@@ -53,7 +54,7 @@ pnpm test                 # Vitest
 読み手ベース SSOT(repo-internal ADR-0005、ADR-0002 を Superseded):
 
 - README: `README.md`(en SSOT)+ `README.ja.md`(ja mirror)
-- ユーザーマニュアル: `docs/manual/en/`(en SSOT、後続フェーズで反転)+ `docs/manual/ja/`(ja mirror)
+- ユーザーマニュアル: `docs/manual/en/`(**en SSOT**)+ `docs/manual/ja/`(ja mirror、新規コンテンツは en 先行で ja 追従)
 - SKILL.md: `SKILL.md`(ja SSOT)+ `SKILL.en.md`(en mirror)
 - ADR(`docs/adr/`): ja のみ(repo-internal な意思決定記録、翻訳しない)
 - 設計ドキュメント(`docs/design/`): ja のみ(living な設計メモ、翻訳しない)

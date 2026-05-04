@@ -1,6 +1,6 @@
-# User Manual (English mirror)
+# User Manual (English, SSOT)
 
-User manual for `gh-tasks`. This is the **English mirror**; the SSOT currently lives in `docs/manual/ja/` (repo-internal [ADR-0005](../../adr/0005-i18n-reader-based-ssot.md)). The SSOT will be inverted to English in a follow-up phase.
+User manual for `gh-tasks`. This directory is the **SSOT**; `docs/manual/ja/` is the Japanese mirror (repo-internal [ADR-0005](../../adr/0005-i18n-reader-based-ssot.md)). New content lands here first; the Japanese mirror is updated to match.
 
 ## Structure (Diátaxis simplified)
 
