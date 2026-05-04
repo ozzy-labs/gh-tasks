@@ -46,9 +46,6 @@ func runPlan(ctx context.Context, c *cobra.Command, deps Deps) error {
 	if err != nil {
 		return localizedError(c, r, err)
 	}
-	if p == "" {
-		p = period.Weekly
-	}
 	now := deps.Now()
 	rng := period.Of(p, period.Options{Getenv: deps.Env, Now: now})
 	sc, err := scope.Detect(scope.DetectOptions{
@@ -78,10 +75,10 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 	if err := clients.GraphQL.Do(ctx, queries.ListRepoIssuesWithMilestone, map[string]any{
 		"owner": id.Owner, "name": id.Name, "first": planFetchLimit,
 	}, &issuesResp); err != nil {
-		return err
+		return fmt.Errorf("list repo issues with milestone: %w", err)
 	}
 	if issuesResp.Repository == nil {
-		fmt.Fprintf(c.ErrOrStderr(), "repository not found: %s/%s\n", id.Owner, id.Name)
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilent
 	}
 	inRange := []queries.RepoIssueWithMilestoneNode{}
@@ -116,7 +113,7 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 	if err := clients.GraphQL.Do(ctx, queries.ListMilestones, map[string]any{
 		"owner": id.Owner, "name": id.Name, "first": planFetchLimit,
 	}, &milestonesResp); err != nil {
-		return err
+		return fmt.Errorf("list milestones: %w", err)
 	}
 	var milestoneID string
 	var milestoneNumber int
@@ -154,7 +151,7 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 		if err := clients.GraphQL.Do(ctx, queries.UpdateIssueMilestone, map[string]any{
 			"input": map[string]any{"id": n.ID, "milestoneId": milestoneID},
 		}, &update); err != nil {
-			return err
+			return fmt.Errorf("update issue milestone (issue #%d): %w", n.Number, err)
 		}
 		fmt.Fprintf(out, "  %s: #%d\n", r.T("plan.linked"), n.Number)
 	}
@@ -181,17 +178,17 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		return err
 	}
 	if pid == "" {
-		fmt.Fprintf(c.ErrOrStderr(), "project not found: %s/%d (--scope %s)\n", pref.Owner, pref.Number, sc)
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilent
 	}
 	var fieldsResp queries.ListProjectV2FieldsResponse
 	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Fields, map[string]any{
 		"projectId": pid, "first": planFieldsFetchLimit,
 	}, &fieldsResp); err != nil {
-		return err
+		return fmt.Errorf("list project fields: %w", err)
 	}
 	if fieldsResp.Node == nil {
-		fmt.Fprintf(c.ErrOrStderr(), "project not found: %s/%d (--scope %s)\n", pref.Owner, pref.Number, sc)
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilent
 	}
 	itField := findIterationField(fieldsResp.Node.Fields.Nodes)
@@ -219,7 +216,7 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Items, map[string]any{
 		"projectId": pid, "first": planFetchLimit,
 	}, &itemsResp); err != nil {
-		return err
+		return fmt.Errorf("list project items: %w", err)
 	}
 	allItems := []queries.ProjectV2ItemNode{}
 	if itemsResp.Node != nil {
@@ -262,7 +259,7 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 				"value":     map[string]any{"iterationId": resolved.iteration.ID},
 			},
 		}, &update); err != nil {
-			return err
+			return fmt.Errorf("update item field value (%s): %w", describeItem(item), err)
 		}
 		fmt.Fprintf(out, "  %s: %s\n", r.T("plan.iterationUpdated.project"), describeItem(item))
 	}

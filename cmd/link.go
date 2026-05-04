@@ -63,10 +63,10 @@ func runLinkRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 	if err := clients.GraphQL.Do(ctx, queries.GetPullRequestByNumber, map[string]any{
 		"owner": id.Owner, "name": id.Name, "number": pr,
 	}, &prResp); err != nil {
-		return err
+		return fmt.Errorf("get pull request: %w", err)
 	}
 	if prResp.Repository == nil || prResp.Repository.PullRequest == nil {
-		fmt.Fprintf(c.ErrOrStderr(), "PR not found: %s/%s#%d\n", id.Owner, id.Name, pr)
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.pullRequest.notFound", "owner", id.Owner, "name", id.Name, "number", pr))
 		return ErrSilent
 	}
 	prNode := prResp.Repository.PullRequest
@@ -79,7 +79,7 @@ func runLinkRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 	if err := clients.GraphQL.Do(ctx, queries.UpdatePullRequest, map[string]any{
 		"input": map[string]any{"pullRequestId": prNode.ID, "body": updatedBody},
 	}, &updated); err != nil {
-		return err
+		return fmt.Errorf("update pull request body: %w", err)
 	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("link.added"), updated.UpdatePullRequest.PullRequest.URL)
 	return nil
@@ -108,39 +108,39 @@ func runLinkProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		return err
 	}
 	if pid == "" {
-		fmt.Fprintf(c.ErrOrStderr(), "project not found: %s/%d (--scope %s)\n", pref.Owner, pref.Number, sc)
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilent
 	}
 	var prResp queries.GetPullRequestByNumberResponse
 	if err := clients.GraphQL.Do(ctx, queries.GetPullRequestByNumber, map[string]any{
 		"owner": id.Owner, "name": id.Name, "number": pr,
 	}, &prResp); err != nil {
-		return err
+		return fmt.Errorf("get pull request: %w", err)
 	}
 	if prResp.Repository == nil || prResp.Repository.PullRequest == nil {
-		fmt.Fprintf(c.ErrOrStderr(), "PR not found: %s/%s#%d\n", id.Owner, id.Name, pr)
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.pullRequest.notFound", "owner", id.Owner, "name", id.Name, "number", pr))
 		return ErrSilent
 	}
 	var issueResp queries.GetIssueByNumberResponse
 	if err := clients.GraphQL.Do(ctx, queries.GetIssueByNumber, map[string]any{
 		"owner": id.Owner, "name": id.Name, "number": task,
 	}, &issueResp); err != nil {
-		return err
+		return fmt.Errorf("get issue: %w", err)
 	}
 	if issueResp.Repository == nil || issueResp.Repository.Issue == nil {
-		fmt.Fprintf(c.ErrOrStderr(), "Issue not found: %s/%s#%d\n", id.Owner, id.Name, task)
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.issue.notFound", "owner", id.Owner, "name", id.Name, "number", task))
 		return ErrSilent
 	}
 	var addResp queries.AddProjectV2ItemByIDResponse
 	if err := clients.GraphQL.Do(ctx, queries.AddProjectV2ItemByID, map[string]any{
 		"input": map[string]any{"projectId": pid, "contentId": prResp.Repository.PullRequest.ID},
 	}, &addResp); err != nil {
-		return err
+		return fmt.Errorf("add PR to project: %w", err)
 	}
 	if err := clients.GraphQL.Do(ctx, queries.AddProjectV2ItemByID, map[string]any{
 		"input": map[string]any{"projectId": pid, "contentId": issueResp.Repository.Issue.ID},
 	}, &addResp); err != nil {
-		return err
+		return fmt.Errorf("add issue to project: %w", err)
 	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s ↔ %s\n",
 		r.T("link.added.project"),

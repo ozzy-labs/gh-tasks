@@ -231,7 +231,7 @@ func runProjectsInit(ctx context.Context, c *cobra.Command, deps Deps, yamlPath 
 	if err := clients.GraphQL.Do(ctx, queries.CreateProjectV2, map[string]any{
 		"input": map[string]any{"ownerId": ownerID, "title": title},
 	}, &pResp); err != nil {
-		return err
+		return fmt.Errorf("create project: %w", err)
 	}
 	project := pResp.CreateProjectV2.ProjectV2
 	fmt.Fprintln(c.OutOrStdout(),
@@ -241,7 +241,7 @@ func runProjectsInit(ctx context.Context, c *cobra.Command, deps Deps, yamlPath 
 	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Fields, map[string]any{
 		"projectId": project.ID, "first": 100,
 	}, &existing); err != nil {
-		return err
+		return fmt.Errorf("list project fields: %w", err)
 	}
 	existingNames := map[string]bool{}
 	if existing.Node != nil {
@@ -268,7 +268,7 @@ func runProjectsInit(ctx context.Context, c *cobra.Command, deps Deps, yamlPath 
 		if err := clients.GraphQL.Do(ctx, queries.CreateProjectV2Field, map[string]any{
 			"input": input,
 		}, &created); err != nil {
-			return err
+			return fmt.Errorf("create project field: %w", err)
 		}
 		fmt.Fprintln(c.OutOrStdout(),
 			r.T("projectsInit.fieldCreated",

@@ -67,10 +67,10 @@ func runTriageRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 	if err := clients.GraphQL.Do(ctx, queries.ListRepoIssuesWithLabels, map[string]any{
 		"owner": id.Owner, "name": id.Name, "first": triageFetchLimit,
 	}, &resp); err != nil {
-		return err
+		return fmt.Errorf("list repo issues with labels: %w", err)
 	}
 	if resp.Repository == nil {
-		fmt.Fprintf(c.ErrOrStderr(), "repository not found: %s/%s\n", id.Owner, id.Name)
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilent
 	}
 	hits := []queries.RepoIssueWithLabelsNode{}
@@ -112,17 +112,17 @@ func runTriageProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 		return err
 	}
 	if pid == "" {
-		fmt.Fprintf(c.ErrOrStderr(), "project not found: %s/%d (--scope %s)\n", pref.Owner, pref.Number, sc)
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilent
 	}
 	var resp queries.ListProjectV2ItemsResponse
 	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Items, map[string]any{
 		"projectId": pid, "first": triageFetchLimit,
 	}, &resp); err != nil {
-		return err
+		return fmt.Errorf("list project items: %w", err)
 	}
 	if resp.Node == nil {
-		fmt.Fprintf(c.ErrOrStderr(), "project not found: %s/%d (--scope %s)\n", pref.Owner, pref.Number, sc)
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilent
 	}
 	hits := []queries.ProjectV2ItemNode{}

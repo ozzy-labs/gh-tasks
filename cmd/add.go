@@ -64,10 +64,10 @@ func runAddRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, ti
 	if err := clients.GraphQL.Do(ctx, queries.GetRepositoryID, map[string]any{
 		"owner": id.Owner, "name": id.Name,
 	}, &idResp); err != nil {
-		return err
+		return fmt.Errorf("get repository id: %w", err)
 	}
 	if idResp.Repository == nil {
-		fmt.Fprintf(c.ErrOrStderr(), "repository not found: %s/%s\n", id.Owner, id.Name)
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilent
 	}
 	input := map[string]any{"repositoryId": idResp.Repository.ID, "title": title}
@@ -76,7 +76,7 @@ func runAddRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, ti
 	}
 	var resp queries.CreateIssueResponse
 	if err := clients.GraphQL.Do(ctx, queries.CreateIssue, map[string]any{"input": input}, &resp); err != nil {
-		return err
+		return fmt.Errorf("create issue: %w", err)
 	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("add.created.repo"), resp.CreateIssue.Issue.URL)
 	return nil
@@ -101,7 +101,7 @@ func runAddProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 		return err
 	}
 	if pid == "" {
-		fmt.Fprintf(c.ErrOrStderr(), "project not found: %s/%d (--scope %s)\n", pref.Owner, pref.Number, sc)
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilent
 	}
 	input := map[string]any{"projectId": pid, "title": title}
@@ -110,7 +110,7 @@ func runAddProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 	}
 	var resp queries.AddProjectV2DraftIssueResponse
 	if err := clients.GraphQL.Do(ctx, queries.AddProjectV2DraftIssue, map[string]any{"input": input}, &resp); err != nil {
-		return err
+		return fmt.Errorf("add project draft issue: %w", err)
 	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("add.created.project"), resp.AddProjectV2DraftIssue.ProjectItem.ID)
 	return nil
