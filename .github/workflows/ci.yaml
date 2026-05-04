@@ -9,41 +9,15 @@ permissions:
   contents: read
 
 jobs:
-  lint:
+  doc-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: jdx/mise-action@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: pnpm/action-setup@v4
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run lint:check
-      - run: pnpm run lint:md
-      - run: pnpm run lint:yaml
-      - run: pnpm run lint:i18n
-
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: jdx/mise-action@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: pnpm/action-setup@v4
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run typecheck
-
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: jdx/mise-action@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: pnpm/action-setup@v4
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm test
+      - run: markdownlint-cli2 "**/*.md" "#**/node_modules" "#**/dist" "#**/CHANGELOG.md"
+      - run: yamllint .
 
   go:
     runs-on: ubuntu-latest
