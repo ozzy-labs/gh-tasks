@@ -149,6 +149,11 @@ func parseLangFlag(argv []string) (Locale, bool) {
 
 // T renders the localized message for key, substituting {name} placeholders
 // with values from args. Missing translations fall back to en, then key.
+//
+// args is treated as alternating (key string, value any) pairs, the same
+// shape ToArgsMap consumes. Pairs whose key is not a string are silently
+// dropped, and an odd-length args (a trailing unpaired key) is silently
+// truncated. Callers must always pass complete (string-key, value) pairs.
 func T(locale Locale, key string, args ...any) string {
 	msg := lookup(locale, key)
 	if len(args) == 0 {
@@ -158,7 +163,12 @@ func T(locale Locale, key string, args ...any) string {
 }
 
 // ToArgsMap converts a flat key1, value1, key2, value2, ... varargs sequence
-// into a map. Odd-length input drops the trailing key.
+// into a map. Pairs whose key is not a string are silently dropped (the
+// value is also discarded), and an odd-length input silently drops the
+// trailing unpaired key. The flat varargs shape is intentional for ergonomic
+// call sites, so callers must always pass complete (string-key, value)
+// pairs — non-string keys are a programmer error and produce missing
+// substitutions rather than runtime errors.
 func ToArgsMap(args []any) map[string]any {
 	m := map[string]any{}
 	for i := 0; i+1 < len(args); i += 2 {
@@ -183,6 +193,11 @@ var placeholderPattern = regexp.MustCompile(`\{(\w+)\}`)
 // The replacement is a single left-to-right regex pass, so the result is
 // deterministic regardless of Go map iteration order and `{name}` tokens
 // that appear inside an already-substituted value are not re-expanded.
+//
+// args is keyed by string. When callers build args via T/NewPayload's
+// flat varargs interface, any non-string key in that varargs is dropped at
+// the ToArgsMap boundary before reaching Substitute, so its placeholder is
+// left as `{name}` in the output (silent — never a runtime error).
 func Substitute(msg string, args map[string]any) string {
 	if len(args) == 0 {
 		return msg
