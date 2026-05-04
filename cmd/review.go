@@ -39,9 +39,6 @@ func runReview(ctx context.Context, c *cobra.Command, deps Deps) error {
 	if err != nil {
 		return localizedError(c, r, err)
 	}
-	if p == "" {
-		p = period.Weekly
-	}
 	now := time.Now()
 	if deps.Now != nil {
 		now = deps.Now()
