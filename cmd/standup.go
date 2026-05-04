@@ -149,7 +149,7 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 			fmt.Fprintf(out, "- in-progress: #%d %s (%s)\n", i.Number, i.Title, i.URL)
 		}
 	}
-	fmt.Fprintf(out, "\n## %s\n- %s\n\n", r.T("standup.blockers"), r.T("standup.blockersHint"))
+	fmt.Fprintf(out, "\n## %s\n- %s\n", r.T("standup.blockers"), r.T("standup.blockersHint"))
 	return nil
 }
 
@@ -231,7 +231,7 @@ func runStandupProject(ctx context.Context, c *cobra.Command, deps Deps, r Resol
 			fmt.Fprintf(out, "- in-progress: %s\n", projectitem.FormatItemLineCompact(item))
 		}
 	}
-	fmt.Fprintf(out, "\n## %s\n- %s\n\n", r.T("standup.blockers"), r.T("standup.blockersHint"))
+	fmt.Fprintf(out, "\n## %s\n- %s\n", r.T("standup.blockers"), r.T("standup.blockersHint"))
 	return nil
 }
 
