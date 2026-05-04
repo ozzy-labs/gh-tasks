@@ -88,22 +88,41 @@ func ParseFlag(argv []string) (Period, bool, error) {
 	return "", false, nil
 }
 
-// Of returns the local-midnight-anchored Range for the given period at now.
+// Options collects the contextual inputs shared by [Of],
+// [SuggestMilestoneTitle], and [FormatLocalISODate].
 //
-// tz selection (in priority order):
-//  1. tz arg, if non-empty and a valid IANA name
-//  2. TZ env (looked up via getenv)
-//  3. system local time (time.Local)
-//  4. UTC fallback
-//
-// The fallback to UTC matches the TS implementation: an explicit but invalid
-// tz drops to UTC (so the caller is not silently substituted with system tz).
-func Of(period Period, now time.Time, tz string, getenv func(string) string) Range {
-	if getenv == nil {
-		getenv = func(string) string { return "" }
+// All fields are optional:
+//   - Tz: an IANA timezone name. Empty falls back to TZ env, then system
+//     local time, then UTC. An explicit but invalid name drops to UTC
+//     (so callers are not silently substituted with system tz).
+//   - Getenv: env lookup function. Defaults to a no-op (returns "").
+//   - Now: clock reference. Used only by [Of] and [SuggestMilestoneTitle].
+//     Defaults to [time.Now] when zero.
+type Options struct {
+	Tz     string
+	Getenv func(string) string
+	Now    time.Time
+}
+
+func (o Options) getenv() func(string) string {
+	if o.Getenv != nil {
+		return o.Getenv
 	}
-	loc := resolveLocation(tz, getenv)
-	startOfToday := localMidnight(now, loc)
+	return func(string) string { return "" }
+}
+
+func (o Options) now() time.Time {
+	if o.Now.IsZero() {
+		return time.Now()
+	}
+	return o.Now
+}
+
+// Of returns the local-midnight-anchored Range for the given period at
+// opts.Now.
+func Of(period Period, opts Options) Range {
+	loc := resolveLocation(opts.Tz, opts.getenv())
+	startOfToday := localMidnight(opts.now(), loc)
 	switch period {
 	case Daily:
 		return Range{Start: startOfToday, End: startOfToday.AddDate(0, 0, 1)}
@@ -120,10 +139,11 @@ func Of(period Period, now time.Time, tz string, getenv func(string) string) Ran
 	panic(fmt.Sprintf("period: unrecognized Period value %q", string(period)))
 }
 
-// SuggestMilestoneTitle returns a human label for a period anchored at now.
-func SuggestMilestoneTitle(period Period, now time.Time, tz string, getenv func(string) string) string {
-	r := Of(period, now, tz, getenv)
-	iso := FormatLocalISODate(r.Start, tz, getenv)
+// SuggestMilestoneTitle returns a human label for a period anchored at
+// opts.Now.
+func SuggestMilestoneTitle(period Period, opts Options) string {
+	r := Of(period, opts)
+	iso := FormatLocalISODate(r.Start, opts)
 	switch period {
 	case Daily:
 		return "Daily " + iso
@@ -136,11 +156,9 @@ func SuggestMilestoneTitle(period Period, now time.Time, tz string, getenv func(
 }
 
 // FormatLocalISODate renders d as YYYY-MM-DD in the resolved timezone.
-func FormatLocalISODate(d time.Time, tz string, getenv func(string) string) string {
-	if getenv == nil {
-		getenv = func(string) string { return "" }
-	}
-	loc := resolveLocation(tz, getenv)
+// opts.Now is ignored.
+func FormatLocalISODate(d time.Time, opts Options) string {
+	loc := resolveLocation(opts.Tz, opts.getenv())
 	return d.In(loc).Format("2006-01-02")
 }
 
