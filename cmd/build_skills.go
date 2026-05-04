@@ -69,6 +69,11 @@ func runBuildSkills(c *cobra.Command, deps Deps) error {
 			if err := os.MkdirAll(filepath.Dir(dest), 0o750); err != nil {
 				return fmt.Errorf("mkdir %s: %w", dest, err)
 			}
+			// 0o600 cap: skill outputs are text (SKILL.md / SKILL.en.md / settings.json)
+			// that never need exec bit. Pinning a conservative mode keeps gosec happy
+			// and matches the trust model that this dist/ tree is consumed by humans
+			// (committed to the repo) rather than executed directly. If we ever stage
+			// binary assets that need 0o755 (or preserve source mode), revisit this.
 			if err := os.WriteFile(dest, []byte(out.Content), 0o600); err != nil {
 				return fmt.Errorf("write %s: %w", dest, err)
 			}
@@ -125,6 +130,11 @@ func runBuildSkills(c *cobra.Command, deps Deps) error {
 	return nil
 }
 
+// copyDir mirrors src into dst preserving relative paths. All files are written
+// with mode 0o600 regardless of source mode: skill assets are text (SKILL.md
+// etc.) and never need an exec bit, so pinning a conservative mode keeps gosec
+// satisfied and matches the trust model (human-readable repo content, not
+// executables). Revisit if binary assets requiring 0o755 are ever staged.
 func copyDir(src, dst string) error {
 	return filepath.Walk(src, func(p string, info os.FileInfo, err error) error {
 		if err != nil {
