@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ozzy-labs/gh-tasks/internal/config"
@@ -85,18 +86,37 @@ func (r Resolved) T(key string, args ...any) string {
 	return i18n.T(r.Locale, key, args...)
 }
 
+// gitRemoteCache memoizes the result of `git remote get-url origin` for the
+// lifetime of a single process. Tests inject Deps.HasGitRemote /
+// Deps.GetRemoteURL directly, so the cache only applies to production runs
+// where the working tree's remote does not change mid-invocation.
+var (
+	gitRemoteCacheOnce sync.Once
+	gitRemoteCacheURL  string
+	gitRemoteCacheOK   bool
+)
+
+func loadGitRemoteCache() {
+	gitRemoteCacheOnce.Do(func() {
+		out, err := exec.Command("git", "remote", "get-url", "origin").Output()
+		if err != nil {
+			return
+		}
+		url := strings.TrimSpace(string(out))
+		if url == "" {
+			return
+		}
+		gitRemoteCacheURL = url
+		gitRemoteCacheOK = true
+	})
+}
+
 func defaultHasGitRemote() bool {
-	return exec.Command("git", "remote", "get-url", "origin").Run() == nil
+	loadGitRemoteCache()
+	return gitRemoteCacheOK
 }
 
 func defaultGetRemoteURL() (string, bool) {
-	out, err := exec.Command("git", "remote", "get-url", "origin").Output()
-	if err != nil {
-		return "", false
-	}
-	url := strings.TrimSpace(string(out))
-	if url == "" {
-		return "", false
-	}
-	return url, true
+	loadGitRemoteCache()
+	return gitRemoteCacheURL, gitRemoteCacheOK
 }
