@@ -123,9 +123,10 @@ var remotePattern = regexp.MustCompile(`[:/]([^/:]+)/([^/]+?)(?:\.git)?/?$`)
 // ExtractFromRemote pulls owner/name out of a git remote URL.
 //
 // Supported forms:
-//   - SSH: git@github.com:owner/name.git
-//   - HTTPS: https://github.com/owner/name.git
-//   - Trailing .git is optional.
+//   - SSH (scp-like): git@github.com:owner/name.git
+//   - SSH (URI):      ssh://git@github.com/owner/name.git
+//   - HTTPS:          https://github.com/owner/name.git
+//   - Trailing .git is optional; a single trailing slash is accepted.
 func ExtractFromRemote(url string) (string, error) {
 	url = strings.TrimSpace(url)
 	m := remotePattern.FindStringSubmatch(url)
