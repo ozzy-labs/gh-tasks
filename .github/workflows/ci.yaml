@@ -21,6 +21,7 @@ jobs:
       - run: pnpm run lint:check
       - run: pnpm run lint:md
       - run: pnpm run lint:yaml
+      - run: pnpm run lint:i18n
 
   typecheck:
     runs-on: ubuntu-latest
