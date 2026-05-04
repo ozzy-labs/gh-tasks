@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/ozzy-labs/gh-tasks/internal/config"
 	"github.com/ozzy-labs/gh-tasks/internal/github"
 	"github.com/ozzy-labs/gh-tasks/internal/i18n"
@@ -28,13 +30,6 @@ type Deps struct {
 	GetRemoteURL func() (string, bool)
 	NewClients   func() (*github.Clients, error)
 	LoadConfig   func() (config.AppConfig, error)
-	// Argv supplies the raw process argv used for legacy flag parsing in
-	// commands that haven't been fully migrated to cobra flags. cobra
-	// normally consumes flags in args, so this is the unparsed argv passed
-	// from main when callers want to honour --scope / --project / --repo /
-	// --lang etc. via the existing TS-shaped parsers in internal/{scope,
-	// repo, project, period, i18n}.
-	Argv []string
 }
 
 // Resolved bundles the runtime-derived values: locale, config, etc.
@@ -60,24 +55,52 @@ func DefaultDeps() Deps {
 		LoadConfig: func() (config.AppConfig, error) {
 			return config.Load(config.LoadOptions{})
 		},
-		Argv: os.Args,
 	}
 }
 
-// Resolve loads config and resolves the locale, applying Deps.Argv +
+// Resolve loads config and resolves the locale from cobra's --lang flag and
 // Deps.Env. Returns a populated Resolved on success, or a *config.ConfigError
 // when the config file is malformed.
-func (d Deps) Resolve() (Resolved, error) {
+//
+// The cobra command is consulted for the --lang persistent flag so cobra
+// remains the authoritative source of all flag values (no parallel argv
+// scanning).
+func (d Deps) Resolve(c *cobra.Command) (Resolved, error) {
+	lang := flagString(c, "lang")
 	cfg, err := d.LoadConfig()
 	if err != nil {
-		// Even on config load failure, resolve locale from argv + env so the
+		// Even on config load failure, resolve locale from flag + env so the
 		// returned error message can still be localized by the caller. The
 		// nil provider tells ResolveLocaleFor to skip the config step.
-		loc := i18n.ResolveLocaleFor(d.Argv, d.Env, nil)
+		loc := i18n.ResolveLocaleFor(langArgv(lang), d.Env, nil)
 		return Resolved{Locale: loc}, err
 	}
-	loc := i18n.ResolveLocaleFor(d.Argv, d.Env, cfg)
+	loc := i18n.ResolveLocaleFor(langArgv(lang), d.Env, cfg)
 	return Resolved{Locale: loc, Config: cfg}, nil
+}
+
+// flagString reads a string flag from c (or any ancestor that defined it as
+// a persistent flag). Returns "" when the command tree does not declare the
+// flag (e.g. tests that build a bare *cobra.Command without a root).
+func flagString(c *cobra.Command, name string) string {
+	if c == nil {
+		return ""
+	}
+	if f := c.Flag(name); f == nil {
+		return ""
+	}
+	v, _ := c.Flags().GetString(name)
+	return v
+}
+
+// langArgv adapts the cobra-parsed --lang value into the legacy argv shape
+// consumed by i18n.ResolveLocaleFor. The latter still accepts argv-only so
+// the existing precedence (flag > config > env) is preserved unchanged.
+func langArgv(lang string) []string {
+	if lang == "" {
+		return nil
+	}
+	return []string{"--lang=" + lang}
 }
 
 // T renders a localized message in the resolved locale. Convenience wrapper

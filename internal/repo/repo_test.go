@@ -77,48 +77,9 @@ func TestExtractFromRemote(t *testing.T) {
 	}
 }
 
-func TestParseFlag(t *testing.T) {
-	t.Parallel()
-
-	t.Run("equals", func(t *testing.T) {
-		t.Parallel()
-		v, ok, err := repo.ParseFlag([]string{"--repo=a/b"})
-		if err != nil || !ok || v != "a/b" {
-			t.Fatalf("got (%q, %v, %v)", v, ok, err)
-		}
-	})
-
-	t.Run("space", func(t *testing.T) {
-		t.Parallel()
-		v, ok, err := repo.ParseFlag([]string{"--repo", "a/b"})
-		if err != nil || !ok || v != "a/b" {
-			t.Fatalf("got (%q, %v, %v)", v, ok, err)
-		}
-	})
-
-	t.Run("missing-value", func(t *testing.T) {
-		t.Parallel()
-		_, ok, err := repo.ParseFlag([]string{"--repo"})
-		if err == nil {
-			t.Fatalf("want error")
-		}
-		if !ok {
-			t.Errorf("present=false on malformed flag; want true (flag was present)")
-		}
-	})
-
-	t.Run("absent", func(t *testing.T) {
-		t.Parallel()
-		_, ok, err := repo.ParseFlag([]string{"--scope=user"})
-		if err != nil || ok {
-			t.Fatalf("got (%v, %v)", ok, err)
-		}
-	})
-}
-
 func TestResolve_FlagWins(t *testing.T) {
 	t.Parallel()
-	got, err := repo.Resolve(repo.ResolveOptions{Argv: []string{"--repo=ozzy-labs/gh-tasks"}})
+	got, err := repo.Resolve(repo.ResolveOptions{Flag: "ozzy-labs/gh-tasks"})
 	if err != nil {
 		t.Fatalf("err: %v", err)
 	}
@@ -150,24 +111,14 @@ func TestResolve_NoSourceFails(t *testing.T) {
 	}
 }
 
+// TestResolve_EmptyFlagFallsThroughToRemote covers the case where cobra
+// reports an empty --repo value (e.g. user typed `--repo=` or didn't pass
+// it at all). Resolve must fall through to the git remote rather than
+// surfacing an invalid-identifier error on "".
 func TestResolve_EmptyFlagFallsThroughToRemote(t *testing.T) {
 	t.Parallel()
 	got, err := repo.Resolve(repo.ResolveOptions{
-		Argv:         []string{"--repo="},
-		GetRemoteURL: func() (string, bool) { return "git@github.com:foo/bar.git", true },
-	})
-	if err != nil {
-		t.Fatalf("err: %v", err)
-	}
-	if got.String() != "foo/bar" {
-		t.Errorf("got %q; want fallthrough to remote", got.String())
-	}
-}
-
-func TestResolve_EmptySpaceFlagFallsThroughToRemote(t *testing.T) {
-	t.Parallel()
-	got, err := repo.Resolve(repo.ResolveOptions{
-		Argv:         []string{"--repo", ""},
+		Flag:         "",
 		GetRemoteURL: func() (string, bool) { return "git@github.com:foo/bar.git", true },
 	})
 	if err != nil {
@@ -184,7 +135,7 @@ func TestResolve_EmptySpaceFlagFallsThroughToRemote(t *testing.T) {
 func TestResolve_NilContextUsesBackground(t *testing.T) {
 	t.Parallel()
 	got, err := repo.Resolve(repo.ResolveOptions{
-		Argv: []string{"--repo=ozzy-labs/gh-tasks"},
+		Flag: "ozzy-labs/gh-tasks",
 	})
 	if err != nil {
 		t.Fatalf("err: %v", err)

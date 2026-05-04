@@ -68,7 +68,6 @@ func testDeps(g *fakeGraphQL, opts ...func(*cmd.Deps)) cmd.Deps {
 		GetRemoteURL: func() (string, bool) { return "git@github.com:ozzy-labs/gh-tasks.git", true },
 		NewClients:   func() (*github.Clients, error) { return newClients(g), nil },
 		LoadConfig:   func() (config.AppConfig, error) { return config.AppConfig{}, nil },
-		Argv:         []string{},
 	}
 	for _, opt := range opts {
 		opt(&d)

@@ -60,44 +60,14 @@ func ParseIdentifier(value string) (Ref, bool) {
 	return Ref{Owner: owner, Number: n}, true
 }
 
-// ParseFlag scans argv for --project=<value> or --project <value>.
-//
-// The returned bool reports whether the --project flag was *present* in argv,
-// independent of whether its value parsed successfully. Always check err
-// first; a non-nil err means the flag was present but malformed (missing
-// value or invalid identifier).
-//
-// Result combinations:
-//   - (Ref{}, false, nil): flag absent.
-//   - (ref, true, nil): flag present with a valid value.
-//   - (Ref{}, true, err): flag present but malformed.
-func ParseFlag(argv []string) (Ref, bool, error) {
-	for i, arg := range argv {
-		var value string
-		switch {
-		case strings.HasPrefix(arg, "--project="):
-			value = strings.TrimPrefix(arg, "--project=")
-		case arg == "--project":
-			if i+1 >= len(argv) {
-				return Ref{}, true, newError("error.project.flagMissingValue")
-			}
-			value = argv[i+1]
-		default:
-			continue
-		}
-		ref, ok := ParseIdentifier(value)
-		if !ok {
-			return Ref{}, true, newError("error.project.invalidIdentifier", "value", value)
-		}
-		return ref, true, nil
-	}
-	return Ref{}, false, nil
-}
-
 // ResolveOptions configures Resolve.
+//
+// Flag carries the raw string value of the --project flag as parsed by cobra
+// (empty means the flag was not supplied). The previous Argv-based scanner
+// was retired in favour of cobra-authoritative flag handling.
 type ResolveOptions struct {
 	Scope       scope.Scope
-	Argv        []string
+	Flag        string
 	OrgProject  Ref // from config
 	UserProject Ref // from config
 }
@@ -105,7 +75,7 @@ type ResolveOptions struct {
 // Resolve picks a Projects v2 reference for the given scope.
 //
 // Order:
-//  1. --project flag
+//  1. Flag (cobra-parsed --project value)
 //  2. config (OrgProject when scope=org, UserProject when scope=user)
 //  3. ProjectError (callers should report the missing setting)
 //
@@ -114,11 +84,11 @@ func Resolve(opts ResolveOptions) (Ref, error) {
 	if opts.Scope == scope.Repo {
 		return Ref{}, newError("error.project.repoScope")
 	}
-	ref, present, err := ParseFlag(opts.Argv)
-	if err != nil {
-		return Ref{}, err
-	}
-	if present {
+	if opts.Flag != "" {
+		ref, ok := ParseIdentifier(opts.Flag)
+		if !ok {
+			return Ref{}, newError("error.project.invalidIdentifier", "value", opts.Flag)
+		}
 		return ref, nil
 	}
 	switch opts.Scope {

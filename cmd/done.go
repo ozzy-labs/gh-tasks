@@ -31,7 +31,7 @@ func newDoneCmd(deps Deps) *cobra.Command {
 }
 
 func runDone(ctx context.Context, c *cobra.Command, deps Deps, args []string) error {
-	r, err := deps.Resolve()
+	r, err := deps.Resolve(c)
 	if err != nil {
 		return localizedError(c, r, err)
 	}
@@ -41,7 +41,7 @@ func runDone(ctx context.Context, c *cobra.Command, deps Deps, args []string) er
 	}
 	rawID := args[0]
 	sc, err := scope.Detect(scope.DetectOptions{
-		Argv:         deps.Argv,
+		Flag:         flagString(c, "scope"),
 		HasGitRemote: deps.HasGitRemote,
 		DefaultScope: r.Config.DefaultScope,
 	})
@@ -60,7 +60,7 @@ func runDoneRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, r
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.done.idRequired"))
 		return ErrSilentArgs
 	}
-	id, err := repo.Resolve(repo.ResolveOptions{Argv: deps.Argv, GetRemoteURL: deps.GetRemoteURL})
+	id, err := repo.Resolve(repo.ResolveOptions{Flag: flagString(c, "repo"), GetRemoteURL: deps.GetRemoteURL})
 	if err != nil {
 		return localizedError(c, r, err)
 	}
@@ -92,7 +92,7 @@ func runDoneRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, r
 func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, itemID string) error {
 	pref, err := project.Resolve(project.ResolveOptions{
 		Scope:       sc,
-		Argv:        deps.Argv,
+		Flag:        flagString(c, "project"),
 		OrgProject:  r.Config.OrgProject,
 		UserProject: r.Config.UserProject,
 	})

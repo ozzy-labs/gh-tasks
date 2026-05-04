@@ -26,7 +26,7 @@ func newAddCmd(deps Deps) *cobra.Command {
 }
 
 func runAdd(ctx context.Context, c *cobra.Command, deps Deps, args []string) error {
-	r, err := deps.Resolve()
+	r, err := deps.Resolve(c)
 	if err != nil {
 		return localizedError(c, r, err)
 	}
@@ -38,7 +38,7 @@ func runAdd(ctx context.Context, c *cobra.Command, deps Deps, args []string) err
 	body, _ := c.Flags().GetString("body")
 
 	sc, err := scope.Detect(scope.DetectOptions{
-		Argv:         deps.Argv,
+		Flag:         flagString(c, "scope"),
 		HasGitRemote: deps.HasGitRemote,
 		DefaultScope: r.Config.DefaultScope,
 	})
@@ -52,7 +52,7 @@ func runAdd(ctx context.Context, c *cobra.Command, deps Deps, args []string) err
 }
 
 func runAddRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, title, body string) error {
-	id, err := repo.Resolve(repo.ResolveOptions{Argv: deps.Argv, GetRemoteURL: deps.GetRemoteURL})
+	id, err := repo.Resolve(repo.ResolveOptions{Flag: flagString(c, "repo"), GetRemoteURL: deps.GetRemoteURL})
 	if err != nil {
 		return localizedError(c, r, err)
 	}
@@ -84,7 +84,7 @@ func runAddRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, ti
 func runAddProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, title, body string) error {
 	pref, err := project.Resolve(project.ResolveOptions{
 		Scope:       sc,
-		Argv:        deps.Argv,
+		Flag:        flagString(c, "project"),
 		OrgProject:  r.Config.OrgProject,
 		UserProject: r.Config.UserProject,
 	})

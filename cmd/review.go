@@ -30,7 +30,7 @@ func newReviewCmd(deps Deps) *cobra.Command {
 }
 
 func runReview(ctx context.Context, c *cobra.Command, deps Deps) error {
-	r, err := deps.Resolve()
+	r, err := deps.Resolve(c)
 	if err != nil {
 		return localizedError(c, r, err)
 	}
@@ -41,7 +41,7 @@ func runReview(ctx context.Context, c *cobra.Command, deps Deps) error {
 	}
 	rng := period.Of(p, period.Options{Getenv: deps.Env, Now: deps.Now()})
 	sc, err := scope.Detect(scope.DetectOptions{
-		Argv:         deps.Argv,
+		Flag:         flagString(c, "scope"),
 		HasGitRemote: deps.HasGitRemote,
 		DefaultScope: r.Config.DefaultScope,
 	})
@@ -55,7 +55,7 @@ func runReview(ctx context.Context, c *cobra.Command, deps Deps) error {
 }
 
 func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p period.Period, rng period.Range) error {
-	id, err := repo.Resolve(repo.ResolveOptions{Argv: deps.Argv, GetRemoteURL: deps.GetRemoteURL})
+	id, err := repo.Resolve(repo.ResolveOptions{Flag: flagString(c, "repo"), GetRemoteURL: deps.GetRemoteURL})
 	if err != nil {
 		return localizedError(c, r, err)
 	}
@@ -132,7 +132,7 @@ func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 func runReviewProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, p period.Period, rng period.Range) error {
 	pref, err := project.Resolve(project.ResolveOptions{
 		Scope:       sc,
-		Argv:        deps.Argv,
+		Flag:        flagString(c, "project"),
 		OrgProject:  r.Config.OrgProject,
 		UserProject: r.Config.UserProject,
 	})

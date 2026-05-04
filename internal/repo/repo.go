@@ -20,8 +20,8 @@ type Ident struct {
 // String renders the canonical owner/name form.
 func (i Ident) String() string { return i.Owner + "/" + i.Name }
 
-// RepoError is returned by [Resolve] / [ParseFlag] / [ParseOwnerName] /
-// [ExtractFromRemote] when an input cannot be parsed.
+// RepoError is returned by [Resolve] / [ParseOwnerName] / [ExtractFromRemote]
+// when an input cannot be parsed.
 //
 // Use errors.As(err, &target) to test for this type:
 //
@@ -37,28 +37,29 @@ func newError(key string, args ...any) *RepoError {
 }
 
 // ResolveOptions configures Resolve.
+//
+// Flag carries the raw string value of the --repo flag as parsed by cobra
+// (empty means the flag was not supplied; an explicitly empty value such as
+// `--repo=` also resolves to "" and falls through to the git remote). The
+// previous Argv-based scanner was retired in favour of cobra-authoritative
+// flag handling.
 type ResolveOptions struct {
 	// Context bounds the default git remote lookup. When nil,
 	// context.Background() is used. When GetRemoteURL is set, callers are
 	// responsible for honouring any context themselves.
 	Context      context.Context
-	Argv         []string
+	Flag         string
 	GetRemoteURL func() (string, bool) // returns ("", false) when no remote
 }
 
 // Resolve picks a repo identifier from --repo flag or git remote origin.
 //
-// An empty --repo= value (e.g. from an unset shell variable expansion like
-// `--repo=$VAR`) falls through to git remote resolution rather than surfacing
-// a confusing invalidIdentifier error. This matches the prior TS behavior
-// where parseRepoFlag returning "" was treated as falsy in resolveRepo.
+// An empty Flag value falls through to git remote resolution rather than
+// surfacing a confusing invalidIdentifier error. This matches the prior TS
+// behavior where an unset --repo was treated as falsy in resolveRepo.
 func Resolve(opts ResolveOptions) (Ident, error) {
-	value, present, err := ParseFlag(opts.Argv)
-	if err != nil {
-		return Ident{}, err
-	}
-	if present && value != "" {
-		return ParseOwnerName(value)
+	if opts.Flag != "" {
+		return ParseOwnerName(opts.Flag)
 	}
 	ctx := opts.Context
 	if ctx == nil {
@@ -77,31 +78,6 @@ func Resolve(opts ResolveOptions) (Ident, error) {
 		return Ident{}, err
 	}
 	return ParseOwnerName(v)
-}
-
-// ParseFlag scans argv for --repo=<value> or --repo <value>.
-//
-// The returned bool reports whether the --repo flag was *present* in argv,
-// independent of whether the value is well-formed. Always check err first;
-// a non-nil err means the flag was present but missing a value.
-//
-// Result combinations:
-//   - ("", false, nil): flag absent.
-//   - (value, true, nil): flag present (value may be empty for `--repo=`).
-//   - ("", true, err): flag present but missing a value (`--repo` at end).
-func ParseFlag(argv []string) (string, bool, error) {
-	for i, arg := range argv {
-		if strings.HasPrefix(arg, "--repo=") {
-			return strings.TrimPrefix(arg, "--repo="), true, nil
-		}
-		if arg == "--repo" {
-			if i+1 >= len(argv) {
-				return "", true, newError("error.repo.flagMissingValue")
-			}
-			return argv[i+1], true, nil
-		}
-	}
-	return "", false, nil
 }
 
 // ParseOwnerName parses an `<owner>/<name>` string.

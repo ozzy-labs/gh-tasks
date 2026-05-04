@@ -68,26 +68,17 @@ func newClientsWithREST(g *fakeGraphQL, r *recordingREST) *github.Clients {
 }
 
 // runCmd is a small helper that bootstraps the cobra root with the supplied
-// deps + argv, captures stdout/stderr into the bytes.Buffers wired into
+// deps + args, captures stdout/stderr into the bytes.Buffers wired into
 // d.Stdout / d.Stderr, and returns the resulting err. It also wires
 // SetOut/SetErr on the root command itself, since cmd handlers prefer
 // c.OutOrStdout()/c.ErrOrStderr() over deps.Stdout/deps.Stderr.
 //
-// As a convenience, when d.Argv is empty, runCmd populates it with a
-// process-shaped argv (`["gh-tasks", args...]`) so the legacy flag parsers in
-// internal/{scope,repo,project,period,i18n} see the flags consistently with
-// what cobra parses. Tests that need a different argv (e.g. a malformed
-// --scope value) should set d.Argv before calling runCmd.
+// Flags are parsed entirely by cobra from args; the legacy Deps.Argv field
+// has been retired in favour of authoritative cobra flag handling.
 func runCmd(t *testing.T, d cmd.Deps, args ...string) (stdout, stderr *bytes.Buffer, err error) {
 	t.Helper()
 	stdout = d.Stdout.(*bytes.Buffer)
 	stderr = d.Stderr.(*bytes.Buffer)
-	if len(d.Argv) == 0 {
-		argv := make([]string, 0, len(args)+1)
-		argv = append(argv, "gh-tasks")
-		argv = append(argv, args...)
-		d.Argv = argv
-	}
 	root := cmd.RootWithDeps(d)
 	root.SetArgs(args)
 	root.SetOut(stdout)
@@ -160,7 +151,6 @@ func TestList_LimitDefault(t *testing.T) {
 			return &github.Clients{Host: "github.com", GraphQL: wrap, REST: fakeREST{}}, nil
 		},
 		LoadConfig: func() (config.AppConfig, error) { return config.AppConfig{}, nil },
-		Argv:       []string{},
 	}
 	if _, _, err := runCmd(t, d, "list"); err != nil {
 		t.Fatalf("Execute: %v", err)
@@ -724,9 +714,7 @@ func TestList_ScopeFlagInvalid(t *testing.T) {
 	t.Parallel()
 
 	g := &fakeGraphQL{}
-	d := testDeps(g, func(d *cmd.Deps) {
-		d.Argv = []string{"gh-tasks", "list", "--scope=bogus"}
-	})
+	d := testDeps(g)
 	_, stderr, err := runCmd(t, d, "list", "--scope=bogus")
 	if !errors.Is(err, cmd.ErrSilent) {
 		t.Fatalf("expected ErrSilent for invalid scope, got %v", err)
@@ -759,7 +747,6 @@ func TestList_ProjectFlagInvalid(t *testing.T) {
 	g := &fakeGraphQL{}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
-		d.Argv = []string{"gh-tasks", "list", "--scope=org", "--project=bogus"}
 	})
 	_, stderr, err := runCmd(t, d, "list", "--scope=org", "--project=bogus")
 	if !errors.Is(err, cmd.ErrSilent) {

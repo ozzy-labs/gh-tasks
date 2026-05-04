@@ -5,7 +5,6 @@ package period
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/ozzy-labs/gh-tasks/internal/i18n"
@@ -49,6 +48,10 @@ func newError(key string, args ...any) *PeriodError {
 
 // Parse validates value as a recognized [Period]. Empty values return the
 // zero Period without error so callers can apply their own default.
+//
+// Callers read --period via cobra's c.Flags().GetString("period") and pass
+// the result here directly; the previous argv-based ParseFlag scanner was
+// retired together with the rest of the legacy argv parsers.
 func Parse(value string) (Period, error) {
 	if value == "" {
 		return "", nil
@@ -59,28 +62,6 @@ func Parse(value string) (Period, error) {
 		}
 	}
 	return "", newError("error.period.invalid", "value", value, "valid", i18n.JoinPipe(Periods))
-}
-
-// ParseFlag scans argv for --period=<value> or --period <value> and
-// delegates validation to [Parse]. The bool return reports whether the
-// flag was present with a non-empty value.
-func ParseFlag(argv []string) (Period, bool, error) {
-	for i, arg := range argv {
-		if strings.HasPrefix(arg, "--period=") {
-			value := strings.TrimPrefix(arg, "--period=")
-			p, err := Parse(value)
-			return p, err == nil && value != "", err
-		}
-		if arg == "--period" {
-			if i+1 >= len(argv) {
-				return "", false, newError("error.period.flagMissingValue")
-			}
-			value := argv[i+1]
-			p, err := Parse(value)
-			return p, err == nil && value != "", err
-		}
-	}
-	return "", false, nil
 }
 
 // Options collects the contextual inputs shared by [Of],
@@ -128,9 +109,9 @@ func Of(period Period, opts Options) Range {
 	case Sprint:
 		return Range{Start: startOfToday, End: startOfToday.AddDate(0, 0, 14)}
 	}
-	// Unrecognized Period values are a programmer error: ParseFlag /
-	// toPeriod gate user-supplied input. Returning a zero Range would let
-	// downstream filters silently treat the window as empty.
+	// Unrecognized Period values are a programmer error: Parse gates
+	// user-supplied input. Returning a zero Range would let downstream
+	// filters silently treat the window as empty.
 	panic(fmt.Sprintf("period: unrecognized Period value %q", string(period)))
 }
 
