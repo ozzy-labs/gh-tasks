@@ -1,6 +1,6 @@
 {
   "name": "@ozzylabs/gh-tasks",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "gh extension for managing tasks across GitHub Projects v2, Issues, and Milestones",
   "type": "module",
   "private": true,
