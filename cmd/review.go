@@ -43,7 +43,7 @@ func runReview(ctx context.Context, c *cobra.Command, deps Deps) error {
 	if deps.Now != nil {
 		now = deps.Now()
 	}
-	rng := period.Of(p, now, "", deps.Env)
+	rng := period.Of(p, period.Options{Getenv: deps.Env, Now: now})
 	sc, err := scope.Detect(scope.DetectOptions{
 		Argv:         deps.Argv,
 		HasGitRemote: deps.HasGitRemote,

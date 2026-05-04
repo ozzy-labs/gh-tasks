@@ -53,7 +53,7 @@ func runPlan(ctx context.Context, c *cobra.Command, deps Deps) error {
 	if deps.Now != nil {
 		now = deps.Now()
 	}
-	rng := period.Of(p, now, "", deps.Env)
+	rng := period.Of(p, period.Options{Getenv: deps.Env, Now: now})
 	sc, err := scope.Detect(scope.DetectOptions{
 		Argv:         deps.Argv,
 		HasGitRemote: deps.HasGitRemote,
@@ -94,7 +94,7 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 			inRange = append(inRange, n)
 		}
 	}
-	title := period.SuggestMilestoneTitle(p, now, "", deps.Env)
+	title := period.SuggestMilestoneTitle(p, period.Options{Getenv: deps.Env, Now: now})
 	out := c.OutOrStdout()
 	fmt.Fprintf(out, "%s: %s\n", r.T("plan.proposed"), title)
 	fmt.Fprintf(out, "  %s → %s\n\n", rng.Start.Format("2006-01-02"), rng.End.Format("2006-01-02"))
@@ -202,7 +202,7 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.plan.iterationFieldMissing"))
 		return ErrSilent
 	}
-	target := period.SuggestMilestoneTitle(p, now, "", deps.Env)
+	target := period.SuggestMilestoneTitle(p, period.Options{Getenv: deps.Env, Now: now})
 	resolved := resolveTargetIteration(itField.Configuration.Iterations, target, now)
 	if resolved == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.plan.noIterationsAvailable"))
