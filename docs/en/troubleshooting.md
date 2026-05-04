@@ -40,7 +40,7 @@ See [installation.md](./installation.md) for the full config schema.
 
 ## Semantic clash with `gh agent-task`
 
-GitHub's official `gh agent-task` (preview) is close in name to this extension's `gh tasks`. handbook ADR-0022 marked this as something to watch. If it becomes a problem, a repo-internal ADR will decide the response.
+GitHub's official `gh agent-task` (preview) is close in name to this extension's `gh tasks`. This is a known watch item; if it becomes a problem, a repo-internal ADR will decide the response.
 
 ## API rate limit
 

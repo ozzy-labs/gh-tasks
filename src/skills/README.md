@@ -22,6 +22,6 @@ src/skills/
 pnpm run build:skills
 ```
 
-[handbook ADR-0018](https://github.com/ozzy-labs/handbook/blob/main/adr/0018-agent-adapter-architecture.md) の adapter 機構を再利用し、`dist/{claude-code,codex-cli,gemini-cli,copilot}/.agents/skills/{name}/SKILL.md` を生成する。
+adapter 機構経由で `dist/{claude-code,codex-cli,gemini-cli,copilot}/.agents/skills/{name}/SKILL.md` を生成する。
 
 consumer 側の sync 手順は [`skills-sync/README.md`](../../skills-sync/README.md) を参照(Renovate preset + `MARKER_TAG=@ozzylabs/gh-tasks` での `sync-skills.sh`)。

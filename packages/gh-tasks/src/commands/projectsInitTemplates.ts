@@ -35,7 +35,7 @@ fields:
 
 export const BUNDLED_ORG_TEMPLATE = `# GitHub Projects v2 field template - org (team) scope
 #
-# Used by \`gh-tasks\` org scope (e.g. OzzyLabs Platform Project v2).
+# Used by \`gh-tasks\` org scope (organization-wide Project v2).
 # Extends the user template with cross-repo coordination fields:
 #
 # - Repository: built-in field type for the owning repo of an item.

@@ -81,11 +81,11 @@ gh project field-create "$PROJECT_NUMBER" \
 #### Team (org) scope
 
 ```bash
-ORG="ozzy-labs"
+ORG="my-org"
 
 PROJECT_NUMBER=$(gh project create \
   --owner "$ORG" \
-  --title "OzzyLabs Platform" \
+  --title "team board" \
   --format json --jq .number)
 
 gh project field-create "$PROJECT_NUMBER" --owner "$ORG" \

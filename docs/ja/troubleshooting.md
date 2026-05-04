@@ -40,7 +40,7 @@ config の全スキーマは [installation.md](./installation.md) を参照。
 
 ## `gh agent-task` との semantic 衝突
 
-GitHub CLI 公式の `gh agent-task` (preview) と本拡張の `gh tasks` でコマンド名のニアミスがあり得る(handbook ADR-0022 で監視対象とした)。顕在時は本リポの ADR で対応方針を決定する。
+GitHub CLI 公式の `gh agent-task` (preview) と本拡張の `gh tasks` でコマンド名のニアミスがあり得る(監視対象として認識)。顕在時は本リポの ADR で対応方針を決定する。
 
 ## API rate limit
 
