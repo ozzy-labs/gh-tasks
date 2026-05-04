@@ -38,6 +38,38 @@ func newAuthError(key string, args ...any) *AuthError {
 	return &AuthError{Payload: i18n.NewPayload(key, args...)}
 }
 
+// GraphQLClientError wraps an underlying go-gh error with the HTTP status
+// code (when available) so callers can branch on 401 / 404 / etc. without
+// reaching into go-gh internals via [errors.As].
+//
+// Status is 0 when the underlying error is not an [*api.HTTPError] (e.g. a
+// transport / network failure or a [*api.GraphQLError] without HTTP context).
+// In that case callers should fall back to inspecting Cause directly.
+type GraphQLClientError struct {
+	Status int
+	Cause  error
+}
+
+// Error satisfies the error interface.
+func (e *GraphQLClientError) Error() string {
+	if e == nil || e.Cause == nil {
+		return "graphql request"
+	}
+	if e.Status != 0 {
+		return fmt.Sprintf("graphql request: HTTP %d: %s", e.Status, e.Cause.Error())
+	}
+	return fmt.Sprintf("graphql request: %s", e.Cause.Error())
+}
+
+// Unwrap exposes Cause to [errors.Is] / [errors.As], allowing callers to
+// keep using e.g. errors.As against [*api.HTTPError] when needed.
+func (e *GraphQLClientError) Unwrap() error {
+	if e == nil {
+		return nil
+	}
+	return e.Cause
+}
+
 // GraphQLClient is the minimal surface used by domain packages. The
 // production implementation uses cli/go-gh; tests inject a fake.
 type GraphQLClient interface {
@@ -64,16 +96,19 @@ type ClientOptions struct {
 	Timeout  time.Duration // per-request timeout, default 30s
 	Cache    bool          // enable go-gh in-memory cache
 	CacheTTL time.Duration
+	// CacheDir overrides the directory go-gh uses for cached API responses
+	// (default: gh's own cache dir, ~/.cache/gh/api). Exposed primarily so
+	// tests can redirect cache writes to a temp directory.
+	CacheDir string
 }
 
 // NewClients constructs both clients with auth resolved through go-gh.
 func NewClients(opts ClientOptions) (*Clients, error) {
 	host := opts.Host
 	if host == "" {
+		// auth.DefaultHost already falls back to "github.com" when no
+		// config is present, so no further fallback is needed here.
 		host, _ = auth.DefaultHost()
-	}
-	if host == "" {
-		host = "github.com"
 	}
 	token, _ := auth.TokenForHost(host)
 	if token == "" {
@@ -88,6 +123,7 @@ func NewClients(opts ClientOptions) (*Clients, error) {
 		AuthToken:   token,
 		EnableCache: opts.Cache,
 		CacheTTL:    opts.CacheTTL,
+		CacheDir:    opts.CacheDir,
 		Timeout:     timeout,
 	}
 	gqlClient, err := api.NewGraphQLClient(apiOpts)
@@ -112,7 +148,12 @@ func (a *graphqlAdapter) Do(ctx context.Context, query string, vars map[string]a
 		ctx = context.Background()
 	}
 	if err := a.c.DoWithContext(ctx, query, vars, out); err != nil {
-		return fmt.Errorf("graphql request: %w", err)
+		gqlErr := &GraphQLClientError{Cause: err}
+		var apiErr *api.HTTPError
+		if errors.As(err, &apiErr) {
+			gqlErr.Status = apiErr.StatusCode
+		}
+		return gqlErr
 	}
 	return nil
 }
@@ -123,6 +164,8 @@ func (a *restAdapter) Do(ctx context.Context, method, path string, body any, out
 	if ctx == nil {
 		ctx = context.Background()
 	}
+	// Skip JSON encoding entirely when no body is supplied (e.g. GET, DELETE
+	// without payload). go-gh treats a nil reader as "no request body".
 	var reader io.Reader
 	if body != nil {
 		buf, err := json.Marshal(body)
