@@ -76,7 +76,7 @@ describe('t', () => {
 
   it('interpolates {name} placeholders from args', () => {
     expect(t('en', 'error.scope.invalid', { value: 'bogus', valid: 'repo | org | user' })).toBe(
-      "invalid --scope value: 'bogus' (valid: repo | org | user)"
+      "Invalid --scope value: 'bogus' (valid: repo | org | user)"
     );
     expect(t('ja', 'error.repo.invalidIdentifier', { value: 'oops' })).toBe(
       "不正なリポジトリ識別子: 'oops' (期待: '<owner>/<name>')"
