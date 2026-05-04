@@ -18,14 +18,16 @@ release.yaml(workflow_run on push)
   │
   ▼ (ユーザーが release PR を merge → release_created == true)
   │
-  ├─ build-binaries job(matrix × 5)
-  │    └─ 各 OS / arch:
-  │         - bun build --compile → gh-tasks-{os}-{arch}[.exe]
-  │         - actions/attest-build-provenance@v1 で SLSA provenance 発行
-  │         - gh release upload <tag> <binary>
+  ├─ build-binaries job(`cli/gh-extension-precompile@v2`)
+  │    └─ 公式 Action が一括で:
+  │         - go build を全 OS / arch で実行
+  │         - 命名規則 gh-tasks_<version>_<os>-<arch>[.exe] を自動生成
+  │         - manifest.yml(プラットフォーム解決メタデータ)を発行
+  │         - generate_attestations: true で SLSA provenance を発行
+  │         - すべて gh release upload <tag> ...
   │
   ├─ checksums job(build-binaries 完了後)
-  │    └─ 全 5 binary の SHA256 を集約 → checksums.txt → gh release upload
+  │    └─ 全 binary の SHA256 を集約 → checksums.txt → gh release upload
   │
   ▼
 GitHub Release v0.X.Y 完成
@@ -43,7 +45,7 @@ GitHub Release v0.X.Y 完成
 | Job | needs | permissions | 役割 |
 | --- | --- | --- | --- |
 | `release-please` | — | `contents: write`、`pull-requests: write` | release-please-action 実行 |
-| `build-binaries` | `release-please` | `contents: write`、`id-token: write`、`attestations: write` | 5 matrix で binary 生成 + provenance + upload |
+| `build-binaries` | `release-please` | `contents: write`、`id-token: write`、`attestations: write` | `cli/gh-extension-precompile@v2` で全 OS/arch を一括生成 + manifest.yml + provenance + upload |
 | `checksums` | `release-please`、`build-binaries` | `contents: write` | aggregated SHA256SUMS upload |
 
 両方の post-release job は `if: needs.release-please.outputs.release_created == 'true'` でガードしているため、release PR が無く release-please が新規 PR を作るだけのケース(daily な commit 累積期)では起動しない。
@@ -86,17 +88,19 @@ GitHub Release v0.X.Y 完成
 
 ### Asset 命名規約
 
-GitHub CLI extension の precompiled extension 仕様(`<extension>-<os>-<arch>[.exe]`)に準拠:
+`cli/gh-extension-precompile@v2` が GitHub CLI extension の正規仕様
+`gh-<extension>_<version>_<os>-<arch>[.exe]` を自動生成する。具体的には:
 
-| Target(Bun) | Asset 名 |
-| --- | --- |
-| `bun-linux-x64` | `gh-tasks-linux-amd64` |
-| `bun-linux-arm64` | `gh-tasks-linux-arm64` |
-| `bun-darwin-x64` | `gh-tasks-darwin-amd64` |
-| `bun-darwin-arm64` | `gh-tasks-darwin-arm64` |
-| `bun-windows-x64` | `gh-tasks-windows-amd64.exe` |
-
-加えて `checksums.txt`(SHA256SUMS、5 binary 分)を attach。
+```text
+gh-tasks_v0.X.Y_linux-amd64
+gh-tasks_v0.X.Y_linux-arm64
+gh-tasks_v0.X.Y_darwin-amd64
+gh-tasks_v0.X.Y_darwin-arm64
+gh-tasks_v0.X.Y_windows-amd64.exe
+gh-tasks_v0.X.Y_windows-arm64.exe
+manifest.yml         ← gh extension が読むプラットフォーム解決メタデータ
+checksums.txt        ← 後続 job が aggregated SHA256SUMS を upload
+```
 
 各 binary に対して GitHub が SLSA build provenance attestation を発行(`gh attestation verify <binary> --owner ozzy-labs` で検証可能)。
 
@@ -159,14 +163,15 @@ release-please-action は実行のたびに以下を判定して PR を再生成
 | 観点 | 採用 | 代替 |
 | --- | --- | --- |
 | version 管理 | `release-please` | 手動 `gh release create`(放棄、Conventional Commits との連動を活用) |
-| Cross-compile | matrix の手書き(`bun --compile` × 5) | `cli/gh-extension-precompile` action(Go 中心、命名衝突あり、不採用) |
-| Provenance | `actions/attest-build-provenance@v1` | 自前 GPG 署名(運用負担、見送り) |
+| Cross-compile | `cli/gh-extension-precompile@v2`(公式 Action、Go 中心) | matrix の手書き(`bun --compile` × 5、ADR-0001 旧採用案、ADR-0006 で Superseded) |
+| Provenance | precompile-action の `generate_attestations: true` | 自前 GPG 署名(運用負担、見送り) |
 | Checksum | aggregated `checksums.txt` | per-binary `<name>.sha256`(verbose、見送り) |
 
 ## 関連 ADR / docs
 
-- [ADR-0001](../adr/0001-use-bun-compile-for-binary.md): Bun --compile 採用根拠
+- [ADR-0006](../adr/0006-go-and-cobra-migration.md): Go + cobra + `cli/gh-extension-precompile@v2` 採用(ADR-0001 を Superseded)
 - [docs/design/architecture.md](./architecture.md): 配布モデル全体
 - [docs/manual/en/guides/installation.md](../manual/en/guides/installation.md): ユーザー向けインストール手順
 - gh extension precompiled extension 仕様: <https://docs.github.com/en/github-cli/github-cli/creating-github-cli-extensions>
+- `cli/gh-extension-precompile`: <https://github.com/cli/gh-extension-precompile>
 - SLSA build provenance: <https://slsa.dev/provenance/v1>

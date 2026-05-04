@@ -23,132 +23,128 @@
                     consumer リポ(.claude/skills 等)
 
 ┌────────────────────────────────────────────────────────────┐
-│  packages/gh-tasks/src/cli.ts                              │ ← CLI 本体
-│    ├─ commands/*.ts  (add/list/today/plan/triage/done/    │
-│    │                   review/standup/link/projects)       │
-│    ├─ lib/*.ts       (config/repo/scope/project/period/    │
-│    │                   github/projectItem)                  │
-│    ├─ lib/queries/   (GraphQL fragments + types)            │
-│    └─ i18n/          (en SSOT + ja translation)             │
+│  main.go (リポルート)                                        │ ← CLI 本体
+│  cmd/                (cobra コマンド: add/list/today/plan/   │
+│                       triage/done/review/standup/link/       │
+│                       projects + Hidden: build-skills /      │
+│                       check-i18n)                            │
+│  internal/                                                   │
+│    ├─ github/queries/(GraphQL operation + 型、ADR-0007)     │
+│    ├─ i18n/          (en SSOT + ja translation、embed JSON) │
+│    ├─ scope/ repo/ project/ projectitem/ period/ config/    │
+│    ├─ skills/        (frontmatter parse + Load)             │
+│    └─ adapters/      (4 agent OutputFile 生成)              │
 └────────────────────────────────────────────────────────────┘
-                                 │ bun build --compile
+                                 │ cli/gh-extension-precompile@v2
                                  ▼
-                    bin/gh-tasks-{os}-{arch}
-                    (5 ターゲット: darwin/linux/windows × x64/arm64)
+                    gh-tasks_<v>_{os}-{arch}[.exe] + manifest.yml
+                    (darwin/linux/windows × amd64/arm64、SLSA 付)
 ```
 
 ## ディレクトリ構成
 
 ```text
 gh-tasks/
-├── packages/
-│   ├── gh-tasks/         # CLI 本体(TypeScript、Bun --compile 対象)
-│   │   ├── src/
-│   │   │   ├── cli.ts             # entry point + dispatch
-│   │   │   ├── commands/          # 各サブコマンド実装
-│   │   │   ├── lib/               # 共通ヘルパー
-│   │   │   ├── lib/queries/       # GraphQL クエリ定義
-│   │   │   └── i18n/              # ja.json / en.json + index.ts
-│   │   ├── bin/                   # ローカルビルド出力(.gitignore)
-│   │   └── package.json
-│   └── templates/        # Projects v2 フィールド定義 YAML
-│       └── projects-v2/{user,org}.yaml
-├── src/
-│   └── skills/{name}/    # skill SSOT(ja: SKILL.md、en mirror: SKILL.en.md)
-├── scripts/
-│   ├── build-cli.mjs              # 5 ターゲットの cross-compile
-│   ├── build-skills.mjs           # adapter pipeline orchestrator
-│   ├── check-no-hardcoded-i18n.mjs # 非 ASCII 文字列リテラル検知 lint
-│   ├── adapters/                  # 4 adapter 実装
-│   └── lib/                       # adapter 共通ヘルパー
+├── main.go                            # cobra root エントリ(gh extension 慣習)
+├── cmd/                               # cobra コマンド定義
+│   ├── root.go / deps.go              # root / 依存注入
+│   ├── add.go list.go today.go ...    # ユーザー向けコマンド
+│   ├── build_skills.go                # Hidden: adapter pipeline 実行
+│   └── check_i18n.go                  # Hidden: ハードコード非 ASCII 検知
+├── internal/                          # ドメインロジック(import 不可境界)
+│   ├── github/                        # cli/go-gh ラッパ + クエリ
+│   │   ├── github.go                  # GraphQLClient / RESTClient interfaces
+│   │   └── queries/queries.go         # 21 操作 + 応答型(ADR-0007)
+│   ├── i18n/                          # embed JSON catalog + Resolve / T
+│   ├── i18ncheck/                     # go/parser ベース i18n lint
+│   ├── scope/ repo/ project/          # ID 解決群
+│   ├── projectitem/ period/ config/   # ドメイン helpers
+│   ├── skills/                        # SKILL.md frontmatter parse + Load
+│   └── adapters/                      # 4 agent OutputFile 生成
+├── packages/templates/                # Projects v2 フィールド定義 YAML
+├── src/skills/{name}/                 # skill SSOT(ja: SKILL.md、en mirror)
 ├── docs/
-│   ├── manual/{en,ja}/   # ユーザーマニュアル(en SSOT、ja mirror)
-│   ├── adr/              # 意思決定記録(ja 単一)
-│   └── design/           # 設計ドキュメント(本ディレクトリ、ja 単一)
-├── dist/{adapter-id}/    # adapter 出力(.gitignore、build:skills で再生成)
-├── .claude/skills/       # ローカル staged コピー(Claude Code dogfooding)
-├── .agents/skills/       # ローカル staged コピー(Codex CLI dogfooding)
-└── skills-sync/          # consumer 向け Renovate preset
+│   ├── manual/{en,ja}/                # ユーザーマニュアル(en SSOT、ja mirror)
+│   ├── adr/                           # 意思決定記録(ja 単一)
+│   └── design/                        # 設計ドキュメント(本ディレクトリ、ja 単一)
+├── dist/{adapter-id}/                 # adapter 出力(.gitignore、build-skills で再生成)
+├── .claude/skills/ .agents/skills/    # ローカル staged コピー(dogfooding)
+├── skills-sync/                       # consumer 向け Renovate preset
+├── packages/gh-tasks/ scripts/        # 旧 TS 実装(Phase 7 で削除予定)
+├── go.mod / go.sum / .golangci.yaml / genqlient.yaml
+└── .github/workflows/                 # ci.yaml(go ジョブ含)+ release.yaml(precompile-action)
 ```
 
 ## 主要モジュール境界
 
-### `packages/gh-tasks/src/cli.ts`
+### `main.go` + `cmd/root.go`
 
 エントリポイント。責務:
 
-- argv 先頭の subcommand を dispatch する(`commands/{name}.ts` への委譲)
-- `loadConfig()` を呼ぶ(失敗時は `ConfigError` を捕捉して localized stderr を出力)
-- 中央 catch block で typed error(`AuthError` / `RepoError` / `ScopeError` / `ProjectError` / `PeriodError`)を localize して出力、exit code 2 を返す
-- `--help` / `--version` を処理
+- `cmd.Root()` が cobra root を組み立て、各サブコマンドを `Add` する
+- `SilenceUsage: true` / `SilenceErrors: true`(Cobra ベストプラクティス)
+- 各コマンドは `Deps`(stdout / stderr / GraphQL client factory / config loader / time / env / git remote)を注入可能で、テストはフェイクを差し込んで決定論的に検証する
 
-設計判断:
-
-- 各 command は副作用ベース(stdout / stderr / exit code を返す)で、同じ `argv: readonly string[]` シグネチャに揃える
-- `deps` パラメータで `client` / `hasGitRemote` / `getRemoteUrl` / `stdout` / `stderr` / `config` を注入可能にし、テストは決定論的にセットアップできる
-
-### `commands/{name}.ts`
+### `cmd/{name}.go`
 
 各サブコマンドの実装。共通パターン:
 
-1. `resolveLocale(argv, env, config)` で出力言語を決める
-2. 必要に応じて `detectScope({ argv, hasGitRemote, config })` で scope 判定
+1. `deps.Resolve()` で config + locale を読み込み
+2. `scope.Detect(...)` で scope 判定
 3. scope に応じて分岐(repo は GitHub Issues + Milestones、org/user は Projects v2)
-4. GraphQL は `createClient(resolveToken())` 経由 → `client.request<T>(query, vars)`
-5. 結果を localized メッセージで stdout に出力、exit code 0
+4. GraphQL は `clients.GraphQL.Do(ctx, queries.<Op>, vars, &resp)` 経由
+5. 結果を localized メッセージで `cmd.OutOrStdout()` に書く、`localizedError` でエラーを stderr へ写像
+6. RunE は `errors.As` でドメインエラーを判別、`%w` ラップを徹底
 
-### `lib/*.ts`
+### `internal/*`
 
-純粋関数中心のヘルパー群。各モジュールは「1 つの解決責務」を持つ:
+純粋関数 + interface 中心のヘルパー群。各パッケージは「1 つの解決責務」を持つ:
 
-| モジュール | 責務 | 主な関数 / 型 |
+| パッケージ | 責務 | 主な関数 / 型 |
 | --- | --- | --- |
-| `config.ts` | TOML config 読込 + 検証 | `loadConfig`、`ConfigError` |
-| `repo.ts` | `<owner>/<name>` 解決 | `resolveRepo`、`RepoError` |
-| `scope.ts` | `--scope` 自動判定 | `detectScope`、`ScopeError` |
-| `project.ts` | `<owner>/<number>` 解決 | `resolveProjectRef`、`ProjectError` |
-| `period.ts` | `daily`/`weekly`/`sprint` の境界計算(IANA tz 対応) | `rangeOf`、`PeriodError` |
-| `github.ts` | Octokit client 抽象、token 解決、エラー型 | `createClient`、`AuthError` |
-| `projectItem.ts` | Project v2 item 解決(node id 検索等) | `resolveProjectNodeId` |
-| `queries/` | GraphQL クエリ + レスポンス型 | `GET_ORG_PROJECT_V2` 等 |
+| `config` | TOML config 読込 + 検証 | `Load`、`ConfigError` |
+| `repo` | `<owner>/<name>` 解決 | `Resolve`、`RepoError` |
+| `scope` | `--scope` 自動判定 | `Detect`、`ScopeError` |
+| `project` | `<owner>/<number>` 解決 | `Resolve`、`ProjectError` |
+| `period` | `daily`/`weekly`/`sprint` の境界計算(IANA tz 対応) | `Of`、`PeriodError` |
+| `github` | go-gh wrapper、interface ベース GraphQL/REST client、token 解決 | `NewClients`、`AuthError` |
+| `projectitem` | Project v2 item 解決 + format helper | `ResolveProjectNodeID`、`FormatItem` |
+| `github/queries` | GraphQL operation 定数 + 応答型 | `GetOrgProjectV2` 等(21 operations) |
+| `i18n` | embed JSON catalog + locale 解決 + `T` | `ResolveLocale`、`T`、`Payload` |
+| `i18ncheck` | go/parser ベースの非 ASCII 検知 | `Scan`、`HasNonASCII`、`Decorative` |
+| `skills` | `src/skills/<name>/SKILL.md` parse + Load | `Load`、`ParseDocument` |
+| `adapters` | 4 agent OutputFile 生成 | `ClaudeCode` / `CodexCLI` / `GeminiCLI` / `Copilot` |
 
-### `i18n/`
+### `internal/i18n`
 
 CLI 出力 / エラーメッセージの key ベース translation。
 
-- `en.json` が **SSOT**(repo-internal ADR-0005)、`ja.json` が translation
-- `t(locale, key, args?)` で参照、locale 解決は `resolveLocale(argv, env, config)`
+- `en.json` が **SSOT**(repo-internal ADR-0005)、`ja.json` が translation。両方 `embed` で binary に同梱
+- `i18n.T(locale, key, args...)` で参照、locale 解決は `i18n.ResolveLocale(argv, env, config)`
 - フォールバック chain: 指定 locale → en → key 文字列(デバッグ用)
 - locale 解決順: `--lang` フラグ → config `lang` → `LC_ALL` → `LANG` → fallback `en`(POSIX 標準で `LC_ALL` が `LANG` より優先)
 
 ## エラー設計
 
-`lib/{config,repo,scope,project,period,github}.ts` のエラーは **i18nKey + i18nArgs パターン**:
+`internal/{config,repo,scope,project,period,github}` のエラーは **i18n.Payload 埋め込みパターン**:
 
-```ts
-class XxxError extends Error {
-  readonly i18nKey: string;
-  readonly i18nArgs: I18nArgs;
-  constructor(i18nKey: string, args: I18nArgs = {}) {
-    super(i18nKey);  // err.message は key そのもの
-    this.name = 'XxxError';
-    this.i18nKey = i18nKey;
-    this.i18nArgs = args;
-  }
-}
+```go
+type ScopeError struct{ i18n.Payload }
+
+func (e *ScopeError) Error() string { return e.Key }
 ```
 
-- `super(i18nKey)` で `err.message` に key を入れる(localize は出力時に行う)
-- catch block(`cli.ts` の中央 catch block / 一部 commands)で `t(locale, err.i18nKey, err.i18nArgs)` で localize して stderr 出力
-- ハードコード ja 文字列は `scripts/check-no-hardcoded-i18n.mjs`(`pnpm run lint:i18n`、lefthook pre-commit、CI)で検知して reject
+- `Payload` は `Key string` + `Args map[string]any` を保持し、`I18nKey()` / `I18nArgs()` を実装する `i18n.Localized` インタフェースに準拠する
+- `errors.As(err, &target)` でドメイン判別、上位 (`cmd/list.go` 等の `localizedError`) で `i18n.T(loc, key, flat...)` を呼んで stderr に書く
+- ハードコード非 ASCII 文字列は `gh tasks check-i18n` (`internal/i18ncheck`、`go/parser`) が pre-commit / CI で検知して reject
 
 ## 配布モデル
 
 ### CLI バイナリ
 
-- `bun build --compile --target=bun-{os}-{arch}` で 5 ターゲット(darwin/linux × x64/arm64、windows × x64)を発行
-- GitHub Releases に attach、`gh extension install ozzy-labs/gh-tasks` でユーザー側にダウンロード
-- リポルートの `gh-tasks` shim が `uname -s` / `uname -m` で該当バイナリを exec(repo-internal ADR-0001)
+- `cli/gh-extension-precompile@v2`(GitHub 公式 Action)が `go build` を全 OS/arch で実行し、`gh-tasks_<version>_<os>-<arch>[.exe]` 命名規則 + `manifest.yml`(プラットフォーム解決メタデータ)+ SLSA attestations を発行する
+- GitHub Releases に attach、`gh extension install ozzy-labs/gh-tasks` でユーザー側にダウンロード(`manifest.yml` を gh が読んで適切な binary を選択)
+- ローカル開発: `gh extension install . --force` でカレントブランチの `go build` 出力をそのまま使う dogfooding(repo-internal ADR-0006)
 
 ### skill bundle
 
@@ -160,15 +156,18 @@ class XxxError extends Error {
 
 ## テスト構成
 
-- `*.test.ts` は同階層に配置(`lib/scope.test.ts` 等)
-- `vitest run` で実行(現状 19 ファイル / 203 テスト)
-- 副作用注入(client / hasGitRemote / readFile)で決定論的に検証
-- 統合テスト相当は実機で `gh tasks <subcommand> --lang={en,ja}` を手動確認
+- `*_test.go` は同パッケージ + `_test` パッケージで配置(black-box テスト、`internal/scope/scope_test.go` 等)
+- `go test -race -shuffle=on ./...` を CI 必須(repo-internal ADR-0008)
+- `Deps` 構造体に GraphQL client factory / config loader / time / env / git remote を注入して決定論的に検証(`cmd/cmd_test.go` の `fakeGraphQL` パターン)
+- diff は `google/go-cmp` を使用、`testify/require` は致命エラーの fail-fast 限定
 
 ## 関連 ADR
 
-- [ADR-0001](../adr/0001-use-bun-compile-for-binary.md): Bun --compile 採用
+- [ADR-0001](../adr/0001-use-bun-compile-for-binary.md): Bun --compile 採用(Superseded by 0006)
 - [ADR-0002](../adr/0002-i18n-japanese-ssot.md): i18n は Japanese SSOT(Superseded by 0005)
-- [ADR-0003](../adr/0003-graphql-via-octokit.md): GraphQL は Octokit 経由
+- [ADR-0003](../adr/0003-graphql-via-octokit.md): GraphQL は Octokit 経由(Superseded by 0007)
 - [ADR-0004](../adr/0004-skill-frontmatter-schema.md): SKILL.md frontmatter スキーマ
 - [ADR-0005](../adr/0005-i18n-reader-based-ssot.md): i18n SSOT を読み手ベースに再設計、docs/ 構造再編
+- [ADR-0006](../adr/0006-go-and-cobra-migration.md): Go 1.25 + cobra + `cli/gh-extension-precompile@v2` への完全移行
+- [ADR-0007](../adr/0007-go-gh-graphql-client.md): GitHub API は `cli/go-gh/v2` 経由
+- [ADR-0008](../adr/0008-go-test-and-quality-chain.md): Go テスト・品質チェーン
