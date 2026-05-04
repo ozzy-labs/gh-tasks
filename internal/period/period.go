@@ -79,11 +79,6 @@ func toPeriod(v string) (Period, error) {
 	return "", newError("error.period.invalid", "value", v, "valid", joinPipe(Periods))
 }
 
-// LocationLookup resolves an IANA timezone name to a *time.Location. Tests
-// override this via [Range]Of{}-style options if needed; production callers
-// pass nil to use [time.LoadLocation].
-type LocationLookup func(name string) (*time.Location, error)
-
 // Of returns the local-midnight-anchored Range for the given period at now.
 //
 // tz selection (in priority order):
