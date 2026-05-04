@@ -57,9 +57,11 @@ type DetectOptions struct {
 //  3. config DefaultScope
 //  4. fallback → user
 func Detect(opts DetectOptions) (Scope, error) {
-	if s, ok, err := ParseFlag(opts.Argv); err != nil {
+	s, present, err := ParseFlag(opts.Argv)
+	if err != nil {
 		return "", err
-	} else if ok {
+	}
+	if present {
 		return s, nil
 	}
 	if opts.HasGitRemote != nil && opts.HasGitRemote() {
@@ -71,21 +73,35 @@ func Detect(opts DetectOptions) (Scope, error) {
 	return User, nil
 }
 
-// ParseFlag scans argv for --scope=<value> or --scope <value>. Returns
-// (scope, true, nil) on success, ("", false, nil) when the flag is absent,
-// and (_, _, err) when present but malformed.
+// ParseFlag scans argv for --scope=<value> or --scope <value>.
+//
+// The returned bool reports whether the --scope flag was *present* in argv,
+// independent of whether its value parsed successfully. Always check err
+// first; a non-nil err means the flag was present but malformed (missing
+// value or unknown scope).
+//
+// Result combinations:
+//   - ("", false, nil): flag absent.
+//   - (scope, true, nil): flag present with a valid value.
+//   - ("", true, err): flag present but malformed.
 func ParseFlag(argv []string) (Scope, bool, error) {
 	for i, arg := range argv {
 		if strings.HasPrefix(arg, "--scope=") {
 			s, err := assertScope(strings.TrimPrefix(arg, "--scope="))
-			return s, err == nil, err
+			if err != nil {
+				return "", true, err
+			}
+			return s, true, nil
 		}
 		if arg == "--scope" {
 			if i+1 >= len(argv) {
-				return "", false, newError("error.scope.flagMissingValue")
+				return "", true, newError("error.scope.flagMissingValue")
 			}
 			s, err := assertScope(argv[i+1])
-			return s, err == nil, err
+			if err != nil {
+				return "", true, err
+			}
+			return s, true, nil
 		}
 	}
 	return "", false, nil

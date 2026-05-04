@@ -53,9 +53,11 @@ type ResolveOptions struct {
 // a confusing invalidIdentifier error. This matches the prior TS behavior
 // where parseRepoFlag returning "" was treated as falsy in resolveRepo.
 func Resolve(opts ResolveOptions) (Ident, error) {
-	if value, ok, err := ParseFlag(opts.Argv); err != nil {
+	value, present, err := ParseFlag(opts.Argv)
+	if err != nil {
 		return Ident{}, err
-	} else if ok && value != "" {
+	}
+	if present && value != "" {
 		return ParseOwnerName(value)
 	}
 	getRemote := opts.GetRemoteURL
@@ -66,16 +68,23 @@ func Resolve(opts ResolveOptions) (Ident, error) {
 	if !ok {
 		return Ident{}, newError("error.repo.notResolved")
 	}
-	value, err := ExtractFromRemote(url)
+	v, err := ExtractFromRemote(url)
 	if err != nil {
 		return Ident{}, err
 	}
-	return ParseOwnerName(value)
+	return ParseOwnerName(v)
 }
 
-// ParseFlag scans argv for --repo=<value> or --repo <value>. Returns
-// (value, true, nil) on success, ("", false, nil) when absent, and
-// (_, _, err) when present but missing a value.
+// ParseFlag scans argv for --repo=<value> or --repo <value>.
+//
+// The returned bool reports whether the --repo flag was *present* in argv,
+// independent of whether the value is well-formed. Always check err first;
+// a non-nil err means the flag was present but missing a value.
+//
+// Result combinations:
+//   - ("", false, nil): flag absent.
+//   - (value, true, nil): flag present (value may be empty for `--repo=`).
+//   - ("", true, err): flag present but missing a value (`--repo` at end).
 func ParseFlag(argv []string) (string, bool, error) {
 	for i, arg := range argv {
 		if strings.HasPrefix(arg, "--repo=") {
@@ -83,7 +92,7 @@ func ParseFlag(argv []string) (string, bool, error) {
 		}
 		if arg == "--repo" {
 			if i+1 >= len(argv) {
-				return "", false, newError("error.repo.flagMissingValue")
+				return "", true, newError("error.repo.flagMissingValue")
 			}
 			return argv[i+1], true, nil
 		}
