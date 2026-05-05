@@ -59,10 +59,8 @@ func runLinkRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 	if err != nil {
 		return localizedError(c, r, err)
 	}
-	var prResp queries.GetPullRequestByNumberResponse
-	if err := clients.GraphQL.Do(ctx, queries.GetPullRequestByNumber, map[string]any{
-		"owner": id.Owner, "name": id.Name, "number": pr,
-	}, &prResp); err != nil {
+	prResp, err := queries.GetPullRequestByNumber(ctx, clients.AsGenqlientClient(), id.Owner, id.Name, pr)
+	if err != nil {
 		return fmt.Errorf("get pull request: %w", err)
 	}
 	if prResp.Repository == nil || prResp.Repository.PullRequest == nil {
@@ -71,13 +69,13 @@ func runLinkRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 	}
 	prNode := prResp.Repository.PullRequest
 	if ContainsCloseLink(prNode.Body, task) {
-		fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("link.alreadyLinked"), prNode.URL)
+		fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("link.alreadyLinked"), prNode.Url)
 		return nil
 	}
 	updatedBody := AppendCloseLink(prNode.Body, task)
 	var updated queries.UpdatePullRequestResponse
 	if err := clients.GraphQL.Do(ctx, queries.UpdatePullRequest, map[string]any{
-		"input": map[string]any{"pullRequestId": prNode.ID, "body": updatedBody},
+		"input": map[string]any{"pullRequestId": prNode.Id, "body": updatedBody},
 	}, &updated); err != nil {
 		return fmt.Errorf("update pull request body: %w", err)
 	}
@@ -111,20 +109,16 @@ func runLinkProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	var prResp queries.GetPullRequestByNumberResponse
-	if err := clients.GraphQL.Do(ctx, queries.GetPullRequestByNumber, map[string]any{
-		"owner": id.Owner, "name": id.Name, "number": pr,
-	}, &prResp); err != nil {
+	prResp, err := queries.GetPullRequestByNumber(ctx, clients.AsGenqlientClient(), id.Owner, id.Name, pr)
+	if err != nil {
 		return fmt.Errorf("get pull request: %w", err)
 	}
 	if prResp.Repository == nil || prResp.Repository.PullRequest == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.pullRequest.notFound", "owner", id.Owner, "name", id.Name, "number", pr))
 		return ErrSilentRuntime
 	}
-	var issueResp queries.GetIssueByNumberResponse
-	if err := clients.GraphQL.Do(ctx, queries.GetIssueByNumber, map[string]any{
-		"owner": id.Owner, "name": id.Name, "number": task,
-	}, &issueResp); err != nil {
+	issueResp, err := queries.GetIssueByNumber(ctx, clients.AsGenqlientClient(), id.Owner, id.Name, task)
+	if err != nil {
 		return fmt.Errorf("get issue: %w", err)
 	}
 	if issueResp.Repository == nil || issueResp.Repository.Issue == nil {
@@ -133,19 +127,19 @@ func runLinkProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	var addResp queries.AddProjectV2ItemByIDResponse
 	if err := clients.GraphQL.Do(ctx, queries.AddProjectV2ItemByID, map[string]any{
-		"input": map[string]any{"projectId": pid, "contentId": prResp.Repository.PullRequest.ID},
+		"input": map[string]any{"projectId": pid, "contentId": prResp.Repository.PullRequest.Id},
 	}, &addResp); err != nil {
 		return fmt.Errorf("add PR to project: %w", err)
 	}
 	if err := clients.GraphQL.Do(ctx, queries.AddProjectV2ItemByID, map[string]any{
-		"input": map[string]any{"projectId": pid, "contentId": issueResp.Repository.Issue.ID},
+		"input": map[string]any{"projectId": pid, "contentId": issueResp.Repository.Issue.Id},
 	}, &addResp); err != nil {
 		return fmt.Errorf("add issue to project: %w", err)
 	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s ↔ %s\n",
 		r.T("link.added.project"),
-		prResp.Repository.PullRequest.URL,
-		issueResp.Repository.Issue.URL)
+		prResp.Repository.PullRequest.Url,
+		issueResp.Repository.Issue.Url)
 	return nil
 }
 

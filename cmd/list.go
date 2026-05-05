@@ -66,10 +66,8 @@ func runListRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, l
 	if err != nil {
 		return localizedError(c, r, err)
 	}
-	var resp queries.ListRepoIssuesResponse
-	if err := clients.GraphQL.Do(ctx, queries.ListRepoIssues, map[string]any{
-		"owner": id.Owner, "name": id.Name, "first": limit,
-	}, &resp); err != nil {
+	resp, err := queries.ListRepoIssues(ctx, clients.AsGenqlientClient(), id.Owner, id.Name, limit)
+	if err != nil {
 		return fmt.Errorf("list repo issues: %w", err)
 	}
 	if resp.Repository == nil {
@@ -81,7 +79,7 @@ func runListRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, l
 		return nil
 	}
 	for _, issue := range resp.Repository.Issues.Nodes {
-		fmt.Fprintf(c.OutOrStdout(), "#%d  %s\n  %s\n", issue.Number, issue.Title, issue.URL)
+		fmt.Fprintf(c.OutOrStdout(), "#%d  %s\n  %s\n", issue.Number, issue.Title, issue.Url)
 	}
 	return nil
 }

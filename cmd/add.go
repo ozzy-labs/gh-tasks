@@ -60,17 +60,15 @@ func runAddRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, ti
 	if err != nil {
 		return localizedError(c, r, err)
 	}
-	var idResp queries.GetRepositoryIDResponse
-	if err := clients.GraphQL.Do(ctx, queries.GetRepositoryID, map[string]any{
-		"owner": id.Owner, "name": id.Name,
-	}, &idResp); err != nil {
+	idResp, err := queries.GetRepositoryID(ctx, clients.AsGenqlientClient(), id.Owner, id.Name)
+	if err != nil {
 		return fmt.Errorf("get repository id: %w", err)
 	}
 	if idResp.Repository == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
 	}
-	input := map[string]any{"repositoryId": idResp.Repository.ID, "title": title}
+	input := map[string]any{"repositoryId": idResp.Repository.Id, "title": title}
 	if body != "" {
 		input["body"] = body
 	}

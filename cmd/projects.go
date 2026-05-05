@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
+	"github.com/ozzy-labs/gh-tasks/internal/github"
 	"github.com/ozzy-labs/gh-tasks/internal/github/queries"
 )
 
@@ -359,23 +360,21 @@ func templateTypeToDataType(t string) (string, error) {
 	return "", fmt.Errorf("unsupported field type: %q", t)
 }
 
-func resolveOwnerID(ctx context.Context, gql interface {
-	Do(context.Context, string, map[string]any, any) error
-}, owner string,
-) (string, error) {
+func resolveOwnerID(ctx context.Context, gql github.GraphQLClient, owner string) (string, error) {
+	gqlClient := github.AsGenqlientClientFor(gql)
 	if owner == "@me" {
-		var resp queries.GetViewerIDResponse
-		if err := gql.Do(ctx, queries.GetViewerID, nil, &resp); err != nil {
+		resp, err := queries.GetViewerID(ctx, gqlClient)
+		if err != nil {
 			return "", err
 		}
-		return resp.Viewer.ID, nil
+		return resp.Viewer.Id, nil
 	}
-	var resp queries.GetOwnerIDResponse
-	if err := gql.Do(ctx, queries.GetOwnerID, map[string]any{"login": owner}, &resp); err != nil {
+	resp, err := queries.GetOwnerID(ctx, gqlClient, owner)
+	if err != nil {
 		return "", err
 	}
-	if resp.RepositoryOwner == nil {
+	if resp.RepositoryOwner == nil || *resp.RepositoryOwner == nil {
 		return "", nil
 	}
-	return resp.RepositoryOwner.ID, nil
+	return (*resp.RepositoryOwner).GetId(), nil
 }

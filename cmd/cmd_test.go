@@ -81,7 +81,7 @@ func TestList_RepoEmpty(t *testing.T) {
 
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{
-			matchSubstring: "query ListRepoIssues(",
+			matchSubstring: "query ListRepoIssues (",
 			data: map[string]any{
 				"repository": map[string]any{
 					"issues": map[string]any{"nodes": []any{}},
@@ -108,7 +108,7 @@ func TestList_RepoIssues(t *testing.T) {
 
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{
-			matchSubstring: "query ListRepoIssues(",
+			matchSubstring: "query ListRepoIssues (",
 			data: map[string]any{
 				"repository": map[string]any{
 					"issues": map[string]any{
@@ -146,7 +146,7 @@ func TestToday_FiltersByUTC(t *testing.T) {
 
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{
-			matchSubstring: "query ListRepoIssues(",
+			matchSubstring: "query ListRepoIssues (",
 			data: map[string]any{
 				"repository": map[string]any{
 					"issues": map[string]any{
@@ -183,7 +183,7 @@ func TestReview_RepoMarkdown(t *testing.T) {
 
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{
-			matchSubstring: "query ListClosedIssues(",
+			matchSubstring: "query ListClosedIssues (",
 			data: map[string]any{
 				"repository": map[string]any{
 					"issues": map[string]any{
@@ -195,7 +195,7 @@ func TestReview_RepoMarkdown(t *testing.T) {
 			},
 		},
 		{
-			matchSubstring: "query ListMergedPRs(",
+			matchSubstring: "query ListMergedPRs (",
 			data: map[string]any{
 				"repository": map[string]any{
 					"pullRequests": map[string]any{"nodes": []any{}},
@@ -228,9 +228,9 @@ func TestStandup_RepoStructure(t *testing.T) {
 		"repository": map[string]any{"pullRequests": map[string]any{"nodes": []any{}}},
 	}
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query ListClosedIssues(", data: emptyRepoIssues},
-		{matchSubstring: "query ListMergedPRs(", data: emptyPRs},
-		{matchSubstring: "query ListRepoIssues(", data: emptyRepoIssues},
+		{matchSubstring: "query ListClosedIssues (", data: emptyRepoIssues},
+		{matchSubstring: "query ListMergedPRs (", data: emptyPRs},
+		{matchSubstring: "query ListRepoIssues (", data: emptyRepoIssues},
 	}}
 	out := new(bytes.Buffer)
 	deps := testDeps(g, func(d *cmd.Deps) { d.Stdout = out })

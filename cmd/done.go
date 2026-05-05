@@ -68,23 +68,21 @@ func runDoneRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, r
 	if err != nil {
 		return localizedError(c, r, err)
 	}
-	var resp queries.GetIssueByNumberResponse
-	if err := clients.GraphQL.Do(ctx, queries.GetIssueByNumber, map[string]any{
-		"owner": id.Owner, "name": id.Name, "number": num,
-	}, &resp); err != nil {
+	resp, err := queries.GetIssueByNumber(ctx, clients.AsGenqlientClient(), id.Owner, id.Name, num)
+	if err != nil {
 		return fmt.Errorf("get issue: %w", err)
 	}
 	if resp.Repository == nil || resp.Repository.Issue == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.issue.notFound", "owner", id.Owner, "name", id.Name, "number", num))
 		return ErrSilentRuntime
 	}
-	if resp.Repository.Issue.State == "CLOSED" {
-		fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("done.alreadyClosed"), resp.Repository.Issue.URL)
+	if resp.Repository.Issue.State == queries.IssueStateClosed {
+		fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("done.alreadyClosed"), resp.Repository.Issue.Url)
 		return nil
 	}
 	var closed queries.CloseIssueResponse
 	if err := clients.GraphQL.Do(ctx, queries.CloseIssue, map[string]any{
-		"input": map[string]any{"issueId": resp.Repository.Issue.ID},
+		"input": map[string]any{"issueId": resp.Repository.Issue.Id},
 	}, &closed); err != nil {
 		return fmt.Errorf("close issue: %w", err)
 	}

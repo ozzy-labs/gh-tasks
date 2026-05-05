@@ -4,22 +4,36 @@
 // Two flavors coexist while the genqlient migration (#229 / #230 / #231)
 // is in flight:
 //
-//   - Hand-written operations and response types in this file. Each block
-//     is a 1:1 port of the previous TypeScript counterpart in
-//     packages/gh-tasks/src/lib/queries/.
 //   - genqlient-generated typed operations in `genqlient.go`, sourced
 //     from `operations.graphql` (SSOT) + `schema.graphql` (GitHub public
-//     SDL). See `generate.go` for the `go generate` invocation.
+//     SDL). See `generate.go` for the `go generate` invocation. Read-side
+//     operations were migrated under #230.
+//   - Hand-written mutation operations and response types in this file.
+//     Each block is a 1:1 port of the previous TypeScript counterpart in
+//     packages/gh-tasks/src/lib/queries/. Mutations are tracked for
+//     migration under #231.
 //
 // New operations should be added to `operations.graphql` and consumed via
-// the genqlient-generated functions. The hand-written entries below are
-// being migrated incrementally; when a hand-written operation has no
-// remaining call sites, remove it from this file.
+// the genqlient-generated functions.
 package queries
 
 import "encoding/json"
 
-// Issue queries / types ------------------------------------------------------
+// Login is a thin wrapper around { login: "..." } shared by hand-written
+// shapes. Each genqlient-generated read operation has its own per-
+// operation Login type; this is kept for the still-hand-written
+// `ListProjectV2Items` ProjectV2ItemContent shape (deferred from #230).
+type Login struct {
+	Login string `json:"login"`
+}
+
+// Assignees wraps the paginated assignees list returned by hand-written
+// queries (currently only `ListProjectV2Items.content.assignees`).
+type Assignees struct {
+	Nodes []Login `json:"nodes"`
+}
+
+// Issue mutations / types ----------------------------------------------------
 
 // CreateIssue mutates a new Issue under a given repository.
 const CreateIssue = `
@@ -42,80 +56,6 @@ type CreateIssueResponse struct {
 			URL    string `json:"url"`
 		} `json:"issue"`
 	} `json:"createIssue"`
-}
-
-// ListRepoIssues lists open Issues under a repository, ordered by recently
-// updated.
-const ListRepoIssues = `
-query ListRepoIssues($owner: String!, $name: String!, $first: Int!) {
-  repository(owner: $owner, name: $name) {
-    issues(first: $first, states: OPEN, orderBy: { field: UPDATED_AT, direction: DESC }) {
-      nodes {
-        id
-        number
-        title
-        url
-        updatedAt
-        author { login }
-        assignees(first: 10) { nodes { login } }
-      }
-    }
-  }
-}`
-
-// RepoIssueNode is the per-item shape returned by [ListRepoIssues].
-type RepoIssueNode struct {
-	ID        string    `json:"id"`
-	Number    int       `json:"number"`
-	Title     string    `json:"title"`
-	URL       string    `json:"url"`
-	UpdatedAt string    `json:"updatedAt"`
-	Author    *Login    `json:"author,omitempty"`
-	Assignees Assignees `json:"assignees"`
-}
-
-// Assignees wraps the paginated assignees list.
-type Assignees struct {
-	Nodes []Login `json:"nodes"`
-}
-
-// Login is a thin wrapper around { login: "..." }.
-type Login struct {
-	Login string `json:"login"`
-}
-
-// ListRepoIssuesResponse is the response of [ListRepoIssues].
-type ListRepoIssuesResponse struct {
-	Repository *struct {
-		Issues struct {
-			Nodes []RepoIssueNode `json:"nodes"`
-		} `json:"issues"`
-	} `json:"repository"`
-}
-
-// GetIssueByNumber resolves an Issue's node id from owner/name + number.
-const GetIssueByNumber = `
-query GetIssueByNumber($owner: String!, $name: String!, $number: Int!) {
-  repository(owner: $owner, name: $name) {
-    issue(number: $number) {
-      id
-      number
-      url
-      state
-    }
-  }
-}`
-
-// GetIssueByNumberResponse is the response of [GetIssueByNumber].
-type GetIssueByNumberResponse struct {
-	Repository *struct {
-		Issue *struct {
-			ID     string `json:"id"`
-			Number int    `json:"number"`
-			URL    string `json:"url"`
-			State  string `json:"state"`
-		} `json:"issue"`
-	} `json:"repository"`
 }
 
 // CloseIssue mutates an Issue to state CLOSED.
@@ -143,156 +83,7 @@ type CloseIssueResponse struct {
 	} `json:"closeIssue"`
 }
 
-// ListRepoIssuesWithLabels lists open Issues with their label set, used for
-// triage filtering.
-const ListRepoIssuesWithLabels = `
-query ListRepoIssuesWithLabels($owner: String!, $name: String!, $first: Int!) {
-  repository(owner: $owner, name: $name) {
-    issues(first: $first, states: OPEN, orderBy: { field: UPDATED_AT, direction: DESC }) {
-      nodes {
-        id
-        number
-        title
-        url
-        updatedAt
-        labels(first: 20) { nodes { name } }
-      }
-    }
-  }
-}`
-
-// LabelNode is a label name wrapper.
-type LabelNode struct {
-	Name string `json:"name"`
-}
-
-// Labels is the paginated labels list.
-type Labels struct {
-	Nodes []LabelNode `json:"nodes"`
-}
-
-// RepoIssueWithLabelsNode is the per-item shape returned by
-// [ListRepoIssuesWithLabels].
-type RepoIssueWithLabelsNode struct {
-	ID        string `json:"id"`
-	Number    int    `json:"number"`
-	Title     string `json:"title"`
-	URL       string `json:"url"`
-	UpdatedAt string `json:"updatedAt"`
-	Labels    Labels `json:"labels"`
-}
-
-// ListRepoIssuesWithLabelsResponse is the response of
-// [ListRepoIssuesWithLabels].
-type ListRepoIssuesWithLabelsResponse struct {
-	Repository *struct {
-		Issues struct {
-			Nodes []RepoIssueWithLabelsNode `json:"nodes"`
-		} `json:"issues"`
-	} `json:"repository"`
-}
-
-// ListClosedIssues lists recently CLOSED Issues; the caller filters by
-// closedAt window.
-const ListClosedIssues = `
-query ListClosedIssues($owner: String!, $name: String!, $first: Int!) {
-  repository(owner: $owner, name: $name) {
-    issues(first: $first, states: CLOSED, orderBy: { field: UPDATED_AT, direction: DESC }) {
-      nodes {
-        id
-        number
-        title
-        url
-        closedAt
-        author { login }
-        assignees(first: 10) { nodes { login } }
-      }
-    }
-  }
-}`
-
-// ClosedIssueNode is the per-item shape returned by [ListClosedIssues].
-type ClosedIssueNode struct {
-	ID        string    `json:"id"`
-	Number    int       `json:"number"`
-	Title     string    `json:"title"`
-	URL       string    `json:"url"`
-	ClosedAt  string    `json:"closedAt"`
-	Author    *Login    `json:"author,omitempty"`
-	Assignees Assignees `json:"assignees"`
-}
-
-// ListClosedIssuesResponse is the response of [ListClosedIssues].
-type ListClosedIssuesResponse struct {
-	Repository *struct {
-		Issues struct {
-			Nodes []ClosedIssueNode `json:"nodes"`
-		} `json:"issues"`
-	} `json:"repository"`
-}
-
-// Repository queries / types -------------------------------------------------
-
-// GetRepositoryID resolves a repository's node id.
-const GetRepositoryID = `
-query GetRepositoryId($owner: String!, $name: String!) {
-  repository(owner: $owner, name: $name) {
-    id
-  }
-}`
-
-// GetRepositoryIDResponse is the response of [GetRepositoryID].
-type GetRepositoryIDResponse struct {
-	Repository *struct {
-		ID string `json:"id"`
-	} `json:"repository"`
-}
-
-// Viewer queries / types -----------------------------------------------------
-//
-// `GetViewerLogin` is now sourced from genqlient (see `operations.graphql`).
-// Hand-written entries below are kept for #230 / #231 migration.
-
-// GetViewerID resolves the viewer's node id (used for `--owner @me`).
-const GetViewerID = `
-query GetViewerId {
-  viewer { id login }
-}`
-
-// GetViewerIDResponse is the response of [GetViewerID].
-type GetViewerIDResponse struct {
-	Viewer struct {
-		ID    string `json:"id"`
-		Login string `json:"login"`
-	} `json:"viewer"`
-}
-
-// PR queries / types ---------------------------------------------------------
-
-// GetPullRequestByNumber resolves a PR's id and current body.
-const GetPullRequestByNumber = `
-query GetPullRequestByNumber($owner: String!, $name: String!, $number: Int!) {
-  repository(owner: $owner, name: $name) {
-    pullRequest(number: $number) {
-      id
-      number
-      url
-      body
-    }
-  }
-}`
-
-// GetPullRequestByNumberResponse is the response of [GetPullRequestByNumber].
-type GetPullRequestByNumberResponse struct {
-	Repository *struct {
-		PullRequest *struct {
-			ID     string `json:"id"`
-			Number int    `json:"number"`
-			URL    string `json:"url"`
-			Body   string `json:"body"`
-		} `json:"pullRequest"`
-	} `json:"repository"`
-}
+// PR mutations / types -------------------------------------------------------
 
 // UpdatePullRequest mutates a PR's body.
 const UpdatePullRequest = `
@@ -317,117 +108,7 @@ type UpdatePullRequestResponse struct {
 	} `json:"updatePullRequest"`
 }
 
-// ListMergedPRs lists recently MERGED PRs; the caller filters by mergedAt.
-const ListMergedPRs = `
-query ListMergedPRs($owner: String!, $name: String!, $first: Int!) {
-  repository(owner: $owner, name: $name) {
-    pullRequests(first: $first, states: MERGED, orderBy: { field: UPDATED_AT, direction: DESC }) {
-      nodes {
-        id
-        number
-        title
-        url
-        mergedAt
-        author { login }
-        assignees(first: 10) { nodes { login } }
-      }
-    }
-  }
-}`
-
-// MergedPRNode is the per-item shape returned by [ListMergedPRs].
-type MergedPRNode struct {
-	ID        string    `json:"id"`
-	Number    int       `json:"number"`
-	Title     string    `json:"title"`
-	URL       string    `json:"url"`
-	MergedAt  string    `json:"mergedAt"`
-	Author    *Login    `json:"author,omitempty"`
-	Assignees Assignees `json:"assignees"`
-}
-
-// ListMergedPRsResponse is the response of [ListMergedPRs].
-type ListMergedPRsResponse struct {
-	Repository *struct {
-		PullRequests struct {
-			Nodes []MergedPRNode `json:"nodes"`
-		} `json:"pullRequests"`
-	} `json:"repository"`
-}
-
-// Milestone queries / types --------------------------------------------------
-
-// ListRepoIssuesWithMilestone lists open Issues with their milestone binding.
-const ListRepoIssuesWithMilestone = `
-query ListRepoIssuesWithMilestone($owner: String!, $name: String!, $first: Int!) {
-  repository(owner: $owner, name: $name) {
-    issues(first: $first, states: OPEN, orderBy: { field: UPDATED_AT, direction: DESC }) {
-      nodes {
-        id
-        number
-        title
-        url
-        updatedAt
-        milestone {
-          id
-          number
-          title
-        }
-      }
-    }
-  }
-}`
-
-// MilestoneRef points to an issue's currently-bound milestone.
-type MilestoneRef struct {
-	ID     string `json:"id"`
-	Number int    `json:"number"`
-	Title  string `json:"title"`
-}
-
-// RepoIssueWithMilestoneNode is the per-item shape returned by
-// [ListRepoIssuesWithMilestone].
-type RepoIssueWithMilestoneNode struct {
-	ID        string        `json:"id"`
-	Number    int           `json:"number"`
-	Title     string        `json:"title"`
-	URL       string        `json:"url"`
-	UpdatedAt string        `json:"updatedAt"`
-	Milestone *MilestoneRef `json:"milestone"`
-}
-
-// ListRepoIssuesWithMilestoneResponse is the response of
-// [ListRepoIssuesWithMilestone].
-type ListRepoIssuesWithMilestoneResponse struct {
-	Repository *struct {
-		Issues struct {
-			Nodes []RepoIssueWithMilestoneNode `json:"nodes"`
-		} `json:"issues"`
-	} `json:"repository"`
-}
-
-// ListMilestones lists recently updated open milestones.
-const ListMilestones = `
-query ListMilestones($owner: String!, $name: String!, $first: Int!) {
-  repository(owner: $owner, name: $name) {
-    milestones(first: $first, states: OPEN, orderBy: { field: UPDATED_AT, direction: DESC }) {
-      nodes {
-        id
-        number
-        title
-      }
-    }
-  }
-}`
-
-// ListMilestonesResponse is the response of [ListMilestones].
-type ListMilestonesResponse struct {
-	Repository *struct {
-		Milestones struct {
-			Nodes []MilestoneRef `json:"nodes"`
-		} `json:"milestones"`
-	} `json:"repository"`
-}
+// Milestone mutations / REST helpers -----------------------------------------
 
 // UpdateIssueMilestone binds (or clears) a milestone on an Issue.
 const UpdateIssueMilestone = `
@@ -445,6 +126,16 @@ mutation UpdateIssueMilestone($input: UpdateIssueInput!) {
     }
   }
 }`
+
+// MilestoneRef points to an issue's currently-bound milestone. Retained
+// here as a value type so the [UpdateIssueMilestone] mutation response
+// can embed it without depending on the genqlient-generated milestone
+// shapes (each generated type is operation-scoped).
+type MilestoneRef struct {
+	ID     string `json:"id"`
+	Number int    `json:"number"`
+	Title  string `json:"title"`
+}
 
 // UpdateIssueMilestoneResponse is the response of [UpdateIssueMilestone].
 type UpdateIssueMilestoneResponse struct {
@@ -466,7 +157,7 @@ type CreateMilestoneResult struct {
 	Title  string `json:"title"`
 }
 
-// Project queries / types ----------------------------------------------------
+// Project mutations / types --------------------------------------------------
 
 // AddProjectV2DraftIssue adds a draft item to a Projects v2 board.
 const AddProjectV2DraftIssue = `
@@ -485,50 +176,101 @@ type AddProjectV2DraftIssueResponse struct {
 	} `json:"addProjectV2DraftIssue"`
 }
 
-// GetUserProjectV2 resolves a user-scope Projects v2 node by login + number.
-const GetUserProjectV2 = `
-query GetUserProjectV2($login: String!, $number: Int!) {
-  user(login: $login) {
-    projectV2(number: $number) {
+// AddProjectV2ItemByID adds an existing Issue or PR to a Projects v2 board.
+const AddProjectV2ItemByID = `
+mutation AddProjectV2ItemById($input: AddProjectV2ItemByIdInput!) {
+  addProjectV2ItemById(input: $input) {
+    item { id }
+  }
+}`
+
+// AddProjectV2ItemByIDResponse is the response of [AddProjectV2ItemByID].
+type AddProjectV2ItemByIDResponse struct {
+	AddProjectV2ItemByID struct {
+		Item struct {
+			ID string `json:"id"`
+		} `json:"item"`
+	} `json:"addProjectV2ItemById"`
+}
+
+// UpdateProjectV2ItemFieldValue updates a single field value on a project
+// item. The value shape is constructed by the caller per the target field's
+// dataType.
+const UpdateProjectV2ItemFieldValue = `
+mutation UpdateProjectV2ItemFieldValue($input: UpdateProjectV2ItemFieldValueInput!) {
+  updateProjectV2ItemFieldValue(input: $input) {
+    projectV2Item { id }
+  }
+}`
+
+// UpdateProjectV2ItemFieldValueResponse is the response of
+// [UpdateProjectV2ItemFieldValue].
+type UpdateProjectV2ItemFieldValueResponse struct {
+	UpdateProjectV2ItemFieldValue struct {
+		ProjectV2Item struct {
+			ID string `json:"id"`
+		} `json:"projectV2Item"`
+	} `json:"updateProjectV2ItemFieldValue"`
+}
+
+// CreateProjectV2 creates a Projects v2 board owned by ownerId.
+const CreateProjectV2 = `
+mutation CreateProjectV2($input: CreateProjectV2Input!) {
+  createProjectV2(input: $input) {
+    projectV2 {
       id
       number
       title
+      url
     }
   }
 }`
 
-// ProjectV2Ref is a Projects v2 minimal reference returned by lookups.
-type ProjectV2Ref struct {
-	ID     string `json:"id"`
-	Number int    `json:"number"`
-	Title  string `json:"title"`
+// CreateProjectV2Response is the response of [CreateProjectV2].
+type CreateProjectV2Response struct {
+	CreateProjectV2 struct {
+		ProjectV2 struct {
+			ID     string `json:"id"`
+			Number int    `json:"number"`
+			Title  string `json:"title"`
+			URL    string `json:"url"`
+		} `json:"projectV2"`
+	} `json:"createProjectV2"`
 }
 
-// GetUserProjectV2Response is the response of [GetUserProjectV2].
-type GetUserProjectV2Response struct {
-	User *struct {
-		ProjectV2 *ProjectV2Ref `json:"projectV2"`
-	} `json:"user"`
-}
-
-// GetOrgProjectV2 resolves an org-scope Projects v2 node by login + number.
-const GetOrgProjectV2 = `
-query GetOrgProjectV2($login: String!, $number: Int!) {
-  organization(login: $login) {
-    projectV2(number: $number) {
-      id
-      number
-      title
+// CreateProjectV2Field adds a custom field to an existing Projects v2 board.
+const CreateProjectV2Field = `
+mutation CreateProjectV2Field($input: CreateProjectV2FieldInput!) {
+  createProjectV2Field(input: $input) {
+    projectV2Field {
+      ... on ProjectV2FieldCommon {
+        id
+        name
+        dataType
+      }
     }
   }
 }`
 
-// GetOrgProjectV2Response is the response of [GetOrgProjectV2].
-type GetOrgProjectV2Response struct {
-	Organization *struct {
-		ProjectV2 *ProjectV2Ref `json:"projectV2"`
-	} `json:"organization"`
+// CreateProjectV2FieldResponse is the response of [CreateProjectV2Field].
+type CreateProjectV2FieldResponse struct {
+	CreateProjectV2Field struct {
+		ProjectV2Field struct {
+			ID       string `json:"id"`
+			Name     string `json:"name"`
+			DataType string `json:"dataType"`
+		} `json:"projectV2Field"`
+	} `json:"createProjectV2Field"`
 }
+
+// ProjectV2 read operations (deferred from #230) ----------------------------
+//
+// These two operations remain hand-written for now. Their response shape
+// flows through the `node(id: ID!)` Node interface, which genqlient
+// would model as a Go interface backed by ~200 generated types — and
+// the shared `ProjectV2ItemNode` / `ProjectV2FieldValue` domain helpers
+// in `internal/projectitem` plus several cmd/*.go consumers would all
+// need to be reshaped. A follow-up issue tracks the migration.
 
 // ListProjectV2Fields lists fields with their per-type extras (single-select
 // options, iteration configurations).
@@ -582,10 +324,6 @@ type ProjectV2IterationOption struct {
 //     ProjectV2SingleSelectField fragment).
 //   - Configuration is non-nil only when DataType=ITERATION (populated by the
 //     ProjectV2IterationField fragment).
-//
-// For every other DataType (TEXT / NUMBER / DATE / TITLE / ASSIGNEES / …)
-// both fields are absent and the response carries only the
-// ProjectV2FieldCommon shape (id / name / dataType).
 type ProjectV2FieldNode struct {
 	ID            string                    `json:"id"`
 	Name          string                    `json:"name"`
@@ -698,13 +436,7 @@ query ListProjectV2Items($projectId: ID!, $first: Int!) {
 // Fields shared by Issue and PullRequest (ID, Number, Title, URL, State,
 // UpdatedAt, Author, Assignees) are always populated for those two variants
 // and only absent for DraftIssue, which itself populates ID, Title, and
-// Body. The remaining fields (ClosedAt, MergedAt, Body, Number, URL, State,
-// UpdatedAt, Author, Assignees) are variant-specific and modeled as
-// pointers / value types whose zero value is meaningful — branch on
-// Typename before reading them. omitempty is intentionally omitted for the
-// always-present fields on the Issue/PullRequest path so the struct
-// signature reflects the schema invariant; this struct is decode-only and
-// never marshaled back, so the tag has no runtime effect.
+// Body.
 type ProjectV2ItemContent struct {
 	Typename  string     `json:"__typename"`
 	ID        string     `json:"id"`
@@ -729,15 +461,6 @@ type ProjectV2FieldRef struct {
 // ProjectV2FieldValue is the union of single-select / iteration / text / date
 // values on a Projects v2 item. The Typename selects which fields are
 // populated.
-//
-// Field is always populated for every union variant since the GraphQL
-// selection set in [ListProjectV2Items] requests
-// `field { ... on ProjectV2FieldCommon { id name } }` on every branch. It
-// is therefore kept as a value type rather than a pointer; a zero
-// {ID:"", Name:""} would only appear if GitHub silently omitted the
-// selection, which would be a schema-level breakage rather than a
-// per-item nil. genqlient adoption (tracked separately) may revisit this
-// when each variant gets its own generated struct.
 type ProjectV2FieldValue struct {
 	Typename    string            `json:"__typename"`
 	OptionID    string            `json:"optionId,omitempty"`
@@ -768,114 +491,6 @@ type ListProjectV2ItemsResponse struct {
 			Nodes []ProjectV2ItemNode `json:"nodes"`
 		} `json:"items"`
 	} `json:"node"`
-}
-
-// AddProjectV2ItemByID adds an existing Issue or PR to a Projects v2 board.
-const AddProjectV2ItemByID = `
-mutation AddProjectV2ItemById($input: AddProjectV2ItemByIdInput!) {
-  addProjectV2ItemById(input: $input) {
-    item { id }
-  }
-}`
-
-// AddProjectV2ItemByIDResponse is the response of [AddProjectV2ItemByID].
-type AddProjectV2ItemByIDResponse struct {
-	AddProjectV2ItemByID struct {
-		Item struct {
-			ID string `json:"id"`
-		} `json:"item"`
-	} `json:"addProjectV2ItemById"`
-}
-
-// UpdateProjectV2ItemFieldValue updates a single field value on a project
-// item. The value shape is constructed by the caller per the target field's
-// dataType.
-const UpdateProjectV2ItemFieldValue = `
-mutation UpdateProjectV2ItemFieldValue($input: UpdateProjectV2ItemFieldValueInput!) {
-  updateProjectV2ItemFieldValue(input: $input) {
-    projectV2Item { id }
-  }
-}`
-
-// UpdateProjectV2ItemFieldValueResponse is the response of
-// [UpdateProjectV2ItemFieldValue].
-type UpdateProjectV2ItemFieldValueResponse struct {
-	UpdateProjectV2ItemFieldValue struct {
-		ProjectV2Item struct {
-			ID string `json:"id"`
-		} `json:"projectV2Item"`
-	} `json:"updateProjectV2ItemFieldValue"`
-}
-
-// Project init queries / types ----------------------------------------------
-
-// GetOwnerID resolves a user/org's node id from a login.
-const GetOwnerID = `
-query GetOwnerId($login: String!) {
-  repositoryOwner(login: $login) {
-    __typename
-    id
-    login
-  }
-}`
-
-// GetOwnerIDResponse is the response of [GetOwnerID].
-type GetOwnerIDResponse struct {
-	RepositoryOwner *struct {
-		Typename string `json:"__typename"`
-		ID       string `json:"id"`
-		Login    string `json:"login"`
-	} `json:"repositoryOwner"`
-}
-
-// CreateProjectV2 creates a Projects v2 board owned by ownerId.
-const CreateProjectV2 = `
-mutation CreateProjectV2($input: CreateProjectV2Input!) {
-  createProjectV2(input: $input) {
-    projectV2 {
-      id
-      number
-      title
-      url
-    }
-  }
-}`
-
-// CreateProjectV2Response is the response of [CreateProjectV2].
-type CreateProjectV2Response struct {
-	CreateProjectV2 struct {
-		ProjectV2 struct {
-			ID     string `json:"id"`
-			Number int    `json:"number"`
-			Title  string `json:"title"`
-			URL    string `json:"url"`
-		} `json:"projectV2"`
-	} `json:"createProjectV2"`
-}
-
-// CreateProjectV2Field adds a custom field to an existing Projects v2 board.
-const CreateProjectV2Field = `
-mutation CreateProjectV2Field($input: CreateProjectV2FieldInput!) {
-  createProjectV2Field(input: $input) {
-    projectV2Field {
-      ... on ProjectV2FieldCommon {
-        id
-        name
-        dataType
-      }
-    }
-  }
-}`
-
-// CreateProjectV2FieldResponse is the response of [CreateProjectV2Field].
-type CreateProjectV2FieldResponse struct {
-	CreateProjectV2Field struct {
-		ProjectV2Field struct {
-			ID       string `json:"id"`
-			Name     string `json:"name"`
-			DataType string `json:"dataType"`
-		} `json:"projectV2Field"`
-	} `json:"createProjectV2Field"`
 }
 
 // MustMarshal is a helper for callers that need raw JSON pass-through (e.g.

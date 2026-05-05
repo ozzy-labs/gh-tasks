@@ -141,15 +141,13 @@ func TestList_LimitDefault(t *testing.T) {
 	g := &fakeGraphQL{}
 	g.responses = []fakeResponse{
 		{
-			matchSubstring: "query ListRepoIssues(",
+			matchSubstring: "query ListRepoIssues (",
 			data:           repoIssuesPayload(),
 		},
 	}
 	// Wrap the fake so we can capture the variables.
 	wrap := &captureGraphQL{inner: g, capture: func(_ string, vars map[string]any) {
-		if v, ok := vars["first"].(int); ok {
-			capturedFirst = v
-		}
+		capturedFirst = intFromVar(vars["first"])
 	}}
 	d := cmd.Deps{
 		Stdout:       new(bytes.Buffer),
@@ -172,17 +170,29 @@ func TestList_LimitDefault(t *testing.T) {
 	}
 }
 
+// intFromVar extracts an integer from a variable captured by [captureGraphQL].
+// Genqlient-generated calls pass variables through JSON, so numeric values
+// are unmarshalled to float64; hand-written call sites still pass ints
+// directly. This helper accepts both.
+func intFromVar(v any) int {
+	switch x := v.(type) {
+	case int:
+		return x
+	case float64:
+		return int(x)
+	}
+	return 0
+}
+
 func TestList_LimitExplicit(t *testing.T) {
 	t.Parallel()
 
 	var capturedFirst int
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query ListRepoIssues(", data: repoIssuesPayload()},
+		{matchSubstring: "query ListRepoIssues (", data: repoIssuesPayload()},
 	}}
 	wrap := &captureGraphQL{inner: g, capture: func(_ string, vars map[string]any) {
-		if v, ok := vars["first"].(int); ok {
-			capturedFirst = v
-		}
+		capturedFirst = intFromVar(vars["first"])
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.NewClients = func() (*github.Clients, error) {
@@ -201,7 +211,7 @@ func TestList_OrgProjectFound(t *testing.T) {
 	t.Parallel()
 
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetOrgProjectV2(", data: orgProject("PVT_org")},
+		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
 		{
 			matchSubstring: "query ListProjectV2Items(",
 			data: map[string]any{"node": map[string]any{"items": map[string]any{"nodes": []any{
@@ -271,7 +281,7 @@ func TestList_OrgProjectNotFound(t *testing.T) {
 	t.Parallel()
 
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetOrgProjectV2(", data: emptyOrgProject()},
+		{matchSubstring: "query GetOrgProjectV2 (", data: emptyOrgProject()},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
@@ -310,7 +320,7 @@ func TestToday_RepoEmpty(t *testing.T) {
 	t.Parallel()
 
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query ListRepoIssues(", data: repoIssuesPayload()},
+		{matchSubstring: "query ListRepoIssues (", data: repoIssuesPayload()},
 	}}
 	d := testDeps(g)
 	stdout, _, err := runCmd(t, d, "today")
@@ -326,7 +336,7 @@ func TestToday_OrgScope(t *testing.T) {
 	t.Parallel()
 
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetOrgProjectV2(", data: orgProject("PVT_org")},
+		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
 		{
 			matchSubstring: "query ListProjectV2Items(",
 			data: map[string]any{"node": map[string]any{"items": map[string]any{"nodes": []any{
@@ -364,7 +374,7 @@ func TestToday_UserScopeEmpty(t *testing.T) {
 	t.Parallel()
 
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetUserProjectV2(", data: userProject("PVT_user")},
+		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
 		{
 			matchSubstring: "query ListProjectV2Items(",
 			data:           map[string]any{"node": map[string]any{"items": map[string]any{"nodes": []any{}}}},
@@ -393,9 +403,9 @@ func TestStandup_SinceFlag(t *testing.T) {
 	emptyRepoIssues := map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{}}}}
 	emptyPRs := map[string]any{"repository": map[string]any{"pullRequests": map[string]any{"nodes": []any{}}}}
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query ListClosedIssues(", data: emptyRepoIssues},
-		{matchSubstring: "query ListMergedPRs(", data: emptyPRs},
-		{matchSubstring: "query ListRepoIssues(", data: emptyRepoIssues},
+		{matchSubstring: "query ListClosedIssues (", data: emptyRepoIssues},
+		{matchSubstring: "query ListMergedPRs (", data: emptyPRs},
+		{matchSubstring: "query ListRepoIssues (", data: emptyRepoIssues},
 	}}
 	d := testDeps(g)
 	stdout, _, err := runCmd(t, d, "standup", "--since", "2026-05-01T00:00:00Z")
@@ -414,13 +424,13 @@ func TestStandup_MineFiltersAndAnnotates(t *testing.T) {
 		map[string]any{ // mine -- author=alice
 			"id": "I_a", "number": 10, "title": "Mine closed", "url": "u/10",
 			"closedAt":  "2026-05-04T08:00:00Z",
-			"author":    map[string]any{"login": "alice"},
+			"author":    map[string]any{"__typename": "User", "login": "alice"},
 			"assignees": map[string]any{"nodes": []any{}},
 		},
 		map[string]any{ // not mine -- author=bob, no assignees
 			"id": "I_b", "number": 11, "title": "Other closed", "url": "u/11",
 			"closedAt":  "2026-05-04T08:00:00Z",
-			"author":    map[string]any{"login": "bob"},
+			"author":    map[string]any{"__typename": "User", "login": "bob"},
 			"assignees": map[string]any{"nodes": []any{}},
 		},
 	}}}}
@@ -428,7 +438,7 @@ func TestStandup_MineFiltersAndAnnotates(t *testing.T) {
 		map[string]any{ // mine via assignee
 			"id": "P_1", "number": 21, "title": "Assigned to me", "url": "p/21",
 			"mergedAt":  "2026-05-04T09:00:00Z",
-			"author":    map[string]any{"login": "carol"},
+			"author":    map[string]any{"__typename": "User", "login": "carol"},
 			"assignees": map[string]any{"nodes": []any{map[string]any{"login": "alice"}}},
 		},
 	}}}}
@@ -436,21 +446,21 @@ func TestStandup_MineFiltersAndAnnotates(t *testing.T) {
 		map[string]any{ // mine
 			"id": "I_o", "number": 33, "title": "WIP", "url": "u/33",
 			"updatedAt": "2026-05-04T11:00:00Z",
-			"author":    map[string]any{"login": "alice"},
+			"author":    map[string]any{"__typename": "User", "login": "alice"},
 			"assignees": map[string]any{"nodes": []any{}},
 		},
 		map[string]any{ // not mine
 			"id": "I_x", "number": 34, "title": "Their WIP", "url": "u/34",
 			"updatedAt": "2026-05-04T11:00:00Z",
-			"author":    map[string]any{"login": "bob"},
+			"author":    map[string]any{"__typename": "User", "login": "bob"},
 			"assignees": map[string]any{"nodes": []any{}},
 		},
 	}}}}
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{matchSubstring: "query GetViewerLogin", data: map[string]any{"viewer": map[string]any{"login": "alice"}}},
-		{matchSubstring: "query ListClosedIssues(", data: closed},
-		{matchSubstring: "query ListMergedPRs(", data: merged},
-		{matchSubstring: "query ListRepoIssues(", data: open},
+		{matchSubstring: "query ListClosedIssues (", data: closed},
+		{matchSubstring: "query ListMergedPRs (", data: merged},
+		{matchSubstring: "query ListRepoIssues (", data: open},
 	}}
 	d := testDeps(g)
 	stdout, _, err := runCmd(t, d, "standup", "--since", "2026-05-04T00:00:00Z", "--mine")
@@ -482,7 +492,7 @@ func TestStandup_OrgScope_DoneSplit_DraftExcludedUnderMine(t *testing.T) {
 			"updatedAt": "2026-05-04T09:00:00Z",
 			"content": map[string]any{
 				"__typename": "Issue", "id": "I_d", "number": 1, "title": "Done item", "url": "u/1",
-				"author":    map[string]any{"login": "alice"},
+				"author":    map[string]any{"__typename": "User", "login": "alice"},
 				"assignees": map[string]any{"nodes": []any{}},
 			},
 			"fieldValues": map[string]any{"nodes": []any{
@@ -499,7 +509,7 @@ func TestStandup_OrgScope_DoneSplit_DraftExcludedUnderMine(t *testing.T) {
 			"updatedAt": "2026-05-04T10:00:00Z",
 			"content": map[string]any{
 				"__typename": "Issue", "id": "I_p", "number": 2, "title": "Active item", "url": "u/2",
-				"author":    map[string]any{"login": "alice"},
+				"author":    map[string]any{"__typename": "User", "login": "alice"},
 				"assignees": map[string]any{"nodes": []any{}},
 			},
 			"fieldValues": map[string]any{"nodes": []any{
@@ -522,7 +532,7 @@ func TestStandup_OrgScope_DoneSplit_DraftExcludedUnderMine(t *testing.T) {
 	}}}}
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{matchSubstring: "query GetViewerLogin", data: map[string]any{"viewer": map[string]any{"login": "alice"}}},
-		{matchSubstring: "query GetOrgProjectV2(", data: orgProject("PVT_org")},
+		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
 		{matchSubstring: "query ListProjectV2Items(", data: items},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
@@ -563,11 +573,11 @@ func TestReview_PeriodDaily(t *testing.T) {
 
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{
-			matchSubstring: "query ListClosedIssues(",
+			matchSubstring: "query ListClosedIssues (",
 			data:           map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{}}}},
 		},
 		{
-			matchSubstring: "query ListMergedPRs(",
+			matchSubstring: "query ListMergedPRs (",
 			data:           map[string]any{"repository": map[string]any{"pullRequests": map[string]any{"nodes": []any{}}}},
 		},
 	}}
@@ -591,11 +601,11 @@ func TestReview_PeriodSprintDefaultsWeekly(t *testing.T) {
 	// Bare `review` (no --period) inherits cobra default "weekly".
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{
-			matchSubstring: "query ListClosedIssues(",
+			matchSubstring: "query ListClosedIssues (",
 			data:           map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{}}}},
 		},
 		{
-			matchSubstring: "query ListMergedPRs(",
+			matchSubstring: "query ListMergedPRs (",
 			data:           map[string]any{"repository": map[string]any{"pullRequests": map[string]any{"nodes": []any{}}}},
 		},
 	}}
@@ -643,7 +653,7 @@ func TestReview_OrgProjectDoneFilter(t *testing.T) {
 		},
 	}}}}
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetOrgProjectV2(", data: orgProject("PVT_org")},
+		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
 		{matchSubstring: "query ListProjectV2Items(", data: items},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
@@ -669,7 +679,7 @@ func TestReview_UserProjectEmptyPlaceholder(t *testing.T) {
 	t.Parallel()
 
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetUserProjectV2(", data: userProject("PVT_user")},
+		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
 		{matchSubstring: "query ListProjectV2Items(", data: map[string]any{"node": map[string]any{"items": map[string]any{"nodes": []any{}}}}},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
@@ -781,7 +791,7 @@ func TestAdd_RepoCreatesIssue(t *testing.T) {
 
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{
-			matchSubstring: "query GetRepositoryId(",
+			matchSubstring: "query GetRepositoryID (",
 			data:           map[string]any{"repository": map[string]any{"id": "R_1"}},
 		},
 		{
@@ -810,7 +820,7 @@ func TestAdd_RepoBodyFlagPropagates(t *testing.T) {
 
 	var seenInput map[string]any
 	inner := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetRepositoryId(", data: map[string]any{"repository": map[string]any{"id": "R_1"}}},
+		{matchSubstring: "query GetRepositoryID (", data: map[string]any{"repository": map[string]any{"id": "R_1"}}},
 		{
 			matchSubstring: "mutation CreateIssue(",
 			data: map[string]any{"createIssue": map[string]any{"issue": map[string]any{
@@ -856,7 +866,7 @@ func TestAdd_ProjectDraftItem(t *testing.T) {
 	t.Parallel()
 
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetUserProjectV2(", data: userProject("PVT_user")},
+		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
 		{
 			matchSubstring: "mutation AddProjectV2DraftIssue(",
 			data:           map[string]any{"addProjectV2DraftIssue": map[string]any{"projectItem": map[string]any{"id": "DI_new"}}},
@@ -885,7 +895,7 @@ func TestAdd_RepoMissingRepository(t *testing.T) {
 	t.Parallel()
 
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetRepositoryId(", data: map[string]any{"repository": nil}},
+		{matchSubstring: "query GetRepositoryID (", data: map[string]any{"repository": nil}},
 	}}
 	d := testDeps(g)
 	_, stderr, err := runCmd(t, d, "add", "Title")
@@ -904,7 +914,7 @@ func TestDone_RepoCloses(t *testing.T) {
 
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{
-			matchSubstring: "query GetIssueByNumber(",
+			matchSubstring: "query GetIssueByNumber (",
 			data: map[string]any{"repository": map[string]any{"issue": map[string]any{
 				"id": "I_open", "number": 7, "url": "u/7", "state": "OPEN",
 			}}},
@@ -931,7 +941,7 @@ func TestDone_RepoIdempotentAlreadyClosed(t *testing.T) {
 
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{
-			matchSubstring: "query GetIssueByNumber(",
+			matchSubstring: "query GetIssueByNumber (",
 			data: map[string]any{"repository": map[string]any{"issue": map[string]any{
 				"id": "I_done", "number": 9, "url": "u/9", "state": "CLOSED",
 			}}},
@@ -976,7 +986,7 @@ func TestDone_ProjectStatusUpdate(t *testing.T) {
 		},
 	}}}}
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetUserProjectV2(", data: userProject("PVT_user")},
+		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
 		{matchSubstring: "query ListProjectV2Fields(", data: fields},
 		{matchSubstring: "query ListProjectV2Items(", data: items},
 		{
@@ -1026,7 +1036,7 @@ func TestDone_ProjectIdempotentAlreadyDone(t *testing.T) {
 		},
 	}}}}
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetUserProjectV2(", data: userProject("PVT_user")},
+		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
 		{matchSubstring: "query ListProjectV2Fields(", data: fields},
 		{matchSubstring: "query ListProjectV2Items(", data: items},
 	}}
@@ -1052,7 +1062,7 @@ func TestDone_ProjectMissingStatusField(t *testing.T) {
 		map[string]any{"id": "F_OTHER", "name": "Priority", "dataType": "SINGLE_SELECT", "options": []any{}},
 	}}}}
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetUserProjectV2(", data: userProject("PVT_user")},
+		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
 		{matchSubstring: "query ListProjectV2Fields(", data: fields},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
@@ -1080,7 +1090,7 @@ func TestDone_ProjectMissingDoneOption(t *testing.T) {
 		},
 	}}}}
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetUserProjectV2(", data: userProject("PVT_user")},
+		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
 		{matchSubstring: "query ListProjectV2Fields(", data: fields},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
@@ -1106,7 +1116,7 @@ func TestLink_RepoAppendsClosesLink(t *testing.T) {
 	var seenBody string
 	inner := &fakeGraphQL{responses: []fakeResponse{
 		{
-			matchSubstring: "query GetPullRequestByNumber(",
+			matchSubstring: "query GetPullRequestByNumber (",
 			data: map[string]any{"repository": map[string]any{"pullRequest": map[string]any{
 				"id": "PR_1", "number": 12, "url": "https://github.com/ozzy-labs/gh-tasks/pull/12", "body": "Initial summary",
 			}}},
@@ -1152,7 +1162,7 @@ func TestLink_RepoIdempotentAlreadyLinked(t *testing.T) {
 
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{
-			matchSubstring: "query GetPullRequestByNumber(",
+			matchSubstring: "query GetPullRequestByNumber (",
 			data: map[string]any{"repository": map[string]any{"pullRequest": map[string]any{
 				"id": "PR_1", "number": 12, "url": "u/12", "body": "Closes #42 already",
 			}}},
@@ -1173,15 +1183,15 @@ func TestLink_ProjectDualAdd(t *testing.T) {
 
 	calls := 0
 	inner := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetOrgProjectV2(", data: orgProject("PVT_org")},
+		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
 		{
-			matchSubstring: "query GetPullRequestByNumber(",
+			matchSubstring: "query GetPullRequestByNumber (",
 			data: map[string]any{"repository": map[string]any{"pullRequest": map[string]any{
 				"id": "PR_1", "number": 12, "url": "u/12", "body": "",
 			}}},
 		},
 		{
-			matchSubstring: "query GetIssueByNumber(",
+			matchSubstring: "query GetIssueByNumber (",
 			data: map[string]any{"repository": map[string]any{"issue": map[string]any{
 				"id": "I_42", "number": 42, "url": "u/42", "state": "OPEN",
 			}}},
@@ -1228,7 +1238,7 @@ func TestPlan_RepoDryRunDaily(t *testing.T) {
 
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{
-			matchSubstring: "query ListRepoIssuesWithMilestone(",
+			matchSubstring: "query ListRepoIssuesWithMilestone (",
 			data: map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{
 				map[string]any{
 					"id": "I_a", "number": 1, "title": "Task A", "url": "u/1",
@@ -1261,7 +1271,7 @@ func TestPlan_RepoReuseExistingMilestone(t *testing.T) {
 	rest := &recordingREST{}
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{
-			matchSubstring: "query ListRepoIssuesWithMilestone(",
+			matchSubstring: "query ListRepoIssuesWithMilestone (",
 			data: map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{
 				map[string]any{
 					"id": "I_a", "number": 1, "title": "Task A", "url": "u/1",
@@ -1271,7 +1281,7 @@ func TestPlan_RepoReuseExistingMilestone(t *testing.T) {
 			}}}},
 		},
 		{
-			matchSubstring: "query ListMilestones(",
+			matchSubstring: "query ListMilestones (",
 			data: map[string]any{"repository": map[string]any{"milestones": map[string]any{"nodes": []any{
 				map[string]any{"id": "M_1", "number": 5, "title": "Daily 2026-05-04"},
 			}}}},
@@ -1319,7 +1329,7 @@ func TestPlan_RepoCreateNewMilestone(t *testing.T) {
 	}}
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{
-			matchSubstring: "query ListRepoIssuesWithMilestone(",
+			matchSubstring: "query ListRepoIssuesWithMilestone (",
 			data: map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{
 				map[string]any{
 					"id": "I_a", "number": 1, "title": "Task A", "url": "u/1",
@@ -1329,7 +1339,7 @@ func TestPlan_RepoCreateNewMilestone(t *testing.T) {
 			}}}},
 		},
 		{
-			matchSubstring: "query ListMilestones(",
+			matchSubstring: "query ListMilestones (",
 			data:           map[string]any{"repository": map[string]any{"milestones": map[string]any{"nodes": []any{}}}},
 		},
 		{
@@ -1379,7 +1389,7 @@ func TestPlan_ProjectIterationMatched(t *testing.T) {
 	}}}}
 	items := map[string]any{"node": map[string]any{"items": map[string]any{"nodes": []any{}}}}
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetOrgProjectV2(", data: orgProject("PVT_org")},
+		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
 		{matchSubstring: "query ListProjectV2Fields(", data: fields},
 		{matchSubstring: "query ListProjectV2Items(", data: items},
 	}}
@@ -1416,7 +1426,7 @@ func TestPlan_ProjectIterationFallback(t *testing.T) {
 	}}}}
 	items := map[string]any{"node": map[string]any{"items": map[string]any{"nodes": []any{}}}}
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetOrgProjectV2(", data: orgProject("PVT_org")},
+		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
 		{matchSubstring: "query ListProjectV2Fields(", data: fields},
 		{matchSubstring: "query ListProjectV2Items(", data: items},
 	}}
@@ -1442,7 +1452,7 @@ func TestTriage_RepoUnlabelledOnly(t *testing.T) {
 
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{
-			matchSubstring: "query ListRepoIssuesWithLabels(",
+			matchSubstring: "query ListRepoIssuesWithLabels (",
 			data: map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{
 				map[string]any{
 					"id": "I_u", "number": 1, "title": "Untriaged", "url": "u/1", "updatedAt": "2026-05-04T08:00:00Z",
@@ -1503,7 +1513,7 @@ func TestTriage_ProjectStatusTriageFilter(t *testing.T) {
 		},
 	}}}}
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetUserProjectV2(", data: userProject("PVT_user")},
+		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
 		{matchSubstring: "query ListProjectV2Items(", data: items},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
@@ -1610,7 +1620,7 @@ func TestProjectsInit_OwnerNotFound(t *testing.T) {
 	t.Parallel()
 
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetOwnerId(", data: map[string]any{"repositoryOwner": nil}},
+		{matchSubstring: "query GetOwnerID (", data: map[string]any{"repositoryOwner": nil}},
 	}}
 	d := testDeps(g)
 	_, stderr, err := runCmd(t, d, "projects", "init", "--template", "user", "--title", "x", "--owner", "ghost")

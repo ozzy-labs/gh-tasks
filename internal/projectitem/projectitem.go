@@ -27,27 +27,27 @@ func ResolveProjectNodeID(ctx context.Context, gql github.GraphQLClient, sc scop
 	if sc == scope.Repo {
 		return "", &scope.ScopeError{Payload: i18n.NewPayload("error.scope.invalidForProjectResolution")}
 	}
-	vars := map[string]any{"login": ref.Owner, "number": ref.Number}
+	gqlClient := github.AsGenqlientClientFor(gql)
 
 	if sc == scope.Org {
-		var resp queries.GetOrgProjectV2Response
-		if err := gql.Do(ctx, queries.GetOrgProjectV2, vars, &resp); err != nil {
+		resp, err := queries.GetOrgProjectV2(ctx, gqlClient, ref.Owner, ref.Number)
+		if err != nil {
 			return "", fmt.Errorf("get org project: %w", err)
 		}
 		if resp.Organization == nil || resp.Organization.ProjectV2 == nil {
 			return "", nil
 		}
-		return resp.Organization.ProjectV2.ID, nil
+		return resp.Organization.ProjectV2.Id, nil
 	}
 
-	var resp queries.GetUserProjectV2Response
-	if err := gql.Do(ctx, queries.GetUserProjectV2, vars, &resp); err != nil {
+	resp, err := queries.GetUserProjectV2(ctx, gqlClient, ref.Owner, ref.Number)
+	if err != nil {
 		return "", fmt.Errorf("get user project: %w", err)
 	}
 	if resp.User == nil || resp.User.ProjectV2 == nil {
 		return "", nil
 	}
-	return resp.User.ProjectV2.ID, nil
+	return resp.User.ProjectV2.Id, nil
 }
 
 // FindStatus returns the value of the conventionally-named "Status" single
