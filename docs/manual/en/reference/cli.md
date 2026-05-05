@@ -156,11 +156,11 @@ esac
 
 ## Skill integration
 
-Each command has a corresponding skill SSOT under `src/skills/{name}/SKILL.md` (ja) + `SKILL.en.md` (en). The adapter pipeline emits per-agent outputs to `dist/{adapter}/` for claude-code / codex-cli / gemini-cli / copilot. See repo-internal [ADR-0004](../../../adr/0004-skill-frontmatter-schema.md).
+Each command has a corresponding skill SSOT under `skills/{name}/SKILL.md` (ja) + `SKILL.en.md` (en). The adapter pipeline emits per-agent outputs to `dist/{adapter}/` for claude-code / codex-cli / gemini-cli / copilot. See repo-internal [ADR-0004](../../../adr/0004-skill-frontmatter-schema.md).
 
 ## Related
 
 - [scope-detection.md](./scope-detection.md): `--scope` resolution order
 - [locale-detection.md](./locale-detection.md): `--lang` resolution order
 - [projects-v2-setup.md](../guides/projects-v2-setup.md): required Projects v2 fields for `org` / `user` scope
-- [src/skills/](../../../../src/skills/): skill SSOT for each command
+- [skills/](../../../../skills/): skill SSOT for each command

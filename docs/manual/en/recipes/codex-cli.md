@@ -133,4 +133,4 @@ Codex CLI skills work as Markdown procedures — the agent walks the steps. Unli
 
 - [cli.md](../reference/cli.md): all commands / flags
 - [concepts.md](../concepts.md): scope / item / iteration glossary
-- [src/skills/](../../../../src/skills/): skill SSOT
+- [skills/](../../../../skills/): skill SSOT

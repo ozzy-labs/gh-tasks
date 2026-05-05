@@ -43,7 +43,7 @@ internal/               → ドメインロジック
   ├── project/ projectitem/ period/ config/ → ドメイン helpers
   ├── skills/           → SKILL.md frontmatter parse + Load
   └── adapters/         → 4 エージェント向け OutputFile 生成
-src/skills/             → skill SSOT(SKILL.md = ja、SKILL.en.md = en)
+skills/             → skill SSOT(SKILL.md = ja、SKILL.en.md = en)
 dist/{adapter}/         → adapter 出力(`gh tasks build-skills` で生成)
 docs/manual/{en,ja}/    → ユーザーマニュアル(en SSOT、ja mirror)
 docs/adr/               → repo-internal ADR(ja 単一)

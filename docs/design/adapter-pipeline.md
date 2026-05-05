@@ -1,23 +1,23 @@
 # Adapter Pipeline
 
-`src/skills/{name}/SKILL.md`(SSOT)から 4 エージェント向けの skill 配布物(`dist/{adapter-id}/`)を生成し、ローカル staged コピー(`.claude/skills/`、`.agents/skills/`)を再生成する `gh tasks build-skills`(`cmd/build_skills.go`)の処理連鎖を記述する。
+`skills/{name}/SKILL.md`(SSOT)から 4 エージェント向けの skill 配布物(`dist/{adapter-id}/`)を生成し、ローカル staged コピー(`.claude/skills/`、`.agents/skills/`)を再生成する `gh tasks build-skills`(`cmd/build_skills.go`)の処理連鎖を記述する。
 
 ## 目的
 
-- skill SSOT は **1 ファイル**(`src/skills/{name}/SKILL.md`、ja)に集約
+- skill SSOT は **1 ファイル**(`skills/{name}/SKILL.md`、ja)に集約
 - Claude Code / Codex CLI / Gemini CLI / GitHub Copilot の **4 エージェント**は読み込み形式が異なるため、SSOT を adapter で各形式に変換
 - consumer リポへの配信は **Renovate preset + commons の `sync-skills.sh`** が担当(本リポは生成のみ)
 
 ## 全体フロー
 
 ```text
-src/skills/{name}/
+skills/{name}/
   ├─ SKILL.md       (ja SSOT、frontmatter + body)
   └─ SKILL.en.md    (en mirror、現状 build には未消費)
         │
         ▼
 gh tasks build-skills (cmd/build_skills.go: runBuildSkills)
-  ├─ skills.Load(src, ...)         ← src/skills/ 直下のディレクトリ列挙 + SKILL.md parse + frontmatter 検証(ADR-0004)
+  ├─ skills.Load(src, ...)         ← skills/ 直下のディレクトリ列挙 + SKILL.md parse + frontmatter 検証(ADR-0004)
   ├─ adapters.All()                ← 4 adapter (ClaudeCode / CodexCLI / GeminiCLI / Copilot) を取得
   ├─ adapter.Generate(loaded)      ← 各 adapter で OutputFile を生成 → dist/{id}/ に書き出し
   └─ defaultLocalStages + copyDir  ← dist/ 内の skill body を .claude/.agents/ にコピー
@@ -65,7 +65,7 @@ locale: ja
 
 | Field | 役割 |
 | --- | --- |
-| `name` | skill 識別子。`src/skills/{name}/` ディレクトリ名と一致必須 |
+| `name` | skill 識別子。`skills/{name}/` ディレクトリ名と一致必須 |
 | `description` | ja の 1 行説明(`AGENTS.md` snippet で使用) |
 | `description_en` | en の 1 行説明(将来の en locale adapter 用に保持) |
 | `allowed-tools` | Claude Code 等が認識するツール許可宣言(例: `Bash(gh:*)`) |

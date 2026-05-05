@@ -25,7 +25,7 @@ func newBuildSkillsCmd(deps Deps) *cobra.Command {
 		},
 	}
 	c.Flags().Bool("check-diff", false, "fail if dist/ output differs from source SSOT (CI dogfooding)")
-	c.Flags().String("src", "src/skills", "skill SSOT directory")
+	c.Flags().String("src", "skills", "skill SSOT directory")
 	c.Flags().String("dist", "dist", "output directory root (WARNING: contents of <dist>/<adapter>/ are wiped before regeneration)")
 	return c
 }
@@ -74,7 +74,7 @@ func runBuildSkills(c *cobra.Command, deps Deps) error {
 	}
 
 	if _, err := os.Stat(src); errors.Is(err, os.ErrNotExist) {
-		fmt.Fprintln(c.OutOrStdout(), "[build-skills] no src/skills/ — nothing to build")
+		fmt.Fprintln(c.OutOrStdout(), "[build-skills] no skills/ — nothing to build")
 		return nil
 	}
 

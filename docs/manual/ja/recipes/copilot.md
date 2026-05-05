@@ -137,4 +137,4 @@ Copilot Coding Agent からは `gh` CLI 経由で実行できるので、PR comm
 
 - [cli.md](../reference/cli.md): 全コマンド / フラグ
 - [concepts.md](../concepts.md): scope / item / iteration の用語
-- [src/skills/](../../../../src/skills/): skill SSOT
+- [skills/](../../../../skills/): skill SSOT
