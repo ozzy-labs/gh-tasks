@@ -12,3 +12,4 @@ rules:
   comments-indentation: disable
 ignore:
   - node_modules/
+  - pnpm-lock.yaml
