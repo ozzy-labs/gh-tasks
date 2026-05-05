@@ -1,6 +1,6 @@
 # Adapter Pipeline
 
-`src/skills/{name}/SKILL.md`(SSOT)から 4 エージェント向けの skill 配布物(`dist/{adapter-id}/`)を生成し、ローカル staged コピー(`.claude/skills/`、`.agents/skills/`)を再生成する `scripts/build-skills.mjs` の処理連鎖を記述する。
+`src/skills/{name}/SKILL.md`(SSOT)から 4 エージェント向けの skill 配布物(`dist/{adapter-id}/`)を生成し、ローカル staged コピー(`.claude/skills/`、`.agents/skills/`)を再生成する `gh tasks build-skills`(`cmd/build_skills.go`)の処理連鎖を記述する。
 
 ## 目的
 
@@ -16,11 +16,11 @@ src/skills/{name}/
   └─ SKILL.en.md    (en mirror、現状 build には未消費)
         │
         ▼
-scripts/build-skills.mjs (orchestrator)
-  ├─ readSkillNames()      ← src/skills/ 直下のディレクトリ列挙
-  ├─ loadSkills()          ← 各 SKILL.md を parse + frontmatter 検証(ADR-0004)
-  ├─ writeAdapterOutputs() ← 4 adapter を順に呼び、dist/{id}/ を再生成
-  └─ stageLocalCopies()    ← dist/ 内の skill body を .claude/.agents/ にコピー
+gh tasks build-skills (cmd/build_skills.go: runBuildSkills)
+  ├─ skills.Load(src, ...)         ← src/skills/ 直下のディレクトリ列挙 + SKILL.md parse + frontmatter 検証(ADR-0004)
+  ├─ adapters.All()                ← 4 adapter (ClaudeCode / CodexCLI / GeminiCLI / Copilot) を取得
+  ├─ adapter.Generate(loaded)      ← 各 adapter で OutputFile を生成 → dist/{id}/ に書き出し
+  └─ defaultLocalStages + copyDir  ← dist/ 内の skill body を .claude/.agents/ にコピー
         │
         ▼
 dist/
@@ -61,7 +61,7 @@ locale: ja
 ...(本文)...
 ```
 
-必須フィールド(`scripts/build-skills.mjs:48` の `REQUIRED_FIELDS`):
+必須フィールド(`internal/skills/skills.go` の frontmatter 検証):
 
 | Field | 役割 |
 | --- | --- |
@@ -71,49 +71,52 @@ locale: ja
 | `allowed-tools` | Claude Code 等が認識するツール許可宣言(例: `Bash(gh:*)`) |
 | `locale` | SSOT locale。本リポでは `ja` 固定(検証エラーで reject) |
 
-`name` と `locale` は `loadSkills()` 内で厳格に検証され、不一致は build 失敗。
+`name` と `locale` は `skills.Load` 内で厳格に検証され、不一致は build 失敗。
 
-## adapter 契約(`scripts/lib/adapter-base.mjs`)
+## adapter 契約(`internal/adapters/adapters.go`)
 
 各 adapter は **純粋関数**(handbook ADR-0018):
 
-```ts
-class AdapterBase {
-  static id: string;                          // dist/{id}/ サブディレクトリ名
-  generate(skills: Skill[]): OutputFile[];   // 副作用なし、決定論的
+```go
+type Adapter interface {
+    ID() string                                       // dist/{id}/ サブディレクトリ名
+    Generate(s []skills.Skill) []skills.OutputFile    // 副作用なし、決定論的
 }
 ```
 
-- ファイルシステム書き込みは **orchestrator のみ**(`writeAdapterOutputs`)
-- adapter は入力 `Skill[]` から `OutputFile[]`(`{ relativePath, content }`)を返すだけ
+- ファイルシステム書き込みは **orchestrator のみ**(`cmd/build_skills.go` の `runBuildSkills`)
+- adapter は入力 `[]skills.Skill` から `[]skills.OutputFile`(`{ RelativePath, Content }`)を返すだけ
 - 同じ入力で常に同じ出力(順序・内容含めて)を返す必要がある
+- skill 名のソートは Unicode-aware collator(`golang.org/x/text/collate`)を使い、TS 版の `String.prototype.localeCompare` と互換
 
 ## 4 adapter の実装
 
-### claude-code(`scripts/adapters/claude-code.mjs`)
+`internal/adapters/adapters.go` に 4 adapter とも実装される(TS 版で `scripts/adapters/*.mjs` に分離していたものを Go では 1 ファイル集約)。
 
-- 出力: `.claude/skills/{name}/SKILL.md`(`skill.raw` をそのまま — frontmatter 含む全文)
+### claude-code (`ClaudeCode` 型)
+
+- 出力: `.claude/skills/{name}/SKILL.md`(`skill.Raw` をそのまま — frontmatter 含む全文)
 - Claude Code は `.claude/skills/{name}/SKILL.md` を skill 定義として直接ロード
 - frontmatter の `name` / `description` / `allowed-tools` で auto-trigger 判定
 
-### codex-cli(`scripts/adapters/codex-cli.mjs`)
+### codex-cli (`CodexCLI` 型)
 
-- 出力 1: `.agents/skills/{name}/SKILL.md`(`skill.raw` をそのまま)
-- 出力 2: `AGENTS.md.snippet`(`renderAgentsMdSnippet(skills, 'ja')` で生成)
+- 出力 1: `.agents/skills/{name}/SKILL.md`(`skill.Raw` をそのまま)
+- 出力 2: `AGENTS.md.snippet`(`renderAgentsMdSnippet(skills, "ja")` で生成)
 - Codex CLI は `AGENTS.md` 起点で skill 名を参照、本体は `.agents/skills/{name}/SKILL.md` をロード
 
-### gemini-cli(`scripts/adapters/gemini-cli.mjs`)
+### gemini-cli (`GeminiCLI` 型)
 
 - 出力 1: `.gemini/settings.json`(`{ "context": { "fileName": ["AGENTS.md"] } }`)
 - 出力 2: `AGENTS.md.snippet`(codex-cli と同じ snippet 共有)
 - Gemini CLI は `SKILL.md` 自動ロード機構を持たないため、AGENTS.md の skill 一覧を参照する形
 
-### copilot(`scripts/adapters/copilot.mjs`)
+### copilot (`Copilot` 型)
 
 - 出力: `.github/copilot-instructions.md.snippet`(skill 名 + ja description のみのリスト)
 - GitHub Copilot は `SKILL.md` 本体を読まないので、skill 機構は名前 + 説明文に縮約
 
-## snippet marker block(`scripts/lib/snippet.mjs`)
+## snippet marker block(`internal/adapters/adapters.go`)
 
 `AGENTS.md.snippet` / `copilot-instructions.md.snippet` は **marker block 形式**:
 
@@ -131,12 +134,12 @@ class AdapterBase {
 
 設計判断:
 
-- marker tag は **`@ozzylabs/gh-tasks` 固定**(`scripts/lib/snippet.mjs:12`)、上流の `@ozzylabs/skills` の marker と独立
+- marker tag は **`@ozzylabs/gh-tasks` 固定**(`snippetTag` 定数)、上流の `@ozzylabs/skills` の marker と独立
 - consumer の `AGENTS.md` には両方の marker block が共存できる
-- 上下に空行 1 つを挟むのは Prettier の Markdown フォーマッタ idempotency 対策
+- 上下に空行 1 つを挟む(`wrapSnippet` 関数)のは Prettier の Markdown フォーマッタ idempotency 対策
 - consumer 側の sync スクリプトは marker 内のみ書き換え、外側の手書き内容は不変
 
-## ローカル staged コピー(`stageLocalCopies`)
+## ローカル staged コピー(`defaultLocalStages` + `copyDir`)
 
 本リポ自身を Claude Code / Codex CLI で開いたときに `/task-*` skill を即利用できるようにするため、`dist/` 配下の skill body を repo ルートの staged ディレクトリにコピーする:
 
@@ -146,6 +149,10 @@ class AdapterBase {
 | `.agents/skills/{name}/` | `dist/codex-cli/.agents/skills/{name}/` をコピー |
 
 スコープは `task-*` の本リポ skill のみ(commons の commit / lint / pr 等は `sync-commons` で別経路、衝突しない)。
+
+## CI ガード(`--check-diff`)
+
+`gh tasks build-skills --check-diff` は `dist/` を書き換えず、SSOT から再生成した内容と既存の `dist/{adapter}/` を比較する。差分があれば stderr に `path: <reason>` + 1 行 diff を出力し非ゼロ終了。CI で実行することで「SSOT を変えたのに `gh tasks build-skills` を走らせ忘れて `dist/` が古い」状態を検知する。
 
 ## consumer 側配信(`skills-sync/`)
 
@@ -174,18 +181,18 @@ build 通過後の確認ポイント:
 - `dist/{adapter-id}/` 4 つすべてが存在
 - 各 SKILL.md の frontmatter が ADR-0004 を満たす(必須 5 フィールド、`name` 一致、`locale: ja`)
 - staged copy が 6 skill 全て(`task-add` / `task-link-pr` / `task-plan` / `task-review` / `task-standup` / `task-triage`)に展開される
-- `pnpm run build:skills` 出力末尾に skill 一覧が表示される
+- `gh tasks build-skills` 出力末尾に skill 一覧が表示される
+- CI で `gh tasks build-skills --check-diff` が成功する
 
 ## 関連 ADR
 
 - [ADR-0004](../adr/0004-skill-frontmatter-schema.md): SKILL.md frontmatter 最小スキーマ
 - [ADR-0005](../adr/0005-i18n-reader-based-ssot.md): i18n SSOT(SKILL.md は ja 単一を維持)
-- [ADR-0001](../adr/0001-use-bun-compile-for-binary.md): CLI バイナリ配布(skill bundle と並行する別経路)
+- [ADR-0006](../adr/0006-go-and-cobra-migration.md): Go + cobra 移行(本 pipeline の Go 化はこの一環)
 
 ## 関連ファイル
 
-- orchestrator: `scripts/build-skills.mjs`
-- adapter base: `scripts/lib/adapter-base.mjs`
-- adapter 実装: `scripts/adapters/{claude-code,codex-cli,gemini-cli,copilot}.mjs`
-- 共通ヘルパー: `scripts/lib/{frontmatter,snippet,agents-md-snippet,types}.mjs`
+- orchestrator: `cmd/build_skills.go`(`runBuildSkills` / `runCheckDiff` / `defaultLocalStages` / `copyDir`)
+- adapter 契約 + 4 adapter 実装 + snippet ヘルパー: `internal/adapters/adapters.go`
+- skill loader + frontmatter parser: `internal/skills/skills.go`
 - consumer 配信: `skills-sync/README.md`、`skills-sync/{adapter}.json`
