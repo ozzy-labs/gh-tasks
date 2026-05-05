@@ -1,7 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Adapter opt-in: gemini-cli (dist/gemini-cli/AGENTS.md.snippet). Use alongside skills-sync/default.",
-  "extends": ["github>ozzy-labs/gh-tasks//skills-sync/default"],
+  "description": "Adapter opt-in: gemini-cli (dist/gemini-cli/AGENTS.md.snippet). Use alongside configs/skills-sync/default.",
+  "extends": ["github>ozzy-labs/gh-tasks//configs/skills-sync/default"],
   "packageRules": [
     {
       "matchDepNames": ["ozzy-labs/gh-tasks"],

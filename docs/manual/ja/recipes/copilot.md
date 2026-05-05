@@ -23,7 +23,7 @@ MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \
   .
 ```
 
-snippet が consumer の `.github/copilot-instructions.md` の marker block に挿入される。詳細は [`skills-sync/README.md`](../../../../skills-sync/README.md) を参照。
+snippet が consumer の `.github/copilot-instructions.md` の marker block に挿入される。詳細は [`configs/skills-sync/README.md`](../../../../configs/skills-sync/README.md) を参照。
 
 `copilot-instructions.md` には `AGENTS.md` の内容を取り込むよう指示するか、AGENTS.md と並行して skill 一覧 marker block を入れる。snippet 例:
 

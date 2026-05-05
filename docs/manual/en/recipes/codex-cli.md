@@ -26,7 +26,7 @@ MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \
   .
 ```
 
-The script copies `.agents/skills/{name}/SKILL.md` and merges the snippet into `AGENTS.md` in one shot. See [`skills-sync/README.md`](../../../../skills-sync/README.md) for details.
+The script copies `.agents/skills/{name}/SKILL.md` and merges the snippet into `AGENTS.md` in one shot. See [`configs/skills-sync/README.md`](../../../../configs/skills-sync/README.md) for details.
 
 The injected `AGENTS.md` block looks like:
 

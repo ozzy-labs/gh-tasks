@@ -34,7 +34,7 @@ dist/
 .agents/skills/{name}/  ← Codex CLI dogfood
         │
         ▼ (consumer 側)
-skills-sync/{adapter}.json (Renovate preset) で gh_tasks_commit を bump
+configs/skills-sync/{adapter}.json (Renovate preset) で gh_tasks_commit を bump
         │
         ▼
 sync-skills.sh(commons、MARKER_TAG=@ozzylabs/gh-tasks 上書き)
@@ -154,17 +154,17 @@ type Adapter interface {
 
 `gh tasks build-skills --check-diff` は `dist/` を書き換えず、SSOT から再生成した内容と既存の `dist/{adapter}/` を比較する。差分があれば stderr に `path: <reason>` + 1 行 diff を出力し非ゼロ終了。CI で実行することで「SSOT を変えたのに `gh tasks build-skills` を走らせ忘れて `dist/` が古い」状態を検知する。
 
-## consumer 側配信(`skills-sync/`)
+## consumer 側配信(`configs/skills-sync/`)
 
 build 成果物を consumer リポに配信するためのフロー:
 
-1. **Renovate preset**: `skills-sync/{adapter}.json` を consumer の `renovate.json` で extend
+1. **Renovate preset**: `configs/skills-sync/{adapter}.json` を consumer の `renovate.json` で extend
 
    ```jsonc
    {
      "extends": [
-       "github>ozzy-labs/gh-tasks//skills-sync/claude-code",
-       "github>ozzy-labs/gh-tasks//skills-sync/codex-cli"
+       "github>ozzy-labs/gh-tasks//configs/skills-sync/claude-code",
+       "github>ozzy-labs/gh-tasks//configs/skills-sync/codex-cli"
      ]
    }
    ```
@@ -195,4 +195,4 @@ build 通過後の確認ポイント:
 - orchestrator: `cmd/build_skills.go`(`runBuildSkills` / `runCheckDiff` / `defaultLocalStages` / `copyDir`)
 - adapter 契約 + 4 adapter 実装 + snippet ヘルパー: `internal/adapters/adapters.go`
 - skill loader + frontmatter parser: `internal/skills/skills.go`
-- consumer 配信: `skills-sync/README.md`、`skills-sync/{adapter}.json`
+- consumer 配信: `configs/skills-sync/README.md`、`configs/skills-sync/{adapter}.json`

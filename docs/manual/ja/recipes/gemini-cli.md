@@ -23,7 +23,7 @@ MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \
   .
 ```
 
-snippet が consumer の `AGENTS.md` の marker block に挿入される。詳細は [`skills-sync/README.md`](../../../../skills-sync/README.md) を参照。
+snippet が consumer の `AGENTS.md` の marker block に挿入される。詳細は [`configs/skills-sync/README.md`](../../../../configs/skills-sync/README.md) を参照。
 
 `.gemini/settings.json` 例:
 

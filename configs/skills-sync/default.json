@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Auto-sync @ozzylabs/gh-tasks skill bundle (ozzy-labs/gh-tasks) via Renovate customManagers + git-refs. Extend per-adapter sub-presets (skills-sync/<adapter-id>) to opt in to adapter outputs. See https://github.com/ozzy-labs/gh-tasks#skills-v010-target",
+  "description": "Auto-sync @ozzylabs/gh-tasks skill bundle (ozzy-labs/gh-tasks) via Renovate customManagers + git-refs. Extend per-adapter sub-presets (configs/skills-sync/<adapter-id>) to opt in to adapter outputs. See https://github.com/ozzy-labs/gh-tasks#skills-v010-target",
   "customManagers": [
     {
       "customType": "regex",

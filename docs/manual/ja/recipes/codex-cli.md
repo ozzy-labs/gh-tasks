@@ -26,7 +26,7 @@ MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \
   .
 ```
 
-`.agents/skills/{name}/SKILL.md` のコピーと `AGENTS.md` の marker block 挿入が一括で実施される。詳細は [`skills-sync/README.md`](../../../../skills-sync/README.md) を参照。
+`.agents/skills/{name}/SKILL.md` のコピーと `AGENTS.md` の marker block 挿入が一括で実施される。詳細は [`configs/skills-sync/README.md`](../../../../configs/skills-sync/README.md) を参照。
 
 `AGENTS.md` には以下のような marker block が挿入される:
 
