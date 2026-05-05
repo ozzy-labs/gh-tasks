@@ -1,6 +1,7 @@
 package i18n_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -74,7 +75,7 @@ func TestT(t *testing.T) {
 	t.Run("placeholder-substitution", func(t *testing.T) {
 		t.Parallel()
 		got := i18n.T(i18n.LocaleEN, "error.repo.invalidIdentifier", "value", "broken-input")
-		if !contains(got, "broken-input") {
+		if !strings.Contains(got, "broken-input") {
 			t.Errorf("expected substituted value in %q", got)
 		}
 	})
@@ -85,7 +86,7 @@ func TestT(t *testing.T) {
 		// any `{name}` placeholders in the catalog string must survive
 		// verbatim in the output.
 		got := i18n.T(i18n.LocaleEN, "error.repo.invalidIdentifier")
-		if !contains(got, "{value}") {
+		if !strings.Contains(got, "{value}") {
 			t.Errorf("expected literal {value} placeholder in %q", got)
 		}
 	})
@@ -231,13 +232,4 @@ func TestKeys(t *testing.T) {
 
 func lookupFn(env map[string]string) i18n.EnvLookup {
 	return func(k string) string { return env[k] }
-}
-
-func contains(haystack, needle string) bool {
-	for i := 0; i+len(needle) <= len(haystack); i++ {
-		if haystack[i:i+len(needle)] == needle {
-			return true
-		}
-	}
-	return false
 }

@@ -431,6 +431,60 @@ func TestPaginateProjectV2Items_HappyPath(t *testing.T) {
 	}
 }
 
+// makeProjectV2Items generates `count` synthetic ProjectV2ItemNode entries
+// numbered from `start` upward, mirroring makeRepoIssues / makeMergedPRs.
+func makeProjectV2Items(start, count int) []*queries.ProjectV2ItemNode {
+	out := make([]*queries.ProjectV2ItemNode, count)
+	for i := 0; i < count; i++ {
+		num := start + i
+		out[i] = &queries.ProjectV2ItemNode{Id: fmt.Sprintf("PVTI_%d", num)}
+	}
+	return out
+}
+
+// TestPaginateProjectV2Items_MultiPage pins the cursor-propagation contract
+// for the Projects v2 items paginator, mirroring the multi-page coverage that
+// already exists for PaginateRepoIssues / PaginateMergedPRs. The fake serves
+// page 1 (100 items, hasNextPage=true with endCursor=C1), then page 2 must
+// arrive with after=&C1 and request the remaining capacity (50). The result
+// must accumulate all 150 items in input order and stop when hasNextPage
+// flips to false.
+func TestPaginateProjectV2Items_MultiPage(t *testing.T) {
+	t.Parallel()
+	cur := "PVTI_C1"
+	steps := []scriptStep{
+		{
+			op: "ListProjectV2Items", wantSize: 100, wantAfter: nil,
+			respond: func(out any) {
+				r := out.(*queries.ListProjectV2ItemsResponse)
+				node := projectItemsNode(makeProjectV2Items(0, 100), true, &cur)
+				var asIface queries.ProjectV2ItemsNode = node
+				r.Node = &asIface
+			},
+		},
+		{
+			op: "ListProjectV2Items", wantSize: 50, wantAfter: &cur,
+			respond: func(out any) {
+				r := out.(*queries.ListProjectV2ItemsResponse)
+				node := projectItemsNode(makeProjectV2Items(100, 50), false, nil)
+				var asIface queries.ProjectV2ItemsNode = node
+				r.Node = &asIface
+			},
+		},
+	}
+	client := &scriptedClient{t: t, steps: steps}
+	got, err := queries.PaginateProjectV2Items(context.Background(), client, "PVT_1", 150)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(got) != 150 {
+		t.Fatalf("expected 150 accumulated items, got %d", len(got))
+	}
+	if got[0].Id != "PVTI_0" || got[149].Id != "PVTI_149" {
+		t.Errorf("unexpected page boundary: first=%q last=%q", got[0].Id, got[149].Id)
+	}
+}
+
 // =============================================================================
 // PaginateProjectV2Fields — interface-variant accumulation across pages
 // =============================================================================

@@ -188,17 +188,24 @@ func TestRunCheckDiff_ExtraOnDisk(t *testing.T) {
 
 func TestFirstLine(t *testing.T) {
 	t.Parallel()
-	cases := map[string]string{
-		"single":        "single",
-		"first\nsecond": "first ...",
-		"first\n":       "first",
-		"":              "",
-		"a\nb\nc":       "a ...",
+	cases := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{name: "single-line", in: "single", want: "single"},
+		{name: "two-lines-truncated-with-ellipsis", in: "first\nsecond", want: "first ..."},
+		{name: "trailing-newline-no-second-line", in: "first\n", want: "first"},
+		{name: "empty-input", in: "", want: ""},
+		{name: "three-lines-still-shows-first-with-ellipsis", in: "a\nb\nc", want: "a ..."},
 	}
-	for in, want := range cases {
-		got := firstLine(in)
-		if got != want {
-			t.Errorf("firstLine(%q) = %q, want %q", in, got, want)
-		}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := firstLine(tc.in)
+			if got != tc.want {
+				t.Errorf("firstLine(%q) = %q, want %q", tc.in, got, tc.want)
+			}
+		})
 	}
 }

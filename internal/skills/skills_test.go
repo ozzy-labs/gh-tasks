@@ -264,3 +264,112 @@ func TestLoadEnglishMirrorAccepted(t *testing.T) {
 }
 
 func ptr[T any](v T) *T { return &v }
+
+// TestParseDocument_NonScalarFrontmatter pins the defensive fall-through in
+// stringifyYAMLValue for sequence and mapping nodes. The current SKILL.md
+// schema only uses scalars, but a stray YAML list or nested mapping must
+// not crash the loader; instead it is rendered with %v so adapters get a
+// non-empty string and the AssertRequiredFields gate continues to behave.
+//
+// Without this test, the sequence / map branch would be dead code from a
+// coverage standpoint and any future regression (e.g. accidentally dropping
+// the branch in favour of fmt.Sprint(v) which produces different output for
+// maps) would go unnoticed.
+func TestParseDocument_NonScalarFrontmatter(t *testing.T) {
+	t.Parallel()
+
+	t.Run("sequence-value", func(t *testing.T) {
+		t.Parallel()
+		text := "---\n" +
+			"name: alpha\n" +
+			"tags:\n" +
+			"  - a\n" +
+			"  - b\n" +
+			"---\nbody\n"
+		fm, _, err := skills.ParseDocument(text, "label")
+		if err != nil {
+			t.Fatalf("err: %v", err)
+		}
+		// Scalars round-trip unchanged.
+		if got, want := fm["name"], "alpha"; got != want {
+			t.Errorf("name=%q, want %q", got, want)
+		}
+		// Sequences are rendered with %v ("[a b]") rather than dropped or
+		// crashing the parser. The exact format is incidental, but it must
+		// be non-empty so AssertRequiredFields doesn't treat the key as
+		// missing.
+		if fm["tags"] == "" {
+			t.Errorf("tags: expected non-empty rendering of sequence, got %q", fm["tags"])
+		}
+		if !strings.Contains(fm["tags"], "a") || !strings.Contains(fm["tags"], "b") {
+			t.Errorf("tags=%q, want both 'a' and 'b' to appear", fm["tags"])
+		}
+	})
+
+	t.Run("mapping-value", func(t *testing.T) {
+		t.Parallel()
+		text := "---\n" +
+			"name: alpha\n" +
+			"meta:\n" +
+			"  owner: alice\n" +
+			"  level: 3\n" +
+			"---\nbody\n"
+		fm, _, err := skills.ParseDocument(text, "label")
+		if err != nil {
+			t.Fatalf("err: %v", err)
+		}
+		if fm["meta"] == "" {
+			t.Errorf("meta: expected non-empty rendering of mapping, got %q", fm["meta"])
+		}
+		// yaml.v3 decodes nested mappings as map[string]any; %v renders
+		// them as `map[k:v ...]`. We don't assert the exact format —
+		// just that the keys round-tripped through.
+		if !strings.Contains(fm["meta"], "owner") || !strings.Contains(fm["meta"], "alice") {
+			t.Errorf("meta=%q, want owner/alice to appear", fm["meta"])
+		}
+	})
+
+	t.Run("explicit-null-value", func(t *testing.T) {
+		t.Parallel()
+		// `key:` with no value parses as nil; stringifyYAMLValue must
+		// collapse this to the empty string so AssertRequiredFields
+		// treats it the same as a missing key (per the function's doc).
+		text := "---\n" +
+			"name: alpha\n" +
+			"description:\n" +
+			"---\nbody\n"
+		fm, _, err := skills.ParseDocument(text, "label")
+		if err != nil {
+			t.Fatalf("err: %v", err)
+		}
+		if got := fm["description"]; got != "" {
+			t.Errorf("description=%q, want empty string for null scalar", got)
+		}
+		// Verify AssertRequiredFields still flags it as missing.
+		if err := skills.AssertRequiredFields(fm, []string{"description"}, "label"); err == nil {
+			t.Error("AssertRequiredFields: expected missing-field error for null-valued key")
+		}
+	})
+
+	t.Run("non-string-scalar", func(t *testing.T) {
+		t.Parallel()
+		// Numeric / boolean scalars hit the default branch in
+		// stringifyYAMLValue (fmt.Sprint). They must round-trip to a
+		// human-readable string.
+		text := "---\n" +
+			"name: alpha\n" +
+			"version: 2\n" +
+			"enabled: true\n" +
+			"---\nbody\n"
+		fm, _, err := skills.ParseDocument(text, "label")
+		if err != nil {
+			t.Fatalf("err: %v", err)
+		}
+		if fm["version"] != "2" {
+			t.Errorf("version=%q, want %q", fm["version"], "2")
+		}
+		if fm["enabled"] != "true" {
+			t.Errorf("enabled=%q, want %q", fm["enabled"], "true")
+		}
+	})
+}
