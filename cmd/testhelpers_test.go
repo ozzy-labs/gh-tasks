@@ -196,6 +196,41 @@ func runCmd(t *testing.T, d cmd.Deps, args ...string) (stdout, stderr *bytes.Buf
 	return stdout, stderr, err
 }
 
+// runCmdWithContext is the context-aware variant of runCmd. It uses cobra's
+// ExecuteContext so c.Context() inside the RunE handler reflects the supplied
+// context (instead of the implicit context.Background() that Execute() uses).
+// Tests that exercise context cancellation / deadline propagation rely on
+// this helper to inject a pre-cancelled or short-deadline context.
+func runCmdWithContext(t *testing.T, ctx context.Context, d cmd.Deps, args ...string) (stdout, stderr *bytes.Buffer, err error) {
+	t.Helper()
+	stdout = d.Stdout.(*bytes.Buffer)
+	stderr = d.Stderr.(*bytes.Buffer)
+	root := cmd.RootWithDeps(d)
+	root.SetArgs(args)
+	root.SetOut(stdout)
+	root.SetErr(stderr)
+	err = root.ExecuteContext(ctx)
+	return stdout, stderr, err
+}
+
+// ctxAwareGraphQL wraps a fakeGraphQL so that any Do call short-circuits to
+// ctx.Err() when the supplied context is already done. The bare fakeGraphQL
+// ignores ctx (responses are pre-canned), which is fine for happy-path tests
+// but unsuitable for context-cancel scenarios where the paginator's per-page
+// Do call must observe the cancellation. Tests that need to simulate a
+// Ctrl-C / deadline expiry wrap their fake with this so the cmd layer sees
+// context.Canceled (or DeadlineExceeded) propagate up through the paginator.
+type ctxAwareGraphQL struct {
+	inner *fakeGraphQL
+}
+
+func (c *ctxAwareGraphQL) Do(ctx context.Context, query string, vars map[string]any, out any) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	return c.inner.Do(ctx, query, vars, out)
+}
+
 // ===== GraphQL payload builders ============================================
 
 // repoIssuesPayload constructs the `repository.issues.nodes` shape consumed by

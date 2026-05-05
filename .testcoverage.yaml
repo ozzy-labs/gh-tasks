@@ -25,7 +25,7 @@ threshold:
 # and `internal/github/queries` apply independently — no ordering hazard.
 override:
   - path: ^cmd$
-    threshold: 76
+    threshold: 78
   - path: ^internal/adapters$
     threshold: 93
   - path: ^internal/config$
