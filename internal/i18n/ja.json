@@ -110,5 +110,6 @@
   "projectsInit.dryRunHeader": "(--dry-run) Project '{title}' を owner '{owner}' に作成し、以下の field を追加します:",
   "projectsInit.created": "Project を作成しました: {url}",
   "projectsInit.fieldCreated": "  field 追加: {name} ({dataType})",
-  "projectsInit.fieldSkipped": "  field スキップ(既に存在): {name}"
+  "projectsInit.fieldSkipped": "  field スキップ(既に存在): {name}",
+  "warn.transport.partial": "警告: '{op}' 実行中に GraphQL から部分応答が返されました: {message}。本コマンドは失敗扱いとなります。rate-limit 解除後にリトライするか、トークンの権限を確認してください"
 }

@@ -3,6 +3,9 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"io"
+
+	"github.com/cli/go-gh/v2/pkg/api"
 
 	"github.com/ozzy-labs/gh-tasks/internal/config"
 	"github.com/ozzy-labs/gh-tasks/internal/i18n"
@@ -88,4 +91,45 @@ func (e *cmdRuntimeError) Error() string { return e.Localize(i18n.LocaleEN) }
 
 func newRuntimeError(key string, args ...any) *cmdRuntimeError {
 	return &cmdRuntimeError{Payload: i18n.NewPayload(key, args...)}
+}
+
+// wrapTransport wraps a transport-layer error returned by a paginator or
+// mutation. When err carries a [*api.GraphQLError] (rate limit, partial
+// errors[] response, permission failure, etc.), a localized hint is printed
+// to stderr before the wrap is returned — operators get an actionable
+// message even though the wrap chain still preserves the raw error for
+// errors.Is callers and cobra's default `Error: <op>: <cause>` rendering.
+//
+// The hint path is a deliberate non-breaking addition to the existing
+// `fmt.Errorf("<op>: %w", err)` pattern (audit follow-up C-5 / refs #285):
+// callers replace the fmt.Errorf line with a call to this helper, and the
+// wrapped error keeps the same shape so `errors.Is(err, transportErr)` and
+// the `<op>:` substring contract pinned by cmd_transport_error_test.go are
+// preserved verbatim. Errors that are not [*api.GraphQLError] (HTTP 5xx,
+// network failure, context cancellation) fall through silently — they are
+// already surfaced by cobra's default error path with the wrapped cause.
+func wrapTransport(stderr io.Writer, locale i18n.Locale, op string, err error) error {
+	if err == nil {
+		return nil
+	}
+	var gqlErr *api.GraphQLError
+	if errors.As(err, &gqlErr) && gqlErr != nil {
+		hintTransportPartial(stderr, locale, op, gqlErr)
+	}
+	return fmt.Errorf("%s: %w", op, err)
+}
+
+// hintTransportPartial prints a one-line localized warning describing a
+// partial GraphQL response (errors[] populated). The summary surfaces the
+// op label so the user can correlate the warning with the wrapped error
+// cobra prints next, and includes the first error item's message verbatim
+// (no further translation — the upstream message is already English) so
+// rate-limit / permission causes are immediately visible without spelunking
+// into a verbose stack trace.
+func hintTransportPartial(stderr io.Writer, locale i18n.Locale, op string, gqlErr *api.GraphQLError) {
+	if stderr == nil || gqlErr == nil || len(gqlErr.Errors) == 0 {
+		return
+	}
+	first := gqlErr.Errors[0].Message
+	fmt.Fprintln(stderr, i18n.T(locale, "warn.transport.partial", "op", op, "message", first))
 }

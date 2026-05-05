@@ -110,5 +110,6 @@
   "projectsInit.dryRunHeader": "(--dry-run) Would create Project '{title}' under owner '{owner}' with these fields:",
   "projectsInit.created": "Project created: {url}",
   "projectsInit.fieldCreated": "  field added: {name} ({dataType})",
-  "projectsInit.fieldSkipped": "  field skipped (already exists): {name}"
+  "projectsInit.fieldSkipped": "  field skipped (already exists): {name}",
+  "warn.transport.partial": "warning: GraphQL returned a partial response while running '{op}': {message}. The operation will fail; retry after the rate-limit window or check token permissions."
 }

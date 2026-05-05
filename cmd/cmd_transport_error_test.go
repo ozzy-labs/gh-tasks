@@ -29,9 +29,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cli/go-gh/v2/pkg/api"
+
 	"github.com/ozzy-labs/gh-tasks/cmd"
 	"github.com/ozzy-labs/gh-tasks/internal/config"
 	"github.com/ozzy-labs/gh-tasks/internal/github"
+	"github.com/ozzy-labs/gh-tasks/internal/i18n"
 	"github.com/ozzy-labs/gh-tasks/internal/project"
 	"github.com/ozzy-labs/gh-tasks/internal/testfake"
 )
@@ -983,5 +986,155 @@ func TestList_RepoContextCanceled(t *testing.T) {
 	}
 	if errors.Is(err, cmd.ErrSilent) {
 		t.Errorf("context.Canceled must NOT classify as ErrSilent, got %v", err)
+	}
+}
+
+// ===== Partial GraphQL response (rate limit / errors[]) ====================
+
+// TestList_RepoGraphQLPartialErrors pins audit follow-up C-5 / refs #285:
+// when the upstream GraphQL transport returns an [*api.GraphQLError] (partial
+// `errors[]` response — typical shape for rate-limit and permission failures),
+// `runListRepo` must:
+//
+//  1. Print a localized warning to stderr that names the operation and
+//     embeds the upstream error message verbatim, so operators understand
+//     the cause without parsing the cobra-default `Error: ...` line.
+//  2. Preserve the existing wrap contract: `errors.Is(err, gqlErr)` still
+//     holds and `err.Error()` still starts with `list repo issues:` — the
+//     30+ existing transport-error tests rely on this invariant.
+//  3. NOT classify as ErrSilent — partial errors[] are user-visible runtime
+//     failures, not silent arg-validation, so cobra surfaces the wrap.
+func TestList_RepoGraphQLPartialErrors(t *testing.T) {
+	t.Parallel()
+
+	gqlErr := &api.GraphQLError{Errors: []api.GraphQLErrorItem{{
+		Type:    "RATE_LIMITED",
+		Message: "API rate limit exceeded for installation",
+	}}}
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query ListRepoIssues (", Err: gqlErr},
+	}}
+	d := testDeps(g)
+	_, stderr, err := runCmd(t, d, "list")
+	if err == nil {
+		t.Fatalf("expected partial GraphQL error to surface, got nil")
+	}
+	// Wrap-chain invariants (compatible with sibling transport tests).
+	if !errors.Is(err, gqlErr) {
+		t.Errorf("expected errors.Is(err, gqlErr) to hold, got %v", err)
+	}
+	if !strings.Contains(err.Error(), "list repo issues") {
+		t.Errorf("expected wrap prefix `list repo issues`, got %q", err.Error())
+	}
+	if errors.Is(err, cmd.ErrSilent) {
+		t.Errorf("partial GraphQL error must NOT classify as ErrSilent, got %v", err)
+	}
+	// Localized warning surfaces the op and upstream message.
+	assertI18nMessage(t, stderr.String(), i18n.LocaleEN,
+		"warn.transport.partial",
+		"op", "list repo issues",
+		"message", "API rate limit exceeded for installation")
+}
+
+// TestList_ProjectGraphQLPartialErrors mirrors TestList_RepoGraphQLPartialErrors
+// for the project-side paginator (`PaginateProjectV2Items`) — the same wrap
+// helper is exercised through the org-scope branch so any divergence between
+// the two list paths shows up as a separately-failing test.
+func TestList_ProjectGraphQLPartialErrors(t *testing.T) {
+	t.Parallel()
+
+	gqlErr := &api.GraphQLError{Errors: []api.GraphQLErrorItem{{
+		Type:    "FORBIDDEN",
+		Message: "Resource not accessible by integration",
+	}}}
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetOrgProjectV2 (", Data: orgProject("PVT_org")},
+		{MatchSubstring: "query ListProjectV2Items (", Err: gqlErr},
+	}}
+	d := testDeps(g, func(d *cmd.Deps) {
+		d.HasGitRemote = func() bool { return false }
+		d.LoadConfig = func() (config.AppConfig, error) {
+			return config.AppConfig{OrgProject: project.Ref{Owner: "octo", Number: 7}}, nil
+		}
+	})
+	_, stderr, err := runCmd(t, d, "list", "--scope=org")
+	if err == nil {
+		t.Fatalf("expected partial GraphQL error to surface, got nil")
+	}
+	if !errors.Is(err, gqlErr) {
+		t.Errorf("expected errors.Is(err, gqlErr) to hold, got %v", err)
+	}
+	if !strings.Contains(err.Error(), "list project items") {
+		t.Errorf("expected wrap prefix `list project items`, got %q", err.Error())
+	}
+	if errors.Is(err, cmd.ErrSilent) {
+		t.Errorf("partial GraphQL error must NOT classify as ErrSilent, got %v", err)
+	}
+	assertI18nMessage(t, stderr.String(), i18n.LocaleEN,
+		"warn.transport.partial",
+		"op", "list project items",
+		"message", "Resource not accessible by integration")
+}
+
+// TestList_RepoGraphQLPartialErrors_ThroughClientWrapper verifies the helper
+// detects an [*api.GraphQLError] even when wrapped by the production
+// [*github.GraphQLClientError] adapter. The test injects the wrapped form
+// directly (mirroring what `internal/github` returns from its real Do path)
+// so a future refactor of the wrapper signature still exercises the
+// errors.As traversal that wrapTransport relies on.
+func TestList_RepoGraphQLPartialErrors_ThroughClientWrapper(t *testing.T) {
+	t.Parallel()
+
+	gqlErr := &api.GraphQLError{Errors: []api.GraphQLErrorItem{{
+		Type:    "RATE_LIMITED",
+		Message: "rate limited",
+	}}}
+	wrapped := &github.GraphQLClientError{Cause: gqlErr}
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query ListRepoIssues (", Err: wrapped},
+	}}
+	d := testDeps(g)
+	_, stderr, err := runCmd(t, d, "list")
+	if err == nil {
+		t.Fatalf("expected wrapped partial GraphQL error to surface, got nil")
+	}
+	if !errors.Is(err, gqlErr) {
+		t.Errorf("expected errors.Is(err, gqlErr) to hold even through GraphQLClientError, got %v", err)
+	}
+	assertI18nMessage(t, stderr.String(), i18n.LocaleEN,
+		"warn.transport.partial",
+		"op", "list repo issues",
+		"message", "rate limited")
+}
+
+// TestList_RepoNonPartialTransport_NoWarning pins the negation: a plain
+// transport error (HTTP 5xx, network failure) that is NOT an
+// [*api.GraphQLError] must NOT print the partial-response warning. Only the
+// raw cobra-default `Error: list repo issues: ...` should appear, keeping
+// noise out of the operator's terminal for transient connection failures.
+func TestList_RepoNonPartialTransport_NoWarning(t *testing.T) {
+	t.Parallel()
+
+	transportErr := errors.New("graphql: HTTP 502 Bad Gateway")
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query ListRepoIssues (", Err: transportErr},
+	}}
+	d := testDeps(g)
+	_, stderr, err := runCmd(t, d, "list")
+	if err == nil {
+		t.Fatalf("expected transport error to surface, got nil")
+	}
+	// The warning template begins with the literal "warning: GraphQL"
+	// regardless of placeholders; if it appears we know wrapTransport
+	// mis-classified a non-partial error.
+	if strings.Contains(stderr.String(), "warning: GraphQL") {
+		t.Errorf("expected no partial-response warning for non-GraphQLError, got stderr=%q", stderr.String())
+	}
+	// Sanity: the wrap chain still pins the operation prefix and sentinel.
+	if !errors.Is(err, transportErr) {
+		t.Errorf("expected errors.Is(err, transportErr) to hold, got %v", err)
+	}
+	if !strings.Contains(err.Error(), "list repo issues") {
+		t.Errorf("expected wrap prefix `list repo issues`, got %q", err.Error())
 	}
 }

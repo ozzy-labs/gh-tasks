@@ -72,7 +72,7 @@ func runListRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, l
 		return ErrSilentRuntime
 	}
 	if err != nil {
-		return fmt.Errorf("list repo issues: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "list repo issues", err)
 	}
 	if len(issues) == 0 {
 		fmt.Fprintln(c.OutOrStdout(), r.T("list.empty"))
@@ -115,7 +115,7 @@ func runListProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		return ErrSilentRuntime
 	}
 	if err != nil {
-		return fmt.Errorf("list project items: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "list project items", err)
 	}
 	if len(items) == 0 {
 		fmt.Fprintln(c.OutOrStdout(), r.T("list.empty.project"))
