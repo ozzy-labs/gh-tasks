@@ -126,7 +126,7 @@ gh tasks projects init [<yaml-path> | --template user|org] --title '<project-tit
 
 ### `gh tasks projects init-templates` ✅
 
-バンドル済みの `user` / `org` Project v2 field テンプレートを stdout に出力する。ローカルで baseline をカスタマイズする前に取り出す用途。
+バンドル済みの `user` / `org` Projects v2 field テンプレートを stdout に出力する。ローカルで baseline をカスタマイズする前に取り出す用途。
 
 ```bash
 gh tasks projects init-templates

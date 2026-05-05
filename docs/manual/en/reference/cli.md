@@ -126,7 +126,7 @@ Returns: prints the created Project URL to stdout, exits 0.
 
 ### `gh tasks projects init-templates` ✅
 
-Print the bundled `user` / `org` Project v2 field templates to stdout. Useful for copying a baseline before customizing locally.
+Print the bundled `user` / `org` Projects v2 field templates to stdout. Useful for copying a baseline before customizing locally.
 
 ```bash
 gh tasks projects init-templates
