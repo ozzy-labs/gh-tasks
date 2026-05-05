@@ -88,13 +88,13 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		return fmt.Errorf("list repo issues: %w", err)
 	}
 	if closedResp.Repository != nil {
-		warnIfTruncated(c, r, "closed_issues", len(closedResp.Repository.Issues.Nodes), standupFetchLimit)
+		warnIfTruncated(c, r, kindClosedIssues, len(closedResp.Repository.Issues.Nodes), standupFetchLimit)
 	}
 	if prsResp.Repository != nil {
-		warnIfTruncated(c, r, "merged_prs", len(prsResp.Repository.PullRequests.Nodes), standupFetchLimit)
+		warnIfTruncated(c, r, kindMergedPRs, len(prsResp.Repository.PullRequests.Nodes), standupFetchLimit)
 	}
 	if openResp.Repository != nil {
-		warnIfTruncated(c, r, "open_issues", len(openResp.Repository.Issues.Nodes), standupFetchLimit)
+		warnIfTruncated(c, r, kindOpenIssues, len(openResp.Repository.Issues.Nodes), standupFetchLimit)
 	}
 
 	type closedItem struct {
@@ -277,7 +277,7 @@ func runStandupProject(ctx context.Context, c *cobra.Command, deps Deps, r Resol
 		return ErrSilentRuntime
 	}
 	items := projectitem.ItemsFromResponse(resp)
-	warnIfTruncated(c, r, "project_items", len(items), standupFetchLimit)
+	warnIfTruncated(c, r, kindProjectItems, len(items), standupFetchLimit)
 	yesterday := []*queries.ProjectV2ItemNode{}
 	today := []*queries.ProjectV2ItemNode{}
 	for _, item := range items {

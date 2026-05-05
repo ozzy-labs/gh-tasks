@@ -63,7 +63,7 @@ func runTodayRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, 
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
 	}
-	warnIfTruncated(c, r, "repo_issues", len(resp.Repository.Issues.Nodes), todayFetchLimit)
+	warnIfTruncated(c, r, kindRepoIssues, len(resp.Repository.Issues.Nodes), todayFetchLimit)
 	type issueNode = queries.ListRepoIssuesRepositoryIssuesIssueConnectionNodesIssue
 	hits := []*issueNode{}
 	for _, issue := range resp.Repository.Issues.Nodes {
@@ -119,7 +119,7 @@ func runTodayProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolve
 		return ErrSilentRuntime
 	}
 	items := projectitem.ItemsFromResponse(resp)
-	warnIfTruncated(c, r, "project_items", len(items), todayFetchLimit)
+	warnIfTruncated(c, r, kindProjectItems, len(items), todayFetchLimit)
 	hits := []*queries.ProjectV2ItemNode{}
 	for _, item := range items {
 		if item == nil {

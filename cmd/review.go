@@ -73,10 +73,10 @@ func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 		return fmt.Errorf("list merged PRs: %w", err)
 	}
 	if closedResp.Repository != nil {
-		warnIfTruncated(c, r, "closed_issues", len(closedResp.Repository.Issues.Nodes), reviewFetchLimit)
+		warnIfTruncated(c, r, kindClosedIssues, len(closedResp.Repository.Issues.Nodes), reviewFetchLimit)
 	}
 	if prsResp.Repository != nil {
-		warnIfTruncated(c, r, "merged_prs", len(prsResp.Repository.PullRequests.Nodes), reviewFetchLimit)
+		warnIfTruncated(c, r, kindMergedPRs, len(prsResp.Repository.PullRequests.Nodes), reviewFetchLimit)
 	}
 	type closedItem struct {
 		Number int
@@ -172,7 +172,7 @@ func runReviewProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 		return ErrSilentRuntime
 	}
 	items := projectitem.ItemsFromResponse(resp)
-	warnIfTruncated(c, r, "project_items", len(items), reviewFetchLimit)
+	warnIfTruncated(c, r, kindProjectItems, len(items), reviewFetchLimit)
 	completed := []*queries.ProjectV2ItemNode{}
 	for _, item := range items {
 		if item == nil {

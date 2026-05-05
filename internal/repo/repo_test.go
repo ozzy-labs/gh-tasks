@@ -56,6 +56,17 @@ func TestExtractFromRemote(t *testing.T) {
 		{"ssh://git@github.com/ozzy-labs/gh-tasks.git", "ozzy-labs/gh-tasks", false},
 		{"https://github.com/ozzy-labs/gh-tasks/", "ozzy-labs/gh-tasks", false},
 		{"not-a-url", "", true},
+		// Multi-segment paths must be rejected. The legacy regex-only
+		// implementation matched the last two segments greedily, silently
+		// extracting "extra/path" from these URLs.
+		{"https://github.com/owner/name/extra/path", "", true},
+		{"https://github.com/owner/name/issues/42", "", true},
+		{"git@github.com:owner/name/extra", "", true},
+		// A single-segment path has no name component to extract.
+		{"https://github.com/just-an-owner", "", true},
+		// A scheme-less, colon-less string (no host/path boundary) is
+		// not a valid git remote.
+		{"github.com/owner/name", "", true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.in, func(t *testing.T) {

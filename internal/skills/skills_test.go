@@ -157,3 +157,110 @@ func TestLoadGuards(t *testing.T) {
 		})
 	}
 }
+
+// TestLoadEnglishMirrorGuards pins the three failure modes of the
+// SKILL.en.md mirror validation: missing file, name-frontmatter
+// mismatch, and a locale that isn't "en".
+func TestLoadEnglishMirrorGuards(t *testing.T) {
+	t.Parallel()
+
+	const validJaFront = "---\n" +
+		"name: alpha\n" +
+		"description: d\n" +
+		"locale: ja\n" +
+		"---\nbody\n"
+
+	cases := []struct {
+		label      string
+		mirror     *string // nil → don't write SKILL.en.md at all
+		wantSubstr string
+	}{
+		{
+			label:      "mirror-missing",
+			mirror:     nil,
+			wantSubstr: "SKILL.en.md mirror is missing",
+		},
+		{
+			label: "mirror-name-mismatch",
+			mirror: ptr("---\n" +
+				"name: not-alpha\n" +
+				"description: en\n" +
+				"locale: en\n" +
+				"---\nbody\n"),
+			wantSubstr: `frontmatter name="not-alpha"`,
+		},
+		{
+			label: "mirror-locale-not-en",
+			mirror: ptr("---\n" +
+				"name: alpha\n" +
+				"description: en\n" +
+				"locale: fr\n" +
+				"---\nbody\n"),
+			wantSubstr: `locale="fr" must be 'en'`,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.label, func(t *testing.T) {
+			t.Parallel()
+			srcDir := t.TempDir()
+			skillDir := filepath.Join(srcDir, "alpha")
+			if err := os.MkdirAll(skillDir, 0o755); err != nil {
+				t.Fatalf("mkdir: %v", err)
+			}
+			if err := os.WriteFile(filepath.Join(skillDir, "SKILL.md"), []byte(validJaFront), 0o600); err != nil {
+				t.Fatalf("write SKILL.md: %v", err)
+			}
+			if tc.mirror != nil {
+				if err := os.WriteFile(filepath.Join(skillDir, "SKILL.en.md"), []byte(*tc.mirror), 0o600); err != nil {
+					t.Fatalf("write SKILL.en.md: %v", err)
+				}
+			}
+
+			_, err := skills.Load(srcDir, skills.LoadOptions{
+				Required: []string{"name", "locale"},
+			})
+			if err == nil {
+				t.Fatalf("expected error, got nil")
+			}
+			if !strings.Contains(err.Error(), tc.wantSubstr) {
+				t.Errorf("error %q does not contain %q", err.Error(), tc.wantSubstr)
+			}
+		})
+	}
+}
+
+// TestLoadEnglishMirrorAccepted pins the happy path: a SKILL.md + a
+// well-formed SKILL.en.md mirror loads cleanly.
+func TestLoadEnglishMirrorAccepted(t *testing.T) {
+	t.Parallel()
+	srcDir := t.TempDir()
+	skillDir := filepath.Join(srcDir, "alpha")
+	if err := os.MkdirAll(skillDir, 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(skillDir, "SKILL.md"), []byte(
+		"---\nname: alpha\ndescription: d\nlocale: ja\n---\nbody\n",
+	), 0o600); err != nil {
+		t.Fatalf("write SKILL.md: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(skillDir, "SKILL.en.md"), []byte(
+		"---\nname: alpha\ndescription: en\nlocale: en\n---\nbody\n",
+	), 0o600); err != nil {
+		t.Fatalf("write SKILL.en.md: %v", err)
+	}
+	loaded, err := skills.Load(srcDir, skills.LoadOptions{
+		Required: []string{"name", "locale"},
+	})
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if len(loaded) != 1 {
+		t.Fatalf("loaded %d skills; want 1", len(loaded))
+	}
+	if loaded[0].Name != "alpha" {
+		t.Errorf("got name=%q, want alpha", loaded[0].Name)
+	}
+}
+
+func ptr[T any](v T) *T { return &v }

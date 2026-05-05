@@ -80,7 +80,7 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
 	}
-	warnIfTruncated(c, r, "repo_issues", len(issuesResp.Repository.Issues.Nodes), planFetchLimit)
+	warnIfTruncated(c, r, kindRepoIssues, len(issuesResp.Repository.Issues.Nodes), planFetchLimit)
 	type issueRow = queries.ListRepoIssuesWithMilestoneRepositoryIssuesIssueConnectionNodesIssue
 	inRange := []*issueRow{}
 	for _, n := range issuesResp.Repository.Issues.Nodes {
@@ -118,7 +118,7 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 		return fmt.Errorf("list milestones: %w", err)
 	}
 	if milestonesResp.Repository != nil {
-		warnIfTruncated(c, r, "milestones", len(milestonesResp.Repository.Milestones.Nodes), planFetchLimit)
+		warnIfTruncated(c, r, kindMilestones, len(milestonesResp.Repository.Milestones.Nodes), planFetchLimit)
 	}
 	var milestoneID string
 	var milestoneNumber int
@@ -222,7 +222,7 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		return fmt.Errorf("list project items: %w", err)
 	}
 	allItems := projectitem.ItemsFromResponse(itemsResp)
-	warnIfTruncated(c, r, "project_items", len(allItems), planFetchLimit)
+	warnIfTruncated(c, r, kindProjectItems, len(allItems), planFetchLimit)
 	inRange := []*queries.ProjectV2ItemNode{}
 	for _, item := range allItems {
 		if item == nil {

@@ -71,7 +71,7 @@ func runTriageRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
 	}
-	warnIfTruncated(c, r, "repo_issues", len(resp.Repository.Issues.Nodes), triageFetchLimit)
+	warnIfTruncated(c, r, kindRepoIssues, len(resp.Repository.Issues.Nodes), triageFetchLimit)
 	type triageHit struct {
 		Number int
 		Title  string
@@ -131,7 +131,7 @@ func runTriageProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 		return ErrSilentRuntime
 	}
 	items := projectitem.ItemsFromResponse(resp)
-	warnIfTruncated(c, r, "project_items", len(items), triageFetchLimit)
+	warnIfTruncated(c, r, kindProjectItems, len(items), triageFetchLimit)
 	hits := []*queries.ProjectV2ItemNode{}
 	for _, item := range items {
 		if item == nil {
