@@ -522,8 +522,8 @@ func TestResolveProjectNodeID(t *testing.T) {
 		if !errors.As(err, &pe) {
 			t.Fatalf("expected *ProjectItemError, got %T: %v", err, err)
 		}
-		if pe.I18nKey() != "error.projectitem.getOrgProjectFailed" {
-			t.Errorf("got key %q, want %q", pe.I18nKey(), "error.projectitem.getOrgProjectFailed")
+		if pe.I18nKey() != "error.projectItem.getOrgProjectFailed" {
+			t.Errorf("got key %q, want %q", pe.I18nKey(), "error.projectItem.getOrgProjectFailed")
 		}
 		if !strings.Contains(err.Error(), "Could not load org project") {
 			t.Errorf("expected localized message in %q", err.Error())
@@ -550,8 +550,8 @@ func TestResolveProjectNodeID(t *testing.T) {
 		if !errors.As(err, &pe) {
 			t.Fatalf("expected *ProjectItemError, got %T: %v", err, err)
 		}
-		if pe.I18nKey() != "error.projectitem.getUserProjectFailed" {
-			t.Errorf("got key %q, want %q", pe.I18nKey(), "error.projectitem.getUserProjectFailed")
+		if pe.I18nKey() != "error.projectItem.getUserProjectFailed" {
+			t.Errorf("got key %q, want %q", pe.I18nKey(), "error.projectItem.getUserProjectFailed")
 		}
 		if !strings.Contains(err.Error(), "Could not load user project") {
 			t.Errorf("expected localized message in %q", err.Error())

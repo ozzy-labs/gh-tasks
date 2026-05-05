@@ -61,7 +61,7 @@ func ResolveProjectNodeID(ctx context.Context, gql github.GraphQLClient, sc scop
 		if err != nil {
 			return "", &ProjectItemError{
 				Payload: i18n.NewPayload(
-					"error.projectitem.getOrgProjectFailed",
+					"error.projectItem.getOrgProjectFailed",
 					"owner", ref.Owner, "number", ref.Number, "reason", err.Error(),
 				),
 				cause: err,
@@ -77,7 +77,7 @@ func ResolveProjectNodeID(ctx context.Context, gql github.GraphQLClient, sc scop
 	if err != nil {
 		return "", &ProjectItemError{
 			Payload: i18n.NewPayload(
-				"error.projectitem.getUserProjectFailed",
+				"error.projectItem.getUserProjectFailed",
 				"owner", ref.Owner, "number", ref.Number, "reason", err.Error(),
 			),
 			cause: err,
