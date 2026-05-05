@@ -148,7 +148,13 @@ type Adapter interface {
 | `.claude/skills/{name}/` | `dist/claude-code/.claude/skills/{name}/` をコピー |
 | `.agents/skills/{name}/` | `dist/codex-cli/.agents/skills/{name}/` をコピー |
 
-スコープは `task-*` の本リポ skill のみ(commons の commit / lint / pr 等は `sync-commons` で別経路、衝突しない)。
+仕組み(`cmd/build_skills.go: runBuildSkills`):
+
+- 全 adapter × 全 stage を二重ループし、各組み合わせを存在チェック(`os.Stat` → `errors.Is(err, os.ErrNotExist)` で skip)
+- `<distRoot>/<adapter-id>/<DistSubpath>/` が存在する adapter のみ対象。現状は claude-code(`.claude/skills`)と codex-cli(`.agents/skills`)が該当し、gemini-cli / copilot は `DistSubpath` 不在で skip
+- 続いて各 `loaded` skill について `<distSkillsDir>/<skill.Name>/` の存在を確認し、存在するものだけ `RemoveAll` → `copyDir` でコピー
+
+結果としてスコープは本リポの SSOT 由来の `task-*` skill のみとなる(commons の commit / lint / pr 等は `sync-commons` で別経路、衝突しない)。
 
 ## CI ガード(`--check-diff`)
 

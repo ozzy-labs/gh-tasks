@@ -128,6 +128,7 @@ CLI 出力 / エラーメッセージの key ベース translation。
 - `i18n.T(locale, key, args...)` で参照、locale 解決は `i18n.ResolveLocale(argv, env, config)`
 - フォールバック chain: 指定 locale → en → key 文字列(デバッグ用)
 - locale 解決順: `--lang` フラグ → config `lang` → `LC_ALL` → `LANG` → fallback `en`(POSIX 標準で `LC_ALL` が `LANG` より優先)
+- 実装方針: 外部 i18n ライブラリ(`nicksnyder/go-i18n/v2` 等)は不採用。Go 標準 `embed` + 自前 JSON unmarshal で軽量化と依存最小化を優先(go-migration-plan.md 冒頭「計画と最終実装で異なった主な箇所」参照)
 
 ## エラー設計
 
