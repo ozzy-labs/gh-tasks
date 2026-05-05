@@ -106,21 +106,20 @@ func runListProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	var resp queries.ListProjectV2ItemsResponse
-	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Items, map[string]any{
-		"projectId": pid, "first": limit,
-	}, &resp); err != nil {
+	resp, err := queries.ListProjectV2Items(ctx, clients.AsGenqlientClient(), pid, limit)
+	if err != nil {
 		return fmt.Errorf("list project items: %w", err)
 	}
-	if resp.Node == nil {
+	if !projectitem.HasProjectNode(resp) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	if len(resp.Node.Items.Nodes) == 0 {
+	items := projectitem.ItemsFromResponse(resp)
+	if len(items) == 0 {
 		fmt.Fprintln(c.OutOrStdout(), r.T("list.empty.project"))
 		return nil
 	}
-	for _, item := range resp.Node.Items.Nodes {
+	for _, item := range items {
 		fmt.Fprint(c.OutOrStdout(), projectitem.FormatItem(item))
 	}
 	return nil

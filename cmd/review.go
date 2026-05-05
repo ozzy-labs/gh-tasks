@@ -151,18 +151,19 @@ func runReviewProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	var resp queries.ListProjectV2ItemsResponse
-	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Items, map[string]any{
-		"projectId": pid, "first": reviewFetchLimit,
-	}, &resp); err != nil {
+	resp, err := queries.ListProjectV2Items(ctx, clients.AsGenqlientClient(), pid, reviewFetchLimit)
+	if err != nil {
 		return fmt.Errorf("list project items: %w", err)
 	}
-	if resp.Node == nil {
+	if !projectitem.HasProjectNode(resp) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	completed := []queries.ProjectV2ItemNode{}
-	for _, item := range resp.Node.Items.Nodes {
+	completed := []*queries.ProjectV2ItemNode{}
+	for _, item := range projectitem.ItemsFromResponse(resp) {
+		if item == nil {
+			continue
+		}
 		if withinPeriodRange(item.UpdatedAt, rng) && isItemDone(item) {
 			completed = append(completed, item)
 		}

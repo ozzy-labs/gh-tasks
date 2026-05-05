@@ -13,6 +13,7 @@ import (
 
 	"github.com/ozzy-labs/gh-tasks/internal/github"
 	"github.com/ozzy-labs/gh-tasks/internal/github/queries"
+	"github.com/ozzy-labs/gh-tasks/internal/projectitem"
 )
 
 // Inlined copies of packages/templates/projects-v2/{user,org}.yaml. They are
@@ -240,17 +241,13 @@ func runProjectsInit(ctx context.Context, c *cobra.Command, deps Deps, yamlPath 
 	fmt.Fprintln(c.OutOrStdout(),
 		r.T("projectsInit.created", "url", project.Url))
 
-	var existing queries.ListProjectV2FieldsResponse
-	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Fields, map[string]any{
-		"projectId": project.Id, "first": 100,
-	}, &existing); err != nil {
+	existing, err := queries.ListProjectV2Fields(ctx, gqlClient, project.Id, 100)
+	if err != nil {
 		return fmt.Errorf("list project fields: %w", err)
 	}
 	existingNames := map[string]bool{}
-	if existing.Node != nil {
-		for _, f := range existing.Node.Fields.Nodes {
-			existingNames[strings.ToLower(f.Name)] = true
-		}
+	for _, f := range projectitem.FieldsOf(projectitem.FieldsFromResponse(existing)) {
+		existingNames[strings.ToLower(f.Name)] = true
 	}
 
 	for _, f := range fields {

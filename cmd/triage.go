@@ -118,18 +118,19 @@ func runTriageProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	var resp queries.ListProjectV2ItemsResponse
-	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Items, map[string]any{
-		"projectId": pid, "first": triageFetchLimit,
-	}, &resp); err != nil {
+	resp, err := queries.ListProjectV2Items(ctx, clients.AsGenqlientClient(), pid, triageFetchLimit)
+	if err != nil {
 		return fmt.Errorf("list project items: %w", err)
 	}
-	if resp.Node == nil {
+	if !projectitem.HasProjectNode(resp) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	hits := []queries.ProjectV2ItemNode{}
-	for _, item := range resp.Node.Items.Nodes {
+	hits := []*queries.ProjectV2ItemNode{}
+	for _, item := range projectitem.ItemsFromResponse(resp) {
+		if item == nil {
+			continue
+		}
 		if isUntriaged(item) {
 			hits = append(hits, item)
 			if len(hits) >= limit {
@@ -148,8 +149,8 @@ func runTriageProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 	return nil
 }
 
-func isUntriaged(item queries.ProjectV2ItemNode) bool {
-	status := projectitem.FindStatus(item.FieldValues.Nodes)
+func isUntriaged(item *queries.ProjectV2ItemNode) bool {
+	status := projectitem.FindStatus(projectitem.FieldValuesOf(item))
 	if status == "" {
 		return true
 	}

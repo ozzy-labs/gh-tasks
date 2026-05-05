@@ -245,19 +245,20 @@ func runStandupProject(ctx context.Context, c *cobra.Command, deps Deps, r Resol
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	var resp queries.ListProjectV2ItemsResponse
-	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Items, map[string]any{
-		"projectId": pid, "first": standupFetchLimit,
-	}, &resp); err != nil {
+	resp, err := queries.ListProjectV2Items(ctx, clients.AsGenqlientClient(), pid, standupFetchLimit)
+	if err != nil {
 		return fmt.Errorf("list project items: %w", err)
 	}
-	if resp.Node == nil {
+	if !projectitem.HasProjectNode(resp) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	yesterday := []queries.ProjectV2ItemNode{}
-	today := []queries.ProjectV2ItemNode{}
-	for _, item := range resp.Node.Items.Nodes {
+	yesterday := []*queries.ProjectV2ItemNode{}
+	today := []*queries.ProjectV2ItemNode{}
+	for _, item := range projectitem.ItemsFromResponse(resp) {
+		if item == nil {
+			continue
+		}
 		if !timeAtOrAfter(item.UpdatedAt, since) {
 			continue
 		}
@@ -333,26 +334,27 @@ func matchesViewer(authorLogin string, assigneeLogins []string, viewer string) b
 	return false
 }
 
-func matchesViewerOnItem(item queries.ProjectV2ItemNode, viewer string) bool {
-	c := item.Content
-	if c == nil || c.Typename == "DraftIssue" {
+// matchesViewerOnItem reports whether the project item's content carries
+// the given viewer as author or assignee. Draft items have no author /
+// assignees so they're always excluded under `--mine`.
+func matchesViewerOnItem(item *queries.ProjectV2ItemNode, viewer string) bool {
+	c := projectitem.ContentOf(item)
+	if c.Typename == "" || c.Typename == "DraftIssue" {
 		return false
 	}
-	if c.Author != nil && c.Author.Login == viewer {
+	if c.Author != "" && c.Author == viewer {
 		return true
 	}
-	if c.Assignees != nil {
-		for _, a := range c.Assignees.Nodes {
-			if a.Login == viewer {
-				return true
-			}
+	for _, login := range c.Assignees {
+		if login == viewer {
+			return true
 		}
 	}
 	return false
 }
 
-func isItemDone(item queries.ProjectV2ItemNode) bool {
-	status := projectitem.FindStatus(item.FieldValues.Nodes)
+func isItemDone(item *queries.ProjectV2ItemNode) bool {
+	status := projectitem.FindStatus(projectitem.FieldValuesOf(item))
 	if status == "" {
 		return false
 	}

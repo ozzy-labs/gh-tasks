@@ -213,8 +213,8 @@ func TestList_OrgProjectFound(t *testing.T) {
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
 		{
-			matchSubstring: "query ListProjectV2Items(",
-			data: map[string]any{"node": map[string]any{"items": map[string]any{"nodes": []any{
+			matchSubstring: "query ListProjectV2Items (",
+			data: map[string]any{"node": map[string]any{"__typename": "ProjectV2", "items": map[string]any{"nodes": []any{
 				map[string]any{
 					"id":        "ITEM_1",
 					"updatedAt": "2026-05-04T08:00:00Z",
@@ -230,7 +230,7 @@ func TestList_OrgProjectFound(t *testing.T) {
 							"__typename": "ProjectV2ItemFieldSingleSelectValue",
 							"optionId":   "OPT_TODO",
 							"name":       "Todo",
-							"field":      map[string]any{"id": "F_S", "name": "Status"},
+							"field":      map[string]any{"__typename": "ProjectV2SingleSelectField", "id": "F_S", "name": "Status"},
 						},
 					}},
 				},
@@ -338,8 +338,8 @@ func TestToday_OrgScope(t *testing.T) {
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
 		{
-			matchSubstring: "query ListProjectV2Items(",
-			data: map[string]any{"node": map[string]any{"items": map[string]any{"nodes": []any{
+			matchSubstring: "query ListProjectV2Items (",
+			data: map[string]any{"node": map[string]any{"__typename": "ProjectV2", "items": map[string]any{"nodes": []any{
 				map[string]any{
 					"id":        "ITEM_T",
 					"updatedAt": "2026-05-04T08:00:00Z",
@@ -376,8 +376,8 @@ func TestToday_UserScopeEmpty(t *testing.T) {
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
 		{
-			matchSubstring: "query ListProjectV2Items(",
-			data:           map[string]any{"node": map[string]any{"items": map[string]any{"nodes": []any{}}}},
+			matchSubstring: "query ListProjectV2Items (",
+			data:           map[string]any{"node": map[string]any{"__typename": "ProjectV2", "items": map[string]any{"nodes": []any{}}}},
 		},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
@@ -486,7 +486,7 @@ func TestStandup_MineFiltersAndAnnotates(t *testing.T) {
 func TestStandup_OrgScope_DoneSplit_DraftExcludedUnderMine(t *testing.T) {
 	t.Parallel()
 
-	items := map[string]any{"node": map[string]any{"items": map[string]any{"nodes": []any{
+	items := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "items": map[string]any{"nodes": []any{
 		map[string]any{ // done, alice
 			"id":        "ITEM_DONE",
 			"updatedAt": "2026-05-04T09:00:00Z",
@@ -500,7 +500,7 @@ func TestStandup_OrgScope_DoneSplit_DraftExcludedUnderMine(t *testing.T) {
 					"__typename": "ProjectV2ItemFieldSingleSelectValue",
 					"optionId":   "OPT_DONE",
 					"name":       "Done",
-					"field":      map[string]any{"id": "F_S", "name": "Status"},
+					"field":      map[string]any{"__typename": "ProjectV2SingleSelectField", "id": "F_S", "name": "Status"},
 				},
 			}},
 		},
@@ -517,7 +517,7 @@ func TestStandup_OrgScope_DoneSplit_DraftExcludedUnderMine(t *testing.T) {
 					"__typename": "ProjectV2ItemFieldSingleSelectValue",
 					"optionId":   "OPT_TODO",
 					"name":       "Todo",
-					"field":      map[string]any{"id": "F_S", "name": "Status"},
+					"field":      map[string]any{"__typename": "ProjectV2SingleSelectField", "id": "F_S", "name": "Status"},
 				},
 			}},
 		},
@@ -533,7 +533,7 @@ func TestStandup_OrgScope_DoneSplit_DraftExcludedUnderMine(t *testing.T) {
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{matchSubstring: "query GetViewerLogin", data: map[string]any{"viewer": map[string]any{"login": "alice"}}},
 		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
-		{matchSubstring: "query ListProjectV2Items(", data: items},
+		{matchSubstring: "query ListProjectV2Items (", data: items},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
@@ -622,7 +622,7 @@ func TestReview_PeriodSprintDefaultsWeekly(t *testing.T) {
 func TestReview_OrgProjectDoneFilter(t *testing.T) {
 	t.Parallel()
 
-	items := map[string]any{"node": map[string]any{"items": map[string]any{"nodes": []any{
+	items := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "items": map[string]any{"nodes": []any{
 		map[string]any{
 			"id": "ITEM_D", "updatedAt": "2026-05-04T08:00:00Z",
 			"content": map[string]any{
@@ -633,7 +633,7 @@ func TestReview_OrgProjectDoneFilter(t *testing.T) {
 					"__typename": "ProjectV2ItemFieldSingleSelectValue",
 					"optionId":   "OPT_DONE",
 					"name":       "Done",
-					"field":      map[string]any{"id": "F_S", "name": "Status"},
+					"field":      map[string]any{"__typename": "ProjectV2SingleSelectField", "id": "F_S", "name": "Status"},
 				},
 			}},
 		},
@@ -647,14 +647,14 @@ func TestReview_OrgProjectDoneFilter(t *testing.T) {
 					"__typename": "ProjectV2ItemFieldSingleSelectValue",
 					"optionId":   "OPT_TODO",
 					"name":       "Todo",
-					"field":      map[string]any{"id": "F_S", "name": "Status"},
+					"field":      map[string]any{"__typename": "ProjectV2SingleSelectField", "id": "F_S", "name": "Status"},
 				},
 			}},
 		},
 	}}}}
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
-		{matchSubstring: "query ListProjectV2Items(", data: items},
+		{matchSubstring: "query ListProjectV2Items (", data: items},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
@@ -680,7 +680,7 @@ func TestReview_UserProjectEmptyPlaceholder(t *testing.T) {
 
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
-		{matchSubstring: "query ListProjectV2Items(", data: map[string]any{"node": map[string]any{"items": map[string]any{"nodes": []any{}}}}},
+		{matchSubstring: "query ListProjectV2Items (", data: map[string]any{"node": map[string]any{"__typename": "ProjectV2", "items": map[string]any{"nodes": []any{}}}}},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
@@ -960,16 +960,16 @@ func TestDone_RepoIdempotentAlreadyClosed(t *testing.T) {
 func TestDone_ProjectStatusUpdate(t *testing.T) {
 	t.Parallel()
 
-	fields := map[string]any{"node": map[string]any{"fields": map[string]any{"nodes": []any{
+	fields := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "fields": map[string]any{"nodes": []any{
 		map[string]any{
-			"id": "F_STATUS", "name": "Status", "dataType": "SINGLE_SELECT",
+			"__typename": "ProjectV2SingleSelectField", "id": "F_STATUS", "name": "Status", "dataType": "SINGLE_SELECT",
 			"options": []any{
 				map[string]any{"id": "OPT_TODO", "name": "Todo"},
 				map[string]any{"id": "OPT_DONE", "name": "Done"},
 			},
 		},
 	}}}}
-	items := map[string]any{"node": map[string]any{"items": map[string]any{"nodes": []any{
+	items := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "items": map[string]any{"nodes": []any{
 		map[string]any{
 			"id": "ITEM_X", "updatedAt": "2026-05-04T08:00:00Z",
 			"content": map[string]any{
@@ -980,15 +980,15 @@ func TestDone_ProjectStatusUpdate(t *testing.T) {
 					"__typename": "ProjectV2ItemFieldSingleSelectValue",
 					"optionId":   "OPT_TODO",
 					"name":       "Todo",
-					"field":      map[string]any{"id": "F_STATUS", "name": "Status"},
+					"field":      map[string]any{"__typename": "ProjectV2SingleSelectField", "id": "F_STATUS", "name": "Status"},
 				},
 			}},
 		},
 	}}}}
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
-		{matchSubstring: "query ListProjectV2Fields(", data: fields},
-		{matchSubstring: "query ListProjectV2Items(", data: items},
+		{matchSubstring: "query ListProjectV2Fields (", data: fields},
+		{matchSubstring: "query ListProjectV2Items (", data: items},
 		{
 			matchSubstring: "mutation UpdateProjectV2ItemFieldValue (",
 			data:           map[string]any{"updateProjectV2ItemFieldValue": map[string]any{"projectV2Item": map[string]any{"id": "ITEM_X"}}},
@@ -1012,16 +1012,16 @@ func TestDone_ProjectStatusUpdate(t *testing.T) {
 func TestDone_ProjectIdempotentAlreadyDone(t *testing.T) {
 	t.Parallel()
 
-	fields := map[string]any{"node": map[string]any{"fields": map[string]any{"nodes": []any{
+	fields := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "fields": map[string]any{"nodes": []any{
 		map[string]any{
-			"id": "F_STATUS", "name": "Status", "dataType": "SINGLE_SELECT",
+			"__typename": "ProjectV2SingleSelectField", "id": "F_STATUS", "name": "Status", "dataType": "SINGLE_SELECT",
 			"options": []any{
 				map[string]any{"id": "OPT_TODO", "name": "Todo"},
 				map[string]any{"id": "OPT_DONE", "name": "Done"},
 			},
 		},
 	}}}}
-	items := map[string]any{"node": map[string]any{"items": map[string]any{"nodes": []any{
+	items := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "items": map[string]any{"nodes": []any{
 		map[string]any{
 			"id": "ITEM_X", "updatedAt": "2026-05-04T08:00:00Z",
 			"content": map[string]any{"__typename": "Issue", "id": "I_xx", "number": 1, "title": "x", "url": "u/x"},
@@ -1030,15 +1030,15 @@ func TestDone_ProjectIdempotentAlreadyDone(t *testing.T) {
 					"__typename": "ProjectV2ItemFieldSingleSelectValue",
 					"optionId":   "OPT_DONE",
 					"name":       "Done",
-					"field":      map[string]any{"id": "F_STATUS", "name": "Status"},
+					"field":      map[string]any{"__typename": "ProjectV2SingleSelectField", "id": "F_STATUS", "name": "Status"},
 				},
 			}},
 		},
 	}}}}
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
-		{matchSubstring: "query ListProjectV2Fields(", data: fields},
-		{matchSubstring: "query ListProjectV2Items(", data: items},
+		{matchSubstring: "query ListProjectV2Fields (", data: fields},
+		{matchSubstring: "query ListProjectV2Items (", data: items},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
@@ -1058,12 +1058,12 @@ func TestDone_ProjectIdempotentAlreadyDone(t *testing.T) {
 func TestDone_ProjectMissingStatusField(t *testing.T) {
 	t.Parallel()
 
-	fields := map[string]any{"node": map[string]any{"fields": map[string]any{"nodes": []any{
-		map[string]any{"id": "F_OTHER", "name": "Priority", "dataType": "SINGLE_SELECT", "options": []any{}},
+	fields := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "fields": map[string]any{"nodes": []any{
+		map[string]any{"__typename": "ProjectV2SingleSelectField", "id": "F_OTHER", "name": "Priority", "dataType": "SINGLE_SELECT", "options": []any{}},
 	}}}}
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
-		{matchSubstring: "query ListProjectV2Fields(", data: fields},
+		{matchSubstring: "query ListProjectV2Fields (", data: fields},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
@@ -1083,15 +1083,15 @@ func TestDone_ProjectMissingStatusField(t *testing.T) {
 func TestDone_ProjectMissingDoneOption(t *testing.T) {
 	t.Parallel()
 
-	fields := map[string]any{"node": map[string]any{"fields": map[string]any{"nodes": []any{
+	fields := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "fields": map[string]any{"nodes": []any{
 		map[string]any{
-			"id": "F_S", "name": "Status", "dataType": "SINGLE_SELECT",
+			"__typename": "ProjectV2SingleSelectField", "id": "F_S", "name": "Status", "dataType": "SINGLE_SELECT",
 			"options": []any{map[string]any{"id": "OPT_TODO", "name": "Todo"}},
 		},
 	}}}}
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
-		{matchSubstring: "query ListProjectV2Fields(", data: fields},
+		{matchSubstring: "query ListProjectV2Fields (", data: fields},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
@@ -1376,9 +1376,9 @@ func TestPlan_RepoCreateNewMilestone(t *testing.T) {
 func TestPlan_ProjectIterationMatched(t *testing.T) {
 	t.Parallel()
 
-	fields := map[string]any{"node": map[string]any{"fields": map[string]any{"nodes": []any{
+	fields := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "fields": map[string]any{"nodes": []any{
 		map[string]any{
-			"id": "F_IT", "name": "Iteration", "dataType": "ITERATION",
+			"__typename": "ProjectV2IterationField", "id": "F_IT", "name": "Iteration", "dataType": "ITERATION",
 			"configuration": map[string]any{
 				"iterations": []any{
 					map[string]any{"id": "IT_1", "title": "Daily 2026-05-04", "startDate": "2026-05-04", "duration": 1},
@@ -1387,11 +1387,11 @@ func TestPlan_ProjectIterationMatched(t *testing.T) {
 			},
 		},
 	}}}}
-	items := map[string]any{"node": map[string]any{"items": map[string]any{"nodes": []any{}}}}
+	items := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "items": map[string]any{"nodes": []any{}}}}
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
-		{matchSubstring: "query ListProjectV2Fields(", data: fields},
-		{matchSubstring: "query ListProjectV2Items(", data: items},
+		{matchSubstring: "query ListProjectV2Fields (", data: fields},
+		{matchSubstring: "query ListProjectV2Items (", data: items},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
@@ -1412,9 +1412,9 @@ func TestPlan_ProjectIterationMatched(t *testing.T) {
 func TestPlan_ProjectIterationFallback(t *testing.T) {
 	t.Parallel()
 
-	fields := map[string]any{"node": map[string]any{"fields": map[string]any{"nodes": []any{
+	fields := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "fields": map[string]any{"nodes": []any{
 		map[string]any{
-			"id": "F_IT", "name": "Iteration", "dataType": "ITERATION",
+			"__typename": "ProjectV2IterationField", "id": "F_IT", "name": "Iteration", "dataType": "ITERATION",
 			"configuration": map[string]any{
 				"iterations": []any{
 					// Title doesn't match Daily target, but covers now (2026-05-04)
@@ -1424,11 +1424,11 @@ func TestPlan_ProjectIterationFallback(t *testing.T) {
 			},
 		},
 	}}}}
-	items := map[string]any{"node": map[string]any{"items": map[string]any{"nodes": []any{}}}}
+	items := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "items": map[string]any{"nodes": []any{}}}}
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
-		{matchSubstring: "query ListProjectV2Fields(", data: fields},
-		{matchSubstring: "query ListProjectV2Items(", data: items},
+		{matchSubstring: "query ListProjectV2Fields (", data: fields},
+		{matchSubstring: "query ListProjectV2Items (", data: items},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
@@ -1482,7 +1482,7 @@ func TestTriage_RepoUnlabelledOnly(t *testing.T) {
 func TestTriage_ProjectStatusTriageFilter(t *testing.T) {
 	t.Parallel()
 
-	items := map[string]any{"node": map[string]any{"items": map[string]any{"nodes": []any{
+	items := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "items": map[string]any{"nodes": []any{
 		map[string]any{
 			"id": "ITEM_T", "updatedAt": "2026-05-04T08:00:00Z",
 			"content": map[string]any{
@@ -1493,7 +1493,7 @@ func TestTriage_ProjectStatusTriageFilter(t *testing.T) {
 					"__typename": "ProjectV2ItemFieldSingleSelectValue",
 					"optionId":   "OPT_TRIAGE",
 					"name":       "Triage",
-					"field":      map[string]any{"id": "F_S", "name": "Status"},
+					"field":      map[string]any{"__typename": "ProjectV2SingleSelectField", "id": "F_S", "name": "Status"},
 				},
 			}},
 		},
@@ -1507,14 +1507,14 @@ func TestTriage_ProjectStatusTriageFilter(t *testing.T) {
 					"__typename": "ProjectV2ItemFieldSingleSelectValue",
 					"optionId":   "OPT_TODO",
 					"name":       "Todo",
-					"field":      map[string]any{"id": "F_S", "name": "Status"},
+					"field":      map[string]any{"__typename": "ProjectV2SingleSelectField", "id": "F_S", "name": "Status"},
 				},
 			}},
 		},
 	}}}}
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
-		{matchSubstring: "query ListProjectV2Items(", data: items},
+		{matchSubstring: "query ListProjectV2Items (", data: items},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
