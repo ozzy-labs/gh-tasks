@@ -26,7 +26,7 @@ When `--scope` appears multiple times in argv, the **first occurrence** wins.
 
 ## Implementation
 
-`packages/gh-tasks/src/lib/scope.ts` `detectScope`. The `hasGitRemote` function is injectable so tests are deterministic. See `scope.test.ts` (8 tests) in the same directory.
+`internal/scope/scope.go` `Detect`. The `HasGitRemote` field on `DetectOptions` is injectable so tests are deterministic. See `scope_test.go` (6 subtests under `TestDetect`) in the same directory.
 
 ## Related
 
