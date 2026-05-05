@@ -46,6 +46,23 @@ jobs:
       - name: go test (race + shuffle)
         run: go test -race -shuffle=on ./...
 
+      - name: go test (coverage profile)
+        run: go test -coverprofile=coverage.out -covermode=atomic ./...
+
+      - name: per-package coverage gate
+        uses: vladopajic/go-test-coverage@v2
+        with:
+          config: ./.testcoverage.yaml
+
+      - name: upload coverage profile
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-profile
+          path: coverage.out
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
