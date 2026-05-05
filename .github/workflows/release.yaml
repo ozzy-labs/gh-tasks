@@ -49,15 +49,31 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     steps:
+      # cli/gh-extension-precompile@v2 emits release assets named
+      # `<goos>-<goarch>` (windows variants gain a `.exe` suffix) plus a
+      # generated `manifest.yml`. The legacy `gh-tasks_*` pattern matched
+      # nothing under v2 so the checksum file was empty / missing; pull each
+      # platform family explicitly instead.
       - name: Download release assets
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release download ${{ needs.release-please.outputs.tag_name }} \
-            --pattern 'gh-tasks_*' \
+            --pattern 'darwin-*' \
+            --pattern 'linux-*' \
+            --pattern 'freebsd-*' \
+            --pattern 'windows-*' \
             --repo ${{ github.repository }}
       - name: Compute SHA256 checksums
-        run: sha256sum gh-tasks_* > checksums.txt
+        # `shopt -s nullglob` so a missing platform family expands to nothing
+        # rather than the literal pattern (which sha256sum would treat as a
+        # missing file and fail on). The `*-*` glob covers every emitted
+        # `<goos>-<goarch>[.exe]` asset and intentionally excludes
+        # `manifest.yml` / `checksums.txt`.
+        shell: bash
+        run: |
+          shopt -s nullglob
+          sha256sum -- *-* > checksums.txt
       - name: Upload checksums to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
