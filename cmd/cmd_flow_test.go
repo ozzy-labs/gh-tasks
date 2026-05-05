@@ -7,6 +7,7 @@ package cmd_test
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -109,6 +110,171 @@ func TestList_LimitExplicit(t *testing.T) {
 	}
 	if capturedFirst != 5 {
 		t.Errorf("expected limit 5, got %d", capturedFirst)
+	}
+}
+
+// TestList_LimitZero pins the defensive default-back in cmd/list.go: an
+// explicit `--limit 0` is meaningless and would otherwise propagate to
+// pageStep as 0, terminating before any request. The cmd layer instead falls
+// back to defaultListLimit (30) so the user gets a useful page on a fat-finger
+// input. Audit follow-up #285 (C-4 --limit edge-case coverage).
+func TestList_LimitZero(t *testing.T) {
+	t.Parallel()
+
+	var capturedFirst int
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query ListRepoIssues (", Data: repoIssuesPayload()},
+	}}
+	wrap := &captureGraphQL{inner: g, capture: func(_ string, vars map[string]any) {
+		capturedFirst = intFromVar(vars["first"])
+	}}
+	d := testDeps(g, func(d *cmd.Deps) {
+		d.NewClients = func() (*github.Clients, error) {
+			return &github.Clients{Host: "github.com", GraphQL: wrap, REST: fakeREST{}}, nil
+		}
+	})
+	if _, _, err := runCmd(t, d, "list", "--limit", "0"); err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	if capturedFirst != 30 {
+		t.Errorf("--limit 0 should fall back to defaultListLimit (30), got %d", capturedFirst)
+	}
+}
+
+// TestList_LimitNegative pins that a negative `--limit` value also triggers
+// the defensive default-back (limit <= 0 branch). Negative ints are not
+// rejected at flag-parse time because pflag's IntVar accepts the full int
+// range; the cmd layer normalises them instead. Audit follow-up #285 (C-4).
+func TestList_LimitNegative(t *testing.T) {
+	t.Parallel()
+
+	var capturedFirst int
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query ListRepoIssues (", Data: repoIssuesPayload()},
+	}}
+	wrap := &captureGraphQL{inner: g, capture: func(_ string, vars map[string]any) {
+		capturedFirst = intFromVar(vars["first"])
+	}}
+	d := testDeps(g, func(d *cmd.Deps) {
+		d.NewClients = func() (*github.Clients, error) {
+			return &github.Clients{Host: "github.com", GraphQL: wrap, REST: fakeREST{}}, nil
+		}
+	})
+	if _, _, err := runCmd(t, d, "list", "--limit", "-5"); err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	if capturedFirst != 30 {
+		t.Errorf("--limit -5 should fall back to defaultListLimit (30), got %d", capturedFirst)
+	}
+}
+
+// TestList_LimitVeryLarge pins the maxPages * maxPageSize safety valve in the
+// queries paginator: even with `--limit 100000` and a server that keeps
+// claiming hasNextPage=true, the cmd halts after maxPages (10) pages of
+// maxPageSize (100) items, capping the rendered list at 1000 entries.
+// Audit follow-up #285 (C-4).
+func TestList_LimitVeryLarge(t *testing.T) {
+	t.Parallel()
+
+	const (
+		pages       = 10  // matches queries.maxPages
+		perPage     = 100 // matches queries.maxPageSize
+		expectTotal = pages * perPage
+	)
+	responses := make([]testfake.FakeResponse, 0, pages)
+	for p := 0; p < pages; p++ {
+		nodes := make([]any, 0, perPage)
+		for i := 0; i < perPage; i++ {
+			n := p*perPage + i
+			nodes = append(nodes, map[string]any{
+				"id":        fmt.Sprintf("I_%d", n),
+				"number":    n + 1,
+				"title":     fmt.Sprintf("issue %d", n),
+				"url":       fmt.Sprintf("https://example.com/i/%d", n+1),
+				"updatedAt": "2026-05-04T08:00:00Z",
+			})
+		}
+		cursor := fmt.Sprintf("C%d", p)
+		// Always advertise hasNextPage=true so the loop only stops at
+		// maxPages, not because the server told us we're done.
+		responses = append(responses, testfake.FakeResponse{
+			MatchSubstring: "query ListRepoIssues (",
+			Data: map[string]any{
+				"repository": map[string]any{
+					"issues": map[string]any{
+						"nodes": nodes,
+						"pageInfo": map[string]any{
+							"hasNextPage": true,
+							"endCursor":   cursor,
+						},
+					},
+				},
+			},
+		})
+	}
+
+	g := &testfake.FakeGraphQL{Responses: responses}
+	var (
+		callCount    int
+		lastCaptured int
+	)
+	wrap := &captureGraphQL{inner: g, capture: func(_ string, vars map[string]any) {
+		callCount++
+		lastCaptured = intFromVar(vars["first"])
+	}}
+	d := testDeps(g, func(d *cmd.Deps) {
+		d.NewClients = func() (*github.Clients, error) {
+			return &github.Clients{Host: "github.com", GraphQL: wrap, REST: fakeREST{}}, nil
+		}
+	})
+	stdout, _, err := runCmd(t, d, "list", "--limit", "100000")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	// pageStep clips per-page request size to maxPageSize=100 even when the
+	// caller's remaining budget is huge.
+	if lastCaptured != perPage {
+		t.Errorf("expected per-page first=%d (maxPageSize), got %d", perPage, lastCaptured)
+	}
+	if callCount != pages {
+		t.Errorf("expected exactly %d page requests (maxPages), got %d", pages, callCount)
+	}
+	// Each issue renders as `#N  Title\n  URL\n` — count `#` prefixes at
+	// line starts as a stable proxy for "issues printed".
+	got := stdout.String()
+	hashLines := 0
+	for _, line := range strings.Split(got, "\n") {
+		if strings.HasPrefix(line, "#") {
+			hashLines++
+		}
+	}
+	if hashLines > expectTotal {
+		t.Errorf("safety valve breach: rendered %d issues, want <= %d", hashLines, expectTotal)
+	}
+	if hashLines != expectTotal {
+		t.Errorf("expected %d issues rendered (maxPages*maxPageSize), got %d", expectTotal, hashLines)
+	}
+}
+
+// TestList_LimitDefaultInHelp guards the cobra-generated help string that
+// surfaces the `defaultListLimit` constant to end users. A regression here
+// (e.g. someone changing the IntFlag default without updating tests) would
+// silently shift documented behaviour. Audit follow-up #285 (C-4).
+func TestList_LimitDefaultInHelp(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "list", "--help")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	got := stdout.String()
+	if !strings.Contains(got, "--limit int") {
+		t.Errorf("expected --limit flag in help output, got:\n%s", got)
+	}
+	if !strings.Contains(got, "default 30") {
+		t.Errorf("expected `default 30` in help output, got:\n%s", got)
 	}
 }
 
