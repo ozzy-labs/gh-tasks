@@ -73,3 +73,78 @@ jobs:
           for cmd in add list today 'done' standup review plan triage link projects; do
             gh tasks "$cmd" --help >/dev/null
           done
+      # cli/gh-extension-precompile@v2 emits binaries named `<goos>-<goarch>`
+      # (windows variants gain a `.exe` suffix). Confirm the six tier-1
+      # platforms users install on are all attached so a partial upload does
+      # not silently ship.
+      - name: Verify expected platform binaries are attached
+        if: steps.tag.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          expected="darwin-amd64 darwin-arm64 linux-amd64 linux-arm64 windows-amd64.exe windows-arm64.exe"
+          assets=$(gh release view "${{ steps.tag.outputs.tag }}" --json assets --jq '.assets[].name')
+          echo "$assets"
+          missing=0
+          for plat in $expected; do
+            if ! printf '%s\n' "$assets" | grep -Fxq "$plat"; then
+              echo "::error::missing release asset: $plat"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+      # SLSA build-provenance attestations are produced by
+      # `actions/attest-build-provenance` inside precompile@v2 when
+      # `generate_attestations: true`. `gh attestation verify` confirms each
+      # binary was built by this repo's release workflow.
+      - name: Verify SLSA attestations on each platform binary
+        if: steps.tag.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          tmp=$(mktemp -d)
+          gh release download "${{ steps.tag.outputs.tag }}" \
+            --pattern 'darwin-*' \
+            --pattern 'linux-*' \
+            --pattern 'windows-*' \
+            --dir "$tmp"
+          shopt -s nullglob
+          cd "$tmp"
+          count=0
+          for f in *; do
+            [ -f "$f" ] || continue
+            echo "verifying attestation for $f"
+            gh attestation verify "$f" --repo "${{ github.repository }}"
+            count=$((count + 1))
+          done
+          if [ "$count" -eq 0 ]; then
+            echo "::error::no binaries downloaded for attestation verification"
+            exit 1
+          fi
+      # `release.yaml`'s checksums job uploads `checksums.txt` covering every
+      # `gh-tasks_*`-named asset. We re-run the verification client-side to
+      # catch corruption / mismatch between checksum file and binaries.
+      - name: Verify checksums.txt matches all platform binaries
+        if: steps.tag.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |-
+          tmp=$(mktemp -d)
+          gh release download "${{ steps.tag.outputs.tag }}" \
+            --pattern 'checksums.txt' \
+            --pattern 'darwin-*' \
+            --pattern 'linux-*' \
+            --pattern 'freebsd-*' \
+            --pattern 'windows-*' \
+            --dir "$tmp"
+          if [ ! -f "$tmp/checksums.txt" ]; then
+            echo "::error::checksums.txt is missing from the release"
+            exit 1
+          fi
+          cd "$tmp"
+          sha256sum -c checksums.txt
