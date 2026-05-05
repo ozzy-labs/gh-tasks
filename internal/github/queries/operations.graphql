@@ -221,15 +221,177 @@ query GetOrgProjectV2($login: String!, $number: Int!) {
   }
 }
 
-# NOTE: `ListProjectV2Fields` and `ListProjectV2Items` are intentionally
-# left as hand-written GraphQL strings in `queries.go` for now. Their
-# response shape goes through the `node(id: ID!)` Node interface, which
-# genqlient expands into a Go interface backed by every Node-implementing
-# type in the schema (~200 types). Migrating those two operations also
-# requires reshaping the shared `ProjectV2ItemNode` / `ProjectV2FieldValue`
-# domain helpers in `internal/projectitem` and several cmd/*.go files.
-# Tracked as a follow-up to #230 (see PR description).
+# ListProjectV2Fields lists fields with their per-type extras (single-select
+# options, iteration configurations). Response goes through the `node(id:
+# ID!)` Node interface; the inline fragment restricts genqlient's expansion
+# to ProjectV2, and @genqlient(typename: ...) directives keep generated Go
+# type names tractable for the cmd/* call sites.
 
+query ListProjectV2Fields($projectId: ID!, $first: Int!) {
+  # @genqlient(typename: "ProjectV2FieldsNode")
+  node(id: $projectId) {
+    ... on ProjectV2 {
+      fields(first: $first) {
+        # @genqlient(typename: "ProjectV2FieldNode")
+        nodes {
+          __typename
+          ... on ProjectV2FieldCommon {
+            id
+            name
+            dataType
+          }
+          ... on ProjectV2SingleSelectField {
+            options {
+              id
+              name
+            }
+          }
+          ... on ProjectV2IterationField {
+            # @genqlient(typename: "ProjectV2IterationConfig")
+            configuration {
+              # @genqlient(typename: "ProjectV2IterationOption")
+              iterations {
+                id
+                title
+                startDate
+                duration
+              }
+              # @genqlient(typename: "ProjectV2IterationOption")
+              completedIterations {
+                id
+                title
+                startDate
+                duration
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# ListProjectV2Items lists items in a Projects v2 board. Like
+# ListProjectV2Fields, response goes through node(id: ID!) and
+# @genqlient(typename: ...) directives keep generated type names tractable.
+#
+# Issue.state and PullRequest.state are aliased separately because their
+# enum types differ (IssueState vs PullRequestState); reusing the same
+# selection name would be a GraphQL type conflict.
+
+query ListProjectV2Items($projectId: ID!, $first: Int!) {
+  # @genqlient(typename: "ProjectV2ItemsNode")
+  node(id: $projectId) {
+    ... on ProjectV2 {
+      items(first: $first) {
+        # @genqlient(typename: "ProjectV2ItemNode")
+        nodes {
+          id
+          updatedAt
+          # @genqlient(typename: "ProjectV2ItemContent")
+          content {
+            __typename
+            ... on Issue {
+              id
+              number
+              title
+              url
+              issueState: state
+              updatedAt
+              closedAt
+              # @genqlient(typename: "ProjectV2ItemContentLogin")
+              author {
+                login
+              }
+              # @genqlient(typename: "ProjectV2ItemContentAssignees")
+              assignees(first: 10) {
+                # @genqlient(typename: "ProjectV2ItemContentAssigneeLogin")
+                nodes {
+                  login
+                }
+              }
+            }
+            ... on PullRequest {
+              id
+              number
+              title
+              url
+              prState: state
+              updatedAt
+              mergedAt
+              # @genqlient(typename: "ProjectV2ItemContentLogin")
+              author {
+                login
+              }
+              # @genqlient(typename: "ProjectV2ItemContentAssignees")
+              assignees(first: 10) {
+                # @genqlient(typename: "ProjectV2ItemContentAssigneeLogin")
+                nodes {
+                  login
+                }
+              }
+            }
+            ... on DraftIssue {
+              id
+              title
+              body
+            }
+          }
+          fieldValues(first: 30) {
+            # @genqlient(typename: "ProjectV2ItemFieldValue")
+            nodes {
+              __typename
+              ... on ProjectV2ItemFieldSingleSelectValue {
+                optionId
+                name
+                # @genqlient(typename: "ProjectV2ItemFieldValueFieldRef")
+                field {
+                  ... on ProjectV2FieldCommon {
+                    id
+                    name
+                  }
+                }
+              }
+              ... on ProjectV2ItemFieldIterationValue {
+                iterationId
+                title
+                startDate
+                duration
+                # @genqlient(typename: "ProjectV2ItemFieldValueFieldRef")
+                field {
+                  ... on ProjectV2FieldCommon {
+                    id
+                    name
+                  }
+                }
+              }
+              ... on ProjectV2ItemFieldTextValue {
+                text
+                # @genqlient(typename: "ProjectV2ItemFieldValueFieldRef")
+                field {
+                  ... on ProjectV2FieldCommon {
+                    id
+                    name
+                  }
+                }
+              }
+              ... on ProjectV2ItemFieldDateValue {
+                date
+                # @genqlient(typename: "ProjectV2ItemFieldValueFieldRef")
+                field {
+                  ... on ProjectV2FieldCommon {
+                    id
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
 # ===== Issue mutations ======================================================
 
 # CreateIssue mutates a new Issue under a given repository.

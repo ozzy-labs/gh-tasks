@@ -111,17 +111,17 @@ func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	var fieldsResp queries.ListProjectV2FieldsResponse
-	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Fields, map[string]any{
-		"projectId": pid, "first": doneFieldsLimit,
-	}, &fieldsResp); err != nil {
+	gqlClient := clients.AsGenqlientClient()
+	fieldsResp, err := queries.ListProjectV2Fields(ctx, gqlClient, pid, doneFieldsLimit)
+	if err != nil {
 		return fmt.Errorf("list project fields: %w", err)
 	}
-	if fieldsResp.Node == nil {
+	if !projectitem.HasFieldsNode(fieldsResp) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	statusField := findStatusField(fieldsResp.Node.Fields.Nodes)
+	fields := projectitem.FieldsOf(projectitem.FieldsFromResponse(fieldsResp))
+	statusField := findStatusField(fields)
 	if statusField == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.done.statusFieldMissing"))
 		return ErrSilentRuntime
@@ -132,30 +132,26 @@ func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		return ErrSilentRuntime
 	}
 
-	var itemsResp queries.ListProjectV2ItemsResponse
-	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Items, map[string]any{
-		"projectId": pid, "first": doneItemsLimit,
-	}, &itemsResp); err != nil {
+	itemsResp, err := queries.ListProjectV2Items(ctx, gqlClient, pid, doneItemsLimit)
+	if err != nil {
 		return fmt.Errorf("list project items: %w", err)
 	}
 	var target *queries.ProjectV2ItemNode
-	if itemsResp.Node != nil {
-		for i := range itemsResp.Node.Items.Nodes {
-			if itemsResp.Node.Items.Nodes[i].ID == itemID {
-				target = &itemsResp.Node.Items.Nodes[i]
-				break
-			}
+	for _, n := range projectitem.ItemsFromResponse(itemsResp) {
+		if n != nil && n.Id == itemID {
+			target = n
+			break
 		}
 	}
 	if target == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.projectItem.notFound", "id", itemID))
 		return ErrSilentRuntime
 	}
-	if isAlreadyDone(*target, statusField.ID, doneOption.ID) {
+	if isAlreadyDone(target, statusField.ID, doneOption.ID) {
 		fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("done.alreadyDone.project"), itemID)
 		return nil
 	}
-	if _, err := queries.UpdateProjectV2ItemFieldValue(ctx, clients.AsGenqlientClient(), &queries.UpdateProjectV2ItemFieldValueInput{
+	if _, err := queries.UpdateProjectV2ItemFieldValue(ctx, gqlClient, &queries.UpdateProjectV2ItemFieldValueInput{
 		ProjectId: pid,
 		ItemId:    itemID,
 		FieldId:   statusField.ID,
@@ -167,7 +163,7 @@ func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	return nil
 }
 
-func findStatusField(fields []queries.ProjectV2FieldNode) *queries.ProjectV2FieldNode {
+func findStatusField(fields []projectitem.FieldDescriptor) *projectitem.FieldDescriptor {
 	for i := range fields {
 		f := &fields[i]
 		if f.DataType == "SINGLE_SELECT" && strings.EqualFold(f.Name, "status") {
@@ -177,7 +173,7 @@ func findStatusField(fields []queries.ProjectV2FieldNode) *queries.ProjectV2Fiel
 	return nil
 }
 
-func findOption(opts []queries.ProjectV2SelectOption, name string) *queries.ProjectV2SelectOption {
+func findOption(opts []projectitem.FieldOption, name string) *projectitem.FieldOption {
 	for i := range opts {
 		if strings.EqualFold(opts[i].Name, name) {
 			return &opts[i]
@@ -186,8 +182,8 @@ func findOption(opts []queries.ProjectV2SelectOption, name string) *queries.Proj
 	return nil
 }
 
-func isAlreadyDone(item queries.ProjectV2ItemNode, fieldID, optID string) bool {
-	for _, v := range item.FieldValues.Nodes {
+func isAlreadyDone(item *queries.ProjectV2ItemNode, fieldID, optID string) bool {
+	for _, v := range projectitem.FieldValuesOf(item) {
 		if v.Typename == "ProjectV2ItemFieldSingleSelectValue" && v.Field.ID == fieldID && v.OptionID == optID {
 			return true
 		}

@@ -182,18 +182,18 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	var fieldsResp queries.ListProjectV2FieldsResponse
-	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Fields, map[string]any{
-		"projectId": pid, "first": planFieldsFetchLimit,
-	}, &fieldsResp); err != nil {
+	gqlClient := clients.AsGenqlientClient()
+	fieldsResp, err := queries.ListProjectV2Fields(ctx, gqlClient, pid, planFieldsFetchLimit)
+	if err != nil {
 		return fmt.Errorf("list project fields: %w", err)
 	}
-	if fieldsResp.Node == nil {
+	if !projectitem.HasFieldsNode(fieldsResp) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	itField := findIterationField(fieldsResp.Node.Fields.Nodes)
-	if itField == nil {
+	fields := projectitem.FieldsOf(projectitem.FieldsFromResponse(fieldsResp))
+	itField := findIterationField(fields)
+	if itField == nil || itField.Configuration == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.plan.iterationFieldMissing"))
 		return ErrSilentRuntime
 	}
@@ -213,18 +213,16 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		fmt.Fprintf(out, "  %s\n\n", r.T("plan.iterationFallback.project"))
 	}
 
-	var itemsResp queries.ListProjectV2ItemsResponse
-	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Items, map[string]any{
-		"projectId": pid, "first": planFetchLimit,
-	}, &itemsResp); err != nil {
+	itemsResp, err := queries.ListProjectV2Items(ctx, gqlClient, pid, planFetchLimit)
+	if err != nil {
 		return fmt.Errorf("list project items: %w", err)
 	}
-	allItems := []queries.ProjectV2ItemNode{}
-	if itemsResp.Node != nil {
-		allItems = itemsResp.Node.Items.Nodes
-	}
-	inRange := []queries.ProjectV2ItemNode{}
+	allItems := projectitem.ItemsFromResponse(itemsResp)
+	inRange := []*queries.ProjectV2ItemNode{}
 	for _, item := range allItems {
+		if item == nil {
+			continue
+		}
 		if t, err := time.Parse(time.RFC3339, item.UpdatedAt); err == nil &&
 			(t.Equal(rng.Start) || t.After(rng.Start)) && t.Before(rng.End) {
 			inRange = append(inRange, item)
@@ -251,9 +249,9 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 			fmt.Fprintf(out, "  %s: %s\n", r.T("plan.iterationAlreadySet.project"), describeItem(item))
 			continue
 		}
-		if _, err := queries.UpdateProjectV2ItemFieldValue(ctx, clients.AsGenqlientClient(), &queries.UpdateProjectV2ItemFieldValueInput{
+		if _, err := queries.UpdateProjectV2ItemFieldValue(ctx, gqlClient, &queries.UpdateProjectV2ItemFieldValueInput{
 			ProjectId: pid,
-			ItemId:    item.ID,
+			ItemId:    item.Id,
 			FieldId:   itField.ID,
 			Value:     &queries.ProjectV2FieldValue{IterationId: &resolved.iteration.ID},
 		}); err != nil {
@@ -264,7 +262,7 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	return nil
 }
 
-func findIterationField(fields []queries.ProjectV2FieldNode) *queries.ProjectV2FieldNode {
+func findIterationField(fields []projectitem.FieldDescriptor) *projectitem.FieldDescriptor {
 	for i := range fields {
 		f := &fields[i]
 		if f.DataType == "ITERATION" && strings.EqualFold(f.Name, "iteration") {
@@ -281,11 +279,11 @@ func findIterationField(fields []queries.ProjectV2FieldNode) *queries.ProjectV2F
 }
 
 type resolvedIteration struct {
-	iteration queries.ProjectV2IterationOption
+	iteration projectitem.IterationOption
 	matched   bool
 }
 
-func resolveTargetIteration(iterations []queries.ProjectV2IterationOption, target string, now time.Time) *resolvedIteration {
+func resolveTargetIteration(iterations []projectitem.IterationOption, target string, now time.Time) *resolvedIteration {
 	if len(iterations) == 0 {
 		return nil
 	}
@@ -300,7 +298,7 @@ func resolveTargetIteration(iterations []queries.ProjectV2IterationOption, targe
 		}
 	}
 	type parsedIteration struct {
-		iteration queries.ProjectV2IterationOption
+		iteration projectitem.IterationOption
 		start     time.Time
 	}
 	upcoming := []parsedIteration{}
@@ -325,7 +323,7 @@ func resolveTargetIteration(iterations []queries.ProjectV2IterationOption, targe
 	return &resolvedIteration{iteration: iterations[len(iterations)-1], matched: false}
 }
 
-func iterationContains(it queries.ProjectV2IterationOption, now time.Time) bool {
+func iterationContains(it projectitem.IterationOption, now time.Time) bool {
 	start, err := parseIterationStart(it.StartDate)
 	if err != nil {
 		return false
@@ -341,8 +339,8 @@ func parseIterationStart(s string) (time.Time, error) {
 	return time.Parse(time.RFC3339, s)
 }
 
-func isAlreadyOnIteration(item queries.ProjectV2ItemNode, fieldID, iterationID string) bool {
-	for _, v := range item.FieldValues.Nodes {
+func isAlreadyOnIteration(item *queries.ProjectV2ItemNode, fieldID, iterationID string) bool {
+	for _, v := range projectitem.FieldValuesOf(item) {
 		if v.Typename == "ProjectV2ItemFieldIterationValue" && v.Field.ID == fieldID && v.IterationID == iterationID {
 			return true
 		}
@@ -350,32 +348,31 @@ func isAlreadyOnIteration(item queries.ProjectV2ItemNode, fieldID, iterationID s
 	return false
 }
 
-func formatItemLineForPlan(item queries.ProjectV2ItemNode) string {
-	c := item.Content
-	if c == nil {
-		return "  (no content)\n"
-	}
+func formatItemLineForPlan(item *queries.ProjectV2ItemNode) string {
+	c := projectitem.ContentOf(item)
 	switch c.Typename {
 	case "Issue":
 		return fmt.Sprintf("  #%d  %s\n", c.Number, c.Title)
 	case "PullRequest":
 		return fmt.Sprintf("  PR#%d  %s\n", c.Number, c.Title)
-	default:
+	case "DraftIssue":
 		return fmt.Sprintf("  (draft)  %s\n", c.Title)
+	default:
+		return "  (no content)\n"
 	}
 }
 
-func describeItem(item queries.ProjectV2ItemNode) string {
-	c := item.Content
-	if c == nil {
-		return item.ID
-	}
+func describeItem(item *queries.ProjectV2ItemNode) string {
+	c := projectitem.ContentOf(item)
 	switch c.Typename {
 	case "Issue":
 		return fmt.Sprintf("#%d", c.Number)
 	case "PullRequest":
 		return fmt.Sprintf("PR#%d", c.Number)
 	default:
-		return item.ID
+		if item == nil {
+			return ""
+		}
+		return item.Id
 	}
 }

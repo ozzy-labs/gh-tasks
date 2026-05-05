@@ -49,52 +49,117 @@ func (f *fakeGraphQL) Do(_ context.Context, query string, _ map[string]any, out 
 	return fmt.Errorf("no fake response matched query: %q", query)
 }
 
-func issueItem(num int, title, url string, fieldValues ...queries.ProjectV2ItemFieldValue) queries.ProjectV2ItemNode {
-	item := queries.ProjectV2ItemNode{
-		ID: "ITEM_1",
-		Content: &queries.ProjectV2ItemContent{
-			Typename: "Issue",
-			Number:   num,
-			Title:    title,
-			URL:      url,
+// issueItem builds a minimal ProjectV2ItemNode whose union content is an
+// Issue (number, title, URL). The fieldValues slice is loaded with the
+// supplied entries.
+func issueItem(num int, title, url string, fieldValues ...queries.ProjectV2ItemFieldValue) *queries.ProjectV2ItemNode {
+	var content queries.ProjectV2ItemContent = &queries.ProjectV2ItemContentIssue{
+		Id:     "I_x",
+		Number: num,
+		Title:  title,
+		Url:    url,
+	}
+	item := &queries.ProjectV2ItemNode{
+		Id:      "ITEM_1",
+		Content: &content,
+		FieldValues: &queries.ProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection{
+			Nodes: make([]*queries.ProjectV2ItemFieldValue, 0, len(fieldValues)),
 		},
 	}
-	item.FieldValues.Nodes = fieldValues
+	for i := range fieldValues {
+		v := fieldValues[i]
+		item.FieldValues.Nodes = append(item.FieldValues.Nodes, &v)
+	}
 	return item
 }
 
-func prItem(num int, title, url string) queries.ProjectV2ItemNode {
-	return queries.ProjectV2ItemNode{
-		ID: "ITEM_2",
-		Content: &queries.ProjectV2ItemContent{
-			Typename: "PullRequest",
-			Number:   num,
-			Title:    title,
-			URL:      url,
-		},
+// prItem builds a minimal ProjectV2ItemNode whose union content is a
+// PullRequest (number, title, URL).
+func prItem(num int, title, url string) *queries.ProjectV2ItemNode {
+	var content queries.ProjectV2ItemContent = &queries.ProjectV2ItemContentPullRequest{
+		Id:     "P_x",
+		Number: num,
+		Title:  title,
+		Url:    url,
+	}
+	return &queries.ProjectV2ItemNode{
+		Id:          "ITEM_2",
+		Content:     &content,
+		FieldValues: &queries.ProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection{},
 	}
 }
 
-func draftItem(title string) queries.ProjectV2ItemNode {
-	return queries.ProjectV2ItemNode{
-		ID: "ITEM_3",
-		Content: &queries.ProjectV2ItemContent{
-			Typename: "DraftIssue",
-			Title:    title,
-		},
+// draftItem builds a minimal ProjectV2ItemNode whose union content is a
+// DraftIssue (title only).
+func draftItem(title string) *queries.ProjectV2ItemNode {
+	var content queries.ProjectV2ItemContent = &queries.ProjectV2ItemContentDraftIssue{
+		Id:    "DI_x",
+		Title: title,
+	}
+	return &queries.ProjectV2ItemNode{
+		Id:          "ITEM_3",
+		Content:     &content,
+		FieldValues: &queries.ProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection{},
 	}
 }
 
-func emptyItem() queries.ProjectV2ItemNode {
-	return queries.ProjectV2ItemNode{ID: "ITEM_4"}
+// emptyItem builds a ProjectV2ItemNode with no Content union resolved
+// (i.e. the GraphQL response had `content: null`).
+func emptyItem() *queries.ProjectV2ItemNode {
+	return &queries.ProjectV2ItemNode{
+		Id:          "ITEM_4",
+		FieldValues: &queries.ProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection{},
+	}
 }
 
+// statusValue builds a single-select fieldValue node naming the "Status"
+// field with the supplied option name.
 func statusValue(name string) queries.ProjectV2ItemFieldValue {
-	return queries.ProjectV2ItemFieldValue{
-		Typename: "ProjectV2ItemFieldSingleSelectValue",
-		Name:     name,
-		Field:    queries.ProjectV2FieldRef{ID: "F_status", Name: "Status"},
+	field := queries.ProjectV2ItemFieldValueFieldRef(&queries.ProjectV2ItemFieldValueFieldRefProjectV2SingleSelectField{
+		Id:   "F_status",
+		Name: "Status",
+	})
+	v := &queries.ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue{
+		Name:  &name,
+		Field: field,
 	}
+	return queries.ProjectV2ItemFieldValue(v)
+}
+
+// dateValue builds an iteration fieldValue node naming the supplied field.
+func iterationValue(fieldName, title string) queries.ProjectV2ItemFieldValue {
+	field := queries.ProjectV2ItemFieldValueFieldRef(&queries.ProjectV2ItemFieldValueFieldRefProjectV2IterationField{
+		Id:   "F_iter",
+		Name: fieldName,
+	})
+	return queries.ProjectV2ItemFieldValue(&queries.ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue{
+		Title: title,
+		Field: field,
+	})
+}
+
+// textValue builds a text fieldValue node naming the supplied field.
+func textValue(fieldName, text string) queries.ProjectV2ItemFieldValue {
+	field := queries.ProjectV2ItemFieldValueFieldRef(&queries.ProjectV2ItemFieldValueFieldRefProjectV2Field{
+		Id:   "F_text",
+		Name: fieldName,
+	})
+	return queries.ProjectV2ItemFieldValue(&queries.ProjectV2ItemFieldValueProjectV2ItemFieldTextValue{
+		Text:  &text,
+		Field: field,
+	})
+}
+
+// dateValue builds a date fieldValue node naming the supplied field.
+func dateValue(fieldName, date string) queries.ProjectV2ItemFieldValue {
+	field := queries.ProjectV2ItemFieldValueFieldRef(&queries.ProjectV2ItemFieldValueFieldRefProjectV2Field{
+		Id:   "F_date",
+		Name: fieldName,
+	})
+	return queries.ProjectV2ItemFieldValue(&queries.ProjectV2ItemFieldValueProjectV2ItemFieldDateValue{
+		Date:  &date,
+		Field: field,
+	})
 }
 
 func TestFindStatus(t *testing.T) {
@@ -110,9 +175,21 @@ func TestFindStatus(t *testing.T) {
 
 	t.Run("status-found-case-insensitive-name", func(t *testing.T) {
 		t.Parallel()
-		v := statusValue("Done")
-		v.Field.Name = "status" // lowercase field name
-		got := projectitem.FindStatus([]queries.ProjectV2ItemFieldValue{v})
+		// Case-insensitive match on the field name (`status` vs `Status`).
+		item := issueItem(1, "x", "u/1", statusValue("Done"))
+		// Replace the ref's name to lowercase to exercise EqualFold.
+		(*item.FieldValues.Nodes[0]) = func() queries.ProjectV2ItemFieldValue {
+			field := queries.ProjectV2ItemFieldValueFieldRef(&queries.ProjectV2ItemFieldValueFieldRefProjectV2SingleSelectField{
+				Id:   "F_status",
+				Name: "status", // lowercase
+			})
+			done := "Done"
+			return queries.ProjectV2ItemFieldValue(&queries.ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue{
+				Name:  &done,
+				Field: field,
+			})
+		}()
+		got := projectitem.FindStatus(projectitem.FieldValuesOf(item))
 		if got != "Done" {
 			t.Errorf("got %q", got)
 		}
@@ -120,12 +197,9 @@ func TestFindStatus(t *testing.T) {
 
 	t.Run("ignores-non-single-select", func(t *testing.T) {
 		t.Parallel()
-		v := queries.ProjectV2ItemFieldValue{
-			Typename: "ProjectV2ItemFieldTextValue",
-			Text:     "Note",
-			Field:    queries.ProjectV2FieldRef{ID: "F_status", Name: "Status"},
-		}
-		got := projectitem.FindStatus([]queries.ProjectV2ItemFieldValue{v})
+		// A text value on the Status field must not be picked up.
+		item := issueItem(1, "x", "u/1", textValue("Status", "Note"))
+		got := projectitem.FindStatus(projectitem.FieldValuesOf(item))
 		if got != "" {
 			t.Errorf("got %q", got)
 		}
@@ -135,13 +209,8 @@ func TestFindStatus(t *testing.T) {
 		t.Parallel()
 		// A field literally named "Status" but typed as Iteration must not
 		// be picked up — FindStatus must guard on Typename, not just Name.
-		v := queries.ProjectV2ItemFieldValue{
-			Typename:  "ProjectV2ItemFieldIterationValue",
-			Title:     "Sprint 12",
-			StartDate: "2026-05-04",
-			Field:     queries.ProjectV2FieldRef{ID: "F_status", Name: "Status"},
-		}
-		got := projectitem.FindStatus([]queries.ProjectV2ItemFieldValue{v})
+		item := issueItem(1, "x", "u/1", iterationValue("Status", "Sprint 12"))
+		got := projectitem.FindStatus(projectitem.FieldValuesOf(item))
 		if got != "" {
 			t.Errorf("got %q", got)
 		}
@@ -149,12 +218,8 @@ func TestFindStatus(t *testing.T) {
 
 	t.Run("ignores-date-value-on-status-field", func(t *testing.T) {
 		t.Parallel()
-		v := queries.ProjectV2ItemFieldValue{
-			Typename: "ProjectV2ItemFieldDateValue",
-			Date:     "2026-05-04",
-			Field:    queries.ProjectV2FieldRef{ID: "F_status", Name: "Status"},
-		}
-		got := projectitem.FindStatus([]queries.ProjectV2ItemFieldValue{v})
+		item := issueItem(1, "x", "u/1", dateValue("Status", "2026-05-04"))
+		got := projectitem.FindStatus(projectitem.FieldValuesOf(item))
 		if got != "" {
 			t.Errorf("got %q", got)
 		}
@@ -162,12 +227,8 @@ func TestFindStatus(t *testing.T) {
 
 	t.Run("ignores-text-value-on-status-field", func(t *testing.T) {
 		t.Parallel()
-		v := queries.ProjectV2ItemFieldValue{
-			Typename: "ProjectV2ItemFieldTextValue",
-			Text:     "In Progress",
-			Field:    queries.ProjectV2FieldRef{ID: "F_status", Name: "Status"},
-		}
-		got := projectitem.FindStatus([]queries.ProjectV2ItemFieldValue{v})
+		item := issueItem(1, "x", "u/1", textValue("Status", "In Progress"))
+		got := projectitem.FindStatus(projectitem.FieldValuesOf(item))
 		if got != "" {
 			t.Errorf("got %q", got)
 		}
@@ -175,9 +236,18 @@ func TestFindStatus(t *testing.T) {
 
 	t.Run("ignores-non-status-fields", func(t *testing.T) {
 		t.Parallel()
-		v := statusValue("High")
-		v.Field.Name = "Priority"
-		got := projectitem.FindStatus([]queries.ProjectV2ItemFieldValue{v})
+		// Single-select named "Priority" — not the Status field.
+		field := queries.ProjectV2ItemFieldValueFieldRef(&queries.ProjectV2ItemFieldValueFieldRefProjectV2SingleSelectField{
+			Id:   "F_priority",
+			Name: "Priority",
+		})
+		high := "High"
+		v := queries.ProjectV2ItemFieldValue(&queries.ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue{
+			Name:  &high,
+			Field: field,
+		})
+		item := issueItem(1, "x", "u/1", v)
+		got := projectitem.FindStatus(projectitem.FieldValuesOf(item))
 		if got != "" {
 			t.Errorf("got %q", got)
 		}
@@ -189,7 +259,7 @@ func TestFormatItem(t *testing.T) {
 
 	cases := []struct {
 		name string
-		item queries.ProjectV2ItemNode
+		item *queries.ProjectV2ItemNode
 		want string
 	}{
 		{
@@ -209,9 +279,10 @@ func TestFormatItem(t *testing.T) {
 		},
 		{
 			name: "pr-with-status",
-			item: func() queries.ProjectV2ItemNode {
+			item: func() *queries.ProjectV2ItemNode {
 				it := prItem(7, "Add cache", "https://example.com/p/7")
-				it.FieldValues.Nodes = []queries.ProjectV2ItemFieldValue{statusValue("In Review")}
+				v := statusValue("In Review")
+				it.FieldValues.Nodes = []*queries.ProjectV2ItemFieldValue{&v}
 				return it
 			}(),
 			want: "PR#7  Add cache  [In Review]\n  https://example.com/p/7\n",
@@ -223,18 +294,20 @@ func TestFormatItem(t *testing.T) {
 		},
 		{
 			name: "draft-with-status",
-			item: func() queries.ProjectV2ItemNode {
+			item: func() *queries.ProjectV2ItemNode {
 				it := draftItem("Plan onboarding")
-				it.FieldValues.Nodes = []queries.ProjectV2ItemFieldValue{statusValue("Backlog")}
+				v := statusValue("Backlog")
+				it.FieldValues.Nodes = []*queries.ProjectV2ItemFieldValue{&v}
 				return it
 			}(),
 			want: "(draft)  Plan onboarding  [Backlog]\n",
 		},
 		{
 			name: "no-content-with-status",
-			item: func() queries.ProjectV2ItemNode {
+			item: func() *queries.ProjectV2ItemNode {
 				it := emptyItem()
-				it.FieldValues.Nodes = []queries.ProjectV2ItemFieldValue{statusValue("Backlog")}
+				v := statusValue("Backlog")
+				it.FieldValues.Nodes = []*queries.ProjectV2ItemFieldValue{&v}
 				return it
 			}(),
 			want: "(no content)  [Backlog]\n",
@@ -256,7 +329,7 @@ func TestFormatItemLineCompact(t *testing.T) {
 
 	cases := []struct {
 		name string
-		item queries.ProjectV2ItemNode
+		item *queries.ProjectV2ItemNode
 		want string
 	}{
 		{

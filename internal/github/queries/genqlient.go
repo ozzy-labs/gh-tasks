@@ -2208,6 +2208,156 @@ type ListMilestonesResponse struct {
 // GetRepository returns ListMilestonesResponse.Repository, and is useful for accessing the field via an interface.
 func (v *ListMilestonesResponse) GetRepository() *ListMilestonesRepository { return v.Repository }
 
+// ListProjectV2FieldsResponse is returned by ListProjectV2Fields on success.
+type ListProjectV2FieldsResponse struct {
+	// Fetches an object given its ID.
+	Node *ProjectV2FieldsNode `json:"-"`
+}
+
+// GetNode returns ListProjectV2FieldsResponse.Node, and is useful for accessing the field via an interface.
+func (v *ListProjectV2FieldsResponse) GetNode() *ProjectV2FieldsNode { return v.Node }
+
+func (v *ListProjectV2FieldsResponse) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*ListProjectV2FieldsResponse
+		Node json.RawMessage `json:"node"`
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.ListProjectV2FieldsResponse = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	{
+		dst := &v.Node
+		src := firstPass.Node
+		if len(src) != 0 && string(src) != "null" {
+			*dst = new(ProjectV2FieldsNode)
+			err = __unmarshalProjectV2FieldsNode(
+				src, *dst)
+			if err != nil {
+				return fmt.Errorf(
+					"unable to unmarshal ListProjectV2FieldsResponse.Node: %w", err)
+			}
+		}
+	}
+	return nil
+}
+
+type __premarshalListProjectV2FieldsResponse struct {
+	Node json.RawMessage `json:"node"`
+}
+
+func (v *ListProjectV2FieldsResponse) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *ListProjectV2FieldsResponse) __premarshalJSON() (*__premarshalListProjectV2FieldsResponse, error) {
+	var retval __premarshalListProjectV2FieldsResponse
+
+	{
+
+		dst := &retval.Node
+		src := v.Node
+		if src != nil {
+			var err error
+			*dst, err = __marshalProjectV2FieldsNode(
+				src)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"unable to marshal ListProjectV2FieldsResponse.Node: %w", err)
+			}
+		}
+	}
+	return &retval, nil
+}
+
+// ListProjectV2ItemsResponse is returned by ListProjectV2Items on success.
+type ListProjectV2ItemsResponse struct {
+	// Fetches an object given its ID.
+	Node *ProjectV2ItemsNode `json:"-"`
+}
+
+// GetNode returns ListProjectV2ItemsResponse.Node, and is useful for accessing the field via an interface.
+func (v *ListProjectV2ItemsResponse) GetNode() *ProjectV2ItemsNode { return v.Node }
+
+func (v *ListProjectV2ItemsResponse) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*ListProjectV2ItemsResponse
+		Node json.RawMessage `json:"node"`
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.ListProjectV2ItemsResponse = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	{
+		dst := &v.Node
+		src := firstPass.Node
+		if len(src) != 0 && string(src) != "null" {
+			*dst = new(ProjectV2ItemsNode)
+			err = __unmarshalProjectV2ItemsNode(
+				src, *dst)
+			if err != nil {
+				return fmt.Errorf(
+					"unable to unmarshal ListProjectV2ItemsResponse.Node: %w", err)
+			}
+		}
+	}
+	return nil
+}
+
+type __premarshalListProjectV2ItemsResponse struct {
+	Node json.RawMessage `json:"node"`
+}
+
+func (v *ListProjectV2ItemsResponse) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *ListProjectV2ItemsResponse) __premarshalJSON() (*__premarshalListProjectV2ItemsResponse, error) {
+	var retval __premarshalListProjectV2ItemsResponse
+
+	{
+
+		dst := &retval.Node
+		src := v.Node
+		if src != nil {
+			var err error
+			*dst, err = __marshalProjectV2ItemsNode(
+				src)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"unable to marshal ListProjectV2ItemsResponse.Node: %w", err)
+			}
+		}
+	}
+	return &retval, nil
+}
+
 // ListRepoIssuesRepository includes the requested fields of the GraphQL type Repository.
 // The GraphQL type's documentation follows.
 //
@@ -2884,6 +3034,207 @@ var AllProjectV2CustomFieldType = []ProjectV2CustomFieldType{
 	ProjectV2CustomFieldTypeText,
 }
 
+// ProjectV2FieldNode includes the requested fields of the GraphQL interface ProjectV2FieldConfiguration.
+//
+// ProjectV2FieldNode is implemented by the following types:
+// ProjectV2FieldNodeProjectV2Field
+// ProjectV2FieldNodeProjectV2IterationField
+// ProjectV2FieldNodeProjectV2SingleSelectField
+// The GraphQL type's documentation follows.
+//
+// Configurations for project fields.
+type ProjectV2FieldNode interface {
+	implementsGraphQLInterfaceProjectV2FieldNode()
+	// GetTypename returns the receiver's concrete GraphQL type-name (see interface doc for possible values).
+	GetTypename() *string
+}
+
+func (v *ProjectV2FieldNodeProjectV2Field) implementsGraphQLInterfaceProjectV2FieldNode()          {}
+func (v *ProjectV2FieldNodeProjectV2IterationField) implementsGraphQLInterfaceProjectV2FieldNode() {}
+func (v *ProjectV2FieldNodeProjectV2SingleSelectField) implementsGraphQLInterfaceProjectV2FieldNode() {
+}
+
+func __unmarshalProjectV2FieldNode(b []byte, v *ProjectV2FieldNode) error {
+	if string(b) == "null" {
+		return nil
+	}
+
+	var tn struct {
+		TypeName string `json:"__typename"`
+	}
+	err := json.Unmarshal(b, &tn)
+	if err != nil {
+		return err
+	}
+
+	switch tn.TypeName {
+	case "ProjectV2Field":
+		*v = new(ProjectV2FieldNodeProjectV2Field)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2IterationField":
+		*v = new(ProjectV2FieldNodeProjectV2IterationField)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2SingleSelectField":
+		*v = new(ProjectV2FieldNodeProjectV2SingleSelectField)
+		return json.Unmarshal(b, *v)
+	case "":
+		return fmt.Errorf(
+			"response was missing ProjectV2FieldConfiguration.__typename")
+	default:
+		return fmt.Errorf(
+			`unexpected concrete type for ProjectV2FieldNode: "%v"`, tn.TypeName)
+	}
+}
+
+func __marshalProjectV2FieldNode(v *ProjectV2FieldNode) ([]byte, error) {
+
+	var typename string
+	switch v := (*v).(type) {
+	case *ProjectV2FieldNodeProjectV2Field:
+		typename = "ProjectV2Field"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldNodeProjectV2Field
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldNodeProjectV2IterationField:
+		typename = "ProjectV2IterationField"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldNodeProjectV2IterationField
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldNodeProjectV2SingleSelectField:
+		typename = "ProjectV2SingleSelectField"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldNodeProjectV2SingleSelectField
+		}{typename, v}
+		return json.Marshal(result)
+	case nil:
+		return []byte("null"), nil
+	default:
+		return nil, fmt.Errorf(
+			`unexpected concrete type for ProjectV2FieldNode: "%T"`, v)
+	}
+}
+
+// ProjectV2FieldNodeOptionsProjectV2SingleSelectFieldOption includes the requested fields of the GraphQL type ProjectV2SingleSelectFieldOption.
+// The GraphQL type's documentation follows.
+//
+// Single select field option for a configuration for a project.
+type ProjectV2FieldNodeOptionsProjectV2SingleSelectFieldOption struct {
+	// The option's ID.
+	Id string `json:"id"`
+	// The option's name.
+	Name string `json:"name"`
+}
+
+// GetId returns ProjectV2FieldNodeOptionsProjectV2SingleSelectFieldOption.Id, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldNodeOptionsProjectV2SingleSelectFieldOption) GetId() string { return v.Id }
+
+// GetName returns ProjectV2FieldNodeOptionsProjectV2SingleSelectFieldOption.Name, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldNodeOptionsProjectV2SingleSelectFieldOption) GetName() string { return v.Name }
+
+// ProjectV2FieldNodeProjectV2Field includes the requested fields of the GraphQL type ProjectV2Field.
+// The GraphQL type's documentation follows.
+//
+// A field inside a project.
+type ProjectV2FieldNodeProjectV2Field struct {
+	Typename *string `json:"__typename"`
+	// The Node ID of the ProjectV2FieldCommon object
+	Id string `json:"id"`
+	// The project field's name.
+	Name string `json:"name"`
+	// The field's type.
+	DataType ProjectV2FieldType `json:"dataType"`
+}
+
+// GetTypename returns ProjectV2FieldNodeProjectV2Field.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldNodeProjectV2Field) GetTypename() *string { return v.Typename }
+
+// GetId returns ProjectV2FieldNodeProjectV2Field.Id, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldNodeProjectV2Field) GetId() string { return v.Id }
+
+// GetName returns ProjectV2FieldNodeProjectV2Field.Name, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldNodeProjectV2Field) GetName() string { return v.Name }
+
+// GetDataType returns ProjectV2FieldNodeProjectV2Field.DataType, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldNodeProjectV2Field) GetDataType() ProjectV2FieldType { return v.DataType }
+
+// ProjectV2FieldNodeProjectV2IterationField includes the requested fields of the GraphQL type ProjectV2IterationField.
+// The GraphQL type's documentation follows.
+//
+// An iteration field inside a project.
+type ProjectV2FieldNodeProjectV2IterationField struct {
+	Typename *string `json:"__typename"`
+	// The Node ID of the ProjectV2FieldCommon object
+	Id string `json:"id"`
+	// The project field's name.
+	Name string `json:"name"`
+	// The field's type.
+	DataType ProjectV2FieldType `json:"dataType"`
+	// Iteration configuration settings
+	Configuration *ProjectV2IterationConfig `json:"configuration"`
+}
+
+// GetTypename returns ProjectV2FieldNodeProjectV2IterationField.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldNodeProjectV2IterationField) GetTypename() *string { return v.Typename }
+
+// GetId returns ProjectV2FieldNodeProjectV2IterationField.Id, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldNodeProjectV2IterationField) GetId() string { return v.Id }
+
+// GetName returns ProjectV2FieldNodeProjectV2IterationField.Name, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldNodeProjectV2IterationField) GetName() string { return v.Name }
+
+// GetDataType returns ProjectV2FieldNodeProjectV2IterationField.DataType, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldNodeProjectV2IterationField) GetDataType() ProjectV2FieldType {
+	return v.DataType
+}
+
+// GetConfiguration returns ProjectV2FieldNodeProjectV2IterationField.Configuration, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldNodeProjectV2IterationField) GetConfiguration() *ProjectV2IterationConfig {
+	return v.Configuration
+}
+
+// ProjectV2FieldNodeProjectV2SingleSelectField includes the requested fields of the GraphQL type ProjectV2SingleSelectField.
+// The GraphQL type's documentation follows.
+//
+// A single select field inside a project.
+type ProjectV2FieldNodeProjectV2SingleSelectField struct {
+	Typename *string `json:"__typename"`
+	// The Node ID of the ProjectV2FieldCommon object
+	Id string `json:"id"`
+	// The project field's name.
+	Name string `json:"name"`
+	// The field's type.
+	DataType ProjectV2FieldType `json:"dataType"`
+	// Options for the single select field
+	Options []*ProjectV2FieldNodeOptionsProjectV2SingleSelectFieldOption `json:"options"`
+}
+
+// GetTypename returns ProjectV2FieldNodeProjectV2SingleSelectField.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldNodeProjectV2SingleSelectField) GetTypename() *string { return v.Typename }
+
+// GetId returns ProjectV2FieldNodeProjectV2SingleSelectField.Id, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldNodeProjectV2SingleSelectField) GetId() string { return v.Id }
+
+// GetName returns ProjectV2FieldNodeProjectV2SingleSelectField.Name, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldNodeProjectV2SingleSelectField) GetName() string { return v.Name }
+
+// GetDataType returns ProjectV2FieldNodeProjectV2SingleSelectField.DataType, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldNodeProjectV2SingleSelectField) GetDataType() ProjectV2FieldType {
+	return v.DataType
+}
+
+// GetOptions returns ProjectV2FieldNodeProjectV2SingleSelectField.Options, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldNodeProjectV2SingleSelectField) GetOptions() []*ProjectV2FieldNodeOptionsProjectV2SingleSelectFieldOption {
+	return v.Options
+}
+
 // The type of a project field.
 type ProjectV2FieldType string
 
@@ -2973,6 +3324,15537 @@ func (v *ProjectV2FieldValue) GetSingleSelectOptionId() *string { return v.Singl
 // GetText returns ProjectV2FieldValue.Text, and is useful for accessing the field via an interface.
 func (v *ProjectV2FieldValue) GetText() *string { return v.Text }
 
+// ProjectV2FieldsNode includes the requested fields of the GraphQL interface Node.
+//
+// ProjectV2FieldsNode is implemented by the following types:
+// ProjectV2FieldsNodeAddedToMergeQueueEvent
+// ProjectV2FieldsNodeAddedToProjectEvent
+// ProjectV2FieldsNodeAddedToProjectV2Event
+// ProjectV2FieldsNodeApp
+// ProjectV2FieldsNodeAssignedEvent
+// ProjectV2FieldsNodeAutoMergeDisabledEvent
+// ProjectV2FieldsNodeAutoMergeEnabledEvent
+// ProjectV2FieldsNodeAutoRebaseEnabledEvent
+// ProjectV2FieldsNodeAutoSquashEnabledEvent
+// ProjectV2FieldsNodeAutomaticBaseChangeFailedEvent
+// ProjectV2FieldsNodeAutomaticBaseChangeSucceededEvent
+// ProjectV2FieldsNodeBaseRefChangedEvent
+// ProjectV2FieldsNodeBaseRefDeletedEvent
+// ProjectV2FieldsNodeBaseRefForcePushedEvent
+// ProjectV2FieldsNodeBlob
+// ProjectV2FieldsNodeBlockedByAddedEvent
+// ProjectV2FieldsNodeBlockedByRemovedEvent
+// ProjectV2FieldsNodeBlockingAddedEvent
+// ProjectV2FieldsNodeBlockingRemovedEvent
+// ProjectV2FieldsNodeBot
+// ProjectV2FieldsNodeBranchProtectionRule
+// ProjectV2FieldsNodeBypassForcePushAllowance
+// ProjectV2FieldsNodeBypassPullRequestAllowance
+// ProjectV2FieldsNodeCWE
+// ProjectV2FieldsNodeCheckRun
+// ProjectV2FieldsNodeCheckSuite
+// ProjectV2FieldsNodeClosedEvent
+// ProjectV2FieldsNodeCodeOfConduct
+// ProjectV2FieldsNodeCommentDeletedEvent
+// ProjectV2FieldsNodeCommit
+// ProjectV2FieldsNodeCommitComment
+// ProjectV2FieldsNodeCommitCommentThread
+// ProjectV2FieldsNodeComparison
+// ProjectV2FieldsNodeConnectedEvent
+// ProjectV2FieldsNodeConvertToDraftEvent
+// ProjectV2FieldsNodeConvertedFromDraftEvent
+// ProjectV2FieldsNodeConvertedNoteToIssueEvent
+// ProjectV2FieldsNodeConvertedToDiscussionEvent
+// ProjectV2FieldsNodeCrossReferencedEvent
+// ProjectV2FieldsNodeDemilestonedEvent
+// ProjectV2FieldsNodeDependencyGraphManifest
+// ProjectV2FieldsNodeDeployKey
+// ProjectV2FieldsNodeDeployedEvent
+// ProjectV2FieldsNodeDeployment
+// ProjectV2FieldsNodeDeploymentEnvironmentChangedEvent
+// ProjectV2FieldsNodeDeploymentReview
+// ProjectV2FieldsNodeDeploymentStatus
+// ProjectV2FieldsNodeDisconnectedEvent
+// ProjectV2FieldsNodeDiscussion
+// ProjectV2FieldsNodeDiscussionCategory
+// ProjectV2FieldsNodeDiscussionComment
+// ProjectV2FieldsNodeDiscussionPoll
+// ProjectV2FieldsNodeDiscussionPollOption
+// ProjectV2FieldsNodeDraftIssue
+// ProjectV2FieldsNodeEnterprise
+// ProjectV2FieldsNodeEnterpriseAdministratorInvitation
+// ProjectV2FieldsNodeEnterpriseIdentityProvider
+// ProjectV2FieldsNodeEnterpriseMemberInvitation
+// ProjectV2FieldsNodeEnterpriseRepositoryInfo
+// ProjectV2FieldsNodeEnterpriseServerInstallation
+// ProjectV2FieldsNodeEnterpriseServerUserAccount
+// ProjectV2FieldsNodeEnterpriseServerUserAccountEmail
+// ProjectV2FieldsNodeEnterpriseServerUserAccountsUpload
+// ProjectV2FieldsNodeEnterpriseUserAccount
+// ProjectV2FieldsNodeEnvironment
+// ProjectV2FieldsNodeExternalIdentity
+// ProjectV2FieldsNodeGist
+// ProjectV2FieldsNodeGistComment
+// ProjectV2FieldsNodeHeadRefDeletedEvent
+// ProjectV2FieldsNodeHeadRefForcePushedEvent
+// ProjectV2FieldsNodeHeadRefRestoredEvent
+// ProjectV2FieldsNodeIpAllowListEntry
+// ProjectV2FieldsNodeIssue
+// ProjectV2FieldsNodeIssueComment
+// ProjectV2FieldsNodeIssueCommentPinnedEvent
+// ProjectV2FieldsNodeIssueCommentUnpinnedEvent
+// ProjectV2FieldsNodeIssueFieldAddedEvent
+// ProjectV2FieldsNodeIssueFieldChangedEvent
+// ProjectV2FieldsNodeIssueFieldDate
+// ProjectV2FieldsNodeIssueFieldDateValue
+// ProjectV2FieldsNodeIssueFieldNumber
+// ProjectV2FieldsNodeIssueFieldNumberValue
+// ProjectV2FieldsNodeIssueFieldRemovedEvent
+// ProjectV2FieldsNodeIssueFieldSingleSelect
+// ProjectV2FieldsNodeIssueFieldSingleSelectOption
+// ProjectV2FieldsNodeIssueFieldSingleSelectValue
+// ProjectV2FieldsNodeIssueFieldText
+// ProjectV2FieldsNodeIssueFieldTextValue
+// ProjectV2FieldsNodeIssueType
+// ProjectV2FieldsNodeIssueTypeAddedEvent
+// ProjectV2FieldsNodeIssueTypeChangedEvent
+// ProjectV2FieldsNodeIssueTypeRemovedEvent
+// ProjectV2FieldsNodeLabel
+// ProjectV2FieldsNodeLabeledEvent
+// ProjectV2FieldsNodeLanguage
+// ProjectV2FieldsNodeLicense
+// ProjectV2FieldsNodeLinkedBranch
+// ProjectV2FieldsNodeLockedEvent
+// ProjectV2FieldsNodeMannequin
+// ProjectV2FieldsNodeMarkedAsDuplicateEvent
+// ProjectV2FieldsNodeMarketplaceCategory
+// ProjectV2FieldsNodeMarketplaceListing
+// ProjectV2FieldsNodeMemberFeatureRequestNotification
+// ProjectV2FieldsNodeMembersCanDeleteReposClearAuditEntry
+// ProjectV2FieldsNodeMembersCanDeleteReposDisableAuditEntry
+// ProjectV2FieldsNodeMembersCanDeleteReposEnableAuditEntry
+// ProjectV2FieldsNodeMentionedEvent
+// ProjectV2FieldsNodeMergeQueue
+// ProjectV2FieldsNodeMergeQueueEntry
+// ProjectV2FieldsNodeMergedEvent
+// ProjectV2FieldsNodeMigrationSource
+// ProjectV2FieldsNodeMilestone
+// ProjectV2FieldsNodeMilestonedEvent
+// ProjectV2FieldsNodeMovedColumnsInProjectEvent
+// ProjectV2FieldsNodeOIDCProvider
+// ProjectV2FieldsNodeOauthApplicationCreateAuditEntry
+// ProjectV2FieldsNodeOrgAddBillingManagerAuditEntry
+// ProjectV2FieldsNodeOrgAddMemberAuditEntry
+// ProjectV2FieldsNodeOrgBlockUserAuditEntry
+// ProjectV2FieldsNodeOrgConfigDisableCollaboratorsOnlyAuditEntry
+// ProjectV2FieldsNodeOrgConfigEnableCollaboratorsOnlyAuditEntry
+// ProjectV2FieldsNodeOrgCreateAuditEntry
+// ProjectV2FieldsNodeOrgDisableOauthAppRestrictionsAuditEntry
+// ProjectV2FieldsNodeOrgDisableSamlAuditEntry
+// ProjectV2FieldsNodeOrgDisableTwoFactorRequirementAuditEntry
+// ProjectV2FieldsNodeOrgEnableOauthAppRestrictionsAuditEntry
+// ProjectV2FieldsNodeOrgEnableSamlAuditEntry
+// ProjectV2FieldsNodeOrgEnableTwoFactorRequirementAuditEntry
+// ProjectV2FieldsNodeOrgInviteMemberAuditEntry
+// ProjectV2FieldsNodeOrgInviteToBusinessAuditEntry
+// ProjectV2FieldsNodeOrgOauthAppAccessApprovedAuditEntry
+// ProjectV2FieldsNodeOrgOauthAppAccessBlockedAuditEntry
+// ProjectV2FieldsNodeOrgOauthAppAccessDeniedAuditEntry
+// ProjectV2FieldsNodeOrgOauthAppAccessRequestedAuditEntry
+// ProjectV2FieldsNodeOrgOauthAppAccessUnblockedAuditEntry
+// ProjectV2FieldsNodeOrgRemoveBillingManagerAuditEntry
+// ProjectV2FieldsNodeOrgRemoveMemberAuditEntry
+// ProjectV2FieldsNodeOrgRemoveOutsideCollaboratorAuditEntry
+// ProjectV2FieldsNodeOrgRestoreMemberAuditEntry
+// ProjectV2FieldsNodeOrgUnblockUserAuditEntry
+// ProjectV2FieldsNodeOrgUpdateDefaultRepositoryPermissionAuditEntry
+// ProjectV2FieldsNodeOrgUpdateMemberAuditEntry
+// ProjectV2FieldsNodeOrgUpdateMemberRepositoryCreationPermissionAuditEntry
+// ProjectV2FieldsNodeOrgUpdateMemberRepositoryInvitationPermissionAuditEntry
+// ProjectV2FieldsNodeOrganization
+// ProjectV2FieldsNodeOrganizationIdentityProvider
+// ProjectV2FieldsNodeOrganizationInvitation
+// ProjectV2FieldsNodeOrganizationMigration
+// ProjectV2FieldsNodePackage
+// ProjectV2FieldsNodePackageFile
+// ProjectV2FieldsNodePackageTag
+// ProjectV2FieldsNodePackageVersion
+// ProjectV2FieldsNodeParentIssueAddedEvent
+// ProjectV2FieldsNodeParentIssueRemovedEvent
+// ProjectV2FieldsNodePinnedDiscussion
+// ProjectV2FieldsNodePinnedEnvironment
+// ProjectV2FieldsNodePinnedEvent
+// ProjectV2FieldsNodePinnedIssue
+// ProjectV2FieldsNodePinnedIssueComment
+// ProjectV2FieldsNodePrivateRepositoryForkingDisableAuditEntry
+// ProjectV2FieldsNodePrivateRepositoryForkingEnableAuditEntry
+// ProjectV2FieldsNodeProject
+// ProjectV2FieldsNodeProjectCard
+// ProjectV2FieldsNodeProjectColumn
+// ProjectV2FieldsNodeProjectV2
+// ProjectV2FieldsNodeProjectV2Field
+// ProjectV2FieldsNodeProjectV2Item
+// ProjectV2FieldsNodeProjectV2ItemFieldDateValue
+// ProjectV2FieldsNodeProjectV2ItemFieldIterationValue
+// ProjectV2FieldsNodeProjectV2ItemFieldNumberValue
+// ProjectV2FieldsNodeProjectV2ItemFieldSingleSelectValue
+// ProjectV2FieldsNodeProjectV2ItemFieldTextValue
+// ProjectV2FieldsNodeProjectV2ItemStatusChangedEvent
+// ProjectV2FieldsNodeProjectV2IterationField
+// ProjectV2FieldsNodeProjectV2SingleSelectField
+// ProjectV2FieldsNodeProjectV2StatusUpdate
+// ProjectV2FieldsNodeProjectV2View
+// ProjectV2FieldsNodeProjectV2Workflow
+// ProjectV2FieldsNodePublicKey
+// ProjectV2FieldsNodePullRequest
+// ProjectV2FieldsNodePullRequestCommit
+// ProjectV2FieldsNodePullRequestCommitCommentThread
+// ProjectV2FieldsNodePullRequestReview
+// ProjectV2FieldsNodePullRequestReviewComment
+// ProjectV2FieldsNodePullRequestReviewThread
+// ProjectV2FieldsNodePullRequestThread
+// ProjectV2FieldsNodePush
+// ProjectV2FieldsNodePushAllowance
+// ProjectV2FieldsNodeQuery
+// ProjectV2FieldsNodeReaction
+// ProjectV2FieldsNodeReadyForReviewEvent
+// ProjectV2FieldsNodeRef
+// ProjectV2FieldsNodeReferencedEvent
+// ProjectV2FieldsNodeRelease
+// ProjectV2FieldsNodeReleaseAsset
+// ProjectV2FieldsNodeRemovedFromMergeQueueEvent
+// ProjectV2FieldsNodeRemovedFromProjectEvent
+// ProjectV2FieldsNodeRemovedFromProjectV2Event
+// ProjectV2FieldsNodeRenamedTitleEvent
+// ProjectV2FieldsNodeReopenedEvent
+// ProjectV2FieldsNodeRepoAccessAuditEntry
+// ProjectV2FieldsNodeRepoAddMemberAuditEntry
+// ProjectV2FieldsNodeRepoAddTopicAuditEntry
+// ProjectV2FieldsNodeRepoArchivedAuditEntry
+// ProjectV2FieldsNodeRepoChangeMergeSettingAuditEntry
+// ProjectV2FieldsNodeRepoConfigDisableAnonymousGitAccessAuditEntry
+// ProjectV2FieldsNodeRepoConfigDisableCollaboratorsOnlyAuditEntry
+// ProjectV2FieldsNodeRepoConfigDisableContributorsOnlyAuditEntry
+// ProjectV2FieldsNodeRepoConfigDisableSockpuppetDisallowedAuditEntry
+// ProjectV2FieldsNodeRepoConfigEnableAnonymousGitAccessAuditEntry
+// ProjectV2FieldsNodeRepoConfigEnableCollaboratorsOnlyAuditEntry
+// ProjectV2FieldsNodeRepoConfigEnableContributorsOnlyAuditEntry
+// ProjectV2FieldsNodeRepoConfigEnableSockpuppetDisallowedAuditEntry
+// ProjectV2FieldsNodeRepoConfigLockAnonymousGitAccessAuditEntry
+// ProjectV2FieldsNodeRepoConfigUnlockAnonymousGitAccessAuditEntry
+// ProjectV2FieldsNodeRepoCreateAuditEntry
+// ProjectV2FieldsNodeRepoDestroyAuditEntry
+// ProjectV2FieldsNodeRepoRemoveMemberAuditEntry
+// ProjectV2FieldsNodeRepoRemoveTopicAuditEntry
+// ProjectV2FieldsNodeRepository
+// ProjectV2FieldsNodeRepositoryCustomProperty
+// ProjectV2FieldsNodeRepositoryInvitation
+// ProjectV2FieldsNodeRepositoryMigration
+// ProjectV2FieldsNodeRepositoryRule
+// ProjectV2FieldsNodeRepositoryRuleset
+// ProjectV2FieldsNodeRepositoryRulesetBypassActor
+// ProjectV2FieldsNodeRepositoryTopic
+// ProjectV2FieldsNodeRepositoryVisibilityChangeDisableAuditEntry
+// ProjectV2FieldsNodeRepositoryVisibilityChangeEnableAuditEntry
+// ProjectV2FieldsNodeRepositoryVulnerabilityAlert
+// ProjectV2FieldsNodeReviewDismissalAllowance
+// ProjectV2FieldsNodeReviewDismissedEvent
+// ProjectV2FieldsNodeReviewRequest
+// ProjectV2FieldsNodeReviewRequestRemovedEvent
+// ProjectV2FieldsNodeReviewRequestedEvent
+// ProjectV2FieldsNodeSavedReply
+// ProjectV2FieldsNodeSecurityAdvisory
+// ProjectV2FieldsNodeSponsorsActivity
+// ProjectV2FieldsNodeSponsorsListing
+// ProjectV2FieldsNodeSponsorsListingFeaturedItem
+// ProjectV2FieldsNodeSponsorsTier
+// ProjectV2FieldsNodeSponsorship
+// ProjectV2FieldsNodeSponsorshipNewsletter
+// ProjectV2FieldsNodeStatus
+// ProjectV2FieldsNodeStatusCheckRollup
+// ProjectV2FieldsNodeStatusContext
+// ProjectV2FieldsNodeSubIssueAddedEvent
+// ProjectV2FieldsNodeSubIssueRemovedEvent
+// ProjectV2FieldsNodeSubscribedEvent
+// ProjectV2FieldsNodeTag
+// ProjectV2FieldsNodeTeam
+// ProjectV2FieldsNodeTeamAddMemberAuditEntry
+// ProjectV2FieldsNodeTeamAddRepositoryAuditEntry
+// ProjectV2FieldsNodeTeamChangeParentTeamAuditEntry
+// ProjectV2FieldsNodeTeamRemoveMemberAuditEntry
+// ProjectV2FieldsNodeTeamRemoveRepositoryAuditEntry
+// ProjectV2FieldsNodeTopic
+// ProjectV2FieldsNodeTransferredEvent
+// ProjectV2FieldsNodeTree
+// ProjectV2FieldsNodeUnassignedEvent
+// ProjectV2FieldsNodeUnlabeledEvent
+// ProjectV2FieldsNodeUnlockedEvent
+// ProjectV2FieldsNodeUnmarkedAsDuplicateEvent
+// ProjectV2FieldsNodeUnpinnedEvent
+// ProjectV2FieldsNodeUnsubscribedEvent
+// ProjectV2FieldsNodeUser
+// ProjectV2FieldsNodeUserBlockedEvent
+// ProjectV2FieldsNodeUserContentEdit
+// ProjectV2FieldsNodeUserList
+// ProjectV2FieldsNodeUserNamespaceRepository
+// ProjectV2FieldsNodeUserStatus
+// ProjectV2FieldsNodeVerifiableDomain
+// ProjectV2FieldsNodeWorkflow
+// ProjectV2FieldsNodeWorkflowRun
+// ProjectV2FieldsNodeWorkflowRunFile
+// The GraphQL type's documentation follows.
+//
+// An object with an ID.
+type ProjectV2FieldsNode interface {
+	implementsGraphQLInterfaceProjectV2FieldsNode()
+	// GetTypename returns the receiver's concrete GraphQL type-name (see interface doc for possible values).
+	GetTypename() *string
+}
+
+func (v *ProjectV2FieldsNodeAddedToMergeQueueEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeAddedToProjectEvent) implementsGraphQLInterfaceProjectV2FieldsNode()    {}
+func (v *ProjectV2FieldsNodeAddedToProjectV2Event) implementsGraphQLInterfaceProjectV2FieldsNode()  {}
+func (v *ProjectV2FieldsNodeApp) implementsGraphQLInterfaceProjectV2FieldsNode()                    {}
+func (v *ProjectV2FieldsNodeAssignedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()          {}
+func (v *ProjectV2FieldsNodeAutoMergeDisabledEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeAutoMergeEnabledEvent) implementsGraphQLInterfaceProjectV2FieldsNode()  {}
+func (v *ProjectV2FieldsNodeAutoRebaseEnabledEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeAutoSquashEnabledEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeAutomaticBaseChangeFailedEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeAutomaticBaseChangeSucceededEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeBaseRefChangedEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeBaseRefDeletedEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeBaseRefForcePushedEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeBlob) implementsGraphQLInterfaceProjectV2FieldsNode()                  {}
+func (v *ProjectV2FieldsNodeBlockedByAddedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()   {}
+func (v *ProjectV2FieldsNodeBlockedByRemovedEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeBlockingAddedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()    {}
+func (v *ProjectV2FieldsNodeBlockingRemovedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()  {}
+func (v *ProjectV2FieldsNodeBot) implementsGraphQLInterfaceProjectV2FieldsNode()                   {}
+func (v *ProjectV2FieldsNodeBranchProtectionRule) implementsGraphQLInterfaceProjectV2FieldsNode()  {}
+func (v *ProjectV2FieldsNodeBypassForcePushAllowance) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeBypassPullRequestAllowance) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeCWE) implementsGraphQLInterfaceProjectV2FieldsNode()                 {}
+func (v *ProjectV2FieldsNodeCheckRun) implementsGraphQLInterfaceProjectV2FieldsNode()            {}
+func (v *ProjectV2FieldsNodeCheckSuite) implementsGraphQLInterfaceProjectV2FieldsNode()          {}
+func (v *ProjectV2FieldsNodeClosedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()         {}
+func (v *ProjectV2FieldsNodeCodeOfConduct) implementsGraphQLInterfaceProjectV2FieldsNode()       {}
+func (v *ProjectV2FieldsNodeCommentDeletedEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeCommit) implementsGraphQLInterfaceProjectV2FieldsNode()              {}
+func (v *ProjectV2FieldsNodeCommitComment) implementsGraphQLInterfaceProjectV2FieldsNode()       {}
+func (v *ProjectV2FieldsNodeCommitCommentThread) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeComparison) implementsGraphQLInterfaceProjectV2FieldsNode()          {}
+func (v *ProjectV2FieldsNodeConnectedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()      {}
+func (v *ProjectV2FieldsNodeConvertToDraftEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeConvertedFromDraftEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeConvertedNoteToIssueEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeConvertedToDiscussionEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeCrossReferencedEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeDemilestonedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()    {}
+func (v *ProjectV2FieldsNodeDependencyGraphManifest) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeDeployKey) implementsGraphQLInterfaceProjectV2FieldsNode()     {}
+func (v *ProjectV2FieldsNodeDeployedEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeDeployment) implementsGraphQLInterfaceProjectV2FieldsNode()    {}
+func (v *ProjectV2FieldsNodeDeploymentEnvironmentChangedEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeDeploymentReview) implementsGraphQLInterfaceProjectV2FieldsNode()     {}
+func (v *ProjectV2FieldsNodeDeploymentStatus) implementsGraphQLInterfaceProjectV2FieldsNode()     {}
+func (v *ProjectV2FieldsNodeDisconnectedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()    {}
+func (v *ProjectV2FieldsNodeDiscussion) implementsGraphQLInterfaceProjectV2FieldsNode()           {}
+func (v *ProjectV2FieldsNodeDiscussionCategory) implementsGraphQLInterfaceProjectV2FieldsNode()   {}
+func (v *ProjectV2FieldsNodeDiscussionComment) implementsGraphQLInterfaceProjectV2FieldsNode()    {}
+func (v *ProjectV2FieldsNodeDiscussionPoll) implementsGraphQLInterfaceProjectV2FieldsNode()       {}
+func (v *ProjectV2FieldsNodeDiscussionPollOption) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeDraftIssue) implementsGraphQLInterfaceProjectV2FieldsNode()           {}
+func (v *ProjectV2FieldsNodeEnterprise) implementsGraphQLInterfaceProjectV2FieldsNode()           {}
+func (v *ProjectV2FieldsNodeEnterpriseAdministratorInvitation) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeEnterpriseIdentityProvider) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeEnterpriseMemberInvitation) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeEnterpriseRepositoryInfo) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeEnterpriseServerInstallation) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeEnterpriseServerUserAccount) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeEnterpriseServerUserAccountEmail) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeEnterpriseServerUserAccountsUpload) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeEnterpriseUserAccount) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeEnvironment) implementsGraphQLInterfaceProjectV2FieldsNode()           {}
+func (v *ProjectV2FieldsNodeExternalIdentity) implementsGraphQLInterfaceProjectV2FieldsNode()      {}
+func (v *ProjectV2FieldsNodeGist) implementsGraphQLInterfaceProjectV2FieldsNode()                  {}
+func (v *ProjectV2FieldsNodeGistComment) implementsGraphQLInterfaceProjectV2FieldsNode()           {}
+func (v *ProjectV2FieldsNodeHeadRefDeletedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()   {}
+func (v *ProjectV2FieldsNodeHeadRefForcePushedEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeHeadRefRestoredEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeIpAllowListEntry) implementsGraphQLInterfaceProjectV2FieldsNode()     {}
+func (v *ProjectV2FieldsNodeIssue) implementsGraphQLInterfaceProjectV2FieldsNode()                {}
+func (v *ProjectV2FieldsNodeIssueComment) implementsGraphQLInterfaceProjectV2FieldsNode()         {}
+func (v *ProjectV2FieldsNodeIssueCommentPinnedEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeIssueCommentUnpinnedEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeIssueFieldAddedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()   {}
+func (v *ProjectV2FieldsNodeIssueFieldChangedEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeIssueFieldDate) implementsGraphQLInterfaceProjectV2FieldsNode()         {}
+func (v *ProjectV2FieldsNodeIssueFieldDateValue) implementsGraphQLInterfaceProjectV2FieldsNode()    {}
+func (v *ProjectV2FieldsNodeIssueFieldNumber) implementsGraphQLInterfaceProjectV2FieldsNode()       {}
+func (v *ProjectV2FieldsNodeIssueFieldNumberValue) implementsGraphQLInterfaceProjectV2FieldsNode()  {}
+func (v *ProjectV2FieldsNodeIssueFieldRemovedEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeIssueFieldSingleSelect) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeIssueFieldSingleSelectOption) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeIssueFieldSingleSelectValue) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeIssueFieldText) implementsGraphQLInterfaceProjectV2FieldsNode()         {}
+func (v *ProjectV2FieldsNodeIssueFieldTextValue) implementsGraphQLInterfaceProjectV2FieldsNode()    {}
+func (v *ProjectV2FieldsNodeIssueType) implementsGraphQLInterfaceProjectV2FieldsNode()              {}
+func (v *ProjectV2FieldsNodeIssueTypeAddedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()    {}
+func (v *ProjectV2FieldsNodeIssueTypeChangedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()  {}
+func (v *ProjectV2FieldsNodeIssueTypeRemovedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()  {}
+func (v *ProjectV2FieldsNodeLabel) implementsGraphQLInterfaceProjectV2FieldsNode()                  {}
+func (v *ProjectV2FieldsNodeLabeledEvent) implementsGraphQLInterfaceProjectV2FieldsNode()           {}
+func (v *ProjectV2FieldsNodeLanguage) implementsGraphQLInterfaceProjectV2FieldsNode()               {}
+func (v *ProjectV2FieldsNodeLicense) implementsGraphQLInterfaceProjectV2FieldsNode()                {}
+func (v *ProjectV2FieldsNodeLinkedBranch) implementsGraphQLInterfaceProjectV2FieldsNode()           {}
+func (v *ProjectV2FieldsNodeLockedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()            {}
+func (v *ProjectV2FieldsNodeMannequin) implementsGraphQLInterfaceProjectV2FieldsNode()              {}
+func (v *ProjectV2FieldsNodeMarkedAsDuplicateEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeMarketplaceCategory) implementsGraphQLInterfaceProjectV2FieldsNode()    {}
+func (v *ProjectV2FieldsNodeMarketplaceListing) implementsGraphQLInterfaceProjectV2FieldsNode()     {}
+func (v *ProjectV2FieldsNodeMemberFeatureRequestNotification) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeMembersCanDeleteReposClearAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeMembersCanDeleteReposDisableAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeMembersCanDeleteReposEnableAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeMentionedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()  {}
+func (v *ProjectV2FieldsNodeMergeQueue) implementsGraphQLInterfaceProjectV2FieldsNode()      {}
+func (v *ProjectV2FieldsNodeMergeQueueEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeMergedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()     {}
+func (v *ProjectV2FieldsNodeMigrationSource) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeMilestone) implementsGraphQLInterfaceProjectV2FieldsNode()       {}
+func (v *ProjectV2FieldsNodeMilestonedEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeMovedColumnsInProjectEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOIDCProvider) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeOauthApplicationCreateAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgAddBillingManagerAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgAddMemberAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeOrgBlockUserAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeOrgConfigDisableCollaboratorsOnlyAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgConfigEnableCollaboratorsOnlyAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgCreateAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeOrgDisableOauthAppRestrictionsAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgDisableSamlAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgDisableTwoFactorRequirementAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgEnableOauthAppRestrictionsAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgEnableSamlAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgEnableTwoFactorRequirementAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgInviteMemberAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgInviteToBusinessAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgOauthAppAccessApprovedAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgOauthAppAccessBlockedAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgOauthAppAccessDeniedAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgOauthAppAccessRequestedAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgOauthAppAccessUnblockedAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgRemoveBillingManagerAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgRemoveMemberAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgRemoveOutsideCollaboratorAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgRestoreMemberAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgUnblockUserAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgUpdateDefaultRepositoryPermissionAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgUpdateMemberAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgUpdateMemberRepositoryCreationPermissionAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrgUpdateMemberRepositoryInvitationPermissionAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrganization) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeOrganizationIdentityProvider) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeOrganizationInvitation) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeOrganizationMigration) implementsGraphQLInterfaceProjectV2FieldsNode()  {}
+func (v *ProjectV2FieldsNodePackage) implementsGraphQLInterfaceProjectV2FieldsNode()                {}
+func (v *ProjectV2FieldsNodePackageFile) implementsGraphQLInterfaceProjectV2FieldsNode()            {}
+func (v *ProjectV2FieldsNodePackageTag) implementsGraphQLInterfaceProjectV2FieldsNode()             {}
+func (v *ProjectV2FieldsNodePackageVersion) implementsGraphQLInterfaceProjectV2FieldsNode()         {}
+func (v *ProjectV2FieldsNodeParentIssueAddedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()  {}
+func (v *ProjectV2FieldsNodeParentIssueRemovedEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodePinnedDiscussion) implementsGraphQLInterfaceProjectV2FieldsNode()   {}
+func (v *ProjectV2FieldsNodePinnedEnvironment) implementsGraphQLInterfaceProjectV2FieldsNode()  {}
+func (v *ProjectV2FieldsNodePinnedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()        {}
+func (v *ProjectV2FieldsNodePinnedIssue) implementsGraphQLInterfaceProjectV2FieldsNode()        {}
+func (v *ProjectV2FieldsNodePinnedIssueComment) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodePrivateRepositoryForkingDisableAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodePrivateRepositoryForkingEnableAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeProject) implementsGraphQLInterfaceProjectV2FieldsNode()        {}
+func (v *ProjectV2FieldsNodeProjectCard) implementsGraphQLInterfaceProjectV2FieldsNode()    {}
+func (v *ProjectV2FieldsNodeProjectColumn) implementsGraphQLInterfaceProjectV2FieldsNode()  {}
+func (v *ProjectV2FieldsNodeProjectV2) implementsGraphQLInterfaceProjectV2FieldsNode()      {}
+func (v *ProjectV2FieldsNodeProjectV2Field) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeProjectV2Item) implementsGraphQLInterfaceProjectV2FieldsNode()  {}
+func (v *ProjectV2FieldsNodeProjectV2ItemFieldDateValue) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeProjectV2ItemFieldIterationValue) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeProjectV2ItemFieldNumberValue) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeProjectV2ItemFieldSingleSelectValue) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeProjectV2ItemFieldTextValue) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeProjectV2ItemStatusChangedEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeProjectV2IterationField) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeProjectV2SingleSelectField) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeProjectV2StatusUpdate) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeProjectV2View) implementsGraphQLInterfaceProjectV2FieldsNode()         {}
+func (v *ProjectV2FieldsNodeProjectV2Workflow) implementsGraphQLInterfaceProjectV2FieldsNode()     {}
+func (v *ProjectV2FieldsNodePublicKey) implementsGraphQLInterfaceProjectV2FieldsNode()             {}
+func (v *ProjectV2FieldsNodePullRequest) implementsGraphQLInterfaceProjectV2FieldsNode()           {}
+func (v *ProjectV2FieldsNodePullRequestCommit) implementsGraphQLInterfaceProjectV2FieldsNode()     {}
+func (v *ProjectV2FieldsNodePullRequestCommitCommentThread) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodePullRequestReview) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodePullRequestReviewComment) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodePullRequestReviewThread) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodePullRequestThread) implementsGraphQLInterfaceProjectV2FieldsNode()   {}
+func (v *ProjectV2FieldsNodePush) implementsGraphQLInterfaceProjectV2FieldsNode()                {}
+func (v *ProjectV2FieldsNodePushAllowance) implementsGraphQLInterfaceProjectV2FieldsNode()       {}
+func (v *ProjectV2FieldsNodeQuery) implementsGraphQLInterfaceProjectV2FieldsNode()               {}
+func (v *ProjectV2FieldsNodeReaction) implementsGraphQLInterfaceProjectV2FieldsNode()            {}
+func (v *ProjectV2FieldsNodeReadyForReviewEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeRef) implementsGraphQLInterfaceProjectV2FieldsNode()                 {}
+func (v *ProjectV2FieldsNodeReferencedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()     {}
+func (v *ProjectV2FieldsNodeRelease) implementsGraphQLInterfaceProjectV2FieldsNode()             {}
+func (v *ProjectV2FieldsNodeReleaseAsset) implementsGraphQLInterfaceProjectV2FieldsNode()        {}
+func (v *ProjectV2FieldsNodeRemovedFromMergeQueueEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeRemovedFromProjectEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeRemovedFromProjectV2Event) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeRenamedTitleEvent) implementsGraphQLInterfaceProjectV2FieldsNode()    {}
+func (v *ProjectV2FieldsNodeReopenedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()        {}
+func (v *ProjectV2FieldsNodeRepoAccessAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeRepoAddMemberAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeRepoAddTopicAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeRepoArchivedAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeRepoChangeMergeSettingAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeRepoConfigDisableAnonymousGitAccessAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeRepoConfigDisableCollaboratorsOnlyAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeRepoConfigDisableContributorsOnlyAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeRepoConfigDisableSockpuppetDisallowedAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeRepoConfigEnableAnonymousGitAccessAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeRepoConfigEnableCollaboratorsOnlyAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeRepoConfigEnableContributorsOnlyAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeRepoConfigEnableSockpuppetDisallowedAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeRepoConfigLockAnonymousGitAccessAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeRepoConfigUnlockAnonymousGitAccessAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeRepoCreateAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode()  {}
+func (v *ProjectV2FieldsNodeRepoDestroyAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeRepoRemoveMemberAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeRepoRemoveTopicAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeRepository) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeRepositoryCustomProperty) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeRepositoryInvitation) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeRepositoryMigration) implementsGraphQLInterfaceProjectV2FieldsNode()  {}
+func (v *ProjectV2FieldsNodeRepositoryRule) implementsGraphQLInterfaceProjectV2FieldsNode()       {}
+func (v *ProjectV2FieldsNodeRepositoryRuleset) implementsGraphQLInterfaceProjectV2FieldsNode()    {}
+func (v *ProjectV2FieldsNodeRepositoryRulesetBypassActor) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeRepositoryTopic) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeRepositoryVisibilityChangeDisableAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeRepositoryVisibilityChangeEnableAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeRepositoryVulnerabilityAlert) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeReviewDismissalAllowance) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeReviewDismissedEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeReviewRequest) implementsGraphQLInterfaceProjectV2FieldsNode()        {}
+func (v *ProjectV2FieldsNodeReviewRequestRemovedEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeReviewRequestedEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeSavedReply) implementsGraphQLInterfaceProjectV2FieldsNode()           {}
+func (v *ProjectV2FieldsNodeSecurityAdvisory) implementsGraphQLInterfaceProjectV2FieldsNode()     {}
+func (v *ProjectV2FieldsNodeSponsorsActivity) implementsGraphQLInterfaceProjectV2FieldsNode()     {}
+func (v *ProjectV2FieldsNodeSponsorsListing) implementsGraphQLInterfaceProjectV2FieldsNode()      {}
+func (v *ProjectV2FieldsNodeSponsorsListingFeaturedItem) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeSponsorsTier) implementsGraphQLInterfaceProjectV2FieldsNode()          {}
+func (v *ProjectV2FieldsNodeSponsorship) implementsGraphQLInterfaceProjectV2FieldsNode()           {}
+func (v *ProjectV2FieldsNodeSponsorshipNewsletter) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeStatus) implementsGraphQLInterfaceProjectV2FieldsNode()                {}
+func (v *ProjectV2FieldsNodeStatusCheckRollup) implementsGraphQLInterfaceProjectV2FieldsNode()     {}
+func (v *ProjectV2FieldsNodeStatusContext) implementsGraphQLInterfaceProjectV2FieldsNode()         {}
+func (v *ProjectV2FieldsNodeSubIssueAddedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()    {}
+func (v *ProjectV2FieldsNodeSubIssueRemovedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()  {}
+func (v *ProjectV2FieldsNodeSubscribedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()       {}
+func (v *ProjectV2FieldsNodeTag) implementsGraphQLInterfaceProjectV2FieldsNode()                   {}
+func (v *ProjectV2FieldsNodeTeam) implementsGraphQLInterfaceProjectV2FieldsNode()                  {}
+func (v *ProjectV2FieldsNodeTeamAddMemberAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeTeamAddRepositoryAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeTeamChangeParentTeamAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeTeamRemoveMemberAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeTeamRemoveRepositoryAuditEntry) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeTopic) implementsGraphQLInterfaceProjectV2FieldsNode()            {}
+func (v *ProjectV2FieldsNodeTransferredEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeTree) implementsGraphQLInterfaceProjectV2FieldsNode()             {}
+func (v *ProjectV2FieldsNodeUnassignedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()  {}
+func (v *ProjectV2FieldsNodeUnlabeledEvent) implementsGraphQLInterfaceProjectV2FieldsNode()   {}
+func (v *ProjectV2FieldsNodeUnlockedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()    {}
+func (v *ProjectV2FieldsNodeUnmarkedAsDuplicateEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeUnpinnedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()     {}
+func (v *ProjectV2FieldsNodeUnsubscribedEvent) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeUser) implementsGraphQLInterfaceProjectV2FieldsNode()              {}
+func (v *ProjectV2FieldsNodeUserBlockedEvent) implementsGraphQLInterfaceProjectV2FieldsNode()  {}
+func (v *ProjectV2FieldsNodeUserContentEdit) implementsGraphQLInterfaceProjectV2FieldsNode()   {}
+func (v *ProjectV2FieldsNodeUserList) implementsGraphQLInterfaceProjectV2FieldsNode()          {}
+func (v *ProjectV2FieldsNodeUserNamespaceRepository) implementsGraphQLInterfaceProjectV2FieldsNode() {
+}
+func (v *ProjectV2FieldsNodeUserStatus) implementsGraphQLInterfaceProjectV2FieldsNode()       {}
+func (v *ProjectV2FieldsNodeVerifiableDomain) implementsGraphQLInterfaceProjectV2FieldsNode() {}
+func (v *ProjectV2FieldsNodeWorkflow) implementsGraphQLInterfaceProjectV2FieldsNode()         {}
+func (v *ProjectV2FieldsNodeWorkflowRun) implementsGraphQLInterfaceProjectV2FieldsNode()      {}
+func (v *ProjectV2FieldsNodeWorkflowRunFile) implementsGraphQLInterfaceProjectV2FieldsNode()  {}
+
+func __unmarshalProjectV2FieldsNode(b []byte, v *ProjectV2FieldsNode) error {
+	if string(b) == "null" {
+		return nil
+	}
+
+	var tn struct {
+		TypeName string `json:"__typename"`
+	}
+	err := json.Unmarshal(b, &tn)
+	if err != nil {
+		return err
+	}
+
+	switch tn.TypeName {
+	case "AddedToMergeQueueEvent":
+		*v = new(ProjectV2FieldsNodeAddedToMergeQueueEvent)
+		return json.Unmarshal(b, *v)
+	case "AddedToProjectEvent":
+		*v = new(ProjectV2FieldsNodeAddedToProjectEvent)
+		return json.Unmarshal(b, *v)
+	case "AddedToProjectV2Event":
+		*v = new(ProjectV2FieldsNodeAddedToProjectV2Event)
+		return json.Unmarshal(b, *v)
+	case "App":
+		*v = new(ProjectV2FieldsNodeApp)
+		return json.Unmarshal(b, *v)
+	case "AssignedEvent":
+		*v = new(ProjectV2FieldsNodeAssignedEvent)
+		return json.Unmarshal(b, *v)
+	case "AutoMergeDisabledEvent":
+		*v = new(ProjectV2FieldsNodeAutoMergeDisabledEvent)
+		return json.Unmarshal(b, *v)
+	case "AutoMergeEnabledEvent":
+		*v = new(ProjectV2FieldsNodeAutoMergeEnabledEvent)
+		return json.Unmarshal(b, *v)
+	case "AutoRebaseEnabledEvent":
+		*v = new(ProjectV2FieldsNodeAutoRebaseEnabledEvent)
+		return json.Unmarshal(b, *v)
+	case "AutoSquashEnabledEvent":
+		*v = new(ProjectV2FieldsNodeAutoSquashEnabledEvent)
+		return json.Unmarshal(b, *v)
+	case "AutomaticBaseChangeFailedEvent":
+		*v = new(ProjectV2FieldsNodeAutomaticBaseChangeFailedEvent)
+		return json.Unmarshal(b, *v)
+	case "AutomaticBaseChangeSucceededEvent":
+		*v = new(ProjectV2FieldsNodeAutomaticBaseChangeSucceededEvent)
+		return json.Unmarshal(b, *v)
+	case "BaseRefChangedEvent":
+		*v = new(ProjectV2FieldsNodeBaseRefChangedEvent)
+		return json.Unmarshal(b, *v)
+	case "BaseRefDeletedEvent":
+		*v = new(ProjectV2FieldsNodeBaseRefDeletedEvent)
+		return json.Unmarshal(b, *v)
+	case "BaseRefForcePushedEvent":
+		*v = new(ProjectV2FieldsNodeBaseRefForcePushedEvent)
+		return json.Unmarshal(b, *v)
+	case "Blob":
+		*v = new(ProjectV2FieldsNodeBlob)
+		return json.Unmarshal(b, *v)
+	case "BlockedByAddedEvent":
+		*v = new(ProjectV2FieldsNodeBlockedByAddedEvent)
+		return json.Unmarshal(b, *v)
+	case "BlockedByRemovedEvent":
+		*v = new(ProjectV2FieldsNodeBlockedByRemovedEvent)
+		return json.Unmarshal(b, *v)
+	case "BlockingAddedEvent":
+		*v = new(ProjectV2FieldsNodeBlockingAddedEvent)
+		return json.Unmarshal(b, *v)
+	case "BlockingRemovedEvent":
+		*v = new(ProjectV2FieldsNodeBlockingRemovedEvent)
+		return json.Unmarshal(b, *v)
+	case "Bot":
+		*v = new(ProjectV2FieldsNodeBot)
+		return json.Unmarshal(b, *v)
+	case "BranchProtectionRule":
+		*v = new(ProjectV2FieldsNodeBranchProtectionRule)
+		return json.Unmarshal(b, *v)
+	case "BypassForcePushAllowance":
+		*v = new(ProjectV2FieldsNodeBypassForcePushAllowance)
+		return json.Unmarshal(b, *v)
+	case "BypassPullRequestAllowance":
+		*v = new(ProjectV2FieldsNodeBypassPullRequestAllowance)
+		return json.Unmarshal(b, *v)
+	case "CWE":
+		*v = new(ProjectV2FieldsNodeCWE)
+		return json.Unmarshal(b, *v)
+	case "CheckRun":
+		*v = new(ProjectV2FieldsNodeCheckRun)
+		return json.Unmarshal(b, *v)
+	case "CheckSuite":
+		*v = new(ProjectV2FieldsNodeCheckSuite)
+		return json.Unmarshal(b, *v)
+	case "ClosedEvent":
+		*v = new(ProjectV2FieldsNodeClosedEvent)
+		return json.Unmarshal(b, *v)
+	case "CodeOfConduct":
+		*v = new(ProjectV2FieldsNodeCodeOfConduct)
+		return json.Unmarshal(b, *v)
+	case "CommentDeletedEvent":
+		*v = new(ProjectV2FieldsNodeCommentDeletedEvent)
+		return json.Unmarshal(b, *v)
+	case "Commit":
+		*v = new(ProjectV2FieldsNodeCommit)
+		return json.Unmarshal(b, *v)
+	case "CommitComment":
+		*v = new(ProjectV2FieldsNodeCommitComment)
+		return json.Unmarshal(b, *v)
+	case "CommitCommentThread":
+		*v = new(ProjectV2FieldsNodeCommitCommentThread)
+		return json.Unmarshal(b, *v)
+	case "Comparison":
+		*v = new(ProjectV2FieldsNodeComparison)
+		return json.Unmarshal(b, *v)
+	case "ConnectedEvent":
+		*v = new(ProjectV2FieldsNodeConnectedEvent)
+		return json.Unmarshal(b, *v)
+	case "ConvertToDraftEvent":
+		*v = new(ProjectV2FieldsNodeConvertToDraftEvent)
+		return json.Unmarshal(b, *v)
+	case "ConvertedFromDraftEvent":
+		*v = new(ProjectV2FieldsNodeConvertedFromDraftEvent)
+		return json.Unmarshal(b, *v)
+	case "ConvertedNoteToIssueEvent":
+		*v = new(ProjectV2FieldsNodeConvertedNoteToIssueEvent)
+		return json.Unmarshal(b, *v)
+	case "ConvertedToDiscussionEvent":
+		*v = new(ProjectV2FieldsNodeConvertedToDiscussionEvent)
+		return json.Unmarshal(b, *v)
+	case "CrossReferencedEvent":
+		*v = new(ProjectV2FieldsNodeCrossReferencedEvent)
+		return json.Unmarshal(b, *v)
+	case "DemilestonedEvent":
+		*v = new(ProjectV2FieldsNodeDemilestonedEvent)
+		return json.Unmarshal(b, *v)
+	case "DependencyGraphManifest":
+		*v = new(ProjectV2FieldsNodeDependencyGraphManifest)
+		return json.Unmarshal(b, *v)
+	case "DeployKey":
+		*v = new(ProjectV2FieldsNodeDeployKey)
+		return json.Unmarshal(b, *v)
+	case "DeployedEvent":
+		*v = new(ProjectV2FieldsNodeDeployedEvent)
+		return json.Unmarshal(b, *v)
+	case "Deployment":
+		*v = new(ProjectV2FieldsNodeDeployment)
+		return json.Unmarshal(b, *v)
+	case "DeploymentEnvironmentChangedEvent":
+		*v = new(ProjectV2FieldsNodeDeploymentEnvironmentChangedEvent)
+		return json.Unmarshal(b, *v)
+	case "DeploymentReview":
+		*v = new(ProjectV2FieldsNodeDeploymentReview)
+		return json.Unmarshal(b, *v)
+	case "DeploymentStatus":
+		*v = new(ProjectV2FieldsNodeDeploymentStatus)
+		return json.Unmarshal(b, *v)
+	case "DisconnectedEvent":
+		*v = new(ProjectV2FieldsNodeDisconnectedEvent)
+		return json.Unmarshal(b, *v)
+	case "Discussion":
+		*v = new(ProjectV2FieldsNodeDiscussion)
+		return json.Unmarshal(b, *v)
+	case "DiscussionCategory":
+		*v = new(ProjectV2FieldsNodeDiscussionCategory)
+		return json.Unmarshal(b, *v)
+	case "DiscussionComment":
+		*v = new(ProjectV2FieldsNodeDiscussionComment)
+		return json.Unmarshal(b, *v)
+	case "DiscussionPoll":
+		*v = new(ProjectV2FieldsNodeDiscussionPoll)
+		return json.Unmarshal(b, *v)
+	case "DiscussionPollOption":
+		*v = new(ProjectV2FieldsNodeDiscussionPollOption)
+		return json.Unmarshal(b, *v)
+	case "DraftIssue":
+		*v = new(ProjectV2FieldsNodeDraftIssue)
+		return json.Unmarshal(b, *v)
+	case "Enterprise":
+		*v = new(ProjectV2FieldsNodeEnterprise)
+		return json.Unmarshal(b, *v)
+	case "EnterpriseAdministratorInvitation":
+		*v = new(ProjectV2FieldsNodeEnterpriseAdministratorInvitation)
+		return json.Unmarshal(b, *v)
+	case "EnterpriseIdentityProvider":
+		*v = new(ProjectV2FieldsNodeEnterpriseIdentityProvider)
+		return json.Unmarshal(b, *v)
+	case "EnterpriseMemberInvitation":
+		*v = new(ProjectV2FieldsNodeEnterpriseMemberInvitation)
+		return json.Unmarshal(b, *v)
+	case "EnterpriseRepositoryInfo":
+		*v = new(ProjectV2FieldsNodeEnterpriseRepositoryInfo)
+		return json.Unmarshal(b, *v)
+	case "EnterpriseServerInstallation":
+		*v = new(ProjectV2FieldsNodeEnterpriseServerInstallation)
+		return json.Unmarshal(b, *v)
+	case "EnterpriseServerUserAccount":
+		*v = new(ProjectV2FieldsNodeEnterpriseServerUserAccount)
+		return json.Unmarshal(b, *v)
+	case "EnterpriseServerUserAccountEmail":
+		*v = new(ProjectV2FieldsNodeEnterpriseServerUserAccountEmail)
+		return json.Unmarshal(b, *v)
+	case "EnterpriseServerUserAccountsUpload":
+		*v = new(ProjectV2FieldsNodeEnterpriseServerUserAccountsUpload)
+		return json.Unmarshal(b, *v)
+	case "EnterpriseUserAccount":
+		*v = new(ProjectV2FieldsNodeEnterpriseUserAccount)
+		return json.Unmarshal(b, *v)
+	case "Environment":
+		*v = new(ProjectV2FieldsNodeEnvironment)
+		return json.Unmarshal(b, *v)
+	case "ExternalIdentity":
+		*v = new(ProjectV2FieldsNodeExternalIdentity)
+		return json.Unmarshal(b, *v)
+	case "Gist":
+		*v = new(ProjectV2FieldsNodeGist)
+		return json.Unmarshal(b, *v)
+	case "GistComment":
+		*v = new(ProjectV2FieldsNodeGistComment)
+		return json.Unmarshal(b, *v)
+	case "HeadRefDeletedEvent":
+		*v = new(ProjectV2FieldsNodeHeadRefDeletedEvent)
+		return json.Unmarshal(b, *v)
+	case "HeadRefForcePushedEvent":
+		*v = new(ProjectV2FieldsNodeHeadRefForcePushedEvent)
+		return json.Unmarshal(b, *v)
+	case "HeadRefRestoredEvent":
+		*v = new(ProjectV2FieldsNodeHeadRefRestoredEvent)
+		return json.Unmarshal(b, *v)
+	case "IpAllowListEntry":
+		*v = new(ProjectV2FieldsNodeIpAllowListEntry)
+		return json.Unmarshal(b, *v)
+	case "Issue":
+		*v = new(ProjectV2FieldsNodeIssue)
+		return json.Unmarshal(b, *v)
+	case "IssueComment":
+		*v = new(ProjectV2FieldsNodeIssueComment)
+		return json.Unmarshal(b, *v)
+	case "IssueCommentPinnedEvent":
+		*v = new(ProjectV2FieldsNodeIssueCommentPinnedEvent)
+		return json.Unmarshal(b, *v)
+	case "IssueCommentUnpinnedEvent":
+		*v = new(ProjectV2FieldsNodeIssueCommentUnpinnedEvent)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldAddedEvent":
+		*v = new(ProjectV2FieldsNodeIssueFieldAddedEvent)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldChangedEvent":
+		*v = new(ProjectV2FieldsNodeIssueFieldChangedEvent)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldDate":
+		*v = new(ProjectV2FieldsNodeIssueFieldDate)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldDateValue":
+		*v = new(ProjectV2FieldsNodeIssueFieldDateValue)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldNumber":
+		*v = new(ProjectV2FieldsNodeIssueFieldNumber)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldNumberValue":
+		*v = new(ProjectV2FieldsNodeIssueFieldNumberValue)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldRemovedEvent":
+		*v = new(ProjectV2FieldsNodeIssueFieldRemovedEvent)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldSingleSelect":
+		*v = new(ProjectV2FieldsNodeIssueFieldSingleSelect)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldSingleSelectOption":
+		*v = new(ProjectV2FieldsNodeIssueFieldSingleSelectOption)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldSingleSelectValue":
+		*v = new(ProjectV2FieldsNodeIssueFieldSingleSelectValue)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldText":
+		*v = new(ProjectV2FieldsNodeIssueFieldText)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldTextValue":
+		*v = new(ProjectV2FieldsNodeIssueFieldTextValue)
+		return json.Unmarshal(b, *v)
+	case "IssueType":
+		*v = new(ProjectV2FieldsNodeIssueType)
+		return json.Unmarshal(b, *v)
+	case "IssueTypeAddedEvent":
+		*v = new(ProjectV2FieldsNodeIssueTypeAddedEvent)
+		return json.Unmarshal(b, *v)
+	case "IssueTypeChangedEvent":
+		*v = new(ProjectV2FieldsNodeIssueTypeChangedEvent)
+		return json.Unmarshal(b, *v)
+	case "IssueTypeRemovedEvent":
+		*v = new(ProjectV2FieldsNodeIssueTypeRemovedEvent)
+		return json.Unmarshal(b, *v)
+	case "Label":
+		*v = new(ProjectV2FieldsNodeLabel)
+		return json.Unmarshal(b, *v)
+	case "LabeledEvent":
+		*v = new(ProjectV2FieldsNodeLabeledEvent)
+		return json.Unmarshal(b, *v)
+	case "Language":
+		*v = new(ProjectV2FieldsNodeLanguage)
+		return json.Unmarshal(b, *v)
+	case "License":
+		*v = new(ProjectV2FieldsNodeLicense)
+		return json.Unmarshal(b, *v)
+	case "LinkedBranch":
+		*v = new(ProjectV2FieldsNodeLinkedBranch)
+		return json.Unmarshal(b, *v)
+	case "LockedEvent":
+		*v = new(ProjectV2FieldsNodeLockedEvent)
+		return json.Unmarshal(b, *v)
+	case "Mannequin":
+		*v = new(ProjectV2FieldsNodeMannequin)
+		return json.Unmarshal(b, *v)
+	case "MarkedAsDuplicateEvent":
+		*v = new(ProjectV2FieldsNodeMarkedAsDuplicateEvent)
+		return json.Unmarshal(b, *v)
+	case "MarketplaceCategory":
+		*v = new(ProjectV2FieldsNodeMarketplaceCategory)
+		return json.Unmarshal(b, *v)
+	case "MarketplaceListing":
+		*v = new(ProjectV2FieldsNodeMarketplaceListing)
+		return json.Unmarshal(b, *v)
+	case "MemberFeatureRequestNotification":
+		*v = new(ProjectV2FieldsNodeMemberFeatureRequestNotification)
+		return json.Unmarshal(b, *v)
+	case "MembersCanDeleteReposClearAuditEntry":
+		*v = new(ProjectV2FieldsNodeMembersCanDeleteReposClearAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "MembersCanDeleteReposDisableAuditEntry":
+		*v = new(ProjectV2FieldsNodeMembersCanDeleteReposDisableAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "MembersCanDeleteReposEnableAuditEntry":
+		*v = new(ProjectV2FieldsNodeMembersCanDeleteReposEnableAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "MentionedEvent":
+		*v = new(ProjectV2FieldsNodeMentionedEvent)
+		return json.Unmarshal(b, *v)
+	case "MergeQueue":
+		*v = new(ProjectV2FieldsNodeMergeQueue)
+		return json.Unmarshal(b, *v)
+	case "MergeQueueEntry":
+		*v = new(ProjectV2FieldsNodeMergeQueueEntry)
+		return json.Unmarshal(b, *v)
+	case "MergedEvent":
+		*v = new(ProjectV2FieldsNodeMergedEvent)
+		return json.Unmarshal(b, *v)
+	case "MigrationSource":
+		*v = new(ProjectV2FieldsNodeMigrationSource)
+		return json.Unmarshal(b, *v)
+	case "Milestone":
+		*v = new(ProjectV2FieldsNodeMilestone)
+		return json.Unmarshal(b, *v)
+	case "MilestonedEvent":
+		*v = new(ProjectV2FieldsNodeMilestonedEvent)
+		return json.Unmarshal(b, *v)
+	case "MovedColumnsInProjectEvent":
+		*v = new(ProjectV2FieldsNodeMovedColumnsInProjectEvent)
+		return json.Unmarshal(b, *v)
+	case "OIDCProvider":
+		*v = new(ProjectV2FieldsNodeOIDCProvider)
+		return json.Unmarshal(b, *v)
+	case "OauthApplicationCreateAuditEntry":
+		*v = new(ProjectV2FieldsNodeOauthApplicationCreateAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgAddBillingManagerAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgAddBillingManagerAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgAddMemberAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgAddMemberAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgBlockUserAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgBlockUserAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgConfigDisableCollaboratorsOnlyAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgConfigDisableCollaboratorsOnlyAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgConfigEnableCollaboratorsOnlyAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgConfigEnableCollaboratorsOnlyAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgCreateAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgCreateAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgDisableOauthAppRestrictionsAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgDisableOauthAppRestrictionsAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgDisableSamlAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgDisableSamlAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgDisableTwoFactorRequirementAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgDisableTwoFactorRequirementAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgEnableOauthAppRestrictionsAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgEnableOauthAppRestrictionsAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgEnableSamlAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgEnableSamlAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgEnableTwoFactorRequirementAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgEnableTwoFactorRequirementAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgInviteMemberAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgInviteMemberAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgInviteToBusinessAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgInviteToBusinessAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgOauthAppAccessApprovedAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgOauthAppAccessApprovedAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgOauthAppAccessBlockedAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgOauthAppAccessBlockedAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgOauthAppAccessDeniedAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgOauthAppAccessDeniedAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgOauthAppAccessRequestedAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgOauthAppAccessRequestedAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgOauthAppAccessUnblockedAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgOauthAppAccessUnblockedAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgRemoveBillingManagerAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgRemoveBillingManagerAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgRemoveMemberAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgRemoveMemberAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgRemoveOutsideCollaboratorAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgRemoveOutsideCollaboratorAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgRestoreMemberAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgRestoreMemberAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgUnblockUserAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgUnblockUserAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgUpdateDefaultRepositoryPermissionAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgUpdateDefaultRepositoryPermissionAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgUpdateMemberAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgUpdateMemberAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgUpdateMemberRepositoryCreationPermissionAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgUpdateMemberRepositoryCreationPermissionAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgUpdateMemberRepositoryInvitationPermissionAuditEntry":
+		*v = new(ProjectV2FieldsNodeOrgUpdateMemberRepositoryInvitationPermissionAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "Organization":
+		*v = new(ProjectV2FieldsNodeOrganization)
+		return json.Unmarshal(b, *v)
+	case "OrganizationIdentityProvider":
+		*v = new(ProjectV2FieldsNodeOrganizationIdentityProvider)
+		return json.Unmarshal(b, *v)
+	case "OrganizationInvitation":
+		*v = new(ProjectV2FieldsNodeOrganizationInvitation)
+		return json.Unmarshal(b, *v)
+	case "OrganizationMigration":
+		*v = new(ProjectV2FieldsNodeOrganizationMigration)
+		return json.Unmarshal(b, *v)
+	case "Package":
+		*v = new(ProjectV2FieldsNodePackage)
+		return json.Unmarshal(b, *v)
+	case "PackageFile":
+		*v = new(ProjectV2FieldsNodePackageFile)
+		return json.Unmarshal(b, *v)
+	case "PackageTag":
+		*v = new(ProjectV2FieldsNodePackageTag)
+		return json.Unmarshal(b, *v)
+	case "PackageVersion":
+		*v = new(ProjectV2FieldsNodePackageVersion)
+		return json.Unmarshal(b, *v)
+	case "ParentIssueAddedEvent":
+		*v = new(ProjectV2FieldsNodeParentIssueAddedEvent)
+		return json.Unmarshal(b, *v)
+	case "ParentIssueRemovedEvent":
+		*v = new(ProjectV2FieldsNodeParentIssueRemovedEvent)
+		return json.Unmarshal(b, *v)
+	case "PinnedDiscussion":
+		*v = new(ProjectV2FieldsNodePinnedDiscussion)
+		return json.Unmarshal(b, *v)
+	case "PinnedEnvironment":
+		*v = new(ProjectV2FieldsNodePinnedEnvironment)
+		return json.Unmarshal(b, *v)
+	case "PinnedEvent":
+		*v = new(ProjectV2FieldsNodePinnedEvent)
+		return json.Unmarshal(b, *v)
+	case "PinnedIssue":
+		*v = new(ProjectV2FieldsNodePinnedIssue)
+		return json.Unmarshal(b, *v)
+	case "PinnedIssueComment":
+		*v = new(ProjectV2FieldsNodePinnedIssueComment)
+		return json.Unmarshal(b, *v)
+	case "PrivateRepositoryForkingDisableAuditEntry":
+		*v = new(ProjectV2FieldsNodePrivateRepositoryForkingDisableAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "PrivateRepositoryForkingEnableAuditEntry":
+		*v = new(ProjectV2FieldsNodePrivateRepositoryForkingEnableAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "Project":
+		*v = new(ProjectV2FieldsNodeProject)
+		return json.Unmarshal(b, *v)
+	case "ProjectCard":
+		*v = new(ProjectV2FieldsNodeProjectCard)
+		return json.Unmarshal(b, *v)
+	case "ProjectColumn":
+		*v = new(ProjectV2FieldsNodeProjectColumn)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2":
+		*v = new(ProjectV2FieldsNodeProjectV2)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2Field":
+		*v = new(ProjectV2FieldsNodeProjectV2Field)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2Item":
+		*v = new(ProjectV2FieldsNodeProjectV2Item)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemFieldDateValue":
+		*v = new(ProjectV2FieldsNodeProjectV2ItemFieldDateValue)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemFieldIterationValue":
+		*v = new(ProjectV2FieldsNodeProjectV2ItemFieldIterationValue)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemFieldNumberValue":
+		*v = new(ProjectV2FieldsNodeProjectV2ItemFieldNumberValue)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemFieldSingleSelectValue":
+		*v = new(ProjectV2FieldsNodeProjectV2ItemFieldSingleSelectValue)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemFieldTextValue":
+		*v = new(ProjectV2FieldsNodeProjectV2ItemFieldTextValue)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemStatusChangedEvent":
+		*v = new(ProjectV2FieldsNodeProjectV2ItemStatusChangedEvent)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2IterationField":
+		*v = new(ProjectV2FieldsNodeProjectV2IterationField)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2SingleSelectField":
+		*v = new(ProjectV2FieldsNodeProjectV2SingleSelectField)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2StatusUpdate":
+		*v = new(ProjectV2FieldsNodeProjectV2StatusUpdate)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2View":
+		*v = new(ProjectV2FieldsNodeProjectV2View)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2Workflow":
+		*v = new(ProjectV2FieldsNodeProjectV2Workflow)
+		return json.Unmarshal(b, *v)
+	case "PublicKey":
+		*v = new(ProjectV2FieldsNodePublicKey)
+		return json.Unmarshal(b, *v)
+	case "PullRequest":
+		*v = new(ProjectV2FieldsNodePullRequest)
+		return json.Unmarshal(b, *v)
+	case "PullRequestCommit":
+		*v = new(ProjectV2FieldsNodePullRequestCommit)
+		return json.Unmarshal(b, *v)
+	case "PullRequestCommitCommentThread":
+		*v = new(ProjectV2FieldsNodePullRequestCommitCommentThread)
+		return json.Unmarshal(b, *v)
+	case "PullRequestReview":
+		*v = new(ProjectV2FieldsNodePullRequestReview)
+		return json.Unmarshal(b, *v)
+	case "PullRequestReviewComment":
+		*v = new(ProjectV2FieldsNodePullRequestReviewComment)
+		return json.Unmarshal(b, *v)
+	case "PullRequestReviewThread":
+		*v = new(ProjectV2FieldsNodePullRequestReviewThread)
+		return json.Unmarshal(b, *v)
+	case "PullRequestThread":
+		*v = new(ProjectV2FieldsNodePullRequestThread)
+		return json.Unmarshal(b, *v)
+	case "Push":
+		*v = new(ProjectV2FieldsNodePush)
+		return json.Unmarshal(b, *v)
+	case "PushAllowance":
+		*v = new(ProjectV2FieldsNodePushAllowance)
+		return json.Unmarshal(b, *v)
+	case "Query":
+		*v = new(ProjectV2FieldsNodeQuery)
+		return json.Unmarshal(b, *v)
+	case "Reaction":
+		*v = new(ProjectV2FieldsNodeReaction)
+		return json.Unmarshal(b, *v)
+	case "ReadyForReviewEvent":
+		*v = new(ProjectV2FieldsNodeReadyForReviewEvent)
+		return json.Unmarshal(b, *v)
+	case "Ref":
+		*v = new(ProjectV2FieldsNodeRef)
+		return json.Unmarshal(b, *v)
+	case "ReferencedEvent":
+		*v = new(ProjectV2FieldsNodeReferencedEvent)
+		return json.Unmarshal(b, *v)
+	case "Release":
+		*v = new(ProjectV2FieldsNodeRelease)
+		return json.Unmarshal(b, *v)
+	case "ReleaseAsset":
+		*v = new(ProjectV2FieldsNodeReleaseAsset)
+		return json.Unmarshal(b, *v)
+	case "RemovedFromMergeQueueEvent":
+		*v = new(ProjectV2FieldsNodeRemovedFromMergeQueueEvent)
+		return json.Unmarshal(b, *v)
+	case "RemovedFromProjectEvent":
+		*v = new(ProjectV2FieldsNodeRemovedFromProjectEvent)
+		return json.Unmarshal(b, *v)
+	case "RemovedFromProjectV2Event":
+		*v = new(ProjectV2FieldsNodeRemovedFromProjectV2Event)
+		return json.Unmarshal(b, *v)
+	case "RenamedTitleEvent":
+		*v = new(ProjectV2FieldsNodeRenamedTitleEvent)
+		return json.Unmarshal(b, *v)
+	case "ReopenedEvent":
+		*v = new(ProjectV2FieldsNodeReopenedEvent)
+		return json.Unmarshal(b, *v)
+	case "RepoAccessAuditEntry":
+		*v = new(ProjectV2FieldsNodeRepoAccessAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoAddMemberAuditEntry":
+		*v = new(ProjectV2FieldsNodeRepoAddMemberAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoAddTopicAuditEntry":
+		*v = new(ProjectV2FieldsNodeRepoAddTopicAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoArchivedAuditEntry":
+		*v = new(ProjectV2FieldsNodeRepoArchivedAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoChangeMergeSettingAuditEntry":
+		*v = new(ProjectV2FieldsNodeRepoChangeMergeSettingAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoConfigDisableAnonymousGitAccessAuditEntry":
+		*v = new(ProjectV2FieldsNodeRepoConfigDisableAnonymousGitAccessAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoConfigDisableCollaboratorsOnlyAuditEntry":
+		*v = new(ProjectV2FieldsNodeRepoConfigDisableCollaboratorsOnlyAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoConfigDisableContributorsOnlyAuditEntry":
+		*v = new(ProjectV2FieldsNodeRepoConfigDisableContributorsOnlyAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoConfigDisableSockpuppetDisallowedAuditEntry":
+		*v = new(ProjectV2FieldsNodeRepoConfigDisableSockpuppetDisallowedAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoConfigEnableAnonymousGitAccessAuditEntry":
+		*v = new(ProjectV2FieldsNodeRepoConfigEnableAnonymousGitAccessAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoConfigEnableCollaboratorsOnlyAuditEntry":
+		*v = new(ProjectV2FieldsNodeRepoConfigEnableCollaboratorsOnlyAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoConfigEnableContributorsOnlyAuditEntry":
+		*v = new(ProjectV2FieldsNodeRepoConfigEnableContributorsOnlyAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoConfigEnableSockpuppetDisallowedAuditEntry":
+		*v = new(ProjectV2FieldsNodeRepoConfigEnableSockpuppetDisallowedAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoConfigLockAnonymousGitAccessAuditEntry":
+		*v = new(ProjectV2FieldsNodeRepoConfigLockAnonymousGitAccessAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoConfigUnlockAnonymousGitAccessAuditEntry":
+		*v = new(ProjectV2FieldsNodeRepoConfigUnlockAnonymousGitAccessAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoCreateAuditEntry":
+		*v = new(ProjectV2FieldsNodeRepoCreateAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoDestroyAuditEntry":
+		*v = new(ProjectV2FieldsNodeRepoDestroyAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoRemoveMemberAuditEntry":
+		*v = new(ProjectV2FieldsNodeRepoRemoveMemberAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoRemoveTopicAuditEntry":
+		*v = new(ProjectV2FieldsNodeRepoRemoveTopicAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "Repository":
+		*v = new(ProjectV2FieldsNodeRepository)
+		return json.Unmarshal(b, *v)
+	case "RepositoryCustomProperty":
+		*v = new(ProjectV2FieldsNodeRepositoryCustomProperty)
+		return json.Unmarshal(b, *v)
+	case "RepositoryInvitation":
+		*v = new(ProjectV2FieldsNodeRepositoryInvitation)
+		return json.Unmarshal(b, *v)
+	case "RepositoryMigration":
+		*v = new(ProjectV2FieldsNodeRepositoryMigration)
+		return json.Unmarshal(b, *v)
+	case "RepositoryRule":
+		*v = new(ProjectV2FieldsNodeRepositoryRule)
+		return json.Unmarshal(b, *v)
+	case "RepositoryRuleset":
+		*v = new(ProjectV2FieldsNodeRepositoryRuleset)
+		return json.Unmarshal(b, *v)
+	case "RepositoryRulesetBypassActor":
+		*v = new(ProjectV2FieldsNodeRepositoryRulesetBypassActor)
+		return json.Unmarshal(b, *v)
+	case "RepositoryTopic":
+		*v = new(ProjectV2FieldsNodeRepositoryTopic)
+		return json.Unmarshal(b, *v)
+	case "RepositoryVisibilityChangeDisableAuditEntry":
+		*v = new(ProjectV2FieldsNodeRepositoryVisibilityChangeDisableAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepositoryVisibilityChangeEnableAuditEntry":
+		*v = new(ProjectV2FieldsNodeRepositoryVisibilityChangeEnableAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepositoryVulnerabilityAlert":
+		*v = new(ProjectV2FieldsNodeRepositoryVulnerabilityAlert)
+		return json.Unmarshal(b, *v)
+	case "ReviewDismissalAllowance":
+		*v = new(ProjectV2FieldsNodeReviewDismissalAllowance)
+		return json.Unmarshal(b, *v)
+	case "ReviewDismissedEvent":
+		*v = new(ProjectV2FieldsNodeReviewDismissedEvent)
+		return json.Unmarshal(b, *v)
+	case "ReviewRequest":
+		*v = new(ProjectV2FieldsNodeReviewRequest)
+		return json.Unmarshal(b, *v)
+	case "ReviewRequestRemovedEvent":
+		*v = new(ProjectV2FieldsNodeReviewRequestRemovedEvent)
+		return json.Unmarshal(b, *v)
+	case "ReviewRequestedEvent":
+		*v = new(ProjectV2FieldsNodeReviewRequestedEvent)
+		return json.Unmarshal(b, *v)
+	case "SavedReply":
+		*v = new(ProjectV2FieldsNodeSavedReply)
+		return json.Unmarshal(b, *v)
+	case "SecurityAdvisory":
+		*v = new(ProjectV2FieldsNodeSecurityAdvisory)
+		return json.Unmarshal(b, *v)
+	case "SponsorsActivity":
+		*v = new(ProjectV2FieldsNodeSponsorsActivity)
+		return json.Unmarshal(b, *v)
+	case "SponsorsListing":
+		*v = new(ProjectV2FieldsNodeSponsorsListing)
+		return json.Unmarshal(b, *v)
+	case "SponsorsListingFeaturedItem":
+		*v = new(ProjectV2FieldsNodeSponsorsListingFeaturedItem)
+		return json.Unmarshal(b, *v)
+	case "SponsorsTier":
+		*v = new(ProjectV2FieldsNodeSponsorsTier)
+		return json.Unmarshal(b, *v)
+	case "Sponsorship":
+		*v = new(ProjectV2FieldsNodeSponsorship)
+		return json.Unmarshal(b, *v)
+	case "SponsorshipNewsletter":
+		*v = new(ProjectV2FieldsNodeSponsorshipNewsletter)
+		return json.Unmarshal(b, *v)
+	case "Status":
+		*v = new(ProjectV2FieldsNodeStatus)
+		return json.Unmarshal(b, *v)
+	case "StatusCheckRollup":
+		*v = new(ProjectV2FieldsNodeStatusCheckRollup)
+		return json.Unmarshal(b, *v)
+	case "StatusContext":
+		*v = new(ProjectV2FieldsNodeStatusContext)
+		return json.Unmarshal(b, *v)
+	case "SubIssueAddedEvent":
+		*v = new(ProjectV2FieldsNodeSubIssueAddedEvent)
+		return json.Unmarshal(b, *v)
+	case "SubIssueRemovedEvent":
+		*v = new(ProjectV2FieldsNodeSubIssueRemovedEvent)
+		return json.Unmarshal(b, *v)
+	case "SubscribedEvent":
+		*v = new(ProjectV2FieldsNodeSubscribedEvent)
+		return json.Unmarshal(b, *v)
+	case "Tag":
+		*v = new(ProjectV2FieldsNodeTag)
+		return json.Unmarshal(b, *v)
+	case "Team":
+		*v = new(ProjectV2FieldsNodeTeam)
+		return json.Unmarshal(b, *v)
+	case "TeamAddMemberAuditEntry":
+		*v = new(ProjectV2FieldsNodeTeamAddMemberAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "TeamAddRepositoryAuditEntry":
+		*v = new(ProjectV2FieldsNodeTeamAddRepositoryAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "TeamChangeParentTeamAuditEntry":
+		*v = new(ProjectV2FieldsNodeTeamChangeParentTeamAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "TeamRemoveMemberAuditEntry":
+		*v = new(ProjectV2FieldsNodeTeamRemoveMemberAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "TeamRemoveRepositoryAuditEntry":
+		*v = new(ProjectV2FieldsNodeTeamRemoveRepositoryAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "Topic":
+		*v = new(ProjectV2FieldsNodeTopic)
+		return json.Unmarshal(b, *v)
+	case "TransferredEvent":
+		*v = new(ProjectV2FieldsNodeTransferredEvent)
+		return json.Unmarshal(b, *v)
+	case "Tree":
+		*v = new(ProjectV2FieldsNodeTree)
+		return json.Unmarshal(b, *v)
+	case "UnassignedEvent":
+		*v = new(ProjectV2FieldsNodeUnassignedEvent)
+		return json.Unmarshal(b, *v)
+	case "UnlabeledEvent":
+		*v = new(ProjectV2FieldsNodeUnlabeledEvent)
+		return json.Unmarshal(b, *v)
+	case "UnlockedEvent":
+		*v = new(ProjectV2FieldsNodeUnlockedEvent)
+		return json.Unmarshal(b, *v)
+	case "UnmarkedAsDuplicateEvent":
+		*v = new(ProjectV2FieldsNodeUnmarkedAsDuplicateEvent)
+		return json.Unmarshal(b, *v)
+	case "UnpinnedEvent":
+		*v = new(ProjectV2FieldsNodeUnpinnedEvent)
+		return json.Unmarshal(b, *v)
+	case "UnsubscribedEvent":
+		*v = new(ProjectV2FieldsNodeUnsubscribedEvent)
+		return json.Unmarshal(b, *v)
+	case "User":
+		*v = new(ProjectV2FieldsNodeUser)
+		return json.Unmarshal(b, *v)
+	case "UserBlockedEvent":
+		*v = new(ProjectV2FieldsNodeUserBlockedEvent)
+		return json.Unmarshal(b, *v)
+	case "UserContentEdit":
+		*v = new(ProjectV2FieldsNodeUserContentEdit)
+		return json.Unmarshal(b, *v)
+	case "UserList":
+		*v = new(ProjectV2FieldsNodeUserList)
+		return json.Unmarshal(b, *v)
+	case "UserNamespaceRepository":
+		*v = new(ProjectV2FieldsNodeUserNamespaceRepository)
+		return json.Unmarshal(b, *v)
+	case "UserStatus":
+		*v = new(ProjectV2FieldsNodeUserStatus)
+		return json.Unmarshal(b, *v)
+	case "VerifiableDomain":
+		*v = new(ProjectV2FieldsNodeVerifiableDomain)
+		return json.Unmarshal(b, *v)
+	case "Workflow":
+		*v = new(ProjectV2FieldsNodeWorkflow)
+		return json.Unmarshal(b, *v)
+	case "WorkflowRun":
+		*v = new(ProjectV2FieldsNodeWorkflowRun)
+		return json.Unmarshal(b, *v)
+	case "WorkflowRunFile":
+		*v = new(ProjectV2FieldsNodeWorkflowRunFile)
+		return json.Unmarshal(b, *v)
+	case "":
+		return fmt.Errorf(
+			"response was missing Node.__typename")
+	default:
+		return fmt.Errorf(
+			`unexpected concrete type for ProjectV2FieldsNode: "%v"`, tn.TypeName)
+	}
+}
+
+func __marshalProjectV2FieldsNode(v *ProjectV2FieldsNode) ([]byte, error) {
+
+	var typename string
+	switch v := (*v).(type) {
+	case *ProjectV2FieldsNodeAddedToMergeQueueEvent:
+		typename = "AddedToMergeQueueEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeAddedToMergeQueueEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeAddedToProjectEvent:
+		typename = "AddedToProjectEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeAddedToProjectEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeAddedToProjectV2Event:
+		typename = "AddedToProjectV2Event"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeAddedToProjectV2Event
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeApp:
+		typename = "App"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeApp
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeAssignedEvent:
+		typename = "AssignedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeAssignedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeAutoMergeDisabledEvent:
+		typename = "AutoMergeDisabledEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeAutoMergeDisabledEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeAutoMergeEnabledEvent:
+		typename = "AutoMergeEnabledEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeAutoMergeEnabledEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeAutoRebaseEnabledEvent:
+		typename = "AutoRebaseEnabledEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeAutoRebaseEnabledEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeAutoSquashEnabledEvent:
+		typename = "AutoSquashEnabledEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeAutoSquashEnabledEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeAutomaticBaseChangeFailedEvent:
+		typename = "AutomaticBaseChangeFailedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeAutomaticBaseChangeFailedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeAutomaticBaseChangeSucceededEvent:
+		typename = "AutomaticBaseChangeSucceededEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeAutomaticBaseChangeSucceededEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeBaseRefChangedEvent:
+		typename = "BaseRefChangedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeBaseRefChangedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeBaseRefDeletedEvent:
+		typename = "BaseRefDeletedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeBaseRefDeletedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeBaseRefForcePushedEvent:
+		typename = "BaseRefForcePushedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeBaseRefForcePushedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeBlob:
+		typename = "Blob"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeBlob
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeBlockedByAddedEvent:
+		typename = "BlockedByAddedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeBlockedByAddedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeBlockedByRemovedEvent:
+		typename = "BlockedByRemovedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeBlockedByRemovedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeBlockingAddedEvent:
+		typename = "BlockingAddedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeBlockingAddedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeBlockingRemovedEvent:
+		typename = "BlockingRemovedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeBlockingRemovedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeBot:
+		typename = "Bot"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeBot
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeBranchProtectionRule:
+		typename = "BranchProtectionRule"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeBranchProtectionRule
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeBypassForcePushAllowance:
+		typename = "BypassForcePushAllowance"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeBypassForcePushAllowance
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeBypassPullRequestAllowance:
+		typename = "BypassPullRequestAllowance"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeBypassPullRequestAllowance
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeCWE:
+		typename = "CWE"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeCWE
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeCheckRun:
+		typename = "CheckRun"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeCheckRun
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeCheckSuite:
+		typename = "CheckSuite"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeCheckSuite
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeClosedEvent:
+		typename = "ClosedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeClosedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeCodeOfConduct:
+		typename = "CodeOfConduct"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeCodeOfConduct
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeCommentDeletedEvent:
+		typename = "CommentDeletedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeCommentDeletedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeCommit:
+		typename = "Commit"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeCommit
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeCommitComment:
+		typename = "CommitComment"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeCommitComment
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeCommitCommentThread:
+		typename = "CommitCommentThread"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeCommitCommentThread
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeComparison:
+		typename = "Comparison"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeComparison
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeConnectedEvent:
+		typename = "ConnectedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeConnectedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeConvertToDraftEvent:
+		typename = "ConvertToDraftEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeConvertToDraftEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeConvertedFromDraftEvent:
+		typename = "ConvertedFromDraftEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeConvertedFromDraftEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeConvertedNoteToIssueEvent:
+		typename = "ConvertedNoteToIssueEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeConvertedNoteToIssueEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeConvertedToDiscussionEvent:
+		typename = "ConvertedToDiscussionEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeConvertedToDiscussionEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeCrossReferencedEvent:
+		typename = "CrossReferencedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeCrossReferencedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeDemilestonedEvent:
+		typename = "DemilestonedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeDemilestonedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeDependencyGraphManifest:
+		typename = "DependencyGraphManifest"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeDependencyGraphManifest
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeDeployKey:
+		typename = "DeployKey"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeDeployKey
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeDeployedEvent:
+		typename = "DeployedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeDeployedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeDeployment:
+		typename = "Deployment"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeDeployment
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeDeploymentEnvironmentChangedEvent:
+		typename = "DeploymentEnvironmentChangedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeDeploymentEnvironmentChangedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeDeploymentReview:
+		typename = "DeploymentReview"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeDeploymentReview
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeDeploymentStatus:
+		typename = "DeploymentStatus"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeDeploymentStatus
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeDisconnectedEvent:
+		typename = "DisconnectedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeDisconnectedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeDiscussion:
+		typename = "Discussion"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeDiscussion
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeDiscussionCategory:
+		typename = "DiscussionCategory"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeDiscussionCategory
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeDiscussionComment:
+		typename = "DiscussionComment"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeDiscussionComment
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeDiscussionPoll:
+		typename = "DiscussionPoll"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeDiscussionPoll
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeDiscussionPollOption:
+		typename = "DiscussionPollOption"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeDiscussionPollOption
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeDraftIssue:
+		typename = "DraftIssue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeDraftIssue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeEnterprise:
+		typename = "Enterprise"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeEnterprise
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeEnterpriseAdministratorInvitation:
+		typename = "EnterpriseAdministratorInvitation"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeEnterpriseAdministratorInvitation
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeEnterpriseIdentityProvider:
+		typename = "EnterpriseIdentityProvider"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeEnterpriseIdentityProvider
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeEnterpriseMemberInvitation:
+		typename = "EnterpriseMemberInvitation"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeEnterpriseMemberInvitation
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeEnterpriseRepositoryInfo:
+		typename = "EnterpriseRepositoryInfo"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeEnterpriseRepositoryInfo
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeEnterpriseServerInstallation:
+		typename = "EnterpriseServerInstallation"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeEnterpriseServerInstallation
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeEnterpriseServerUserAccount:
+		typename = "EnterpriseServerUserAccount"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeEnterpriseServerUserAccount
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeEnterpriseServerUserAccountEmail:
+		typename = "EnterpriseServerUserAccountEmail"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeEnterpriseServerUserAccountEmail
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeEnterpriseServerUserAccountsUpload:
+		typename = "EnterpriseServerUserAccountsUpload"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeEnterpriseServerUserAccountsUpload
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeEnterpriseUserAccount:
+		typename = "EnterpriseUserAccount"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeEnterpriseUserAccount
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeEnvironment:
+		typename = "Environment"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeEnvironment
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeExternalIdentity:
+		typename = "ExternalIdentity"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeExternalIdentity
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeGist:
+		typename = "Gist"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeGist
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeGistComment:
+		typename = "GistComment"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeGistComment
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeHeadRefDeletedEvent:
+		typename = "HeadRefDeletedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeHeadRefDeletedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeHeadRefForcePushedEvent:
+		typename = "HeadRefForcePushedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeHeadRefForcePushedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeHeadRefRestoredEvent:
+		typename = "HeadRefRestoredEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeHeadRefRestoredEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeIpAllowListEntry:
+		typename = "IpAllowListEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeIpAllowListEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeIssue:
+		typename = "Issue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeIssue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeIssueComment:
+		typename = "IssueComment"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeIssueComment
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeIssueCommentPinnedEvent:
+		typename = "IssueCommentPinnedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeIssueCommentPinnedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeIssueCommentUnpinnedEvent:
+		typename = "IssueCommentUnpinnedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeIssueCommentUnpinnedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeIssueFieldAddedEvent:
+		typename = "IssueFieldAddedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeIssueFieldAddedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeIssueFieldChangedEvent:
+		typename = "IssueFieldChangedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeIssueFieldChangedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeIssueFieldDate:
+		typename = "IssueFieldDate"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeIssueFieldDate
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeIssueFieldDateValue:
+		typename = "IssueFieldDateValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeIssueFieldDateValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeIssueFieldNumber:
+		typename = "IssueFieldNumber"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeIssueFieldNumber
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeIssueFieldNumberValue:
+		typename = "IssueFieldNumberValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeIssueFieldNumberValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeIssueFieldRemovedEvent:
+		typename = "IssueFieldRemovedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeIssueFieldRemovedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeIssueFieldSingleSelect:
+		typename = "IssueFieldSingleSelect"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeIssueFieldSingleSelect
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeIssueFieldSingleSelectOption:
+		typename = "IssueFieldSingleSelectOption"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeIssueFieldSingleSelectOption
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeIssueFieldSingleSelectValue:
+		typename = "IssueFieldSingleSelectValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeIssueFieldSingleSelectValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeIssueFieldText:
+		typename = "IssueFieldText"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeIssueFieldText
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeIssueFieldTextValue:
+		typename = "IssueFieldTextValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeIssueFieldTextValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeIssueType:
+		typename = "IssueType"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeIssueType
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeIssueTypeAddedEvent:
+		typename = "IssueTypeAddedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeIssueTypeAddedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeIssueTypeChangedEvent:
+		typename = "IssueTypeChangedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeIssueTypeChangedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeIssueTypeRemovedEvent:
+		typename = "IssueTypeRemovedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeIssueTypeRemovedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeLabel:
+		typename = "Label"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeLabel
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeLabeledEvent:
+		typename = "LabeledEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeLabeledEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeLanguage:
+		typename = "Language"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeLanguage
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeLicense:
+		typename = "License"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeLicense
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeLinkedBranch:
+		typename = "LinkedBranch"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeLinkedBranch
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeLockedEvent:
+		typename = "LockedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeLockedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeMannequin:
+		typename = "Mannequin"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeMannequin
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeMarkedAsDuplicateEvent:
+		typename = "MarkedAsDuplicateEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeMarkedAsDuplicateEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeMarketplaceCategory:
+		typename = "MarketplaceCategory"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeMarketplaceCategory
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeMarketplaceListing:
+		typename = "MarketplaceListing"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeMarketplaceListing
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeMemberFeatureRequestNotification:
+		typename = "MemberFeatureRequestNotification"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeMemberFeatureRequestNotification
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeMembersCanDeleteReposClearAuditEntry:
+		typename = "MembersCanDeleteReposClearAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeMembersCanDeleteReposClearAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeMembersCanDeleteReposDisableAuditEntry:
+		typename = "MembersCanDeleteReposDisableAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeMembersCanDeleteReposDisableAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeMembersCanDeleteReposEnableAuditEntry:
+		typename = "MembersCanDeleteReposEnableAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeMembersCanDeleteReposEnableAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeMentionedEvent:
+		typename = "MentionedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeMentionedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeMergeQueue:
+		typename = "MergeQueue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeMergeQueue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeMergeQueueEntry:
+		typename = "MergeQueueEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeMergeQueueEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeMergedEvent:
+		typename = "MergedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeMergedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeMigrationSource:
+		typename = "MigrationSource"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeMigrationSource
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeMilestone:
+		typename = "Milestone"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeMilestone
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeMilestonedEvent:
+		typename = "MilestonedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeMilestonedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeMovedColumnsInProjectEvent:
+		typename = "MovedColumnsInProjectEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeMovedColumnsInProjectEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOIDCProvider:
+		typename = "OIDCProvider"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOIDCProvider
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOauthApplicationCreateAuditEntry:
+		typename = "OauthApplicationCreateAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOauthApplicationCreateAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgAddBillingManagerAuditEntry:
+		typename = "OrgAddBillingManagerAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgAddBillingManagerAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgAddMemberAuditEntry:
+		typename = "OrgAddMemberAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgAddMemberAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgBlockUserAuditEntry:
+		typename = "OrgBlockUserAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgBlockUserAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgConfigDisableCollaboratorsOnlyAuditEntry:
+		typename = "OrgConfigDisableCollaboratorsOnlyAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgConfigDisableCollaboratorsOnlyAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgConfigEnableCollaboratorsOnlyAuditEntry:
+		typename = "OrgConfigEnableCollaboratorsOnlyAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgConfigEnableCollaboratorsOnlyAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgCreateAuditEntry:
+		typename = "OrgCreateAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgCreateAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgDisableOauthAppRestrictionsAuditEntry:
+		typename = "OrgDisableOauthAppRestrictionsAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgDisableOauthAppRestrictionsAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgDisableSamlAuditEntry:
+		typename = "OrgDisableSamlAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgDisableSamlAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgDisableTwoFactorRequirementAuditEntry:
+		typename = "OrgDisableTwoFactorRequirementAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgDisableTwoFactorRequirementAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgEnableOauthAppRestrictionsAuditEntry:
+		typename = "OrgEnableOauthAppRestrictionsAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgEnableOauthAppRestrictionsAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgEnableSamlAuditEntry:
+		typename = "OrgEnableSamlAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgEnableSamlAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgEnableTwoFactorRequirementAuditEntry:
+		typename = "OrgEnableTwoFactorRequirementAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgEnableTwoFactorRequirementAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgInviteMemberAuditEntry:
+		typename = "OrgInviteMemberAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgInviteMemberAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgInviteToBusinessAuditEntry:
+		typename = "OrgInviteToBusinessAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgInviteToBusinessAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgOauthAppAccessApprovedAuditEntry:
+		typename = "OrgOauthAppAccessApprovedAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgOauthAppAccessApprovedAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgOauthAppAccessBlockedAuditEntry:
+		typename = "OrgOauthAppAccessBlockedAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgOauthAppAccessBlockedAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgOauthAppAccessDeniedAuditEntry:
+		typename = "OrgOauthAppAccessDeniedAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgOauthAppAccessDeniedAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgOauthAppAccessRequestedAuditEntry:
+		typename = "OrgOauthAppAccessRequestedAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgOauthAppAccessRequestedAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgOauthAppAccessUnblockedAuditEntry:
+		typename = "OrgOauthAppAccessUnblockedAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgOauthAppAccessUnblockedAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgRemoveBillingManagerAuditEntry:
+		typename = "OrgRemoveBillingManagerAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgRemoveBillingManagerAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgRemoveMemberAuditEntry:
+		typename = "OrgRemoveMemberAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgRemoveMemberAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgRemoveOutsideCollaboratorAuditEntry:
+		typename = "OrgRemoveOutsideCollaboratorAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgRemoveOutsideCollaboratorAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgRestoreMemberAuditEntry:
+		typename = "OrgRestoreMemberAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgRestoreMemberAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgUnblockUserAuditEntry:
+		typename = "OrgUnblockUserAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgUnblockUserAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgUpdateDefaultRepositoryPermissionAuditEntry:
+		typename = "OrgUpdateDefaultRepositoryPermissionAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgUpdateDefaultRepositoryPermissionAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgUpdateMemberAuditEntry:
+		typename = "OrgUpdateMemberAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgUpdateMemberAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgUpdateMemberRepositoryCreationPermissionAuditEntry:
+		typename = "OrgUpdateMemberRepositoryCreationPermissionAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgUpdateMemberRepositoryCreationPermissionAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrgUpdateMemberRepositoryInvitationPermissionAuditEntry:
+		typename = "OrgUpdateMemberRepositoryInvitationPermissionAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrgUpdateMemberRepositoryInvitationPermissionAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrganization:
+		typename = "Organization"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrganization
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrganizationIdentityProvider:
+		typename = "OrganizationIdentityProvider"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrganizationIdentityProvider
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrganizationInvitation:
+		typename = "OrganizationInvitation"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrganizationInvitation
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeOrganizationMigration:
+		typename = "OrganizationMigration"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeOrganizationMigration
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodePackage:
+		typename = "Package"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodePackage
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodePackageFile:
+		typename = "PackageFile"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodePackageFile
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodePackageTag:
+		typename = "PackageTag"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodePackageTag
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodePackageVersion:
+		typename = "PackageVersion"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodePackageVersion
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeParentIssueAddedEvent:
+		typename = "ParentIssueAddedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeParentIssueAddedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeParentIssueRemovedEvent:
+		typename = "ParentIssueRemovedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeParentIssueRemovedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodePinnedDiscussion:
+		typename = "PinnedDiscussion"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodePinnedDiscussion
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodePinnedEnvironment:
+		typename = "PinnedEnvironment"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodePinnedEnvironment
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodePinnedEvent:
+		typename = "PinnedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodePinnedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodePinnedIssue:
+		typename = "PinnedIssue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodePinnedIssue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodePinnedIssueComment:
+		typename = "PinnedIssueComment"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodePinnedIssueComment
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodePrivateRepositoryForkingDisableAuditEntry:
+		typename = "PrivateRepositoryForkingDisableAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodePrivateRepositoryForkingDisableAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodePrivateRepositoryForkingEnableAuditEntry:
+		typename = "PrivateRepositoryForkingEnableAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodePrivateRepositoryForkingEnableAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeProject:
+		typename = "Project"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeProject
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeProjectCard:
+		typename = "ProjectCard"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeProjectCard
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeProjectColumn:
+		typename = "ProjectColumn"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeProjectColumn
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeProjectV2:
+		typename = "ProjectV2"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeProjectV2
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeProjectV2Field:
+		typename = "ProjectV2Field"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeProjectV2Field
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeProjectV2Item:
+		typename = "ProjectV2Item"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeProjectV2Item
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeProjectV2ItemFieldDateValue:
+		typename = "ProjectV2ItemFieldDateValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeProjectV2ItemFieldDateValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeProjectV2ItemFieldIterationValue:
+		typename = "ProjectV2ItemFieldIterationValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeProjectV2ItemFieldIterationValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeProjectV2ItemFieldNumberValue:
+		typename = "ProjectV2ItemFieldNumberValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeProjectV2ItemFieldNumberValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeProjectV2ItemFieldSingleSelectValue:
+		typename = "ProjectV2ItemFieldSingleSelectValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeProjectV2ItemFieldSingleSelectValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeProjectV2ItemFieldTextValue:
+		typename = "ProjectV2ItemFieldTextValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeProjectV2ItemFieldTextValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeProjectV2ItemStatusChangedEvent:
+		typename = "ProjectV2ItemStatusChangedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeProjectV2ItemStatusChangedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeProjectV2IterationField:
+		typename = "ProjectV2IterationField"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeProjectV2IterationField
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeProjectV2SingleSelectField:
+		typename = "ProjectV2SingleSelectField"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeProjectV2SingleSelectField
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeProjectV2StatusUpdate:
+		typename = "ProjectV2StatusUpdate"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeProjectV2StatusUpdate
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeProjectV2View:
+		typename = "ProjectV2View"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeProjectV2View
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeProjectV2Workflow:
+		typename = "ProjectV2Workflow"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeProjectV2Workflow
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodePublicKey:
+		typename = "PublicKey"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodePublicKey
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodePullRequest:
+		typename = "PullRequest"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodePullRequest
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodePullRequestCommit:
+		typename = "PullRequestCommit"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodePullRequestCommit
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodePullRequestCommitCommentThread:
+		typename = "PullRequestCommitCommentThread"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodePullRequestCommitCommentThread
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodePullRequestReview:
+		typename = "PullRequestReview"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodePullRequestReview
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodePullRequestReviewComment:
+		typename = "PullRequestReviewComment"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodePullRequestReviewComment
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodePullRequestReviewThread:
+		typename = "PullRequestReviewThread"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodePullRequestReviewThread
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodePullRequestThread:
+		typename = "PullRequestThread"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodePullRequestThread
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodePush:
+		typename = "Push"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodePush
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodePushAllowance:
+		typename = "PushAllowance"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodePushAllowance
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeQuery:
+		typename = "Query"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeQuery
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeReaction:
+		typename = "Reaction"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeReaction
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeReadyForReviewEvent:
+		typename = "ReadyForReviewEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeReadyForReviewEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRef:
+		typename = "Ref"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRef
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeReferencedEvent:
+		typename = "ReferencedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeReferencedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRelease:
+		typename = "Release"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRelease
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeReleaseAsset:
+		typename = "ReleaseAsset"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeReleaseAsset
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRemovedFromMergeQueueEvent:
+		typename = "RemovedFromMergeQueueEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRemovedFromMergeQueueEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRemovedFromProjectEvent:
+		typename = "RemovedFromProjectEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRemovedFromProjectEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRemovedFromProjectV2Event:
+		typename = "RemovedFromProjectV2Event"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRemovedFromProjectV2Event
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRenamedTitleEvent:
+		typename = "RenamedTitleEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRenamedTitleEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeReopenedEvent:
+		typename = "ReopenedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeReopenedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepoAccessAuditEntry:
+		typename = "RepoAccessAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepoAccessAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepoAddMemberAuditEntry:
+		typename = "RepoAddMemberAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepoAddMemberAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepoAddTopicAuditEntry:
+		typename = "RepoAddTopicAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepoAddTopicAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepoArchivedAuditEntry:
+		typename = "RepoArchivedAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepoArchivedAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepoChangeMergeSettingAuditEntry:
+		typename = "RepoChangeMergeSettingAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepoChangeMergeSettingAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepoConfigDisableAnonymousGitAccessAuditEntry:
+		typename = "RepoConfigDisableAnonymousGitAccessAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepoConfigDisableAnonymousGitAccessAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepoConfigDisableCollaboratorsOnlyAuditEntry:
+		typename = "RepoConfigDisableCollaboratorsOnlyAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepoConfigDisableCollaboratorsOnlyAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepoConfigDisableContributorsOnlyAuditEntry:
+		typename = "RepoConfigDisableContributorsOnlyAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepoConfigDisableContributorsOnlyAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepoConfigDisableSockpuppetDisallowedAuditEntry:
+		typename = "RepoConfigDisableSockpuppetDisallowedAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepoConfigDisableSockpuppetDisallowedAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepoConfigEnableAnonymousGitAccessAuditEntry:
+		typename = "RepoConfigEnableAnonymousGitAccessAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepoConfigEnableAnonymousGitAccessAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepoConfigEnableCollaboratorsOnlyAuditEntry:
+		typename = "RepoConfigEnableCollaboratorsOnlyAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepoConfigEnableCollaboratorsOnlyAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepoConfigEnableContributorsOnlyAuditEntry:
+		typename = "RepoConfigEnableContributorsOnlyAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepoConfigEnableContributorsOnlyAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepoConfigEnableSockpuppetDisallowedAuditEntry:
+		typename = "RepoConfigEnableSockpuppetDisallowedAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepoConfigEnableSockpuppetDisallowedAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepoConfigLockAnonymousGitAccessAuditEntry:
+		typename = "RepoConfigLockAnonymousGitAccessAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepoConfigLockAnonymousGitAccessAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepoConfigUnlockAnonymousGitAccessAuditEntry:
+		typename = "RepoConfigUnlockAnonymousGitAccessAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepoConfigUnlockAnonymousGitAccessAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepoCreateAuditEntry:
+		typename = "RepoCreateAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepoCreateAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepoDestroyAuditEntry:
+		typename = "RepoDestroyAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepoDestroyAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepoRemoveMemberAuditEntry:
+		typename = "RepoRemoveMemberAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepoRemoveMemberAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepoRemoveTopicAuditEntry:
+		typename = "RepoRemoveTopicAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepoRemoveTopicAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepository:
+		typename = "Repository"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepository
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepositoryCustomProperty:
+		typename = "RepositoryCustomProperty"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepositoryCustomProperty
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepositoryInvitation:
+		typename = "RepositoryInvitation"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepositoryInvitation
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepositoryMigration:
+		typename = "RepositoryMigration"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepositoryMigration
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepositoryRule:
+		typename = "RepositoryRule"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepositoryRule
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepositoryRuleset:
+		typename = "RepositoryRuleset"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepositoryRuleset
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepositoryRulesetBypassActor:
+		typename = "RepositoryRulesetBypassActor"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepositoryRulesetBypassActor
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepositoryTopic:
+		typename = "RepositoryTopic"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepositoryTopic
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepositoryVisibilityChangeDisableAuditEntry:
+		typename = "RepositoryVisibilityChangeDisableAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepositoryVisibilityChangeDisableAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepositoryVisibilityChangeEnableAuditEntry:
+		typename = "RepositoryVisibilityChangeEnableAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepositoryVisibilityChangeEnableAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeRepositoryVulnerabilityAlert:
+		typename = "RepositoryVulnerabilityAlert"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeRepositoryVulnerabilityAlert
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeReviewDismissalAllowance:
+		typename = "ReviewDismissalAllowance"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeReviewDismissalAllowance
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeReviewDismissedEvent:
+		typename = "ReviewDismissedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeReviewDismissedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeReviewRequest:
+		typename = "ReviewRequest"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeReviewRequest
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeReviewRequestRemovedEvent:
+		typename = "ReviewRequestRemovedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeReviewRequestRemovedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeReviewRequestedEvent:
+		typename = "ReviewRequestedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeReviewRequestedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeSavedReply:
+		typename = "SavedReply"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeSavedReply
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeSecurityAdvisory:
+		typename = "SecurityAdvisory"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeSecurityAdvisory
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeSponsorsActivity:
+		typename = "SponsorsActivity"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeSponsorsActivity
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeSponsorsListing:
+		typename = "SponsorsListing"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeSponsorsListing
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeSponsorsListingFeaturedItem:
+		typename = "SponsorsListingFeaturedItem"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeSponsorsListingFeaturedItem
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeSponsorsTier:
+		typename = "SponsorsTier"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeSponsorsTier
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeSponsorship:
+		typename = "Sponsorship"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeSponsorship
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeSponsorshipNewsletter:
+		typename = "SponsorshipNewsletter"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeSponsorshipNewsletter
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeStatus:
+		typename = "Status"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeStatus
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeStatusCheckRollup:
+		typename = "StatusCheckRollup"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeStatusCheckRollup
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeStatusContext:
+		typename = "StatusContext"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeStatusContext
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeSubIssueAddedEvent:
+		typename = "SubIssueAddedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeSubIssueAddedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeSubIssueRemovedEvent:
+		typename = "SubIssueRemovedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeSubIssueRemovedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeSubscribedEvent:
+		typename = "SubscribedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeSubscribedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeTag:
+		typename = "Tag"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeTag
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeTeam:
+		typename = "Team"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeTeam
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeTeamAddMemberAuditEntry:
+		typename = "TeamAddMemberAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeTeamAddMemberAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeTeamAddRepositoryAuditEntry:
+		typename = "TeamAddRepositoryAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeTeamAddRepositoryAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeTeamChangeParentTeamAuditEntry:
+		typename = "TeamChangeParentTeamAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeTeamChangeParentTeamAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeTeamRemoveMemberAuditEntry:
+		typename = "TeamRemoveMemberAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeTeamRemoveMemberAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeTeamRemoveRepositoryAuditEntry:
+		typename = "TeamRemoveRepositoryAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeTeamRemoveRepositoryAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeTopic:
+		typename = "Topic"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeTopic
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeTransferredEvent:
+		typename = "TransferredEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeTransferredEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeTree:
+		typename = "Tree"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeTree
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeUnassignedEvent:
+		typename = "UnassignedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeUnassignedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeUnlabeledEvent:
+		typename = "UnlabeledEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeUnlabeledEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeUnlockedEvent:
+		typename = "UnlockedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeUnlockedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeUnmarkedAsDuplicateEvent:
+		typename = "UnmarkedAsDuplicateEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeUnmarkedAsDuplicateEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeUnpinnedEvent:
+		typename = "UnpinnedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeUnpinnedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeUnsubscribedEvent:
+		typename = "UnsubscribedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeUnsubscribedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeUser:
+		typename = "User"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeUser
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeUserBlockedEvent:
+		typename = "UserBlockedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeUserBlockedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeUserContentEdit:
+		typename = "UserContentEdit"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeUserContentEdit
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeUserList:
+		typename = "UserList"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeUserList
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeUserNamespaceRepository:
+		typename = "UserNamespaceRepository"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeUserNamespaceRepository
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeUserStatus:
+		typename = "UserStatus"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeUserStatus
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeVerifiableDomain:
+		typename = "VerifiableDomain"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeVerifiableDomain
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeWorkflow:
+		typename = "Workflow"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeWorkflow
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeWorkflowRun:
+		typename = "WorkflowRun"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeWorkflowRun
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2FieldsNodeWorkflowRunFile:
+		typename = "WorkflowRunFile"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2FieldsNodeWorkflowRunFile
+		}{typename, v}
+		return json.Marshal(result)
+	case nil:
+		return []byte("null"), nil
+	default:
+		return nil, fmt.Errorf(
+			`unexpected concrete type for ProjectV2FieldsNode: "%T"`, v)
+	}
+}
+
+// ProjectV2FieldsNodeAddedToMergeQueueEvent includes the requested fields of the GraphQL type AddedToMergeQueueEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents an 'added_to_merge_queue' event on a given pull request.
+type ProjectV2FieldsNodeAddedToMergeQueueEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeAddedToMergeQueueEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeAddedToMergeQueueEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeAddedToProjectEvent includes the requested fields of the GraphQL type AddedToProjectEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'added_to_project' event on a given issue or pull request.
+type ProjectV2FieldsNodeAddedToProjectEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeAddedToProjectEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeAddedToProjectEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeAddedToProjectV2Event includes the requested fields of the GraphQL type AddedToProjectV2Event.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'added_to_project_v2' event on a given issue or pull request.
+type ProjectV2FieldsNodeAddedToProjectV2Event struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeAddedToProjectV2Event.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeAddedToProjectV2Event) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeApp includes the requested fields of the GraphQL type App.
+// The GraphQL type's documentation follows.
+//
+// A GitHub App.
+type ProjectV2FieldsNodeApp struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeApp.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeApp) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeAssignedEvent includes the requested fields of the GraphQL type AssignedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents an 'assigned' event on any assignable object.
+type ProjectV2FieldsNodeAssignedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeAssignedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeAssignedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeAutoMergeDisabledEvent includes the requested fields of the GraphQL type AutoMergeDisabledEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'auto_merge_disabled' event on a given pull request.
+type ProjectV2FieldsNodeAutoMergeDisabledEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeAutoMergeDisabledEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeAutoMergeDisabledEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeAutoMergeEnabledEvent includes the requested fields of the GraphQL type AutoMergeEnabledEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'auto_merge_enabled' event on a given pull request.
+type ProjectV2FieldsNodeAutoMergeEnabledEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeAutoMergeEnabledEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeAutoMergeEnabledEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeAutoRebaseEnabledEvent includes the requested fields of the GraphQL type AutoRebaseEnabledEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'auto_rebase_enabled' event on a given pull request.
+type ProjectV2FieldsNodeAutoRebaseEnabledEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeAutoRebaseEnabledEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeAutoRebaseEnabledEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeAutoSquashEnabledEvent includes the requested fields of the GraphQL type AutoSquashEnabledEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'auto_squash_enabled' event on a given pull request.
+type ProjectV2FieldsNodeAutoSquashEnabledEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeAutoSquashEnabledEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeAutoSquashEnabledEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeAutomaticBaseChangeFailedEvent includes the requested fields of the GraphQL type AutomaticBaseChangeFailedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'automatic_base_change_failed' event on a given pull request.
+type ProjectV2FieldsNodeAutomaticBaseChangeFailedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeAutomaticBaseChangeFailedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeAutomaticBaseChangeFailedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeAutomaticBaseChangeSucceededEvent includes the requested fields of the GraphQL type AutomaticBaseChangeSucceededEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'automatic_base_change_succeeded' event on a given pull request.
+type ProjectV2FieldsNodeAutomaticBaseChangeSucceededEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeAutomaticBaseChangeSucceededEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeAutomaticBaseChangeSucceededEvent) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeBaseRefChangedEvent includes the requested fields of the GraphQL type BaseRefChangedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'base_ref_changed' event on a given issue or pull request.
+type ProjectV2FieldsNodeBaseRefChangedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeBaseRefChangedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeBaseRefChangedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeBaseRefDeletedEvent includes the requested fields of the GraphQL type BaseRefDeletedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'base_ref_deleted' event on a given pull request.
+type ProjectV2FieldsNodeBaseRefDeletedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeBaseRefDeletedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeBaseRefDeletedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeBaseRefForcePushedEvent includes the requested fields of the GraphQL type BaseRefForcePushedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'base_ref_force_pushed' event on a given pull request.
+type ProjectV2FieldsNodeBaseRefForcePushedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeBaseRefForcePushedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeBaseRefForcePushedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeBlob includes the requested fields of the GraphQL type Blob.
+// The GraphQL type's documentation follows.
+//
+// Represents a Git blob.
+type ProjectV2FieldsNodeBlob struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeBlob.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeBlob) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeBlockedByAddedEvent includes the requested fields of the GraphQL type BlockedByAddedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'blocked_by_added' event on a given issue.
+type ProjectV2FieldsNodeBlockedByAddedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeBlockedByAddedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeBlockedByAddedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeBlockedByRemovedEvent includes the requested fields of the GraphQL type BlockedByRemovedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'blocked_by_removed' event on a given issue.
+type ProjectV2FieldsNodeBlockedByRemovedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeBlockedByRemovedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeBlockedByRemovedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeBlockingAddedEvent includes the requested fields of the GraphQL type BlockingAddedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'blocking_added' event on a given issue.
+type ProjectV2FieldsNodeBlockingAddedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeBlockingAddedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeBlockingAddedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeBlockingRemovedEvent includes the requested fields of the GraphQL type BlockingRemovedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'blocking_removed' event on a given issue.
+type ProjectV2FieldsNodeBlockingRemovedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeBlockingRemovedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeBlockingRemovedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeBot includes the requested fields of the GraphQL type Bot.
+// The GraphQL type's documentation follows.
+//
+// A special type of user which takes actions on behalf of GitHub Apps.
+type ProjectV2FieldsNodeBot struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeBot.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeBot) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeBranchProtectionRule includes the requested fields of the GraphQL type BranchProtectionRule.
+// The GraphQL type's documentation follows.
+//
+// A branch protection rule.
+type ProjectV2FieldsNodeBranchProtectionRule struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeBranchProtectionRule.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeBranchProtectionRule) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeBypassForcePushAllowance includes the requested fields of the GraphQL type BypassForcePushAllowance.
+// The GraphQL type's documentation follows.
+//
+// A user, team, or app who has the ability to bypass a force push requirement on a protected branch.
+type ProjectV2FieldsNodeBypassForcePushAllowance struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeBypassForcePushAllowance.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeBypassForcePushAllowance) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeBypassPullRequestAllowance includes the requested fields of the GraphQL type BypassPullRequestAllowance.
+// The GraphQL type's documentation follows.
+//
+// A user, team, or app who has the ability to bypass a pull request requirement on a protected branch.
+type ProjectV2FieldsNodeBypassPullRequestAllowance struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeBypassPullRequestAllowance.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeBypassPullRequestAllowance) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeCWE includes the requested fields of the GraphQL type CWE.
+// The GraphQL type's documentation follows.
+//
+// A common weakness enumeration
+type ProjectV2FieldsNodeCWE struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeCWE.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeCWE) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeCheckRun includes the requested fields of the GraphQL type CheckRun.
+// The GraphQL type's documentation follows.
+//
+// A check run.
+type ProjectV2FieldsNodeCheckRun struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeCheckRun.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeCheckRun) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeCheckSuite includes the requested fields of the GraphQL type CheckSuite.
+// The GraphQL type's documentation follows.
+//
+// A check suite.
+type ProjectV2FieldsNodeCheckSuite struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeCheckSuite.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeCheckSuite) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeClosedEvent includes the requested fields of the GraphQL type ClosedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'closed' event on any `Closable`.
+type ProjectV2FieldsNodeClosedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeClosedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeClosedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeCodeOfConduct includes the requested fields of the GraphQL type CodeOfConduct.
+// The GraphQL type's documentation follows.
+//
+// The Code of Conduct for a repository
+type ProjectV2FieldsNodeCodeOfConduct struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeCodeOfConduct.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeCodeOfConduct) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeCommentDeletedEvent includes the requested fields of the GraphQL type CommentDeletedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'comment_deleted' event on a given issue or pull request.
+type ProjectV2FieldsNodeCommentDeletedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeCommentDeletedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeCommentDeletedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeCommit includes the requested fields of the GraphQL type Commit.
+// The GraphQL type's documentation follows.
+//
+// Represents a Git commit.
+type ProjectV2FieldsNodeCommit struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeCommit.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeCommit) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeCommitComment includes the requested fields of the GraphQL type CommitComment.
+// The GraphQL type's documentation follows.
+//
+// Represents a comment on a given Commit.
+type ProjectV2FieldsNodeCommitComment struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeCommitComment.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeCommitComment) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeCommitCommentThread includes the requested fields of the GraphQL type CommitCommentThread.
+// The GraphQL type's documentation follows.
+//
+// A thread of comments on a commit.
+type ProjectV2FieldsNodeCommitCommentThread struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeCommitCommentThread.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeCommitCommentThread) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeComparison includes the requested fields of the GraphQL type Comparison.
+// The GraphQL type's documentation follows.
+//
+// Represents a comparison between two commit revisions.
+type ProjectV2FieldsNodeComparison struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeComparison.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeComparison) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeConnectedEvent includes the requested fields of the GraphQL type ConnectedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'connected' event on a given issue or pull request.
+type ProjectV2FieldsNodeConnectedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeConnectedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeConnectedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeConvertToDraftEvent includes the requested fields of the GraphQL type ConvertToDraftEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'convert_to_draft' event on a given pull request.
+type ProjectV2FieldsNodeConvertToDraftEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeConvertToDraftEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeConvertToDraftEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeConvertedFromDraftEvent includes the requested fields of the GraphQL type ConvertedFromDraftEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'converted_from_draft' event on a given issue or pull request.
+type ProjectV2FieldsNodeConvertedFromDraftEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeConvertedFromDraftEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeConvertedFromDraftEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeConvertedNoteToIssueEvent includes the requested fields of the GraphQL type ConvertedNoteToIssueEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'converted_note_to_issue' event on a given issue or pull request.
+type ProjectV2FieldsNodeConvertedNoteToIssueEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeConvertedNoteToIssueEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeConvertedNoteToIssueEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeConvertedToDiscussionEvent includes the requested fields of the GraphQL type ConvertedToDiscussionEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'converted_to_discussion' event on a given issue.
+type ProjectV2FieldsNodeConvertedToDiscussionEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeConvertedToDiscussionEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeConvertedToDiscussionEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeCrossReferencedEvent includes the requested fields of the GraphQL type CrossReferencedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a mention made by one issue or pull request to another.
+type ProjectV2FieldsNodeCrossReferencedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeCrossReferencedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeCrossReferencedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeDemilestonedEvent includes the requested fields of the GraphQL type DemilestonedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'demilestoned' event on a given issue or pull request.
+type ProjectV2FieldsNodeDemilestonedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeDemilestonedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeDemilestonedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeDependencyGraphManifest includes the requested fields of the GraphQL type DependencyGraphManifest.
+// The GraphQL type's documentation follows.
+//
+// Dependency manifest for a repository
+type ProjectV2FieldsNodeDependencyGraphManifest struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeDependencyGraphManifest.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeDependencyGraphManifest) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeDeployKey includes the requested fields of the GraphQL type DeployKey.
+// The GraphQL type's documentation follows.
+//
+// A repository deploy key.
+type ProjectV2FieldsNodeDeployKey struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeDeployKey.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeDeployKey) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeDeployedEvent includes the requested fields of the GraphQL type DeployedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'deployed' event on a given pull request.
+type ProjectV2FieldsNodeDeployedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeDeployedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeDeployedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeDeployment includes the requested fields of the GraphQL type Deployment.
+// The GraphQL type's documentation follows.
+//
+// Represents triggered deployment instance.
+type ProjectV2FieldsNodeDeployment struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeDeployment.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeDeployment) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeDeploymentEnvironmentChangedEvent includes the requested fields of the GraphQL type DeploymentEnvironmentChangedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'deployment_environment_changed' event on a given pull request.
+type ProjectV2FieldsNodeDeploymentEnvironmentChangedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeDeploymentEnvironmentChangedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeDeploymentEnvironmentChangedEvent) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeDeploymentReview includes the requested fields of the GraphQL type DeploymentReview.
+// The GraphQL type's documentation follows.
+//
+// A deployment review.
+type ProjectV2FieldsNodeDeploymentReview struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeDeploymentReview.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeDeploymentReview) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeDeploymentStatus includes the requested fields of the GraphQL type DeploymentStatus.
+// The GraphQL type's documentation follows.
+//
+// Describes the status of a given deployment attempt.
+type ProjectV2FieldsNodeDeploymentStatus struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeDeploymentStatus.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeDeploymentStatus) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeDisconnectedEvent includes the requested fields of the GraphQL type DisconnectedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'disconnected' event on a given issue or pull request.
+type ProjectV2FieldsNodeDisconnectedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeDisconnectedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeDisconnectedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeDiscussion includes the requested fields of the GraphQL type Discussion.
+// The GraphQL type's documentation follows.
+//
+// A discussion in a repository.
+type ProjectV2FieldsNodeDiscussion struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeDiscussion.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeDiscussion) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeDiscussionCategory includes the requested fields of the GraphQL type DiscussionCategory.
+// The GraphQL type's documentation follows.
+//
+// A category for discussions in a repository.
+type ProjectV2FieldsNodeDiscussionCategory struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeDiscussionCategory.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeDiscussionCategory) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeDiscussionComment includes the requested fields of the GraphQL type DiscussionComment.
+// The GraphQL type's documentation follows.
+//
+// A comment on a discussion.
+type ProjectV2FieldsNodeDiscussionComment struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeDiscussionComment.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeDiscussionComment) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeDiscussionPoll includes the requested fields of the GraphQL type DiscussionPoll.
+// The GraphQL type's documentation follows.
+//
+// A poll for a discussion.
+type ProjectV2FieldsNodeDiscussionPoll struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeDiscussionPoll.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeDiscussionPoll) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeDiscussionPollOption includes the requested fields of the GraphQL type DiscussionPollOption.
+// The GraphQL type's documentation follows.
+//
+// An option for a discussion poll.
+type ProjectV2FieldsNodeDiscussionPollOption struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeDiscussionPollOption.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeDiscussionPollOption) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeDraftIssue includes the requested fields of the GraphQL type DraftIssue.
+// The GraphQL type's documentation follows.
+//
+// A draft issue within a project.
+type ProjectV2FieldsNodeDraftIssue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeDraftIssue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeDraftIssue) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeEnterprise includes the requested fields of the GraphQL type Enterprise.
+// The GraphQL type's documentation follows.
+//
+// An account to manage multiple organizations with consolidated policy and billing.
+type ProjectV2FieldsNodeEnterprise struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeEnterprise.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeEnterprise) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeEnterpriseAdministratorInvitation includes the requested fields of the GraphQL type EnterpriseAdministratorInvitation.
+// The GraphQL type's documentation follows.
+//
+// An invitation for a user to become an owner or billing manager of an enterprise.
+type ProjectV2FieldsNodeEnterpriseAdministratorInvitation struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeEnterpriseAdministratorInvitation.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeEnterpriseAdministratorInvitation) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeEnterpriseIdentityProvider includes the requested fields of the GraphQL type EnterpriseIdentityProvider.
+// The GraphQL type's documentation follows.
+//
+// An identity provider configured to provision identities for an enterprise.
+// Visible to enterprise owners or enterprise owners' personal access tokens
+// (classic) with read:enterprise or admin:enterprise scope.
+type ProjectV2FieldsNodeEnterpriseIdentityProvider struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeEnterpriseIdentityProvider.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeEnterpriseIdentityProvider) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeEnterpriseMemberInvitation includes the requested fields of the GraphQL type EnterpriseMemberInvitation.
+// The GraphQL type's documentation follows.
+//
+// An invitation for a user to become an unaffiliated member of an enterprise.
+type ProjectV2FieldsNodeEnterpriseMemberInvitation struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeEnterpriseMemberInvitation.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeEnterpriseMemberInvitation) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeEnterpriseRepositoryInfo includes the requested fields of the GraphQL type EnterpriseRepositoryInfo.
+// The GraphQL type's documentation follows.
+//
+// A subset of repository information queryable from an enterprise.
+type ProjectV2FieldsNodeEnterpriseRepositoryInfo struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeEnterpriseRepositoryInfo.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeEnterpriseRepositoryInfo) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeEnterpriseServerInstallation includes the requested fields of the GraphQL type EnterpriseServerInstallation.
+// The GraphQL type's documentation follows.
+//
+// An Enterprise Server installation.
+type ProjectV2FieldsNodeEnterpriseServerInstallation struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeEnterpriseServerInstallation.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeEnterpriseServerInstallation) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeEnterpriseServerUserAccount includes the requested fields of the GraphQL type EnterpriseServerUserAccount.
+// The GraphQL type's documentation follows.
+//
+// A user account on an Enterprise Server installation.
+type ProjectV2FieldsNodeEnterpriseServerUserAccount struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeEnterpriseServerUserAccount.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeEnterpriseServerUserAccount) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeEnterpriseServerUserAccountEmail includes the requested fields of the GraphQL type EnterpriseServerUserAccountEmail.
+// The GraphQL type's documentation follows.
+//
+// An email belonging to a user account on an Enterprise Server installation.
+type ProjectV2FieldsNodeEnterpriseServerUserAccountEmail struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeEnterpriseServerUserAccountEmail.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeEnterpriseServerUserAccountEmail) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeEnterpriseServerUserAccountsUpload includes the requested fields of the GraphQL type EnterpriseServerUserAccountsUpload.
+// The GraphQL type's documentation follows.
+//
+// A user accounts upload from an Enterprise Server installation.
+type ProjectV2FieldsNodeEnterpriseServerUserAccountsUpload struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeEnterpriseServerUserAccountsUpload.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeEnterpriseServerUserAccountsUpload) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeEnterpriseUserAccount includes the requested fields of the GraphQL type EnterpriseUserAccount.
+// The GraphQL type's documentation follows.
+//
+// An account for a user who is an admin of an enterprise or a member of an enterprise through one or more organizations.
+type ProjectV2FieldsNodeEnterpriseUserAccount struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeEnterpriseUserAccount.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeEnterpriseUserAccount) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeEnvironment includes the requested fields of the GraphQL type Environment.
+// The GraphQL type's documentation follows.
+//
+// An environment.
+type ProjectV2FieldsNodeEnvironment struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeEnvironment.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeEnvironment) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeExternalIdentity includes the requested fields of the GraphQL type ExternalIdentity.
+// The GraphQL type's documentation follows.
+//
+// An external identity provisioned by SAML SSO or SCIM. If SAML is configured on
+// the organization, the external identity is visible to (1) organization owners,
+// (2) organization owners' personal access tokens (classic) with read:org or
+// admin:org scope, (3) GitHub App with an installation token with read or write
+// access to members. If SAML is configured on the enterprise, the external
+// identity is visible to (1) enterprise owners, (2) enterprise owners' personal
+// access tokens (classic) with read:enterprise or admin:enterprise scope.
+type ProjectV2FieldsNodeExternalIdentity struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeExternalIdentity.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeExternalIdentity) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection includes the requested fields of the GraphQL type ProjectV2FieldConfigurationConnection.
+// The GraphQL type's documentation follows.
+//
+// The connection type for ProjectV2FieldConfiguration.
+type ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection struct {
+	// A list of nodes.
+	Nodes []*ProjectV2FieldNode `json:"-"`
+}
+
+// GetNodes returns ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection.Nodes, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection) GetNodes() []*ProjectV2FieldNode {
+	return v.Nodes
+}
+
+func (v *ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection
+		Nodes []json.RawMessage `json:"nodes"`
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	{
+		dst := &v.Nodes
+		src := firstPass.Nodes
+		*dst = make(
+			[]*ProjectV2FieldNode,
+			len(src))
+		for i, src := range src {
+			dst := &(*dst)[i]
+			if len(src) != 0 && string(src) != "null" {
+				*dst = new(ProjectV2FieldNode)
+				err = __unmarshalProjectV2FieldNode(
+					src, *dst)
+				if err != nil {
+					return fmt.Errorf(
+						"unable to unmarshal ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection.Nodes: %w", err)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+type __premarshalProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection struct {
+	Nodes []json.RawMessage `json:"nodes"`
+}
+
+func (v *ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection) __premarshalJSON() (*__premarshalProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection, error) {
+	var retval __premarshalProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection
+
+	{
+
+		dst := &retval.Nodes
+		src := v.Nodes
+		*dst = make(
+			[]json.RawMessage,
+			len(src))
+		for i, src := range src {
+			dst := &(*dst)[i]
+			if src != nil {
+				var err error
+				*dst, err = __marshalProjectV2FieldNode(
+					src)
+				if err != nil {
+					return nil, fmt.Errorf(
+						"unable to marshal ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection.Nodes: %w", err)
+				}
+			}
+		}
+	}
+	return &retval, nil
+}
+
+// ProjectV2FieldsNodeGist includes the requested fields of the GraphQL type Gist.
+// The GraphQL type's documentation follows.
+//
+// A Gist.
+type ProjectV2FieldsNodeGist struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeGist.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeGist) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeGistComment includes the requested fields of the GraphQL type GistComment.
+// The GraphQL type's documentation follows.
+//
+// Represents a comment on an Gist.
+type ProjectV2FieldsNodeGistComment struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeGistComment.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeGistComment) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeHeadRefDeletedEvent includes the requested fields of the GraphQL type HeadRefDeletedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'head_ref_deleted' event on a given pull request.
+type ProjectV2FieldsNodeHeadRefDeletedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeHeadRefDeletedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeHeadRefDeletedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeHeadRefForcePushedEvent includes the requested fields of the GraphQL type HeadRefForcePushedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'head_ref_force_pushed' event on a given pull request.
+type ProjectV2FieldsNodeHeadRefForcePushedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeHeadRefForcePushedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeHeadRefForcePushedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeHeadRefRestoredEvent includes the requested fields of the GraphQL type HeadRefRestoredEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'head_ref_restored' event on a given pull request.
+type ProjectV2FieldsNodeHeadRefRestoredEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeHeadRefRestoredEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeHeadRefRestoredEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeIpAllowListEntry includes the requested fields of the GraphQL type IpAllowListEntry.
+// The GraphQL type's documentation follows.
+//
+// An IP address or range of addresses that is allowed to access an owner's resources.
+type ProjectV2FieldsNodeIpAllowListEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeIpAllowListEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeIpAllowListEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeIssue includes the requested fields of the GraphQL type Issue.
+// The GraphQL type's documentation follows.
+//
+// An Issue is a place to discuss ideas, enhancements, tasks, and bugs for a project.
+type ProjectV2FieldsNodeIssue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeIssue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeIssue) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeIssueComment includes the requested fields of the GraphQL type IssueComment.
+// The GraphQL type's documentation follows.
+//
+// Represents a comment on an Issue.
+type ProjectV2FieldsNodeIssueComment struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeIssueComment.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeIssueComment) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeIssueCommentPinnedEvent includes the requested fields of the GraphQL type IssueCommentPinnedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'issue_comment_pinned' event on a given issue.
+type ProjectV2FieldsNodeIssueCommentPinnedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeIssueCommentPinnedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeIssueCommentPinnedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeIssueCommentUnpinnedEvent includes the requested fields of the GraphQL type IssueCommentUnpinnedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'issue_comment_unpinned' event on a given issue.
+type ProjectV2FieldsNodeIssueCommentUnpinnedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeIssueCommentUnpinnedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeIssueCommentUnpinnedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeIssueFieldAddedEvent includes the requested fields of the GraphQL type IssueFieldAddedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'issue_field_added' event on a given issue.
+type ProjectV2FieldsNodeIssueFieldAddedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeIssueFieldAddedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeIssueFieldAddedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeIssueFieldChangedEvent includes the requested fields of the GraphQL type IssueFieldChangedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'issue_field_changed' event on a given issue.
+type ProjectV2FieldsNodeIssueFieldChangedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeIssueFieldChangedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeIssueFieldChangedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeIssueFieldDate includes the requested fields of the GraphQL type IssueFieldDate.
+// The GraphQL type's documentation follows.
+//
+// Represents a date issue field.
+type ProjectV2FieldsNodeIssueFieldDate struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeIssueFieldDate.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeIssueFieldDate) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeIssueFieldDateValue includes the requested fields of the GraphQL type IssueFieldDateValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a date field in an Issue item.
+type ProjectV2FieldsNodeIssueFieldDateValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeIssueFieldDateValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeIssueFieldDateValue) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeIssueFieldNumber includes the requested fields of the GraphQL type IssueFieldNumber.
+// The GraphQL type's documentation follows.
+//
+// Represents a number issue field.
+type ProjectV2FieldsNodeIssueFieldNumber struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeIssueFieldNumber.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeIssueFieldNumber) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeIssueFieldNumberValue includes the requested fields of the GraphQL type IssueFieldNumberValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a number field in an Issue item.
+type ProjectV2FieldsNodeIssueFieldNumberValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeIssueFieldNumberValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeIssueFieldNumberValue) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeIssueFieldRemovedEvent includes the requested fields of the GraphQL type IssueFieldRemovedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'issue_field_removed' event on a given issue.
+type ProjectV2FieldsNodeIssueFieldRemovedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeIssueFieldRemovedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeIssueFieldRemovedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeIssueFieldSingleSelect includes the requested fields of the GraphQL type IssueFieldSingleSelect.
+// The GraphQL type's documentation follows.
+//
+// Represents a single select issue field.
+type ProjectV2FieldsNodeIssueFieldSingleSelect struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeIssueFieldSingleSelect.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeIssueFieldSingleSelect) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeIssueFieldSingleSelectOption includes the requested fields of the GraphQL type IssueFieldSingleSelectOption.
+// The GraphQL type's documentation follows.
+//
+// Represents an option in a single-select issue field.
+type ProjectV2FieldsNodeIssueFieldSingleSelectOption struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeIssueFieldSingleSelectOption.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeIssueFieldSingleSelectOption) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeIssueFieldSingleSelectValue includes the requested fields of the GraphQL type IssueFieldSingleSelectValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a single select field in an Issue item.
+type ProjectV2FieldsNodeIssueFieldSingleSelectValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeIssueFieldSingleSelectValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeIssueFieldSingleSelectValue) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeIssueFieldText includes the requested fields of the GraphQL type IssueFieldText.
+// The GraphQL type's documentation follows.
+//
+// Represents a text issue field.
+type ProjectV2FieldsNodeIssueFieldText struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeIssueFieldText.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeIssueFieldText) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeIssueFieldTextValue includes the requested fields of the GraphQL type IssueFieldTextValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a text field in an Issue item.
+type ProjectV2FieldsNodeIssueFieldTextValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeIssueFieldTextValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeIssueFieldTextValue) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeIssueType includes the requested fields of the GraphQL type IssueType.
+// The GraphQL type's documentation follows.
+//
+// Represents the type of Issue.
+type ProjectV2FieldsNodeIssueType struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeIssueType.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeIssueType) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeIssueTypeAddedEvent includes the requested fields of the GraphQL type IssueTypeAddedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'issue_type_added' event on a given issue.
+type ProjectV2FieldsNodeIssueTypeAddedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeIssueTypeAddedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeIssueTypeAddedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeIssueTypeChangedEvent includes the requested fields of the GraphQL type IssueTypeChangedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'issue_type_changed' event on a given issue.
+type ProjectV2FieldsNodeIssueTypeChangedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeIssueTypeChangedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeIssueTypeChangedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeIssueTypeRemovedEvent includes the requested fields of the GraphQL type IssueTypeRemovedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'issue_type_removed' event on a given issue.
+type ProjectV2FieldsNodeIssueTypeRemovedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeIssueTypeRemovedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeIssueTypeRemovedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeLabel includes the requested fields of the GraphQL type Label.
+// The GraphQL type's documentation follows.
+//
+// A label for categorizing Issues, Pull Requests, Milestones, or Discussions with a given Repository.
+type ProjectV2FieldsNodeLabel struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeLabel.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeLabel) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeLabeledEvent includes the requested fields of the GraphQL type LabeledEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'labeled' event on a given issue or pull request.
+type ProjectV2FieldsNodeLabeledEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeLabeledEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeLabeledEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeLanguage includes the requested fields of the GraphQL type Language.
+// The GraphQL type's documentation follows.
+//
+// Represents a given language found in repositories.
+type ProjectV2FieldsNodeLanguage struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeLanguage.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeLanguage) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeLicense includes the requested fields of the GraphQL type License.
+// The GraphQL type's documentation follows.
+//
+// A repository's open source license
+type ProjectV2FieldsNodeLicense struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeLicense.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeLicense) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeLinkedBranch includes the requested fields of the GraphQL type LinkedBranch.
+// The GraphQL type's documentation follows.
+//
+// A branch linked to an issue.
+type ProjectV2FieldsNodeLinkedBranch struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeLinkedBranch.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeLinkedBranch) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeLockedEvent includes the requested fields of the GraphQL type LockedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'locked' event on a given issue or pull request.
+type ProjectV2FieldsNodeLockedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeLockedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeLockedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeMannequin includes the requested fields of the GraphQL type Mannequin.
+// The GraphQL type's documentation follows.
+//
+// A placeholder user for attribution of imported data on GitHub.
+type ProjectV2FieldsNodeMannequin struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeMannequin.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeMannequin) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeMarkedAsDuplicateEvent includes the requested fields of the GraphQL type MarkedAsDuplicateEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'marked_as_duplicate' event on a given issue or pull request.
+type ProjectV2FieldsNodeMarkedAsDuplicateEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeMarkedAsDuplicateEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeMarkedAsDuplicateEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeMarketplaceCategory includes the requested fields of the GraphQL type MarketplaceCategory.
+// The GraphQL type's documentation follows.
+//
+// A public description of a Marketplace category.
+type ProjectV2FieldsNodeMarketplaceCategory struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeMarketplaceCategory.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeMarketplaceCategory) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeMarketplaceListing includes the requested fields of the GraphQL type MarketplaceListing.
+// The GraphQL type's documentation follows.
+//
+// A listing in the GitHub integration marketplace.
+type ProjectV2FieldsNodeMarketplaceListing struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeMarketplaceListing.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeMarketplaceListing) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeMemberFeatureRequestNotification includes the requested fields of the GraphQL type MemberFeatureRequestNotification.
+// The GraphQL type's documentation follows.
+//
+// Represents a member feature request notification
+type ProjectV2FieldsNodeMemberFeatureRequestNotification struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeMemberFeatureRequestNotification.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeMemberFeatureRequestNotification) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeMembersCanDeleteReposClearAuditEntry includes the requested fields of the GraphQL type MembersCanDeleteReposClearAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a members_can_delete_repos.clear event.
+type ProjectV2FieldsNodeMembersCanDeleteReposClearAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeMembersCanDeleteReposClearAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeMembersCanDeleteReposClearAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeMembersCanDeleteReposDisableAuditEntry includes the requested fields of the GraphQL type MembersCanDeleteReposDisableAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a members_can_delete_repos.disable event.
+type ProjectV2FieldsNodeMembersCanDeleteReposDisableAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeMembersCanDeleteReposDisableAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeMembersCanDeleteReposDisableAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeMembersCanDeleteReposEnableAuditEntry includes the requested fields of the GraphQL type MembersCanDeleteReposEnableAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a members_can_delete_repos.enable event.
+type ProjectV2FieldsNodeMembersCanDeleteReposEnableAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeMembersCanDeleteReposEnableAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeMembersCanDeleteReposEnableAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeMentionedEvent includes the requested fields of the GraphQL type MentionedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'mentioned' event on a given issue or pull request.
+type ProjectV2FieldsNodeMentionedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeMentionedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeMentionedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeMergeQueue includes the requested fields of the GraphQL type MergeQueue.
+// The GraphQL type's documentation follows.
+//
+// The queue of pull request entries to be merged into a protected branch in a repository.
+type ProjectV2FieldsNodeMergeQueue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeMergeQueue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeMergeQueue) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeMergeQueueEntry includes the requested fields of the GraphQL type MergeQueueEntry.
+// The GraphQL type's documentation follows.
+//
+// Entries in a MergeQueue
+type ProjectV2FieldsNodeMergeQueueEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeMergeQueueEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeMergeQueueEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeMergedEvent includes the requested fields of the GraphQL type MergedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'merged' event on a given pull request.
+type ProjectV2FieldsNodeMergedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeMergedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeMergedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeMigrationSource includes the requested fields of the GraphQL type MigrationSource.
+// The GraphQL type's documentation follows.
+//
+// A GitHub Enterprise Importer (GEI) migration source.
+type ProjectV2FieldsNodeMigrationSource struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeMigrationSource.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeMigrationSource) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeMilestone includes the requested fields of the GraphQL type Milestone.
+// The GraphQL type's documentation follows.
+//
+// Represents a Milestone object on a given repository.
+type ProjectV2FieldsNodeMilestone struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeMilestone.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeMilestone) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeMilestonedEvent includes the requested fields of the GraphQL type MilestonedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'milestoned' event on a given issue or pull request.
+type ProjectV2FieldsNodeMilestonedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeMilestonedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeMilestonedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeMovedColumnsInProjectEvent includes the requested fields of the GraphQL type MovedColumnsInProjectEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'moved_columns_in_project' event on a given issue or pull request.
+type ProjectV2FieldsNodeMovedColumnsInProjectEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeMovedColumnsInProjectEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeMovedColumnsInProjectEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeOIDCProvider includes the requested fields of the GraphQL type OIDCProvider.
+// The GraphQL type's documentation follows.
+//
+// An OIDC identity provider configured to provision identities for an enterprise.
+// Visible to enterprise owners or enterprise owners' personal access tokens
+// (classic) with read:enterprise or admin:enterprise scope.
+type ProjectV2FieldsNodeOIDCProvider struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOIDCProvider.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOIDCProvider) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeOauthApplicationCreateAuditEntry includes the requested fields of the GraphQL type OauthApplicationCreateAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a oauth_application.create event.
+type ProjectV2FieldsNodeOauthApplicationCreateAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOauthApplicationCreateAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOauthApplicationCreateAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeOrgAddBillingManagerAuditEntry includes the requested fields of the GraphQL type OrgAddBillingManagerAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.add_billing_manager
+type ProjectV2FieldsNodeOrgAddBillingManagerAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgAddBillingManagerAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgAddBillingManagerAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeOrgAddMemberAuditEntry includes the requested fields of the GraphQL type OrgAddMemberAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.add_member
+type ProjectV2FieldsNodeOrgAddMemberAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgAddMemberAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgAddMemberAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeOrgBlockUserAuditEntry includes the requested fields of the GraphQL type OrgBlockUserAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.block_user
+type ProjectV2FieldsNodeOrgBlockUserAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgBlockUserAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgBlockUserAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeOrgConfigDisableCollaboratorsOnlyAuditEntry includes the requested fields of the GraphQL type OrgConfigDisableCollaboratorsOnlyAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.config.disable_collaborators_only event.
+type ProjectV2FieldsNodeOrgConfigDisableCollaboratorsOnlyAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgConfigDisableCollaboratorsOnlyAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgConfigDisableCollaboratorsOnlyAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeOrgConfigEnableCollaboratorsOnlyAuditEntry includes the requested fields of the GraphQL type OrgConfigEnableCollaboratorsOnlyAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.config.enable_collaborators_only event.
+type ProjectV2FieldsNodeOrgConfigEnableCollaboratorsOnlyAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgConfigEnableCollaboratorsOnlyAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgConfigEnableCollaboratorsOnlyAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeOrgCreateAuditEntry includes the requested fields of the GraphQL type OrgCreateAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.create event.
+type ProjectV2FieldsNodeOrgCreateAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgCreateAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgCreateAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeOrgDisableOauthAppRestrictionsAuditEntry includes the requested fields of the GraphQL type OrgDisableOauthAppRestrictionsAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.disable_oauth_app_restrictions event.
+type ProjectV2FieldsNodeOrgDisableOauthAppRestrictionsAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgDisableOauthAppRestrictionsAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgDisableOauthAppRestrictionsAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeOrgDisableSamlAuditEntry includes the requested fields of the GraphQL type OrgDisableSamlAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.disable_saml event.
+type ProjectV2FieldsNodeOrgDisableSamlAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgDisableSamlAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgDisableSamlAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeOrgDisableTwoFactorRequirementAuditEntry includes the requested fields of the GraphQL type OrgDisableTwoFactorRequirementAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.disable_two_factor_requirement event.
+type ProjectV2FieldsNodeOrgDisableTwoFactorRequirementAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgDisableTwoFactorRequirementAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgDisableTwoFactorRequirementAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeOrgEnableOauthAppRestrictionsAuditEntry includes the requested fields of the GraphQL type OrgEnableOauthAppRestrictionsAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.enable_oauth_app_restrictions event.
+type ProjectV2FieldsNodeOrgEnableOauthAppRestrictionsAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgEnableOauthAppRestrictionsAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgEnableOauthAppRestrictionsAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeOrgEnableSamlAuditEntry includes the requested fields of the GraphQL type OrgEnableSamlAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.enable_saml event.
+type ProjectV2FieldsNodeOrgEnableSamlAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgEnableSamlAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgEnableSamlAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeOrgEnableTwoFactorRequirementAuditEntry includes the requested fields of the GraphQL type OrgEnableTwoFactorRequirementAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.enable_two_factor_requirement event.
+type ProjectV2FieldsNodeOrgEnableTwoFactorRequirementAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgEnableTwoFactorRequirementAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgEnableTwoFactorRequirementAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeOrgInviteMemberAuditEntry includes the requested fields of the GraphQL type OrgInviteMemberAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.invite_member event.
+type ProjectV2FieldsNodeOrgInviteMemberAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgInviteMemberAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgInviteMemberAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeOrgInviteToBusinessAuditEntry includes the requested fields of the GraphQL type OrgInviteToBusinessAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.invite_to_business event.
+type ProjectV2FieldsNodeOrgInviteToBusinessAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgInviteToBusinessAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgInviteToBusinessAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeOrgOauthAppAccessApprovedAuditEntry includes the requested fields of the GraphQL type OrgOauthAppAccessApprovedAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.oauth_app_access_approved event.
+type ProjectV2FieldsNodeOrgOauthAppAccessApprovedAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgOauthAppAccessApprovedAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgOauthAppAccessApprovedAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeOrgOauthAppAccessBlockedAuditEntry includes the requested fields of the GraphQL type OrgOauthAppAccessBlockedAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.oauth_app_access_blocked event.
+type ProjectV2FieldsNodeOrgOauthAppAccessBlockedAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgOauthAppAccessBlockedAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgOauthAppAccessBlockedAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeOrgOauthAppAccessDeniedAuditEntry includes the requested fields of the GraphQL type OrgOauthAppAccessDeniedAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.oauth_app_access_denied event.
+type ProjectV2FieldsNodeOrgOauthAppAccessDeniedAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgOauthAppAccessDeniedAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgOauthAppAccessDeniedAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeOrgOauthAppAccessRequestedAuditEntry includes the requested fields of the GraphQL type OrgOauthAppAccessRequestedAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.oauth_app_access_requested event.
+type ProjectV2FieldsNodeOrgOauthAppAccessRequestedAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgOauthAppAccessRequestedAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgOauthAppAccessRequestedAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeOrgOauthAppAccessUnblockedAuditEntry includes the requested fields of the GraphQL type OrgOauthAppAccessUnblockedAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.oauth_app_access_unblocked event.
+type ProjectV2FieldsNodeOrgOauthAppAccessUnblockedAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgOauthAppAccessUnblockedAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgOauthAppAccessUnblockedAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeOrgRemoveBillingManagerAuditEntry includes the requested fields of the GraphQL type OrgRemoveBillingManagerAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.remove_billing_manager event.
+type ProjectV2FieldsNodeOrgRemoveBillingManagerAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgRemoveBillingManagerAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgRemoveBillingManagerAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeOrgRemoveMemberAuditEntry includes the requested fields of the GraphQL type OrgRemoveMemberAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.remove_member event.
+type ProjectV2FieldsNodeOrgRemoveMemberAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgRemoveMemberAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgRemoveMemberAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeOrgRemoveOutsideCollaboratorAuditEntry includes the requested fields of the GraphQL type OrgRemoveOutsideCollaboratorAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.remove_outside_collaborator event.
+type ProjectV2FieldsNodeOrgRemoveOutsideCollaboratorAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgRemoveOutsideCollaboratorAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgRemoveOutsideCollaboratorAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeOrgRestoreMemberAuditEntry includes the requested fields of the GraphQL type OrgRestoreMemberAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.restore_member event.
+type ProjectV2FieldsNodeOrgRestoreMemberAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgRestoreMemberAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgRestoreMemberAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeOrgUnblockUserAuditEntry includes the requested fields of the GraphQL type OrgUnblockUserAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.unblock_user
+type ProjectV2FieldsNodeOrgUnblockUserAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgUnblockUserAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgUnblockUserAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeOrgUpdateDefaultRepositoryPermissionAuditEntry includes the requested fields of the GraphQL type OrgUpdateDefaultRepositoryPermissionAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.update_default_repository_permission
+type ProjectV2FieldsNodeOrgUpdateDefaultRepositoryPermissionAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgUpdateDefaultRepositoryPermissionAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgUpdateDefaultRepositoryPermissionAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeOrgUpdateMemberAuditEntry includes the requested fields of the GraphQL type OrgUpdateMemberAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.update_member event.
+type ProjectV2FieldsNodeOrgUpdateMemberAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgUpdateMemberAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgUpdateMemberAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeOrgUpdateMemberRepositoryCreationPermissionAuditEntry includes the requested fields of the GraphQL type OrgUpdateMemberRepositoryCreationPermissionAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.update_member_repository_creation_permission event.
+type ProjectV2FieldsNodeOrgUpdateMemberRepositoryCreationPermissionAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgUpdateMemberRepositoryCreationPermissionAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgUpdateMemberRepositoryCreationPermissionAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeOrgUpdateMemberRepositoryInvitationPermissionAuditEntry includes the requested fields of the GraphQL type OrgUpdateMemberRepositoryInvitationPermissionAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.update_member_repository_invitation_permission event.
+type ProjectV2FieldsNodeOrgUpdateMemberRepositoryInvitationPermissionAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrgUpdateMemberRepositoryInvitationPermissionAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrgUpdateMemberRepositoryInvitationPermissionAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeOrganization includes the requested fields of the GraphQL type Organization.
+// The GraphQL type's documentation follows.
+//
+// An account on GitHub, with one or more owners, that has repositories, members and teams.
+type ProjectV2FieldsNodeOrganization struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrganization.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrganization) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeOrganizationIdentityProvider includes the requested fields of the GraphQL type OrganizationIdentityProvider.
+// The GraphQL type's documentation follows.
+//
+// An Identity Provider configured to provision SAML and SCIM identities for
+// Organizations. Visible to (1) organization owners, (2) organization owners'
+// personal access tokens (classic) with read:org or admin:org scope, (3) GitHub
+// App with an installation token with read or write access to members.
+type ProjectV2FieldsNodeOrganizationIdentityProvider struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrganizationIdentityProvider.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrganizationIdentityProvider) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeOrganizationInvitation includes the requested fields of the GraphQL type OrganizationInvitation.
+// The GraphQL type's documentation follows.
+//
+// An Invitation for a user to an organization.
+type ProjectV2FieldsNodeOrganizationInvitation struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrganizationInvitation.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrganizationInvitation) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeOrganizationMigration includes the requested fields of the GraphQL type OrganizationMigration.
+// The GraphQL type's documentation follows.
+//
+// A GitHub Enterprise Importer (GEI) organization migration.
+type ProjectV2FieldsNodeOrganizationMigration struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeOrganizationMigration.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeOrganizationMigration) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodePackage includes the requested fields of the GraphQL type Package.
+// The GraphQL type's documentation follows.
+//
+// Information for an uploaded package.
+type ProjectV2FieldsNodePackage struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodePackage.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodePackage) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodePackageFile includes the requested fields of the GraphQL type PackageFile.
+// The GraphQL type's documentation follows.
+//
+// A file in a package version.
+type ProjectV2FieldsNodePackageFile struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodePackageFile.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodePackageFile) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodePackageTag includes the requested fields of the GraphQL type PackageTag.
+// The GraphQL type's documentation follows.
+//
+// A version tag contains the mapping between a tag name and a version.
+type ProjectV2FieldsNodePackageTag struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodePackageTag.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodePackageTag) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodePackageVersion includes the requested fields of the GraphQL type PackageVersion.
+// The GraphQL type's documentation follows.
+//
+// Information about a specific package version.
+type ProjectV2FieldsNodePackageVersion struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodePackageVersion.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodePackageVersion) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeParentIssueAddedEvent includes the requested fields of the GraphQL type ParentIssueAddedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'parent_issue_added' event on a given issue.
+type ProjectV2FieldsNodeParentIssueAddedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeParentIssueAddedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeParentIssueAddedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeParentIssueRemovedEvent includes the requested fields of the GraphQL type ParentIssueRemovedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'parent_issue_removed' event on a given issue.
+type ProjectV2FieldsNodeParentIssueRemovedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeParentIssueRemovedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeParentIssueRemovedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodePinnedDiscussion includes the requested fields of the GraphQL type PinnedDiscussion.
+// The GraphQL type's documentation follows.
+//
+// A Pinned Discussion is a discussion pinned to a repository's index page.
+type ProjectV2FieldsNodePinnedDiscussion struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodePinnedDiscussion.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodePinnedDiscussion) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodePinnedEnvironment includes the requested fields of the GraphQL type PinnedEnvironment.
+// The GraphQL type's documentation follows.
+//
+// Represents a pinned environment on a given repository
+type ProjectV2FieldsNodePinnedEnvironment struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodePinnedEnvironment.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodePinnedEnvironment) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodePinnedEvent includes the requested fields of the GraphQL type PinnedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'pinned' event on a given issue or pull request.
+type ProjectV2FieldsNodePinnedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodePinnedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodePinnedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodePinnedIssue includes the requested fields of the GraphQL type PinnedIssue.
+// The GraphQL type's documentation follows.
+//
+// A Pinned Issue is a issue pinned to a repository's index page.
+type ProjectV2FieldsNodePinnedIssue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodePinnedIssue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodePinnedIssue) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodePinnedIssueComment includes the requested fields of the GraphQL type PinnedIssueComment.
+// The GraphQL type's documentation follows.
+//
+// A comment pinned to an Issue.
+type ProjectV2FieldsNodePinnedIssueComment struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodePinnedIssueComment.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodePinnedIssueComment) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodePrivateRepositoryForkingDisableAuditEntry includes the requested fields of the GraphQL type PrivateRepositoryForkingDisableAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a private_repository_forking.disable event.
+type ProjectV2FieldsNodePrivateRepositoryForkingDisableAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodePrivateRepositoryForkingDisableAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodePrivateRepositoryForkingDisableAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodePrivateRepositoryForkingEnableAuditEntry includes the requested fields of the GraphQL type PrivateRepositoryForkingEnableAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a private_repository_forking.enable event.
+type ProjectV2FieldsNodePrivateRepositoryForkingEnableAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodePrivateRepositoryForkingEnableAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodePrivateRepositoryForkingEnableAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeProject includes the requested fields of the GraphQL type Project.
+// The GraphQL type's documentation follows.
+//
+// Projects manage issues, pull requests and notes within a project owner.
+type ProjectV2FieldsNodeProject struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeProject.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeProject) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeProjectCard includes the requested fields of the GraphQL type ProjectCard.
+// The GraphQL type's documentation follows.
+//
+// A card in a project.
+type ProjectV2FieldsNodeProjectCard struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeProjectCard.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeProjectCard) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeProjectColumn includes the requested fields of the GraphQL type ProjectColumn.
+// The GraphQL type's documentation follows.
+//
+// A column inside a project.
+type ProjectV2FieldsNodeProjectColumn struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeProjectColumn.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeProjectColumn) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeProjectV2 includes the requested fields of the GraphQL type ProjectV2.
+// The GraphQL type's documentation follows.
+//
+// New projects that manage issues, pull requests and drafts using tables and boards.
+type ProjectV2FieldsNodeProjectV2 struct {
+	Typename *string `json:"__typename"`
+	// List of fields and their constraints in the project
+	Fields *ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection `json:"fields"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeProjectV2.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeProjectV2) GetTypename() *string { return v.Typename }
+
+// GetFields returns ProjectV2FieldsNodeProjectV2.Fields, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeProjectV2) GetFields() *ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection {
+	return v.Fields
+}
+
+// ProjectV2FieldsNodeProjectV2Field includes the requested fields of the GraphQL type ProjectV2Field.
+// The GraphQL type's documentation follows.
+//
+// A field inside a project.
+type ProjectV2FieldsNodeProjectV2Field struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeProjectV2Field.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeProjectV2Field) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeProjectV2Item includes the requested fields of the GraphQL type ProjectV2Item.
+// The GraphQL type's documentation follows.
+//
+// An item within a Project.
+type ProjectV2FieldsNodeProjectV2Item struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeProjectV2Item.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeProjectV2Item) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeProjectV2ItemFieldDateValue includes the requested fields of the GraphQL type ProjectV2ItemFieldDateValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a date field in a Project item.
+type ProjectV2FieldsNodeProjectV2ItemFieldDateValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeProjectV2ItemFieldDateValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeProjectV2ItemFieldDateValue) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeProjectV2ItemFieldIterationValue includes the requested fields of the GraphQL type ProjectV2ItemFieldIterationValue.
+// The GraphQL type's documentation follows.
+//
+// The value of an iteration field in a Project item.
+type ProjectV2FieldsNodeProjectV2ItemFieldIterationValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeProjectV2ItemFieldIterationValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeProjectV2ItemFieldIterationValue) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeProjectV2ItemFieldNumberValue includes the requested fields of the GraphQL type ProjectV2ItemFieldNumberValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a number field in a Project item.
+type ProjectV2FieldsNodeProjectV2ItemFieldNumberValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeProjectV2ItemFieldNumberValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeProjectV2ItemFieldNumberValue) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeProjectV2ItemFieldSingleSelectValue includes the requested fields of the GraphQL type ProjectV2ItemFieldSingleSelectValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a single select field in a Project item.
+type ProjectV2FieldsNodeProjectV2ItemFieldSingleSelectValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeProjectV2ItemFieldSingleSelectValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeProjectV2ItemFieldSingleSelectValue) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeProjectV2ItemFieldTextValue includes the requested fields of the GraphQL type ProjectV2ItemFieldTextValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a text field in a Project item.
+type ProjectV2FieldsNodeProjectV2ItemFieldTextValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeProjectV2ItemFieldTextValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeProjectV2ItemFieldTextValue) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeProjectV2ItemStatusChangedEvent includes the requested fields of the GraphQL type ProjectV2ItemStatusChangedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'project_v2_item_status_changed' event on a given issue or pull request.
+type ProjectV2FieldsNodeProjectV2ItemStatusChangedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeProjectV2ItemStatusChangedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeProjectV2ItemStatusChangedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeProjectV2IterationField includes the requested fields of the GraphQL type ProjectV2IterationField.
+// The GraphQL type's documentation follows.
+//
+// An iteration field inside a project.
+type ProjectV2FieldsNodeProjectV2IterationField struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeProjectV2IterationField.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeProjectV2IterationField) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeProjectV2SingleSelectField includes the requested fields of the GraphQL type ProjectV2SingleSelectField.
+// The GraphQL type's documentation follows.
+//
+// A single select field inside a project.
+type ProjectV2FieldsNodeProjectV2SingleSelectField struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeProjectV2SingleSelectField.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeProjectV2SingleSelectField) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeProjectV2StatusUpdate includes the requested fields of the GraphQL type ProjectV2StatusUpdate.
+// The GraphQL type's documentation follows.
+//
+// A status update within a project.
+type ProjectV2FieldsNodeProjectV2StatusUpdate struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeProjectV2StatusUpdate.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeProjectV2StatusUpdate) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeProjectV2View includes the requested fields of the GraphQL type ProjectV2View.
+// The GraphQL type's documentation follows.
+//
+// A view within a ProjectV2.
+type ProjectV2FieldsNodeProjectV2View struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeProjectV2View.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeProjectV2View) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeProjectV2Workflow includes the requested fields of the GraphQL type ProjectV2Workflow.
+// The GraphQL type's documentation follows.
+//
+// A workflow inside a project.
+type ProjectV2FieldsNodeProjectV2Workflow struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeProjectV2Workflow.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeProjectV2Workflow) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodePublicKey includes the requested fields of the GraphQL type PublicKey.
+// The GraphQL type's documentation follows.
+//
+// A user's public key.
+type ProjectV2FieldsNodePublicKey struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodePublicKey.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodePublicKey) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodePullRequest includes the requested fields of the GraphQL type PullRequest.
+// The GraphQL type's documentation follows.
+//
+// A repository pull request.
+type ProjectV2FieldsNodePullRequest struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodePullRequest.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodePullRequest) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodePullRequestCommit includes the requested fields of the GraphQL type PullRequestCommit.
+// The GraphQL type's documentation follows.
+//
+// Represents a Git commit part of a pull request.
+type ProjectV2FieldsNodePullRequestCommit struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodePullRequestCommit.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodePullRequestCommit) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodePullRequestCommitCommentThread includes the requested fields of the GraphQL type PullRequestCommitCommentThread.
+// The GraphQL type's documentation follows.
+//
+// Represents a commit comment thread part of a pull request.
+type ProjectV2FieldsNodePullRequestCommitCommentThread struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodePullRequestCommitCommentThread.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodePullRequestCommitCommentThread) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodePullRequestReview includes the requested fields of the GraphQL type PullRequestReview.
+// The GraphQL type's documentation follows.
+//
+// A review object for a given pull request.
+type ProjectV2FieldsNodePullRequestReview struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodePullRequestReview.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodePullRequestReview) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodePullRequestReviewComment includes the requested fields of the GraphQL type PullRequestReviewComment.
+// The GraphQL type's documentation follows.
+//
+// A review comment associated with a given repository pull request.
+type ProjectV2FieldsNodePullRequestReviewComment struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodePullRequestReviewComment.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodePullRequestReviewComment) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodePullRequestReviewThread includes the requested fields of the GraphQL type PullRequestReviewThread.
+// The GraphQL type's documentation follows.
+//
+// A threaded list of comments for a given pull request.
+type ProjectV2FieldsNodePullRequestReviewThread struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodePullRequestReviewThread.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodePullRequestReviewThread) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodePullRequestThread includes the requested fields of the GraphQL type PullRequestThread.
+// The GraphQL type's documentation follows.
+//
+// A threaded list of comments for a given pull request.
+type ProjectV2FieldsNodePullRequestThread struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodePullRequestThread.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodePullRequestThread) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodePush includes the requested fields of the GraphQL type Push.
+// The GraphQL type's documentation follows.
+//
+// A Git push.
+type ProjectV2FieldsNodePush struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodePush.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodePush) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodePushAllowance includes the requested fields of the GraphQL type PushAllowance.
+// The GraphQL type's documentation follows.
+//
+// A team, user, or app who has the ability to push to a protected branch.
+type ProjectV2FieldsNodePushAllowance struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodePushAllowance.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodePushAllowance) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeQuery includes the requested fields of the GraphQL type Query.
+// The GraphQL type's documentation follows.
+//
+// The query root of GitHub's GraphQL interface.
+type ProjectV2FieldsNodeQuery struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeQuery.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeQuery) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeReaction includes the requested fields of the GraphQL type Reaction.
+// The GraphQL type's documentation follows.
+//
+// An emoji reaction to a particular piece of content.
+type ProjectV2FieldsNodeReaction struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeReaction.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeReaction) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeReadyForReviewEvent includes the requested fields of the GraphQL type ReadyForReviewEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'ready_for_review' event on a given pull request.
+type ProjectV2FieldsNodeReadyForReviewEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeReadyForReviewEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeReadyForReviewEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRef includes the requested fields of the GraphQL type Ref.
+// The GraphQL type's documentation follows.
+//
+// Represents a Git reference.
+type ProjectV2FieldsNodeRef struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRef.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRef) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeReferencedEvent includes the requested fields of the GraphQL type ReferencedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'referenced' event on a given `ReferencedSubject`.
+type ProjectV2FieldsNodeReferencedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeReferencedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeReferencedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRelease includes the requested fields of the GraphQL type Release.
+// The GraphQL type's documentation follows.
+//
+// A release contains the content for a release.
+type ProjectV2FieldsNodeRelease struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRelease.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRelease) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeReleaseAsset includes the requested fields of the GraphQL type ReleaseAsset.
+// The GraphQL type's documentation follows.
+//
+// A release asset contains the content for a release asset.
+type ProjectV2FieldsNodeReleaseAsset struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeReleaseAsset.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeReleaseAsset) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRemovedFromMergeQueueEvent includes the requested fields of the GraphQL type RemovedFromMergeQueueEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'removed_from_merge_queue' event on a given pull request.
+type ProjectV2FieldsNodeRemovedFromMergeQueueEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRemovedFromMergeQueueEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRemovedFromMergeQueueEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRemovedFromProjectEvent includes the requested fields of the GraphQL type RemovedFromProjectEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'removed_from_project' event on a given issue or pull request.
+type ProjectV2FieldsNodeRemovedFromProjectEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRemovedFromProjectEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRemovedFromProjectEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRemovedFromProjectV2Event includes the requested fields of the GraphQL type RemovedFromProjectV2Event.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'removed_from_project_v2' event on a given issue or pull request.
+type ProjectV2FieldsNodeRemovedFromProjectV2Event struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRemovedFromProjectV2Event.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRemovedFromProjectV2Event) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRenamedTitleEvent includes the requested fields of the GraphQL type RenamedTitleEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'renamed' event on a given issue or pull request
+type ProjectV2FieldsNodeRenamedTitleEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRenamedTitleEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRenamedTitleEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeReopenedEvent includes the requested fields of the GraphQL type ReopenedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'reopened' event on any `Closable`.
+type ProjectV2FieldsNodeReopenedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeReopenedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeReopenedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRepoAccessAuditEntry includes the requested fields of the GraphQL type RepoAccessAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.access event.
+type ProjectV2FieldsNodeRepoAccessAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepoAccessAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepoAccessAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRepoAddMemberAuditEntry includes the requested fields of the GraphQL type RepoAddMemberAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.add_member event.
+type ProjectV2FieldsNodeRepoAddMemberAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepoAddMemberAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepoAddMemberAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRepoAddTopicAuditEntry includes the requested fields of the GraphQL type RepoAddTopicAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.add_topic event.
+type ProjectV2FieldsNodeRepoAddTopicAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepoAddTopicAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepoAddTopicAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRepoArchivedAuditEntry includes the requested fields of the GraphQL type RepoArchivedAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.archived event.
+type ProjectV2FieldsNodeRepoArchivedAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepoArchivedAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepoArchivedAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRepoChangeMergeSettingAuditEntry includes the requested fields of the GraphQL type RepoChangeMergeSettingAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.change_merge_setting event.
+type ProjectV2FieldsNodeRepoChangeMergeSettingAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepoChangeMergeSettingAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepoChangeMergeSettingAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeRepoConfigDisableAnonymousGitAccessAuditEntry includes the requested fields of the GraphQL type RepoConfigDisableAnonymousGitAccessAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.config.disable_anonymous_git_access event.
+type ProjectV2FieldsNodeRepoConfigDisableAnonymousGitAccessAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepoConfigDisableAnonymousGitAccessAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepoConfigDisableAnonymousGitAccessAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeRepoConfigDisableCollaboratorsOnlyAuditEntry includes the requested fields of the GraphQL type RepoConfigDisableCollaboratorsOnlyAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.config.disable_collaborators_only event.
+type ProjectV2FieldsNodeRepoConfigDisableCollaboratorsOnlyAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepoConfigDisableCollaboratorsOnlyAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepoConfigDisableCollaboratorsOnlyAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeRepoConfigDisableContributorsOnlyAuditEntry includes the requested fields of the GraphQL type RepoConfigDisableContributorsOnlyAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.config.disable_contributors_only event.
+type ProjectV2FieldsNodeRepoConfigDisableContributorsOnlyAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepoConfigDisableContributorsOnlyAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepoConfigDisableContributorsOnlyAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeRepoConfigDisableSockpuppetDisallowedAuditEntry includes the requested fields of the GraphQL type RepoConfigDisableSockpuppetDisallowedAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.config.disable_sockpuppet_disallowed event.
+type ProjectV2FieldsNodeRepoConfigDisableSockpuppetDisallowedAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepoConfigDisableSockpuppetDisallowedAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepoConfigDisableSockpuppetDisallowedAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeRepoConfigEnableAnonymousGitAccessAuditEntry includes the requested fields of the GraphQL type RepoConfigEnableAnonymousGitAccessAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.config.enable_anonymous_git_access event.
+type ProjectV2FieldsNodeRepoConfigEnableAnonymousGitAccessAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepoConfigEnableAnonymousGitAccessAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepoConfigEnableAnonymousGitAccessAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeRepoConfigEnableCollaboratorsOnlyAuditEntry includes the requested fields of the GraphQL type RepoConfigEnableCollaboratorsOnlyAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.config.enable_collaborators_only event.
+type ProjectV2FieldsNodeRepoConfigEnableCollaboratorsOnlyAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepoConfigEnableCollaboratorsOnlyAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepoConfigEnableCollaboratorsOnlyAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeRepoConfigEnableContributorsOnlyAuditEntry includes the requested fields of the GraphQL type RepoConfigEnableContributorsOnlyAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.config.enable_contributors_only event.
+type ProjectV2FieldsNodeRepoConfigEnableContributorsOnlyAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepoConfigEnableContributorsOnlyAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepoConfigEnableContributorsOnlyAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeRepoConfigEnableSockpuppetDisallowedAuditEntry includes the requested fields of the GraphQL type RepoConfigEnableSockpuppetDisallowedAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.config.enable_sockpuppet_disallowed event.
+type ProjectV2FieldsNodeRepoConfigEnableSockpuppetDisallowedAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepoConfigEnableSockpuppetDisallowedAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepoConfigEnableSockpuppetDisallowedAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeRepoConfigLockAnonymousGitAccessAuditEntry includes the requested fields of the GraphQL type RepoConfigLockAnonymousGitAccessAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.config.lock_anonymous_git_access event.
+type ProjectV2FieldsNodeRepoConfigLockAnonymousGitAccessAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepoConfigLockAnonymousGitAccessAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepoConfigLockAnonymousGitAccessAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeRepoConfigUnlockAnonymousGitAccessAuditEntry includes the requested fields of the GraphQL type RepoConfigUnlockAnonymousGitAccessAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.config.unlock_anonymous_git_access event.
+type ProjectV2FieldsNodeRepoConfigUnlockAnonymousGitAccessAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepoConfigUnlockAnonymousGitAccessAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepoConfigUnlockAnonymousGitAccessAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeRepoCreateAuditEntry includes the requested fields of the GraphQL type RepoCreateAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.create event.
+type ProjectV2FieldsNodeRepoCreateAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepoCreateAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepoCreateAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRepoDestroyAuditEntry includes the requested fields of the GraphQL type RepoDestroyAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.destroy event.
+type ProjectV2FieldsNodeRepoDestroyAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepoDestroyAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepoDestroyAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRepoRemoveMemberAuditEntry includes the requested fields of the GraphQL type RepoRemoveMemberAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.remove_member event.
+type ProjectV2FieldsNodeRepoRemoveMemberAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepoRemoveMemberAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepoRemoveMemberAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRepoRemoveTopicAuditEntry includes the requested fields of the GraphQL type RepoRemoveTopicAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.remove_topic event.
+type ProjectV2FieldsNodeRepoRemoveTopicAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepoRemoveTopicAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepoRemoveTopicAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRepository includes the requested fields of the GraphQL type Repository.
+// The GraphQL type's documentation follows.
+//
+// A repository contains the content for a project.
+type ProjectV2FieldsNodeRepository struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepository.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepository) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRepositoryCustomProperty includes the requested fields of the GraphQL type RepositoryCustomProperty.
+// The GraphQL type's documentation follows.
+//
+// A repository custom property.
+type ProjectV2FieldsNodeRepositoryCustomProperty struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepositoryCustomProperty.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepositoryCustomProperty) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRepositoryInvitation includes the requested fields of the GraphQL type RepositoryInvitation.
+// The GraphQL type's documentation follows.
+//
+// An invitation for a user to be added to a repository.
+type ProjectV2FieldsNodeRepositoryInvitation struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepositoryInvitation.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepositoryInvitation) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRepositoryMigration includes the requested fields of the GraphQL type RepositoryMigration.
+// The GraphQL type's documentation follows.
+//
+// A GitHub Enterprise Importer (GEI) repository migration.
+type ProjectV2FieldsNodeRepositoryMigration struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepositoryMigration.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepositoryMigration) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRepositoryRule includes the requested fields of the GraphQL type RepositoryRule.
+// The GraphQL type's documentation follows.
+//
+// A repository rule.
+type ProjectV2FieldsNodeRepositoryRule struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepositoryRule.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepositoryRule) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRepositoryRuleset includes the requested fields of the GraphQL type RepositoryRuleset.
+// The GraphQL type's documentation follows.
+//
+// A repository ruleset.
+type ProjectV2FieldsNodeRepositoryRuleset struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepositoryRuleset.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepositoryRuleset) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRepositoryRulesetBypassActor includes the requested fields of the GraphQL type RepositoryRulesetBypassActor.
+// The GraphQL type's documentation follows.
+//
+// A team or app that has the ability to bypass a rules defined on a ruleset
+type ProjectV2FieldsNodeRepositoryRulesetBypassActor struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepositoryRulesetBypassActor.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepositoryRulesetBypassActor) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRepositoryTopic includes the requested fields of the GraphQL type RepositoryTopic.
+// The GraphQL type's documentation follows.
+//
+// A repository-topic connects a repository to a topic.
+type ProjectV2FieldsNodeRepositoryTopic struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepositoryTopic.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepositoryTopic) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeRepositoryVisibilityChangeDisableAuditEntry includes the requested fields of the GraphQL type RepositoryVisibilityChangeDisableAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repository_visibility_change.disable event.
+type ProjectV2FieldsNodeRepositoryVisibilityChangeDisableAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepositoryVisibilityChangeDisableAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepositoryVisibilityChangeDisableAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeRepositoryVisibilityChangeEnableAuditEntry includes the requested fields of the GraphQL type RepositoryVisibilityChangeEnableAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repository_visibility_change.enable event.
+type ProjectV2FieldsNodeRepositoryVisibilityChangeEnableAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepositoryVisibilityChangeEnableAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepositoryVisibilityChangeEnableAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2FieldsNodeRepositoryVulnerabilityAlert includes the requested fields of the GraphQL type RepositoryVulnerabilityAlert.
+// The GraphQL type's documentation follows.
+//
+// A Dependabot alert for a repository with a dependency affected by a security vulnerability.
+type ProjectV2FieldsNodeRepositoryVulnerabilityAlert struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeRepositoryVulnerabilityAlert.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeRepositoryVulnerabilityAlert) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeReviewDismissalAllowance includes the requested fields of the GraphQL type ReviewDismissalAllowance.
+// The GraphQL type's documentation follows.
+//
+// A user, team, or app who has the ability to dismiss a review on a protected branch.
+type ProjectV2FieldsNodeReviewDismissalAllowance struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeReviewDismissalAllowance.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeReviewDismissalAllowance) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeReviewDismissedEvent includes the requested fields of the GraphQL type ReviewDismissedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'review_dismissed' event on a given issue or pull request.
+type ProjectV2FieldsNodeReviewDismissedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeReviewDismissedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeReviewDismissedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeReviewRequest includes the requested fields of the GraphQL type ReviewRequest.
+// The GraphQL type's documentation follows.
+//
+// A request for a user to review a pull request.
+type ProjectV2FieldsNodeReviewRequest struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeReviewRequest.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeReviewRequest) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeReviewRequestRemovedEvent includes the requested fields of the GraphQL type ReviewRequestRemovedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents an 'review_request_removed' event on a given pull request.
+type ProjectV2FieldsNodeReviewRequestRemovedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeReviewRequestRemovedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeReviewRequestRemovedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeReviewRequestedEvent includes the requested fields of the GraphQL type ReviewRequestedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents an 'review_requested' event on a given pull request.
+type ProjectV2FieldsNodeReviewRequestedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeReviewRequestedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeReviewRequestedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeSavedReply includes the requested fields of the GraphQL type SavedReply.
+// The GraphQL type's documentation follows.
+//
+// A Saved Reply is text a user can use to reply quickly.
+type ProjectV2FieldsNodeSavedReply struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeSavedReply.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeSavedReply) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeSecurityAdvisory includes the requested fields of the GraphQL type SecurityAdvisory.
+// The GraphQL type's documentation follows.
+//
+// A GitHub Security Advisory
+type ProjectV2FieldsNodeSecurityAdvisory struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeSecurityAdvisory.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeSecurityAdvisory) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeSponsorsActivity includes the requested fields of the GraphQL type SponsorsActivity.
+// The GraphQL type's documentation follows.
+//
+// An event related to sponsorship activity.
+type ProjectV2FieldsNodeSponsorsActivity struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeSponsorsActivity.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeSponsorsActivity) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeSponsorsListing includes the requested fields of the GraphQL type SponsorsListing.
+// The GraphQL type's documentation follows.
+//
+// A GitHub Sponsors listing.
+type ProjectV2FieldsNodeSponsorsListing struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeSponsorsListing.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeSponsorsListing) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeSponsorsListingFeaturedItem includes the requested fields of the GraphQL type SponsorsListingFeaturedItem.
+// The GraphQL type's documentation follows.
+//
+// A record that is promoted on a GitHub Sponsors profile.
+type ProjectV2FieldsNodeSponsorsListingFeaturedItem struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeSponsorsListingFeaturedItem.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeSponsorsListingFeaturedItem) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeSponsorsTier includes the requested fields of the GraphQL type SponsorsTier.
+// The GraphQL type's documentation follows.
+//
+// A GitHub Sponsors tier associated with a GitHub Sponsors listing.
+type ProjectV2FieldsNodeSponsorsTier struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeSponsorsTier.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeSponsorsTier) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeSponsorship includes the requested fields of the GraphQL type Sponsorship.
+// The GraphQL type's documentation follows.
+//
+// A sponsorship relationship between a sponsor and a maintainer
+type ProjectV2FieldsNodeSponsorship struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeSponsorship.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeSponsorship) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeSponsorshipNewsletter includes the requested fields of the GraphQL type SponsorshipNewsletter.
+// The GraphQL type's documentation follows.
+//
+// An update sent to sponsors of a user or organization on GitHub Sponsors.
+type ProjectV2FieldsNodeSponsorshipNewsletter struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeSponsorshipNewsletter.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeSponsorshipNewsletter) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeStatus includes the requested fields of the GraphQL type Status.
+// The GraphQL type's documentation follows.
+//
+// Represents a commit status.
+type ProjectV2FieldsNodeStatus struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeStatus.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeStatus) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeStatusCheckRollup includes the requested fields of the GraphQL type StatusCheckRollup.
+// The GraphQL type's documentation follows.
+//
+// Represents the rollup for both the check runs and status for a commit.
+type ProjectV2FieldsNodeStatusCheckRollup struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeStatusCheckRollup.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeStatusCheckRollup) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeStatusContext includes the requested fields of the GraphQL type StatusContext.
+// The GraphQL type's documentation follows.
+//
+// Represents an individual commit status context
+type ProjectV2FieldsNodeStatusContext struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeStatusContext.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeStatusContext) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeSubIssueAddedEvent includes the requested fields of the GraphQL type SubIssueAddedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'sub_issue_added' event on a given issue.
+type ProjectV2FieldsNodeSubIssueAddedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeSubIssueAddedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeSubIssueAddedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeSubIssueRemovedEvent includes the requested fields of the GraphQL type SubIssueRemovedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'sub_issue_removed' event on a given issue.
+type ProjectV2FieldsNodeSubIssueRemovedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeSubIssueRemovedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeSubIssueRemovedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeSubscribedEvent includes the requested fields of the GraphQL type SubscribedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'subscribed' event on a given `Subscribable`.
+type ProjectV2FieldsNodeSubscribedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeSubscribedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeSubscribedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeTag includes the requested fields of the GraphQL type Tag.
+// The GraphQL type's documentation follows.
+//
+// Represents a Git tag.
+type ProjectV2FieldsNodeTag struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeTag.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeTag) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeTeam includes the requested fields of the GraphQL type Team.
+// The GraphQL type's documentation follows.
+//
+// A team of users in an organization.
+type ProjectV2FieldsNodeTeam struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeTeam.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeTeam) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeTeamAddMemberAuditEntry includes the requested fields of the GraphQL type TeamAddMemberAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a team.add_member event.
+type ProjectV2FieldsNodeTeamAddMemberAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeTeamAddMemberAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeTeamAddMemberAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeTeamAddRepositoryAuditEntry includes the requested fields of the GraphQL type TeamAddRepositoryAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a team.add_repository event.
+type ProjectV2FieldsNodeTeamAddRepositoryAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeTeamAddRepositoryAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeTeamAddRepositoryAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeTeamChangeParentTeamAuditEntry includes the requested fields of the GraphQL type TeamChangeParentTeamAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a team.change_parent_team event.
+type ProjectV2FieldsNodeTeamChangeParentTeamAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeTeamChangeParentTeamAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeTeamChangeParentTeamAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeTeamRemoveMemberAuditEntry includes the requested fields of the GraphQL type TeamRemoveMemberAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a team.remove_member event.
+type ProjectV2FieldsNodeTeamRemoveMemberAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeTeamRemoveMemberAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeTeamRemoveMemberAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeTeamRemoveRepositoryAuditEntry includes the requested fields of the GraphQL type TeamRemoveRepositoryAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a team.remove_repository event.
+type ProjectV2FieldsNodeTeamRemoveRepositoryAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeTeamRemoveRepositoryAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeTeamRemoveRepositoryAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeTopic includes the requested fields of the GraphQL type Topic.
+// The GraphQL type's documentation follows.
+//
+// A topic aggregates entities that are related to a subject.
+type ProjectV2FieldsNodeTopic struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeTopic.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeTopic) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeTransferredEvent includes the requested fields of the GraphQL type TransferredEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'transferred' event on a given issue or pull request.
+type ProjectV2FieldsNodeTransferredEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeTransferredEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeTransferredEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeTree includes the requested fields of the GraphQL type Tree.
+// The GraphQL type's documentation follows.
+//
+// Represents a Git tree.
+type ProjectV2FieldsNodeTree struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeTree.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeTree) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeUnassignedEvent includes the requested fields of the GraphQL type UnassignedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents an 'unassigned' event on any assignable object.
+type ProjectV2FieldsNodeUnassignedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeUnassignedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeUnassignedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeUnlabeledEvent includes the requested fields of the GraphQL type UnlabeledEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents an 'unlabeled' event on a given issue or pull request.
+type ProjectV2FieldsNodeUnlabeledEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeUnlabeledEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeUnlabeledEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeUnlockedEvent includes the requested fields of the GraphQL type UnlockedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents an 'unlocked' event on a given issue or pull request.
+type ProjectV2FieldsNodeUnlockedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeUnlockedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeUnlockedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeUnmarkedAsDuplicateEvent includes the requested fields of the GraphQL type UnmarkedAsDuplicateEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents an 'unmarked_as_duplicate' event on a given issue or pull request.
+type ProjectV2FieldsNodeUnmarkedAsDuplicateEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeUnmarkedAsDuplicateEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeUnmarkedAsDuplicateEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeUnpinnedEvent includes the requested fields of the GraphQL type UnpinnedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents an 'unpinned' event on a given issue or pull request.
+type ProjectV2FieldsNodeUnpinnedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeUnpinnedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeUnpinnedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeUnsubscribedEvent includes the requested fields of the GraphQL type UnsubscribedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents an 'unsubscribed' event on a given `Subscribable`.
+type ProjectV2FieldsNodeUnsubscribedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeUnsubscribedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeUnsubscribedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeUser includes the requested fields of the GraphQL type User.
+// The GraphQL type's documentation follows.
+//
+// A user is an individual's account on GitHub that owns repositories and can make new content.
+type ProjectV2FieldsNodeUser struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeUser.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeUser) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeUserBlockedEvent includes the requested fields of the GraphQL type UserBlockedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'user_blocked' event on a given user.
+type ProjectV2FieldsNodeUserBlockedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeUserBlockedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeUserBlockedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeUserContentEdit includes the requested fields of the GraphQL type UserContentEdit.
+// The GraphQL type's documentation follows.
+//
+// An edit on user content
+type ProjectV2FieldsNodeUserContentEdit struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeUserContentEdit.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeUserContentEdit) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeUserList includes the requested fields of the GraphQL type UserList.
+// The GraphQL type's documentation follows.
+//
+// A user-curated list of repositories
+type ProjectV2FieldsNodeUserList struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeUserList.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeUserList) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeUserNamespaceRepository includes the requested fields of the GraphQL type UserNamespaceRepository.
+// The GraphQL type's documentation follows.
+//
+// A repository owned by an Enterprise Managed user.
+type ProjectV2FieldsNodeUserNamespaceRepository struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeUserNamespaceRepository.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeUserNamespaceRepository) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeUserStatus includes the requested fields of the GraphQL type UserStatus.
+// The GraphQL type's documentation follows.
+//
+// The user's description of what they're currently doing.
+type ProjectV2FieldsNodeUserStatus struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeUserStatus.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeUserStatus) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeVerifiableDomain includes the requested fields of the GraphQL type VerifiableDomain.
+// The GraphQL type's documentation follows.
+//
+// A domain that can be verified or approved for an organization or an enterprise.
+type ProjectV2FieldsNodeVerifiableDomain struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeVerifiableDomain.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeVerifiableDomain) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeWorkflow includes the requested fields of the GraphQL type Workflow.
+// The GraphQL type's documentation follows.
+//
+// A workflow contains meta information about an Actions workflow file.
+type ProjectV2FieldsNodeWorkflow struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeWorkflow.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeWorkflow) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeWorkflowRun includes the requested fields of the GraphQL type WorkflowRun.
+// The GraphQL type's documentation follows.
+//
+// A workflow run.
+type ProjectV2FieldsNodeWorkflowRun struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeWorkflowRun.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeWorkflowRun) GetTypename() *string { return v.Typename }
+
+// ProjectV2FieldsNodeWorkflowRunFile includes the requested fields of the GraphQL type WorkflowRunFile.
+// The GraphQL type's documentation follows.
+//
+// An executed workflow file for a workflow run.
+type ProjectV2FieldsNodeWorkflowRunFile struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2FieldsNodeWorkflowRunFile.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeWorkflowRunFile) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemContent includes the requested fields of the GraphQL interface ProjectV2ItemContent.
+//
+// ProjectV2ItemContent is implemented by the following types:
+// ProjectV2ItemContentDraftIssue
+// ProjectV2ItemContentIssue
+// ProjectV2ItemContentPullRequest
+// The GraphQL type's documentation follows.
+//
+// Types that can be inside Project Items.
+type ProjectV2ItemContent interface {
+	implementsGraphQLInterfaceProjectV2ItemContent()
+	// GetTypename returns the receiver's concrete GraphQL type-name (see interface doc for possible values).
+	GetTypename() *string
+}
+
+func (v *ProjectV2ItemContentDraftIssue) implementsGraphQLInterfaceProjectV2ItemContent()  {}
+func (v *ProjectV2ItemContentIssue) implementsGraphQLInterfaceProjectV2ItemContent()       {}
+func (v *ProjectV2ItemContentPullRequest) implementsGraphQLInterfaceProjectV2ItemContent() {}
+
+func __unmarshalProjectV2ItemContent(b []byte, v *ProjectV2ItemContent) error {
+	if string(b) == "null" {
+		return nil
+	}
+
+	var tn struct {
+		TypeName string `json:"__typename"`
+	}
+	err := json.Unmarshal(b, &tn)
+	if err != nil {
+		return err
+	}
+
+	switch tn.TypeName {
+	case "DraftIssue":
+		*v = new(ProjectV2ItemContentDraftIssue)
+		return json.Unmarshal(b, *v)
+	case "Issue":
+		*v = new(ProjectV2ItemContentIssue)
+		return json.Unmarshal(b, *v)
+	case "PullRequest":
+		*v = new(ProjectV2ItemContentPullRequest)
+		return json.Unmarshal(b, *v)
+	case "":
+		return fmt.Errorf(
+			"response was missing ProjectV2ItemContent.__typename")
+	default:
+		return fmt.Errorf(
+			`unexpected concrete type for ProjectV2ItemContent: "%v"`, tn.TypeName)
+	}
+}
+
+func __marshalProjectV2ItemContent(v *ProjectV2ItemContent) ([]byte, error) {
+
+	var typename string
+	switch v := (*v).(type) {
+	case *ProjectV2ItemContentDraftIssue:
+		typename = "DraftIssue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemContentDraftIssue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemContentIssue:
+		typename = "Issue"
+
+		premarshaled, err := v.__premarshalJSON()
+		if err != nil {
+			return nil, err
+		}
+		result := struct {
+			TypeName string `json:"__typename"`
+			*__premarshalProjectV2ItemContentIssue
+		}{typename, premarshaled}
+		return json.Marshal(result)
+	case *ProjectV2ItemContentPullRequest:
+		typename = "PullRequest"
+
+		premarshaled, err := v.__premarshalJSON()
+		if err != nil {
+			return nil, err
+		}
+		result := struct {
+			TypeName string `json:"__typename"`
+			*__premarshalProjectV2ItemContentPullRequest
+		}{typename, premarshaled}
+		return json.Marshal(result)
+	case nil:
+		return []byte("null"), nil
+	default:
+		return nil, fmt.Errorf(
+			`unexpected concrete type for ProjectV2ItemContent: "%T"`, v)
+	}
+}
+
+// ProjectV2ItemContentAssigneeLogin includes the requested fields of the GraphQL type User.
+// The GraphQL type's documentation follows.
+//
+// A user is an individual's account on GitHub that owns repositories and can make new content.
+type ProjectV2ItemContentAssigneeLogin struct {
+	// The username used to login.
+	Login string `json:"login"`
+}
+
+// GetLogin returns ProjectV2ItemContentAssigneeLogin.Login, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentAssigneeLogin) GetLogin() string { return v.Login }
+
+// ProjectV2ItemContentAssignees includes the requested fields of the GraphQL type UserConnection.
+// The GraphQL type's documentation follows.
+//
+// A list of users.
+type ProjectV2ItemContentAssignees struct {
+	// A list of nodes.
+	Nodes []*ProjectV2ItemContentAssigneeLogin `json:"nodes"`
+}
+
+// GetNodes returns ProjectV2ItemContentAssignees.Nodes, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentAssignees) GetNodes() []*ProjectV2ItemContentAssigneeLogin {
+	return v.Nodes
+}
+
+// ProjectV2ItemContentDraftIssue includes the requested fields of the GraphQL type DraftIssue.
+// The GraphQL type's documentation follows.
+//
+// A draft issue within a project.
+type ProjectV2ItemContentDraftIssue struct {
+	Typename *string `json:"__typename"`
+	// The Node ID of the DraftIssue object
+	Id string `json:"id"`
+	// The title of the draft issue
+	Title string `json:"title"`
+	// The body of the draft issue.
+	Body string `json:"body"`
+}
+
+// GetTypename returns ProjectV2ItemContentDraftIssue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentDraftIssue) GetTypename() *string { return v.Typename }
+
+// GetId returns ProjectV2ItemContentDraftIssue.Id, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentDraftIssue) GetId() string { return v.Id }
+
+// GetTitle returns ProjectV2ItemContentDraftIssue.Title, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentDraftIssue) GetTitle() string { return v.Title }
+
+// GetBody returns ProjectV2ItemContentDraftIssue.Body, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentDraftIssue) GetBody() string { return v.Body }
+
+// ProjectV2ItemContentIssue includes the requested fields of the GraphQL type Issue.
+// The GraphQL type's documentation follows.
+//
+// An Issue is a place to discuss ideas, enhancements, tasks, and bugs for a project.
+type ProjectV2ItemContentIssue struct {
+	Typename *string `json:"__typename"`
+	// The Node ID of the Issue object
+	Id string `json:"id"`
+	// Identifies the issue number.
+	Number int `json:"number"`
+	// Identifies the issue title.
+	Title string `json:"title"`
+	// The HTTP URL for this issue
+	Url string `json:"url"`
+	// Identifies the state of the issue.
+	IssueState IssueState `json:"issueState"`
+	// Identifies the date and time when the object was last updated.
+	UpdatedAt string `json:"updatedAt"`
+	// Identifies the date and time when the object was closed.
+	ClosedAt *string `json:"closedAt"`
+	// The actor who authored the comment.
+	Author *ProjectV2ItemContentLogin `json:"-"`
+	// A list of Users assigned to this object.
+	Assignees *ProjectV2ItemContentAssignees `json:"assignees"`
+}
+
+// GetTypename returns ProjectV2ItemContentIssue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentIssue) GetTypename() *string { return v.Typename }
+
+// GetId returns ProjectV2ItemContentIssue.Id, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentIssue) GetId() string { return v.Id }
+
+// GetNumber returns ProjectV2ItemContentIssue.Number, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentIssue) GetNumber() int { return v.Number }
+
+// GetTitle returns ProjectV2ItemContentIssue.Title, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentIssue) GetTitle() string { return v.Title }
+
+// GetUrl returns ProjectV2ItemContentIssue.Url, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentIssue) GetUrl() string { return v.Url }
+
+// GetIssueState returns ProjectV2ItemContentIssue.IssueState, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentIssue) GetIssueState() IssueState { return v.IssueState }
+
+// GetUpdatedAt returns ProjectV2ItemContentIssue.UpdatedAt, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentIssue) GetUpdatedAt() string { return v.UpdatedAt }
+
+// GetClosedAt returns ProjectV2ItemContentIssue.ClosedAt, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentIssue) GetClosedAt() *string { return v.ClosedAt }
+
+// GetAuthor returns ProjectV2ItemContentIssue.Author, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentIssue) GetAuthor() *ProjectV2ItemContentLogin { return v.Author }
+
+// GetAssignees returns ProjectV2ItemContentIssue.Assignees, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentIssue) GetAssignees() *ProjectV2ItemContentAssignees { return v.Assignees }
+
+func (v *ProjectV2ItemContentIssue) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*ProjectV2ItemContentIssue
+		Author json.RawMessage `json:"author"`
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.ProjectV2ItemContentIssue = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	{
+		dst := &v.Author
+		src := firstPass.Author
+		if len(src) != 0 && string(src) != "null" {
+			*dst = new(ProjectV2ItemContentLogin)
+			err = __unmarshalProjectV2ItemContentLogin(
+				src, *dst)
+			if err != nil {
+				return fmt.Errorf(
+					"unable to unmarshal ProjectV2ItemContentIssue.Author: %w", err)
+			}
+		}
+	}
+	return nil
+}
+
+type __premarshalProjectV2ItemContentIssue struct {
+	Typename *string `json:"__typename"`
+
+	Id string `json:"id"`
+
+	Number int `json:"number"`
+
+	Title string `json:"title"`
+
+	Url string `json:"url"`
+
+	IssueState IssueState `json:"issueState"`
+
+	UpdatedAt string `json:"updatedAt"`
+
+	ClosedAt *string `json:"closedAt"`
+
+	Author json.RawMessage `json:"author"`
+
+	Assignees *ProjectV2ItemContentAssignees `json:"assignees"`
+}
+
+func (v *ProjectV2ItemContentIssue) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *ProjectV2ItemContentIssue) __premarshalJSON() (*__premarshalProjectV2ItemContentIssue, error) {
+	var retval __premarshalProjectV2ItemContentIssue
+
+	retval.Typename = v.Typename
+	retval.Id = v.Id
+	retval.Number = v.Number
+	retval.Title = v.Title
+	retval.Url = v.Url
+	retval.IssueState = v.IssueState
+	retval.UpdatedAt = v.UpdatedAt
+	retval.ClosedAt = v.ClosedAt
+	{
+
+		dst := &retval.Author
+		src := v.Author
+		if src != nil {
+			var err error
+			*dst, err = __marshalProjectV2ItemContentLogin(
+				src)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"unable to marshal ProjectV2ItemContentIssue.Author: %w", err)
+			}
+		}
+	}
+	retval.Assignees = v.Assignees
+	return &retval, nil
+}
+
+// ProjectV2ItemContentLogin includes the requested fields of the GraphQL interface Actor.
+//
+// ProjectV2ItemContentLogin is implemented by the following types:
+// ProjectV2ItemContentLoginBot
+// ProjectV2ItemContentLoginEnterpriseUserAccount
+// ProjectV2ItemContentLoginMannequin
+// ProjectV2ItemContentLoginOrganization
+// ProjectV2ItemContentLoginUser
+// The GraphQL type's documentation follows.
+//
+// Represents an object which can take actions on GitHub. Typically a User or Bot.
+type ProjectV2ItemContentLogin interface {
+	implementsGraphQLInterfaceProjectV2ItemContentLogin()
+	// GetTypename returns the receiver's concrete GraphQL type-name (see interface doc for possible values).
+	GetTypename() *string
+	// GetLogin returns the interface-field "login" from its implementation.
+	// The GraphQL interface field's documentation follows.
+	//
+	// The username of the actor.
+	GetLogin() string
+}
+
+func (v *ProjectV2ItemContentLoginBot) implementsGraphQLInterfaceProjectV2ItemContentLogin() {}
+func (v *ProjectV2ItemContentLoginEnterpriseUserAccount) implementsGraphQLInterfaceProjectV2ItemContentLogin() {
+}
+func (v *ProjectV2ItemContentLoginMannequin) implementsGraphQLInterfaceProjectV2ItemContentLogin() {}
+func (v *ProjectV2ItemContentLoginOrganization) implementsGraphQLInterfaceProjectV2ItemContentLogin() {
+}
+func (v *ProjectV2ItemContentLoginUser) implementsGraphQLInterfaceProjectV2ItemContentLogin() {}
+
+func __unmarshalProjectV2ItemContentLogin(b []byte, v *ProjectV2ItemContentLogin) error {
+	if string(b) == "null" {
+		return nil
+	}
+
+	var tn struct {
+		TypeName string `json:"__typename"`
+	}
+	err := json.Unmarshal(b, &tn)
+	if err != nil {
+		return err
+	}
+
+	switch tn.TypeName {
+	case "Bot":
+		*v = new(ProjectV2ItemContentLoginBot)
+		return json.Unmarshal(b, *v)
+	case "EnterpriseUserAccount":
+		*v = new(ProjectV2ItemContentLoginEnterpriseUserAccount)
+		return json.Unmarshal(b, *v)
+	case "Mannequin":
+		*v = new(ProjectV2ItemContentLoginMannequin)
+		return json.Unmarshal(b, *v)
+	case "Organization":
+		*v = new(ProjectV2ItemContentLoginOrganization)
+		return json.Unmarshal(b, *v)
+	case "User":
+		*v = new(ProjectV2ItemContentLoginUser)
+		return json.Unmarshal(b, *v)
+	case "":
+		return fmt.Errorf(
+			"response was missing Actor.__typename")
+	default:
+		return fmt.Errorf(
+			`unexpected concrete type for ProjectV2ItemContentLogin: "%v"`, tn.TypeName)
+	}
+}
+
+func __marshalProjectV2ItemContentLogin(v *ProjectV2ItemContentLogin) ([]byte, error) {
+
+	var typename string
+	switch v := (*v).(type) {
+	case *ProjectV2ItemContentLoginBot:
+		typename = "Bot"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemContentLoginBot
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemContentLoginEnterpriseUserAccount:
+		typename = "EnterpriseUserAccount"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemContentLoginEnterpriseUserAccount
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemContentLoginMannequin:
+		typename = "Mannequin"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemContentLoginMannequin
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemContentLoginOrganization:
+		typename = "Organization"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemContentLoginOrganization
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemContentLoginUser:
+		typename = "User"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemContentLoginUser
+		}{typename, v}
+		return json.Marshal(result)
+	case nil:
+		return []byte("null"), nil
+	default:
+		return nil, fmt.Errorf(
+			`unexpected concrete type for ProjectV2ItemContentLogin: "%T"`, v)
+	}
+}
+
+// ProjectV2ItemContentLoginBot includes the requested fields of the GraphQL type Bot.
+// The GraphQL type's documentation follows.
+//
+// A special type of user which takes actions on behalf of GitHub Apps.
+type ProjectV2ItemContentLoginBot struct {
+	Typename *string `json:"__typename"`
+	// The username of the actor.
+	Login string `json:"login"`
+}
+
+// GetTypename returns ProjectV2ItemContentLoginBot.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentLoginBot) GetTypename() *string { return v.Typename }
+
+// GetLogin returns ProjectV2ItemContentLoginBot.Login, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentLoginBot) GetLogin() string { return v.Login }
+
+// ProjectV2ItemContentLoginEnterpriseUserAccount includes the requested fields of the GraphQL type EnterpriseUserAccount.
+// The GraphQL type's documentation follows.
+//
+// An account for a user who is an admin of an enterprise or a member of an enterprise through one or more organizations.
+type ProjectV2ItemContentLoginEnterpriseUserAccount struct {
+	Typename *string `json:"__typename"`
+	// The username of the actor.
+	Login string `json:"login"`
+}
+
+// GetTypename returns ProjectV2ItemContentLoginEnterpriseUserAccount.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentLoginEnterpriseUserAccount) GetTypename() *string { return v.Typename }
+
+// GetLogin returns ProjectV2ItemContentLoginEnterpriseUserAccount.Login, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentLoginEnterpriseUserAccount) GetLogin() string { return v.Login }
+
+// ProjectV2ItemContentLoginMannequin includes the requested fields of the GraphQL type Mannequin.
+// The GraphQL type's documentation follows.
+//
+// A placeholder user for attribution of imported data on GitHub.
+type ProjectV2ItemContentLoginMannequin struct {
+	Typename *string `json:"__typename"`
+	// The username of the actor.
+	Login string `json:"login"`
+}
+
+// GetTypename returns ProjectV2ItemContentLoginMannequin.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentLoginMannequin) GetTypename() *string { return v.Typename }
+
+// GetLogin returns ProjectV2ItemContentLoginMannequin.Login, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentLoginMannequin) GetLogin() string { return v.Login }
+
+// ProjectV2ItemContentLoginOrganization includes the requested fields of the GraphQL type Organization.
+// The GraphQL type's documentation follows.
+//
+// An account on GitHub, with one or more owners, that has repositories, members and teams.
+type ProjectV2ItemContentLoginOrganization struct {
+	Typename *string `json:"__typename"`
+	// The username of the actor.
+	Login string `json:"login"`
+}
+
+// GetTypename returns ProjectV2ItemContentLoginOrganization.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentLoginOrganization) GetTypename() *string { return v.Typename }
+
+// GetLogin returns ProjectV2ItemContentLoginOrganization.Login, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentLoginOrganization) GetLogin() string { return v.Login }
+
+// ProjectV2ItemContentLoginUser includes the requested fields of the GraphQL type User.
+// The GraphQL type's documentation follows.
+//
+// A user is an individual's account on GitHub that owns repositories and can make new content.
+type ProjectV2ItemContentLoginUser struct {
+	Typename *string `json:"__typename"`
+	// The username of the actor.
+	Login string `json:"login"`
+}
+
+// GetTypename returns ProjectV2ItemContentLoginUser.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentLoginUser) GetTypename() *string { return v.Typename }
+
+// GetLogin returns ProjectV2ItemContentLoginUser.Login, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentLoginUser) GetLogin() string { return v.Login }
+
+// ProjectV2ItemContentPullRequest includes the requested fields of the GraphQL type PullRequest.
+// The GraphQL type's documentation follows.
+//
+// A repository pull request.
+type ProjectV2ItemContentPullRequest struct {
+	Typename *string `json:"__typename"`
+	// The Node ID of the PullRequest object
+	Id string `json:"id"`
+	// Identifies the pull request number.
+	Number int `json:"number"`
+	// Identifies the pull request title.
+	Title string `json:"title"`
+	// The HTTP URL for this pull request.
+	Url string `json:"url"`
+	// Identifies the state of the pull request.
+	PrState PullRequestState `json:"prState"`
+	// Identifies the date and time when the object was last updated.
+	UpdatedAt string `json:"updatedAt"`
+	// The date and time that the pull request was merged.
+	MergedAt *string `json:"mergedAt"`
+	// The actor who authored the comment.
+	Author *ProjectV2ItemContentLogin `json:"-"`
+	// A list of Users assigned to this object.
+	Assignees *ProjectV2ItemContentAssignees `json:"assignees"`
+}
+
+// GetTypename returns ProjectV2ItemContentPullRequest.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentPullRequest) GetTypename() *string { return v.Typename }
+
+// GetId returns ProjectV2ItemContentPullRequest.Id, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentPullRequest) GetId() string { return v.Id }
+
+// GetNumber returns ProjectV2ItemContentPullRequest.Number, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentPullRequest) GetNumber() int { return v.Number }
+
+// GetTitle returns ProjectV2ItemContentPullRequest.Title, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentPullRequest) GetTitle() string { return v.Title }
+
+// GetUrl returns ProjectV2ItemContentPullRequest.Url, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentPullRequest) GetUrl() string { return v.Url }
+
+// GetPrState returns ProjectV2ItemContentPullRequest.PrState, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentPullRequest) GetPrState() PullRequestState { return v.PrState }
+
+// GetUpdatedAt returns ProjectV2ItemContentPullRequest.UpdatedAt, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentPullRequest) GetUpdatedAt() string { return v.UpdatedAt }
+
+// GetMergedAt returns ProjectV2ItemContentPullRequest.MergedAt, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentPullRequest) GetMergedAt() *string { return v.MergedAt }
+
+// GetAuthor returns ProjectV2ItemContentPullRequest.Author, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentPullRequest) GetAuthor() *ProjectV2ItemContentLogin { return v.Author }
+
+// GetAssignees returns ProjectV2ItemContentPullRequest.Assignees, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemContentPullRequest) GetAssignees() *ProjectV2ItemContentAssignees {
+	return v.Assignees
+}
+
+func (v *ProjectV2ItemContentPullRequest) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*ProjectV2ItemContentPullRequest
+		Author json.RawMessage `json:"author"`
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.ProjectV2ItemContentPullRequest = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	{
+		dst := &v.Author
+		src := firstPass.Author
+		if len(src) != 0 && string(src) != "null" {
+			*dst = new(ProjectV2ItemContentLogin)
+			err = __unmarshalProjectV2ItemContentLogin(
+				src, *dst)
+			if err != nil {
+				return fmt.Errorf(
+					"unable to unmarshal ProjectV2ItemContentPullRequest.Author: %w", err)
+			}
+		}
+	}
+	return nil
+}
+
+type __premarshalProjectV2ItemContentPullRequest struct {
+	Typename *string `json:"__typename"`
+
+	Id string `json:"id"`
+
+	Number int `json:"number"`
+
+	Title string `json:"title"`
+
+	Url string `json:"url"`
+
+	PrState PullRequestState `json:"prState"`
+
+	UpdatedAt string `json:"updatedAt"`
+
+	MergedAt *string `json:"mergedAt"`
+
+	Author json.RawMessage `json:"author"`
+
+	Assignees *ProjectV2ItemContentAssignees `json:"assignees"`
+}
+
+func (v *ProjectV2ItemContentPullRequest) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *ProjectV2ItemContentPullRequest) __premarshalJSON() (*__premarshalProjectV2ItemContentPullRequest, error) {
+	var retval __premarshalProjectV2ItemContentPullRequest
+
+	retval.Typename = v.Typename
+	retval.Id = v.Id
+	retval.Number = v.Number
+	retval.Title = v.Title
+	retval.Url = v.Url
+	retval.PrState = v.PrState
+	retval.UpdatedAt = v.UpdatedAt
+	retval.MergedAt = v.MergedAt
+	{
+
+		dst := &retval.Author
+		src := v.Author
+		if src != nil {
+			var err error
+			*dst, err = __marshalProjectV2ItemContentLogin(
+				src)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"unable to marshal ProjectV2ItemContentPullRequest.Author: %w", err)
+			}
+		}
+	}
+	retval.Assignees = v.Assignees
+	return &retval, nil
+}
+
+// ProjectV2ItemFieldValue includes the requested fields of the GraphQL interface ProjectV2ItemFieldValue.
+//
+// ProjectV2ItemFieldValue is implemented by the following types:
+// ProjectV2ItemFieldValueProjectV2ItemFieldDateValue
+// ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue
+// ProjectV2ItemFieldValueProjectV2ItemFieldLabelValue
+// ProjectV2ItemFieldValueProjectV2ItemFieldMilestoneValue
+// ProjectV2ItemFieldValueProjectV2ItemFieldNumberValue
+// ProjectV2ItemFieldValueProjectV2ItemFieldPullRequestValue
+// ProjectV2ItemFieldValueProjectV2ItemFieldRepositoryValue
+// ProjectV2ItemFieldValueProjectV2ItemFieldReviewerValue
+// ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue
+// ProjectV2ItemFieldValueProjectV2ItemFieldTextValue
+// ProjectV2ItemFieldValueProjectV2ItemFieldUserValue
+// ProjectV2ItemFieldValueProjectV2ItemIssueFieldValue
+// The GraphQL type's documentation follows.
+//
+// Project field values
+type ProjectV2ItemFieldValue interface {
+	implementsGraphQLInterfaceProjectV2ItemFieldValue()
+	// GetTypename returns the receiver's concrete GraphQL type-name (see interface doc for possible values).
+	GetTypename() *string
+}
+
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldDateValue) implementsGraphQLInterfaceProjectV2ItemFieldValue() {
+}
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue) implementsGraphQLInterfaceProjectV2ItemFieldValue() {
+}
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldLabelValue) implementsGraphQLInterfaceProjectV2ItemFieldValue() {
+}
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldMilestoneValue) implementsGraphQLInterfaceProjectV2ItemFieldValue() {
+}
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldNumberValue) implementsGraphQLInterfaceProjectV2ItemFieldValue() {
+}
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldPullRequestValue) implementsGraphQLInterfaceProjectV2ItemFieldValue() {
+}
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldRepositoryValue) implementsGraphQLInterfaceProjectV2ItemFieldValue() {
+}
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldReviewerValue) implementsGraphQLInterfaceProjectV2ItemFieldValue() {
+}
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue) implementsGraphQLInterfaceProjectV2ItemFieldValue() {
+}
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldTextValue) implementsGraphQLInterfaceProjectV2ItemFieldValue() {
+}
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldUserValue) implementsGraphQLInterfaceProjectV2ItemFieldValue() {
+}
+func (v *ProjectV2ItemFieldValueProjectV2ItemIssueFieldValue) implementsGraphQLInterfaceProjectV2ItemFieldValue() {
+}
+
+func __unmarshalProjectV2ItemFieldValue(b []byte, v *ProjectV2ItemFieldValue) error {
+	if string(b) == "null" {
+		return nil
+	}
+
+	var tn struct {
+		TypeName string `json:"__typename"`
+	}
+	err := json.Unmarshal(b, &tn)
+	if err != nil {
+		return err
+	}
+
+	switch tn.TypeName {
+	case "ProjectV2ItemFieldDateValue":
+		*v = new(ProjectV2ItemFieldValueProjectV2ItemFieldDateValue)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemFieldIterationValue":
+		*v = new(ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemFieldLabelValue":
+		*v = new(ProjectV2ItemFieldValueProjectV2ItemFieldLabelValue)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemFieldMilestoneValue":
+		*v = new(ProjectV2ItemFieldValueProjectV2ItemFieldMilestoneValue)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemFieldNumberValue":
+		*v = new(ProjectV2ItemFieldValueProjectV2ItemFieldNumberValue)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemFieldPullRequestValue":
+		*v = new(ProjectV2ItemFieldValueProjectV2ItemFieldPullRequestValue)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemFieldRepositoryValue":
+		*v = new(ProjectV2ItemFieldValueProjectV2ItemFieldRepositoryValue)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemFieldReviewerValue":
+		*v = new(ProjectV2ItemFieldValueProjectV2ItemFieldReviewerValue)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemFieldSingleSelectValue":
+		*v = new(ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemFieldTextValue":
+		*v = new(ProjectV2ItemFieldValueProjectV2ItemFieldTextValue)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemFieldUserValue":
+		*v = new(ProjectV2ItemFieldValueProjectV2ItemFieldUserValue)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemIssueFieldValue":
+		*v = new(ProjectV2ItemFieldValueProjectV2ItemIssueFieldValue)
+		return json.Unmarshal(b, *v)
+	case "":
+		return fmt.Errorf(
+			"response was missing ProjectV2ItemFieldValue.__typename")
+	default:
+		return fmt.Errorf(
+			`unexpected concrete type for ProjectV2ItemFieldValue: "%v"`, tn.TypeName)
+	}
+}
+
+func __marshalProjectV2ItemFieldValue(v *ProjectV2ItemFieldValue) ([]byte, error) {
+
+	var typename string
+	switch v := (*v).(type) {
+	case *ProjectV2ItemFieldValueProjectV2ItemFieldDateValue:
+		typename = "ProjectV2ItemFieldDateValue"
+
+		premarshaled, err := v.__premarshalJSON()
+		if err != nil {
+			return nil, err
+		}
+		result := struct {
+			TypeName string `json:"__typename"`
+			*__premarshalProjectV2ItemFieldValueProjectV2ItemFieldDateValue
+		}{typename, premarshaled}
+		return json.Marshal(result)
+	case *ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue:
+		typename = "ProjectV2ItemFieldIterationValue"
+
+		premarshaled, err := v.__premarshalJSON()
+		if err != nil {
+			return nil, err
+		}
+		result := struct {
+			TypeName string `json:"__typename"`
+			*__premarshalProjectV2ItemFieldValueProjectV2ItemFieldIterationValue
+		}{typename, premarshaled}
+		return json.Marshal(result)
+	case *ProjectV2ItemFieldValueProjectV2ItemFieldLabelValue:
+		typename = "ProjectV2ItemFieldLabelValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemFieldValueProjectV2ItemFieldLabelValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemFieldValueProjectV2ItemFieldMilestoneValue:
+		typename = "ProjectV2ItemFieldMilestoneValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemFieldValueProjectV2ItemFieldMilestoneValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemFieldValueProjectV2ItemFieldNumberValue:
+		typename = "ProjectV2ItemFieldNumberValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemFieldValueProjectV2ItemFieldNumberValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemFieldValueProjectV2ItemFieldPullRequestValue:
+		typename = "ProjectV2ItemFieldPullRequestValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemFieldValueProjectV2ItemFieldPullRequestValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemFieldValueProjectV2ItemFieldRepositoryValue:
+		typename = "ProjectV2ItemFieldRepositoryValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemFieldValueProjectV2ItemFieldRepositoryValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemFieldValueProjectV2ItemFieldReviewerValue:
+		typename = "ProjectV2ItemFieldReviewerValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemFieldValueProjectV2ItemFieldReviewerValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue:
+		typename = "ProjectV2ItemFieldSingleSelectValue"
+
+		premarshaled, err := v.__premarshalJSON()
+		if err != nil {
+			return nil, err
+		}
+		result := struct {
+			TypeName string `json:"__typename"`
+			*__premarshalProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue
+		}{typename, premarshaled}
+		return json.Marshal(result)
+	case *ProjectV2ItemFieldValueProjectV2ItemFieldTextValue:
+		typename = "ProjectV2ItemFieldTextValue"
+
+		premarshaled, err := v.__premarshalJSON()
+		if err != nil {
+			return nil, err
+		}
+		result := struct {
+			TypeName string `json:"__typename"`
+			*__premarshalProjectV2ItemFieldValueProjectV2ItemFieldTextValue
+		}{typename, premarshaled}
+		return json.Marshal(result)
+	case *ProjectV2ItemFieldValueProjectV2ItemFieldUserValue:
+		typename = "ProjectV2ItemFieldUserValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemFieldValueProjectV2ItemFieldUserValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemFieldValueProjectV2ItemIssueFieldValue:
+		typename = "ProjectV2ItemIssueFieldValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemFieldValueProjectV2ItemIssueFieldValue
+		}{typename, v}
+		return json.Marshal(result)
+	case nil:
+		return []byte("null"), nil
+	default:
+		return nil, fmt.Errorf(
+			`unexpected concrete type for ProjectV2ItemFieldValue: "%T"`, v)
+	}
+}
+
+// ProjectV2ItemFieldValueFieldRef includes the requested fields of the GraphQL interface ProjectV2FieldConfiguration.
+//
+// ProjectV2ItemFieldValueFieldRef is implemented by the following types:
+// ProjectV2ItemFieldValueFieldRefProjectV2Field
+// ProjectV2ItemFieldValueFieldRefProjectV2IterationField
+// ProjectV2ItemFieldValueFieldRefProjectV2SingleSelectField
+// The GraphQL type's documentation follows.
+//
+// Configurations for project fields.
+type ProjectV2ItemFieldValueFieldRef interface {
+	implementsGraphQLInterfaceProjectV2ItemFieldValueFieldRef()
+	// GetTypename returns the receiver's concrete GraphQL type-name (see interface doc for possible values).
+	GetTypename() *string
+}
+
+func (v *ProjectV2ItemFieldValueFieldRefProjectV2Field) implementsGraphQLInterfaceProjectV2ItemFieldValueFieldRef() {
+}
+func (v *ProjectV2ItemFieldValueFieldRefProjectV2IterationField) implementsGraphQLInterfaceProjectV2ItemFieldValueFieldRef() {
+}
+func (v *ProjectV2ItemFieldValueFieldRefProjectV2SingleSelectField) implementsGraphQLInterfaceProjectV2ItemFieldValueFieldRef() {
+}
+
+func __unmarshalProjectV2ItemFieldValueFieldRef(b []byte, v *ProjectV2ItemFieldValueFieldRef) error {
+	if string(b) == "null" {
+		return nil
+	}
+
+	var tn struct {
+		TypeName string `json:"__typename"`
+	}
+	err := json.Unmarshal(b, &tn)
+	if err != nil {
+		return err
+	}
+
+	switch tn.TypeName {
+	case "ProjectV2Field":
+		*v = new(ProjectV2ItemFieldValueFieldRefProjectV2Field)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2IterationField":
+		*v = new(ProjectV2ItemFieldValueFieldRefProjectV2IterationField)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2SingleSelectField":
+		*v = new(ProjectV2ItemFieldValueFieldRefProjectV2SingleSelectField)
+		return json.Unmarshal(b, *v)
+	case "":
+		return fmt.Errorf(
+			"response was missing ProjectV2FieldConfiguration.__typename")
+	default:
+		return fmt.Errorf(
+			`unexpected concrete type for ProjectV2ItemFieldValueFieldRef: "%v"`, tn.TypeName)
+	}
+}
+
+func __marshalProjectV2ItemFieldValueFieldRef(v *ProjectV2ItemFieldValueFieldRef) ([]byte, error) {
+
+	var typename string
+	switch v := (*v).(type) {
+	case *ProjectV2ItemFieldValueFieldRefProjectV2Field:
+		typename = "ProjectV2Field"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemFieldValueFieldRefProjectV2Field
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemFieldValueFieldRefProjectV2IterationField:
+		typename = "ProjectV2IterationField"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemFieldValueFieldRefProjectV2IterationField
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemFieldValueFieldRefProjectV2SingleSelectField:
+		typename = "ProjectV2SingleSelectField"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemFieldValueFieldRefProjectV2SingleSelectField
+		}{typename, v}
+		return json.Marshal(result)
+	case nil:
+		return []byte("null"), nil
+	default:
+		return nil, fmt.Errorf(
+			`unexpected concrete type for ProjectV2ItemFieldValueFieldRef: "%T"`, v)
+	}
+}
+
+// ProjectV2ItemFieldValueFieldRefProjectV2Field includes the requested fields of the GraphQL type ProjectV2Field.
+// The GraphQL type's documentation follows.
+//
+// A field inside a project.
+type ProjectV2ItemFieldValueFieldRefProjectV2Field struct {
+	Typename *string `json:"__typename"`
+	// The Node ID of the ProjectV2FieldCommon object
+	Id string `json:"id"`
+	// The project field's name.
+	Name string `json:"name"`
+}
+
+// GetTypename returns ProjectV2ItemFieldValueFieldRefProjectV2Field.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueFieldRefProjectV2Field) GetTypename() *string { return v.Typename }
+
+// GetId returns ProjectV2ItemFieldValueFieldRefProjectV2Field.Id, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueFieldRefProjectV2Field) GetId() string { return v.Id }
+
+// GetName returns ProjectV2ItemFieldValueFieldRefProjectV2Field.Name, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueFieldRefProjectV2Field) GetName() string { return v.Name }
+
+// ProjectV2ItemFieldValueFieldRefProjectV2IterationField includes the requested fields of the GraphQL type ProjectV2IterationField.
+// The GraphQL type's documentation follows.
+//
+// An iteration field inside a project.
+type ProjectV2ItemFieldValueFieldRefProjectV2IterationField struct {
+	Typename *string `json:"__typename"`
+	// The Node ID of the ProjectV2FieldCommon object
+	Id string `json:"id"`
+	// The project field's name.
+	Name string `json:"name"`
+}
+
+// GetTypename returns ProjectV2ItemFieldValueFieldRefProjectV2IterationField.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueFieldRefProjectV2IterationField) GetTypename() *string {
+	return v.Typename
+}
+
+// GetId returns ProjectV2ItemFieldValueFieldRefProjectV2IterationField.Id, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueFieldRefProjectV2IterationField) GetId() string { return v.Id }
+
+// GetName returns ProjectV2ItemFieldValueFieldRefProjectV2IterationField.Name, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueFieldRefProjectV2IterationField) GetName() string { return v.Name }
+
+// ProjectV2ItemFieldValueFieldRefProjectV2SingleSelectField includes the requested fields of the GraphQL type ProjectV2SingleSelectField.
+// The GraphQL type's documentation follows.
+//
+// A single select field inside a project.
+type ProjectV2ItemFieldValueFieldRefProjectV2SingleSelectField struct {
+	Typename *string `json:"__typename"`
+	// The Node ID of the ProjectV2FieldCommon object
+	Id string `json:"id"`
+	// The project field's name.
+	Name string `json:"name"`
+}
+
+// GetTypename returns ProjectV2ItemFieldValueFieldRefProjectV2SingleSelectField.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueFieldRefProjectV2SingleSelectField) GetTypename() *string {
+	return v.Typename
+}
+
+// GetId returns ProjectV2ItemFieldValueFieldRefProjectV2SingleSelectField.Id, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueFieldRefProjectV2SingleSelectField) GetId() string { return v.Id }
+
+// GetName returns ProjectV2ItemFieldValueFieldRefProjectV2SingleSelectField.Name, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueFieldRefProjectV2SingleSelectField) GetName() string { return v.Name }
+
+// ProjectV2ItemFieldValueProjectV2ItemFieldDateValue includes the requested fields of the GraphQL type ProjectV2ItemFieldDateValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a date field in a Project item.
+type ProjectV2ItemFieldValueProjectV2ItemFieldDateValue struct {
+	Typename *string `json:"__typename"`
+	// Date value for the field
+	Date *string `json:"date"`
+	// The project field that contains this value.
+	Field ProjectV2ItemFieldValueFieldRef `json:"-"`
+}
+
+// GetTypename returns ProjectV2ItemFieldValueProjectV2ItemFieldDateValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldDateValue) GetTypename() *string { return v.Typename }
+
+// GetDate returns ProjectV2ItemFieldValueProjectV2ItemFieldDateValue.Date, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldDateValue) GetDate() *string { return v.Date }
+
+// GetField returns ProjectV2ItemFieldValueProjectV2ItemFieldDateValue.Field, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldDateValue) GetField() ProjectV2ItemFieldValueFieldRef {
+	return v.Field
+}
+
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldDateValue) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*ProjectV2ItemFieldValueProjectV2ItemFieldDateValue
+		Field json.RawMessage `json:"field"`
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.ProjectV2ItemFieldValueProjectV2ItemFieldDateValue = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	{
+		dst := &v.Field
+		src := firstPass.Field
+		if len(src) != 0 && string(src) != "null" {
+			err = __unmarshalProjectV2ItemFieldValueFieldRef(
+				src, dst)
+			if err != nil {
+				return fmt.Errorf(
+					"unable to unmarshal ProjectV2ItemFieldValueProjectV2ItemFieldDateValue.Field: %w", err)
+			}
+		}
+	}
+	return nil
+}
+
+type __premarshalProjectV2ItemFieldValueProjectV2ItemFieldDateValue struct {
+	Typename *string `json:"__typename"`
+
+	Date *string `json:"date"`
+
+	Field json.RawMessage `json:"field"`
+}
+
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldDateValue) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldDateValue) __premarshalJSON() (*__premarshalProjectV2ItemFieldValueProjectV2ItemFieldDateValue, error) {
+	var retval __premarshalProjectV2ItemFieldValueProjectV2ItemFieldDateValue
+
+	retval.Typename = v.Typename
+	retval.Date = v.Date
+	{
+
+		dst := &retval.Field
+		src := v.Field
+		var err error
+		*dst, err = __marshalProjectV2ItemFieldValueFieldRef(
+			&src)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"unable to marshal ProjectV2ItemFieldValueProjectV2ItemFieldDateValue.Field: %w", err)
+		}
+	}
+	return &retval, nil
+}
+
+// ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue includes the requested fields of the GraphQL type ProjectV2ItemFieldIterationValue.
+// The GraphQL type's documentation follows.
+//
+// The value of an iteration field in a Project item.
+type ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue struct {
+	Typename *string `json:"__typename"`
+	// The ID of the iteration.
+	IterationId string `json:"iterationId"`
+	// The title of the iteration.
+	Title string `json:"title"`
+	// The start date of the iteration.
+	StartDate string `json:"startDate"`
+	// The duration of the iteration in days.
+	Duration int `json:"duration"`
+	// The project field that contains this value.
+	Field ProjectV2ItemFieldValueFieldRef `json:"-"`
+}
+
+// GetTypename returns ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue) GetTypename() *string {
+	return v.Typename
+}
+
+// GetIterationId returns ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue.IterationId, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue) GetIterationId() string {
+	return v.IterationId
+}
+
+// GetTitle returns ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue.Title, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue) GetTitle() string { return v.Title }
+
+// GetStartDate returns ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue.StartDate, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue) GetStartDate() string {
+	return v.StartDate
+}
+
+// GetDuration returns ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue.Duration, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue) GetDuration() int {
+	return v.Duration
+}
+
+// GetField returns ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue.Field, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue) GetField() ProjectV2ItemFieldValueFieldRef {
+	return v.Field
+}
+
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue
+		Field json.RawMessage `json:"field"`
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	{
+		dst := &v.Field
+		src := firstPass.Field
+		if len(src) != 0 && string(src) != "null" {
+			err = __unmarshalProjectV2ItemFieldValueFieldRef(
+				src, dst)
+			if err != nil {
+				return fmt.Errorf(
+					"unable to unmarshal ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue.Field: %w", err)
+			}
+		}
+	}
+	return nil
+}
+
+type __premarshalProjectV2ItemFieldValueProjectV2ItemFieldIterationValue struct {
+	Typename *string `json:"__typename"`
+
+	IterationId string `json:"iterationId"`
+
+	Title string `json:"title"`
+
+	StartDate string `json:"startDate"`
+
+	Duration int `json:"duration"`
+
+	Field json.RawMessage `json:"field"`
+}
+
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue) __premarshalJSON() (*__premarshalProjectV2ItemFieldValueProjectV2ItemFieldIterationValue, error) {
+	var retval __premarshalProjectV2ItemFieldValueProjectV2ItemFieldIterationValue
+
+	retval.Typename = v.Typename
+	retval.IterationId = v.IterationId
+	retval.Title = v.Title
+	retval.StartDate = v.StartDate
+	retval.Duration = v.Duration
+	{
+
+		dst := &retval.Field
+		src := v.Field
+		var err error
+		*dst, err = __marshalProjectV2ItemFieldValueFieldRef(
+			&src)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"unable to marshal ProjectV2ItemFieldValueProjectV2ItemFieldIterationValue.Field: %w", err)
+		}
+	}
+	return &retval, nil
+}
+
+// ProjectV2ItemFieldValueProjectV2ItemFieldLabelValue includes the requested fields of the GraphQL type ProjectV2ItemFieldLabelValue.
+// The GraphQL type's documentation follows.
+//
+// The value of the labels field in a Project item.
+type ProjectV2ItemFieldValueProjectV2ItemFieldLabelValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemFieldValueProjectV2ItemFieldLabelValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldLabelValue) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemFieldValueProjectV2ItemFieldMilestoneValue includes the requested fields of the GraphQL type ProjectV2ItemFieldMilestoneValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a milestone field in a Project item.
+type ProjectV2ItemFieldValueProjectV2ItemFieldMilestoneValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemFieldValueProjectV2ItemFieldMilestoneValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldMilestoneValue) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemFieldValueProjectV2ItemFieldNumberValue includes the requested fields of the GraphQL type ProjectV2ItemFieldNumberValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a number field in a Project item.
+type ProjectV2ItemFieldValueProjectV2ItemFieldNumberValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemFieldValueProjectV2ItemFieldNumberValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldNumberValue) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemFieldValueProjectV2ItemFieldPullRequestValue includes the requested fields of the GraphQL type ProjectV2ItemFieldPullRequestValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a pull request field in a Project item.
+type ProjectV2ItemFieldValueProjectV2ItemFieldPullRequestValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemFieldValueProjectV2ItemFieldPullRequestValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldPullRequestValue) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemFieldValueProjectV2ItemFieldRepositoryValue includes the requested fields of the GraphQL type ProjectV2ItemFieldRepositoryValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a repository field in a Project item.
+type ProjectV2ItemFieldValueProjectV2ItemFieldRepositoryValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemFieldValueProjectV2ItemFieldRepositoryValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldRepositoryValue) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemFieldValueProjectV2ItemFieldReviewerValue includes the requested fields of the GraphQL type ProjectV2ItemFieldReviewerValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a reviewers field in a Project item.
+type ProjectV2ItemFieldValueProjectV2ItemFieldReviewerValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemFieldValueProjectV2ItemFieldReviewerValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldReviewerValue) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue includes the requested fields of the GraphQL type ProjectV2ItemFieldSingleSelectValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a single select field in a Project item.
+type ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue struct {
+	Typename *string `json:"__typename"`
+	// The id of the selected single select option.
+	OptionId *string `json:"optionId"`
+	// The name of the selected single select option.
+	Name *string `json:"name"`
+	// The project field that contains this value.
+	Field ProjectV2ItemFieldValueFieldRef `json:"-"`
+}
+
+// GetTypename returns ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue) GetTypename() *string {
+	return v.Typename
+}
+
+// GetOptionId returns ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue.OptionId, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue) GetOptionId() *string {
+	return v.OptionId
+}
+
+// GetName returns ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue.Name, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue) GetName() *string { return v.Name }
+
+// GetField returns ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue.Field, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue) GetField() ProjectV2ItemFieldValueFieldRef {
+	return v.Field
+}
+
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue
+		Field json.RawMessage `json:"field"`
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	{
+		dst := &v.Field
+		src := firstPass.Field
+		if len(src) != 0 && string(src) != "null" {
+			err = __unmarshalProjectV2ItemFieldValueFieldRef(
+				src, dst)
+			if err != nil {
+				return fmt.Errorf(
+					"unable to unmarshal ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue.Field: %w", err)
+			}
+		}
+	}
+	return nil
+}
+
+type __premarshalProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue struct {
+	Typename *string `json:"__typename"`
+
+	OptionId *string `json:"optionId"`
+
+	Name *string `json:"name"`
+
+	Field json.RawMessage `json:"field"`
+}
+
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue) __premarshalJSON() (*__premarshalProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue, error) {
+	var retval __premarshalProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue
+
+	retval.Typename = v.Typename
+	retval.OptionId = v.OptionId
+	retval.Name = v.Name
+	{
+
+		dst := &retval.Field
+		src := v.Field
+		var err error
+		*dst, err = __marshalProjectV2ItemFieldValueFieldRef(
+			&src)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"unable to marshal ProjectV2ItemFieldValueProjectV2ItemFieldSingleSelectValue.Field: %w", err)
+		}
+	}
+	return &retval, nil
+}
+
+// ProjectV2ItemFieldValueProjectV2ItemFieldTextValue includes the requested fields of the GraphQL type ProjectV2ItemFieldTextValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a text field in a Project item.
+type ProjectV2ItemFieldValueProjectV2ItemFieldTextValue struct {
+	Typename *string `json:"__typename"`
+	// Text value of a field
+	Text *string `json:"text"`
+	// The project field that contains this value.
+	Field ProjectV2ItemFieldValueFieldRef `json:"-"`
+}
+
+// GetTypename returns ProjectV2ItemFieldValueProjectV2ItemFieldTextValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldTextValue) GetTypename() *string { return v.Typename }
+
+// GetText returns ProjectV2ItemFieldValueProjectV2ItemFieldTextValue.Text, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldTextValue) GetText() *string { return v.Text }
+
+// GetField returns ProjectV2ItemFieldValueProjectV2ItemFieldTextValue.Field, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldTextValue) GetField() ProjectV2ItemFieldValueFieldRef {
+	return v.Field
+}
+
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldTextValue) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*ProjectV2ItemFieldValueProjectV2ItemFieldTextValue
+		Field json.RawMessage `json:"field"`
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.ProjectV2ItemFieldValueProjectV2ItemFieldTextValue = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	{
+		dst := &v.Field
+		src := firstPass.Field
+		if len(src) != 0 && string(src) != "null" {
+			err = __unmarshalProjectV2ItemFieldValueFieldRef(
+				src, dst)
+			if err != nil {
+				return fmt.Errorf(
+					"unable to unmarshal ProjectV2ItemFieldValueProjectV2ItemFieldTextValue.Field: %w", err)
+			}
+		}
+	}
+	return nil
+}
+
+type __premarshalProjectV2ItemFieldValueProjectV2ItemFieldTextValue struct {
+	Typename *string `json:"__typename"`
+
+	Text *string `json:"text"`
+
+	Field json.RawMessage `json:"field"`
+}
+
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldTextValue) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldTextValue) __premarshalJSON() (*__premarshalProjectV2ItemFieldValueProjectV2ItemFieldTextValue, error) {
+	var retval __premarshalProjectV2ItemFieldValueProjectV2ItemFieldTextValue
+
+	retval.Typename = v.Typename
+	retval.Text = v.Text
+	{
+
+		dst := &retval.Field
+		src := v.Field
+		var err error
+		*dst, err = __marshalProjectV2ItemFieldValueFieldRef(
+			&src)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"unable to marshal ProjectV2ItemFieldValueProjectV2ItemFieldTextValue.Field: %w", err)
+		}
+	}
+	return &retval, nil
+}
+
+// ProjectV2ItemFieldValueProjectV2ItemFieldUserValue includes the requested fields of the GraphQL type ProjectV2ItemFieldUserValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a user field in a Project item.
+type ProjectV2ItemFieldValueProjectV2ItemFieldUserValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemFieldValueProjectV2ItemFieldUserValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemFieldUserValue) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemFieldValueProjectV2ItemIssueFieldValue includes the requested fields of the GraphQL type ProjectV2ItemIssueFieldValue.
+// The GraphQL type's documentation follows.
+//
+// The value of an issue field in a Project item.
+type ProjectV2ItemFieldValueProjectV2ItemIssueFieldValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemFieldValueProjectV2ItemIssueFieldValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemFieldValueProjectV2ItemIssueFieldValue) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemNode includes the requested fields of the GraphQL type ProjectV2Item.
+// The GraphQL type's documentation follows.
+//
+// An item within a Project.
+type ProjectV2ItemNode struct {
+	// The Node ID of the ProjectV2Item object
+	Id string `json:"id"`
+	// Identifies the date and time when the object was last updated.
+	UpdatedAt string `json:"updatedAt"`
+	// The content of the referenced draft issue, issue, pull request
+	Content *ProjectV2ItemContent `json:"-"`
+	// The field values that are set on the item.
+	FieldValues *ProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection `json:"fieldValues"`
+}
+
+// GetId returns ProjectV2ItemNode.Id, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemNode) GetId() string { return v.Id }
+
+// GetUpdatedAt returns ProjectV2ItemNode.UpdatedAt, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemNode) GetUpdatedAt() string { return v.UpdatedAt }
+
+// GetContent returns ProjectV2ItemNode.Content, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemNode) GetContent() *ProjectV2ItemContent { return v.Content }
+
+// GetFieldValues returns ProjectV2ItemNode.FieldValues, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemNode) GetFieldValues() *ProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection {
+	return v.FieldValues
+}
+
+func (v *ProjectV2ItemNode) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*ProjectV2ItemNode
+		Content json.RawMessage `json:"content"`
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.ProjectV2ItemNode = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	{
+		dst := &v.Content
+		src := firstPass.Content
+		if len(src) != 0 && string(src) != "null" {
+			*dst = new(ProjectV2ItemContent)
+			err = __unmarshalProjectV2ItemContent(
+				src, *dst)
+			if err != nil {
+				return fmt.Errorf(
+					"unable to unmarshal ProjectV2ItemNode.Content: %w", err)
+			}
+		}
+	}
+	return nil
+}
+
+type __premarshalProjectV2ItemNode struct {
+	Id string `json:"id"`
+
+	UpdatedAt string `json:"updatedAt"`
+
+	Content json.RawMessage `json:"content"`
+
+	FieldValues *ProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection `json:"fieldValues"`
+}
+
+func (v *ProjectV2ItemNode) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *ProjectV2ItemNode) __premarshalJSON() (*__premarshalProjectV2ItemNode, error) {
+	var retval __premarshalProjectV2ItemNode
+
+	retval.Id = v.Id
+	retval.UpdatedAt = v.UpdatedAt
+	{
+
+		dst := &retval.Content
+		src := v.Content
+		if src != nil {
+			var err error
+			*dst, err = __marshalProjectV2ItemContent(
+				src)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"unable to marshal ProjectV2ItemNode.Content: %w", err)
+			}
+		}
+	}
+	retval.FieldValues = v.FieldValues
+	return &retval, nil
+}
+
+// ProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection includes the requested fields of the GraphQL type ProjectV2ItemFieldValueConnection.
+// The GraphQL type's documentation follows.
+//
+// The connection type for ProjectV2ItemFieldValue.
+type ProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection struct {
+	// A list of nodes.
+	Nodes []*ProjectV2ItemFieldValue `json:"-"`
+}
+
+// GetNodes returns ProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection.Nodes, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection) GetNodes() []*ProjectV2ItemFieldValue {
+	return v.Nodes
+}
+
+func (v *ProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection) UnmarshalJSON(b []byte) error {
+
+	if string(b) == "null" {
+		return nil
+	}
+
+	var firstPass struct {
+		*ProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection
+		Nodes []json.RawMessage `json:"nodes"`
+		graphql.NoUnmarshalJSON
+	}
+	firstPass.ProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection = v
+
+	err := json.Unmarshal(b, &firstPass)
+	if err != nil {
+		return err
+	}
+
+	{
+		dst := &v.Nodes
+		src := firstPass.Nodes
+		*dst = make(
+			[]*ProjectV2ItemFieldValue,
+			len(src))
+		for i, src := range src {
+			dst := &(*dst)[i]
+			if len(src) != 0 && string(src) != "null" {
+				*dst = new(ProjectV2ItemFieldValue)
+				err = __unmarshalProjectV2ItemFieldValue(
+					src, *dst)
+				if err != nil {
+					return fmt.Errorf(
+						"unable to unmarshal ProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection.Nodes: %w", err)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+type __premarshalProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection struct {
+	Nodes []json.RawMessage `json:"nodes"`
+}
+
+func (v *ProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection) MarshalJSON() ([]byte, error) {
+	premarshaled, err := v.__premarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(premarshaled)
+}
+
+func (v *ProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection) __premarshalJSON() (*__premarshalProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection, error) {
+	var retval __premarshalProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection
+
+	{
+
+		dst := &retval.Nodes
+		src := v.Nodes
+		*dst = make(
+			[]json.RawMessage,
+			len(src))
+		for i, src := range src {
+			dst := &(*dst)[i]
+			if src != nil {
+				var err error
+				*dst, err = __marshalProjectV2ItemFieldValue(
+					src)
+				if err != nil {
+					return nil, fmt.Errorf(
+						"unable to marshal ProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection.Nodes: %w", err)
+				}
+			}
+		}
+	}
+	return &retval, nil
+}
+
+// ProjectV2ItemsNode includes the requested fields of the GraphQL interface Node.
+//
+// ProjectV2ItemsNode is implemented by the following types:
+// ProjectV2ItemsNodeAddedToMergeQueueEvent
+// ProjectV2ItemsNodeAddedToProjectEvent
+// ProjectV2ItemsNodeAddedToProjectV2Event
+// ProjectV2ItemsNodeApp
+// ProjectV2ItemsNodeAssignedEvent
+// ProjectV2ItemsNodeAutoMergeDisabledEvent
+// ProjectV2ItemsNodeAutoMergeEnabledEvent
+// ProjectV2ItemsNodeAutoRebaseEnabledEvent
+// ProjectV2ItemsNodeAutoSquashEnabledEvent
+// ProjectV2ItemsNodeAutomaticBaseChangeFailedEvent
+// ProjectV2ItemsNodeAutomaticBaseChangeSucceededEvent
+// ProjectV2ItemsNodeBaseRefChangedEvent
+// ProjectV2ItemsNodeBaseRefDeletedEvent
+// ProjectV2ItemsNodeBaseRefForcePushedEvent
+// ProjectV2ItemsNodeBlob
+// ProjectV2ItemsNodeBlockedByAddedEvent
+// ProjectV2ItemsNodeBlockedByRemovedEvent
+// ProjectV2ItemsNodeBlockingAddedEvent
+// ProjectV2ItemsNodeBlockingRemovedEvent
+// ProjectV2ItemsNodeBot
+// ProjectV2ItemsNodeBranchProtectionRule
+// ProjectV2ItemsNodeBypassForcePushAllowance
+// ProjectV2ItemsNodeBypassPullRequestAllowance
+// ProjectV2ItemsNodeCWE
+// ProjectV2ItemsNodeCheckRun
+// ProjectV2ItemsNodeCheckSuite
+// ProjectV2ItemsNodeClosedEvent
+// ProjectV2ItemsNodeCodeOfConduct
+// ProjectV2ItemsNodeCommentDeletedEvent
+// ProjectV2ItemsNodeCommit
+// ProjectV2ItemsNodeCommitComment
+// ProjectV2ItemsNodeCommitCommentThread
+// ProjectV2ItemsNodeComparison
+// ProjectV2ItemsNodeConnectedEvent
+// ProjectV2ItemsNodeConvertToDraftEvent
+// ProjectV2ItemsNodeConvertedFromDraftEvent
+// ProjectV2ItemsNodeConvertedNoteToIssueEvent
+// ProjectV2ItemsNodeConvertedToDiscussionEvent
+// ProjectV2ItemsNodeCrossReferencedEvent
+// ProjectV2ItemsNodeDemilestonedEvent
+// ProjectV2ItemsNodeDependencyGraphManifest
+// ProjectV2ItemsNodeDeployKey
+// ProjectV2ItemsNodeDeployedEvent
+// ProjectV2ItemsNodeDeployment
+// ProjectV2ItemsNodeDeploymentEnvironmentChangedEvent
+// ProjectV2ItemsNodeDeploymentReview
+// ProjectV2ItemsNodeDeploymentStatus
+// ProjectV2ItemsNodeDisconnectedEvent
+// ProjectV2ItemsNodeDiscussion
+// ProjectV2ItemsNodeDiscussionCategory
+// ProjectV2ItemsNodeDiscussionComment
+// ProjectV2ItemsNodeDiscussionPoll
+// ProjectV2ItemsNodeDiscussionPollOption
+// ProjectV2ItemsNodeDraftIssue
+// ProjectV2ItemsNodeEnterprise
+// ProjectV2ItemsNodeEnterpriseAdministratorInvitation
+// ProjectV2ItemsNodeEnterpriseIdentityProvider
+// ProjectV2ItemsNodeEnterpriseMemberInvitation
+// ProjectV2ItemsNodeEnterpriseRepositoryInfo
+// ProjectV2ItemsNodeEnterpriseServerInstallation
+// ProjectV2ItemsNodeEnterpriseServerUserAccount
+// ProjectV2ItemsNodeEnterpriseServerUserAccountEmail
+// ProjectV2ItemsNodeEnterpriseServerUserAccountsUpload
+// ProjectV2ItemsNodeEnterpriseUserAccount
+// ProjectV2ItemsNodeEnvironment
+// ProjectV2ItemsNodeExternalIdentity
+// ProjectV2ItemsNodeGist
+// ProjectV2ItemsNodeGistComment
+// ProjectV2ItemsNodeHeadRefDeletedEvent
+// ProjectV2ItemsNodeHeadRefForcePushedEvent
+// ProjectV2ItemsNodeHeadRefRestoredEvent
+// ProjectV2ItemsNodeIpAllowListEntry
+// ProjectV2ItemsNodeIssue
+// ProjectV2ItemsNodeIssueComment
+// ProjectV2ItemsNodeIssueCommentPinnedEvent
+// ProjectV2ItemsNodeIssueCommentUnpinnedEvent
+// ProjectV2ItemsNodeIssueFieldAddedEvent
+// ProjectV2ItemsNodeIssueFieldChangedEvent
+// ProjectV2ItemsNodeIssueFieldDate
+// ProjectV2ItemsNodeIssueFieldDateValue
+// ProjectV2ItemsNodeIssueFieldNumber
+// ProjectV2ItemsNodeIssueFieldNumberValue
+// ProjectV2ItemsNodeIssueFieldRemovedEvent
+// ProjectV2ItemsNodeIssueFieldSingleSelect
+// ProjectV2ItemsNodeIssueFieldSingleSelectOption
+// ProjectV2ItemsNodeIssueFieldSingleSelectValue
+// ProjectV2ItemsNodeIssueFieldText
+// ProjectV2ItemsNodeIssueFieldTextValue
+// ProjectV2ItemsNodeIssueType
+// ProjectV2ItemsNodeIssueTypeAddedEvent
+// ProjectV2ItemsNodeIssueTypeChangedEvent
+// ProjectV2ItemsNodeIssueTypeRemovedEvent
+// ProjectV2ItemsNodeLabel
+// ProjectV2ItemsNodeLabeledEvent
+// ProjectV2ItemsNodeLanguage
+// ProjectV2ItemsNodeLicense
+// ProjectV2ItemsNodeLinkedBranch
+// ProjectV2ItemsNodeLockedEvent
+// ProjectV2ItemsNodeMannequin
+// ProjectV2ItemsNodeMarkedAsDuplicateEvent
+// ProjectV2ItemsNodeMarketplaceCategory
+// ProjectV2ItemsNodeMarketplaceListing
+// ProjectV2ItemsNodeMemberFeatureRequestNotification
+// ProjectV2ItemsNodeMembersCanDeleteReposClearAuditEntry
+// ProjectV2ItemsNodeMembersCanDeleteReposDisableAuditEntry
+// ProjectV2ItemsNodeMembersCanDeleteReposEnableAuditEntry
+// ProjectV2ItemsNodeMentionedEvent
+// ProjectV2ItemsNodeMergeQueue
+// ProjectV2ItemsNodeMergeQueueEntry
+// ProjectV2ItemsNodeMergedEvent
+// ProjectV2ItemsNodeMigrationSource
+// ProjectV2ItemsNodeMilestone
+// ProjectV2ItemsNodeMilestonedEvent
+// ProjectV2ItemsNodeMovedColumnsInProjectEvent
+// ProjectV2ItemsNodeOIDCProvider
+// ProjectV2ItemsNodeOauthApplicationCreateAuditEntry
+// ProjectV2ItemsNodeOrgAddBillingManagerAuditEntry
+// ProjectV2ItemsNodeOrgAddMemberAuditEntry
+// ProjectV2ItemsNodeOrgBlockUserAuditEntry
+// ProjectV2ItemsNodeOrgConfigDisableCollaboratorsOnlyAuditEntry
+// ProjectV2ItemsNodeOrgConfigEnableCollaboratorsOnlyAuditEntry
+// ProjectV2ItemsNodeOrgCreateAuditEntry
+// ProjectV2ItemsNodeOrgDisableOauthAppRestrictionsAuditEntry
+// ProjectV2ItemsNodeOrgDisableSamlAuditEntry
+// ProjectV2ItemsNodeOrgDisableTwoFactorRequirementAuditEntry
+// ProjectV2ItemsNodeOrgEnableOauthAppRestrictionsAuditEntry
+// ProjectV2ItemsNodeOrgEnableSamlAuditEntry
+// ProjectV2ItemsNodeOrgEnableTwoFactorRequirementAuditEntry
+// ProjectV2ItemsNodeOrgInviteMemberAuditEntry
+// ProjectV2ItemsNodeOrgInviteToBusinessAuditEntry
+// ProjectV2ItemsNodeOrgOauthAppAccessApprovedAuditEntry
+// ProjectV2ItemsNodeOrgOauthAppAccessBlockedAuditEntry
+// ProjectV2ItemsNodeOrgOauthAppAccessDeniedAuditEntry
+// ProjectV2ItemsNodeOrgOauthAppAccessRequestedAuditEntry
+// ProjectV2ItemsNodeOrgOauthAppAccessUnblockedAuditEntry
+// ProjectV2ItemsNodeOrgRemoveBillingManagerAuditEntry
+// ProjectV2ItemsNodeOrgRemoveMemberAuditEntry
+// ProjectV2ItemsNodeOrgRemoveOutsideCollaboratorAuditEntry
+// ProjectV2ItemsNodeOrgRestoreMemberAuditEntry
+// ProjectV2ItemsNodeOrgUnblockUserAuditEntry
+// ProjectV2ItemsNodeOrgUpdateDefaultRepositoryPermissionAuditEntry
+// ProjectV2ItemsNodeOrgUpdateMemberAuditEntry
+// ProjectV2ItemsNodeOrgUpdateMemberRepositoryCreationPermissionAuditEntry
+// ProjectV2ItemsNodeOrgUpdateMemberRepositoryInvitationPermissionAuditEntry
+// ProjectV2ItemsNodeOrganization
+// ProjectV2ItemsNodeOrganizationIdentityProvider
+// ProjectV2ItemsNodeOrganizationInvitation
+// ProjectV2ItemsNodeOrganizationMigration
+// ProjectV2ItemsNodePackage
+// ProjectV2ItemsNodePackageFile
+// ProjectV2ItemsNodePackageTag
+// ProjectV2ItemsNodePackageVersion
+// ProjectV2ItemsNodeParentIssueAddedEvent
+// ProjectV2ItemsNodeParentIssueRemovedEvent
+// ProjectV2ItemsNodePinnedDiscussion
+// ProjectV2ItemsNodePinnedEnvironment
+// ProjectV2ItemsNodePinnedEvent
+// ProjectV2ItemsNodePinnedIssue
+// ProjectV2ItemsNodePinnedIssueComment
+// ProjectV2ItemsNodePrivateRepositoryForkingDisableAuditEntry
+// ProjectV2ItemsNodePrivateRepositoryForkingEnableAuditEntry
+// ProjectV2ItemsNodeProject
+// ProjectV2ItemsNodeProjectCard
+// ProjectV2ItemsNodeProjectColumn
+// ProjectV2ItemsNodeProjectV2
+// ProjectV2ItemsNodeProjectV2Field
+// ProjectV2ItemsNodeProjectV2Item
+// ProjectV2ItemsNodeProjectV2ItemFieldDateValue
+// ProjectV2ItemsNodeProjectV2ItemFieldIterationValue
+// ProjectV2ItemsNodeProjectV2ItemFieldNumberValue
+// ProjectV2ItemsNodeProjectV2ItemFieldSingleSelectValue
+// ProjectV2ItemsNodeProjectV2ItemFieldTextValue
+// ProjectV2ItemsNodeProjectV2ItemStatusChangedEvent
+// ProjectV2ItemsNodeProjectV2IterationField
+// ProjectV2ItemsNodeProjectV2SingleSelectField
+// ProjectV2ItemsNodeProjectV2StatusUpdate
+// ProjectV2ItemsNodeProjectV2View
+// ProjectV2ItemsNodeProjectV2Workflow
+// ProjectV2ItemsNodePublicKey
+// ProjectV2ItemsNodePullRequest
+// ProjectV2ItemsNodePullRequestCommit
+// ProjectV2ItemsNodePullRequestCommitCommentThread
+// ProjectV2ItemsNodePullRequestReview
+// ProjectV2ItemsNodePullRequestReviewComment
+// ProjectV2ItemsNodePullRequestReviewThread
+// ProjectV2ItemsNodePullRequestThread
+// ProjectV2ItemsNodePush
+// ProjectV2ItemsNodePushAllowance
+// ProjectV2ItemsNodeQuery
+// ProjectV2ItemsNodeReaction
+// ProjectV2ItemsNodeReadyForReviewEvent
+// ProjectV2ItemsNodeRef
+// ProjectV2ItemsNodeReferencedEvent
+// ProjectV2ItemsNodeRelease
+// ProjectV2ItemsNodeReleaseAsset
+// ProjectV2ItemsNodeRemovedFromMergeQueueEvent
+// ProjectV2ItemsNodeRemovedFromProjectEvent
+// ProjectV2ItemsNodeRemovedFromProjectV2Event
+// ProjectV2ItemsNodeRenamedTitleEvent
+// ProjectV2ItemsNodeReopenedEvent
+// ProjectV2ItemsNodeRepoAccessAuditEntry
+// ProjectV2ItemsNodeRepoAddMemberAuditEntry
+// ProjectV2ItemsNodeRepoAddTopicAuditEntry
+// ProjectV2ItemsNodeRepoArchivedAuditEntry
+// ProjectV2ItemsNodeRepoChangeMergeSettingAuditEntry
+// ProjectV2ItemsNodeRepoConfigDisableAnonymousGitAccessAuditEntry
+// ProjectV2ItemsNodeRepoConfigDisableCollaboratorsOnlyAuditEntry
+// ProjectV2ItemsNodeRepoConfigDisableContributorsOnlyAuditEntry
+// ProjectV2ItemsNodeRepoConfigDisableSockpuppetDisallowedAuditEntry
+// ProjectV2ItemsNodeRepoConfigEnableAnonymousGitAccessAuditEntry
+// ProjectV2ItemsNodeRepoConfigEnableCollaboratorsOnlyAuditEntry
+// ProjectV2ItemsNodeRepoConfigEnableContributorsOnlyAuditEntry
+// ProjectV2ItemsNodeRepoConfigEnableSockpuppetDisallowedAuditEntry
+// ProjectV2ItemsNodeRepoConfigLockAnonymousGitAccessAuditEntry
+// ProjectV2ItemsNodeRepoConfigUnlockAnonymousGitAccessAuditEntry
+// ProjectV2ItemsNodeRepoCreateAuditEntry
+// ProjectV2ItemsNodeRepoDestroyAuditEntry
+// ProjectV2ItemsNodeRepoRemoveMemberAuditEntry
+// ProjectV2ItemsNodeRepoRemoveTopicAuditEntry
+// ProjectV2ItemsNodeRepository
+// ProjectV2ItemsNodeRepositoryCustomProperty
+// ProjectV2ItemsNodeRepositoryInvitation
+// ProjectV2ItemsNodeRepositoryMigration
+// ProjectV2ItemsNodeRepositoryRule
+// ProjectV2ItemsNodeRepositoryRuleset
+// ProjectV2ItemsNodeRepositoryRulesetBypassActor
+// ProjectV2ItemsNodeRepositoryTopic
+// ProjectV2ItemsNodeRepositoryVisibilityChangeDisableAuditEntry
+// ProjectV2ItemsNodeRepositoryVisibilityChangeEnableAuditEntry
+// ProjectV2ItemsNodeRepositoryVulnerabilityAlert
+// ProjectV2ItemsNodeReviewDismissalAllowance
+// ProjectV2ItemsNodeReviewDismissedEvent
+// ProjectV2ItemsNodeReviewRequest
+// ProjectV2ItemsNodeReviewRequestRemovedEvent
+// ProjectV2ItemsNodeReviewRequestedEvent
+// ProjectV2ItemsNodeSavedReply
+// ProjectV2ItemsNodeSecurityAdvisory
+// ProjectV2ItemsNodeSponsorsActivity
+// ProjectV2ItemsNodeSponsorsListing
+// ProjectV2ItemsNodeSponsorsListingFeaturedItem
+// ProjectV2ItemsNodeSponsorsTier
+// ProjectV2ItemsNodeSponsorship
+// ProjectV2ItemsNodeSponsorshipNewsletter
+// ProjectV2ItemsNodeStatus
+// ProjectV2ItemsNodeStatusCheckRollup
+// ProjectV2ItemsNodeStatusContext
+// ProjectV2ItemsNodeSubIssueAddedEvent
+// ProjectV2ItemsNodeSubIssueRemovedEvent
+// ProjectV2ItemsNodeSubscribedEvent
+// ProjectV2ItemsNodeTag
+// ProjectV2ItemsNodeTeam
+// ProjectV2ItemsNodeTeamAddMemberAuditEntry
+// ProjectV2ItemsNodeTeamAddRepositoryAuditEntry
+// ProjectV2ItemsNodeTeamChangeParentTeamAuditEntry
+// ProjectV2ItemsNodeTeamRemoveMemberAuditEntry
+// ProjectV2ItemsNodeTeamRemoveRepositoryAuditEntry
+// ProjectV2ItemsNodeTopic
+// ProjectV2ItemsNodeTransferredEvent
+// ProjectV2ItemsNodeTree
+// ProjectV2ItemsNodeUnassignedEvent
+// ProjectV2ItemsNodeUnlabeledEvent
+// ProjectV2ItemsNodeUnlockedEvent
+// ProjectV2ItemsNodeUnmarkedAsDuplicateEvent
+// ProjectV2ItemsNodeUnpinnedEvent
+// ProjectV2ItemsNodeUnsubscribedEvent
+// ProjectV2ItemsNodeUser
+// ProjectV2ItemsNodeUserBlockedEvent
+// ProjectV2ItemsNodeUserContentEdit
+// ProjectV2ItemsNodeUserList
+// ProjectV2ItemsNodeUserNamespaceRepository
+// ProjectV2ItemsNodeUserStatus
+// ProjectV2ItemsNodeVerifiableDomain
+// ProjectV2ItemsNodeWorkflow
+// ProjectV2ItemsNodeWorkflowRun
+// ProjectV2ItemsNodeWorkflowRunFile
+// The GraphQL type's documentation follows.
+//
+// An object with an ID.
+type ProjectV2ItemsNode interface {
+	implementsGraphQLInterfaceProjectV2ItemsNode()
+	// GetTypename returns the receiver's concrete GraphQL type-name (see interface doc for possible values).
+	GetTypename() *string
+}
+
+func (v *ProjectV2ItemsNodeAddedToMergeQueueEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeAddedToProjectEvent) implementsGraphQLInterfaceProjectV2ItemsNode()    {}
+func (v *ProjectV2ItemsNodeAddedToProjectV2Event) implementsGraphQLInterfaceProjectV2ItemsNode()  {}
+func (v *ProjectV2ItemsNodeApp) implementsGraphQLInterfaceProjectV2ItemsNode()                    {}
+func (v *ProjectV2ItemsNodeAssignedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()          {}
+func (v *ProjectV2ItemsNodeAutoMergeDisabledEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeAutoMergeEnabledEvent) implementsGraphQLInterfaceProjectV2ItemsNode()  {}
+func (v *ProjectV2ItemsNodeAutoRebaseEnabledEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeAutoSquashEnabledEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeAutomaticBaseChangeFailedEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeAutomaticBaseChangeSucceededEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeBaseRefChangedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()      {}
+func (v *ProjectV2ItemsNodeBaseRefDeletedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()      {}
+func (v *ProjectV2ItemsNodeBaseRefForcePushedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()  {}
+func (v *ProjectV2ItemsNodeBlob) implementsGraphQLInterfaceProjectV2ItemsNode()                     {}
+func (v *ProjectV2ItemsNodeBlockedByAddedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()      {}
+func (v *ProjectV2ItemsNodeBlockedByRemovedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()    {}
+func (v *ProjectV2ItemsNodeBlockingAddedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()       {}
+func (v *ProjectV2ItemsNodeBlockingRemovedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()     {}
+func (v *ProjectV2ItemsNodeBot) implementsGraphQLInterfaceProjectV2ItemsNode()                      {}
+func (v *ProjectV2ItemsNodeBranchProtectionRule) implementsGraphQLInterfaceProjectV2ItemsNode()     {}
+func (v *ProjectV2ItemsNodeBypassForcePushAllowance) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeBypassPullRequestAllowance) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeCWE) implementsGraphQLInterfaceProjectV2ItemsNode()                     {}
+func (v *ProjectV2ItemsNodeCheckRun) implementsGraphQLInterfaceProjectV2ItemsNode()                {}
+func (v *ProjectV2ItemsNodeCheckSuite) implementsGraphQLInterfaceProjectV2ItemsNode()              {}
+func (v *ProjectV2ItemsNodeClosedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()             {}
+func (v *ProjectV2ItemsNodeCodeOfConduct) implementsGraphQLInterfaceProjectV2ItemsNode()           {}
+func (v *ProjectV2ItemsNodeCommentDeletedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()     {}
+func (v *ProjectV2ItemsNodeCommit) implementsGraphQLInterfaceProjectV2ItemsNode()                  {}
+func (v *ProjectV2ItemsNodeCommitComment) implementsGraphQLInterfaceProjectV2ItemsNode()           {}
+func (v *ProjectV2ItemsNodeCommitCommentThread) implementsGraphQLInterfaceProjectV2ItemsNode()     {}
+func (v *ProjectV2ItemsNodeComparison) implementsGraphQLInterfaceProjectV2ItemsNode()              {}
+func (v *ProjectV2ItemsNodeConnectedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()          {}
+func (v *ProjectV2ItemsNodeConvertToDraftEvent) implementsGraphQLInterfaceProjectV2ItemsNode()     {}
+func (v *ProjectV2ItemsNodeConvertedFromDraftEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeConvertedNoteToIssueEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeConvertedToDiscussionEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeCrossReferencedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()    {}
+func (v *ProjectV2ItemsNodeDemilestonedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()       {}
+func (v *ProjectV2ItemsNodeDependencyGraphManifest) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeDeployKey) implementsGraphQLInterfaceProjectV2ItemsNode()               {}
+func (v *ProjectV2ItemsNodeDeployedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()           {}
+func (v *ProjectV2ItemsNodeDeployment) implementsGraphQLInterfaceProjectV2ItemsNode()              {}
+func (v *ProjectV2ItemsNodeDeploymentEnvironmentChangedEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeDeploymentReview) implementsGraphQLInterfaceProjectV2ItemsNode()     {}
+func (v *ProjectV2ItemsNodeDeploymentStatus) implementsGraphQLInterfaceProjectV2ItemsNode()     {}
+func (v *ProjectV2ItemsNodeDisconnectedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()    {}
+func (v *ProjectV2ItemsNodeDiscussion) implementsGraphQLInterfaceProjectV2ItemsNode()           {}
+func (v *ProjectV2ItemsNodeDiscussionCategory) implementsGraphQLInterfaceProjectV2ItemsNode()   {}
+func (v *ProjectV2ItemsNodeDiscussionComment) implementsGraphQLInterfaceProjectV2ItemsNode()    {}
+func (v *ProjectV2ItemsNodeDiscussionPoll) implementsGraphQLInterfaceProjectV2ItemsNode()       {}
+func (v *ProjectV2ItemsNodeDiscussionPollOption) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeDraftIssue) implementsGraphQLInterfaceProjectV2ItemsNode()           {}
+func (v *ProjectV2ItemsNodeEnterprise) implementsGraphQLInterfaceProjectV2ItemsNode()           {}
+func (v *ProjectV2ItemsNodeEnterpriseAdministratorInvitation) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeEnterpriseIdentityProvider) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeEnterpriseMemberInvitation) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeEnterpriseRepositoryInfo) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeEnterpriseServerInstallation) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeEnterpriseServerUserAccount) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeEnterpriseServerUserAccountEmail) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeEnterpriseServerUserAccountsUpload) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeEnterpriseUserAccount) implementsGraphQLInterfaceProjectV2ItemsNode()   {}
+func (v *ProjectV2ItemsNodeEnvironment) implementsGraphQLInterfaceProjectV2ItemsNode()             {}
+func (v *ProjectV2ItemsNodeExternalIdentity) implementsGraphQLInterfaceProjectV2ItemsNode()        {}
+func (v *ProjectV2ItemsNodeGist) implementsGraphQLInterfaceProjectV2ItemsNode()                    {}
+func (v *ProjectV2ItemsNodeGistComment) implementsGraphQLInterfaceProjectV2ItemsNode()             {}
+func (v *ProjectV2ItemsNodeHeadRefDeletedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()     {}
+func (v *ProjectV2ItemsNodeHeadRefForcePushedEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeHeadRefRestoredEvent) implementsGraphQLInterfaceProjectV2ItemsNode()    {}
+func (v *ProjectV2ItemsNodeIpAllowListEntry) implementsGraphQLInterfaceProjectV2ItemsNode()        {}
+func (v *ProjectV2ItemsNodeIssue) implementsGraphQLInterfaceProjectV2ItemsNode()                   {}
+func (v *ProjectV2ItemsNodeIssueComment) implementsGraphQLInterfaceProjectV2ItemsNode()            {}
+func (v *ProjectV2ItemsNodeIssueCommentPinnedEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeIssueCommentUnpinnedEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeIssueFieldAddedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()   {}
+func (v *ProjectV2ItemsNodeIssueFieldChangedEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeIssueFieldDate) implementsGraphQLInterfaceProjectV2ItemsNode()         {}
+func (v *ProjectV2ItemsNodeIssueFieldDateValue) implementsGraphQLInterfaceProjectV2ItemsNode()    {}
+func (v *ProjectV2ItemsNodeIssueFieldNumber) implementsGraphQLInterfaceProjectV2ItemsNode()       {}
+func (v *ProjectV2ItemsNodeIssueFieldNumberValue) implementsGraphQLInterfaceProjectV2ItemsNode()  {}
+func (v *ProjectV2ItemsNodeIssueFieldRemovedEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeIssueFieldSingleSelect) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeIssueFieldSingleSelectOption) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeIssueFieldSingleSelectValue) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeIssueFieldText) implementsGraphQLInterfaceProjectV2ItemsNode()         {}
+func (v *ProjectV2ItemsNodeIssueFieldTextValue) implementsGraphQLInterfaceProjectV2ItemsNode()    {}
+func (v *ProjectV2ItemsNodeIssueType) implementsGraphQLInterfaceProjectV2ItemsNode()              {}
+func (v *ProjectV2ItemsNodeIssueTypeAddedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()    {}
+func (v *ProjectV2ItemsNodeIssueTypeChangedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()  {}
+func (v *ProjectV2ItemsNodeIssueTypeRemovedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()  {}
+func (v *ProjectV2ItemsNodeLabel) implementsGraphQLInterfaceProjectV2ItemsNode()                  {}
+func (v *ProjectV2ItemsNodeLabeledEvent) implementsGraphQLInterfaceProjectV2ItemsNode()           {}
+func (v *ProjectV2ItemsNodeLanguage) implementsGraphQLInterfaceProjectV2ItemsNode()               {}
+func (v *ProjectV2ItemsNodeLicense) implementsGraphQLInterfaceProjectV2ItemsNode()                {}
+func (v *ProjectV2ItemsNodeLinkedBranch) implementsGraphQLInterfaceProjectV2ItemsNode()           {}
+func (v *ProjectV2ItemsNodeLockedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()            {}
+func (v *ProjectV2ItemsNodeMannequin) implementsGraphQLInterfaceProjectV2ItemsNode()              {}
+func (v *ProjectV2ItemsNodeMarkedAsDuplicateEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeMarketplaceCategory) implementsGraphQLInterfaceProjectV2ItemsNode()    {}
+func (v *ProjectV2ItemsNodeMarketplaceListing) implementsGraphQLInterfaceProjectV2ItemsNode()     {}
+func (v *ProjectV2ItemsNodeMemberFeatureRequestNotification) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeMembersCanDeleteReposClearAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeMembersCanDeleteReposDisableAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeMembersCanDeleteReposEnableAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeMentionedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()  {}
+func (v *ProjectV2ItemsNodeMergeQueue) implementsGraphQLInterfaceProjectV2ItemsNode()      {}
+func (v *ProjectV2ItemsNodeMergeQueueEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeMergedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()     {}
+func (v *ProjectV2ItemsNodeMigrationSource) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeMilestone) implementsGraphQLInterfaceProjectV2ItemsNode()       {}
+func (v *ProjectV2ItemsNodeMilestonedEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeMovedColumnsInProjectEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOIDCProvider) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeOauthApplicationCreateAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgAddBillingManagerAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgAddMemberAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeOrgBlockUserAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeOrgConfigDisableCollaboratorsOnlyAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgConfigEnableCollaboratorsOnlyAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgCreateAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeOrgDisableOauthAppRestrictionsAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgDisableSamlAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeOrgDisableTwoFactorRequirementAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgEnableOauthAppRestrictionsAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgEnableSamlAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeOrgEnableTwoFactorRequirementAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgInviteMemberAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgInviteToBusinessAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgOauthAppAccessApprovedAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgOauthAppAccessBlockedAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgOauthAppAccessDeniedAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgOauthAppAccessRequestedAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgOauthAppAccessUnblockedAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgRemoveBillingManagerAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgRemoveMemberAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgRemoveOutsideCollaboratorAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgRestoreMemberAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgUnblockUserAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeOrgUpdateDefaultRepositoryPermissionAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgUpdateMemberAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgUpdateMemberRepositoryCreationPermissionAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrgUpdateMemberRepositoryInvitationPermissionAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrganization) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeOrganizationIdentityProvider) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeOrganizationInvitation) implementsGraphQLInterfaceProjectV2ItemsNode()  {}
+func (v *ProjectV2ItemsNodeOrganizationMigration) implementsGraphQLInterfaceProjectV2ItemsNode()   {}
+func (v *ProjectV2ItemsNodePackage) implementsGraphQLInterfaceProjectV2ItemsNode()                 {}
+func (v *ProjectV2ItemsNodePackageFile) implementsGraphQLInterfaceProjectV2ItemsNode()             {}
+func (v *ProjectV2ItemsNodePackageTag) implementsGraphQLInterfaceProjectV2ItemsNode()              {}
+func (v *ProjectV2ItemsNodePackageVersion) implementsGraphQLInterfaceProjectV2ItemsNode()          {}
+func (v *ProjectV2ItemsNodeParentIssueAddedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()   {}
+func (v *ProjectV2ItemsNodeParentIssueRemovedEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodePinnedDiscussion) implementsGraphQLInterfaceProjectV2ItemsNode()        {}
+func (v *ProjectV2ItemsNodePinnedEnvironment) implementsGraphQLInterfaceProjectV2ItemsNode()       {}
+func (v *ProjectV2ItemsNodePinnedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()             {}
+func (v *ProjectV2ItemsNodePinnedIssue) implementsGraphQLInterfaceProjectV2ItemsNode()             {}
+func (v *ProjectV2ItemsNodePinnedIssueComment) implementsGraphQLInterfaceProjectV2ItemsNode()      {}
+func (v *ProjectV2ItemsNodePrivateRepositoryForkingDisableAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodePrivateRepositoryForkingEnableAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeProject) implementsGraphQLInterfaceProjectV2ItemsNode()        {}
+func (v *ProjectV2ItemsNodeProjectCard) implementsGraphQLInterfaceProjectV2ItemsNode()    {}
+func (v *ProjectV2ItemsNodeProjectColumn) implementsGraphQLInterfaceProjectV2ItemsNode()  {}
+func (v *ProjectV2ItemsNodeProjectV2) implementsGraphQLInterfaceProjectV2ItemsNode()      {}
+func (v *ProjectV2ItemsNodeProjectV2Field) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeProjectV2Item) implementsGraphQLInterfaceProjectV2ItemsNode()  {}
+func (v *ProjectV2ItemsNodeProjectV2ItemFieldDateValue) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeProjectV2ItemFieldIterationValue) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeProjectV2ItemFieldNumberValue) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeProjectV2ItemFieldSingleSelectValue) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeProjectV2ItemFieldTextValue) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeProjectV2ItemStatusChangedEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeProjectV2IterationField) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeProjectV2SingleSelectField) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeProjectV2StatusUpdate) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeProjectV2View) implementsGraphQLInterfaceProjectV2ItemsNode()         {}
+func (v *ProjectV2ItemsNodeProjectV2Workflow) implementsGraphQLInterfaceProjectV2ItemsNode()     {}
+func (v *ProjectV2ItemsNodePublicKey) implementsGraphQLInterfaceProjectV2ItemsNode()             {}
+func (v *ProjectV2ItemsNodePullRequest) implementsGraphQLInterfaceProjectV2ItemsNode()           {}
+func (v *ProjectV2ItemsNodePullRequestCommit) implementsGraphQLInterfaceProjectV2ItemsNode()     {}
+func (v *ProjectV2ItemsNodePullRequestCommitCommentThread) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodePullRequestReview) implementsGraphQLInterfaceProjectV2ItemsNode()        {}
+func (v *ProjectV2ItemsNodePullRequestReviewComment) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodePullRequestReviewThread) implementsGraphQLInterfaceProjectV2ItemsNode()  {}
+func (v *ProjectV2ItemsNodePullRequestThread) implementsGraphQLInterfaceProjectV2ItemsNode()        {}
+func (v *ProjectV2ItemsNodePush) implementsGraphQLInterfaceProjectV2ItemsNode()                     {}
+func (v *ProjectV2ItemsNodePushAllowance) implementsGraphQLInterfaceProjectV2ItemsNode()            {}
+func (v *ProjectV2ItemsNodeQuery) implementsGraphQLInterfaceProjectV2ItemsNode()                    {}
+func (v *ProjectV2ItemsNodeReaction) implementsGraphQLInterfaceProjectV2ItemsNode()                 {}
+func (v *ProjectV2ItemsNodeReadyForReviewEvent) implementsGraphQLInterfaceProjectV2ItemsNode()      {}
+func (v *ProjectV2ItemsNodeRef) implementsGraphQLInterfaceProjectV2ItemsNode()                      {}
+func (v *ProjectV2ItemsNodeReferencedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()          {}
+func (v *ProjectV2ItemsNodeRelease) implementsGraphQLInterfaceProjectV2ItemsNode()                  {}
+func (v *ProjectV2ItemsNodeReleaseAsset) implementsGraphQLInterfaceProjectV2ItemsNode()             {}
+func (v *ProjectV2ItemsNodeRemovedFromMergeQueueEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeRemovedFromProjectEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeRemovedFromProjectV2Event) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeRenamedTitleEvent) implementsGraphQLInterfaceProjectV2ItemsNode()       {}
+func (v *ProjectV2ItemsNodeReopenedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()           {}
+func (v *ProjectV2ItemsNodeRepoAccessAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode()    {}
+func (v *ProjectV2ItemsNodeRepoAddMemberAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeRepoAddTopicAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode()  {}
+func (v *ProjectV2ItemsNodeRepoArchivedAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode()  {}
+func (v *ProjectV2ItemsNodeRepoChangeMergeSettingAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeRepoConfigDisableAnonymousGitAccessAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeRepoConfigDisableCollaboratorsOnlyAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeRepoConfigDisableContributorsOnlyAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeRepoConfigDisableSockpuppetDisallowedAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeRepoConfigEnableAnonymousGitAccessAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeRepoConfigEnableCollaboratorsOnlyAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeRepoConfigEnableContributorsOnlyAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeRepoConfigEnableSockpuppetDisallowedAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeRepoConfigLockAnonymousGitAccessAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeRepoConfigUnlockAnonymousGitAccessAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeRepoCreateAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode()  {}
+func (v *ProjectV2ItemsNodeRepoDestroyAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeRepoRemoveMemberAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeRepoRemoveTopicAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeRepository) implementsGraphQLInterfaceProjectV2ItemsNode()               {}
+func (v *ProjectV2ItemsNodeRepositoryCustomProperty) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeRepositoryInvitation) implementsGraphQLInterfaceProjectV2ItemsNode()     {}
+func (v *ProjectV2ItemsNodeRepositoryMigration) implementsGraphQLInterfaceProjectV2ItemsNode()      {}
+func (v *ProjectV2ItemsNodeRepositoryRule) implementsGraphQLInterfaceProjectV2ItemsNode()           {}
+func (v *ProjectV2ItemsNodeRepositoryRuleset) implementsGraphQLInterfaceProjectV2ItemsNode()        {}
+func (v *ProjectV2ItemsNodeRepositoryRulesetBypassActor) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeRepositoryTopic) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeRepositoryVisibilityChangeDisableAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeRepositoryVisibilityChangeEnableAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeRepositoryVulnerabilityAlert) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeReviewDismissalAllowance) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeReviewDismissedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()     {}
+func (v *ProjectV2ItemsNodeReviewRequest) implementsGraphQLInterfaceProjectV2ItemsNode()            {}
+func (v *ProjectV2ItemsNodeReviewRequestRemovedEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeReviewRequestedEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeSavedReply) implementsGraphQLInterfaceProjectV2ItemsNode()           {}
+func (v *ProjectV2ItemsNodeSecurityAdvisory) implementsGraphQLInterfaceProjectV2ItemsNode()     {}
+func (v *ProjectV2ItemsNodeSponsorsActivity) implementsGraphQLInterfaceProjectV2ItemsNode()     {}
+func (v *ProjectV2ItemsNodeSponsorsListing) implementsGraphQLInterfaceProjectV2ItemsNode()      {}
+func (v *ProjectV2ItemsNodeSponsorsListingFeaturedItem) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeSponsorsTier) implementsGraphQLInterfaceProjectV2ItemsNode()            {}
+func (v *ProjectV2ItemsNodeSponsorship) implementsGraphQLInterfaceProjectV2ItemsNode()             {}
+func (v *ProjectV2ItemsNodeSponsorshipNewsletter) implementsGraphQLInterfaceProjectV2ItemsNode()   {}
+func (v *ProjectV2ItemsNodeStatus) implementsGraphQLInterfaceProjectV2ItemsNode()                  {}
+func (v *ProjectV2ItemsNodeStatusCheckRollup) implementsGraphQLInterfaceProjectV2ItemsNode()       {}
+func (v *ProjectV2ItemsNodeStatusContext) implementsGraphQLInterfaceProjectV2ItemsNode()           {}
+func (v *ProjectV2ItemsNodeSubIssueAddedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()      {}
+func (v *ProjectV2ItemsNodeSubIssueRemovedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()    {}
+func (v *ProjectV2ItemsNodeSubscribedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()         {}
+func (v *ProjectV2ItemsNodeTag) implementsGraphQLInterfaceProjectV2ItemsNode()                     {}
+func (v *ProjectV2ItemsNodeTeam) implementsGraphQLInterfaceProjectV2ItemsNode()                    {}
+func (v *ProjectV2ItemsNodeTeamAddMemberAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeTeamAddRepositoryAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeTeamChangeParentTeamAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeTeamRemoveMemberAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeTeamRemoveRepositoryAuditEntry) implementsGraphQLInterfaceProjectV2ItemsNode() {
+}
+func (v *ProjectV2ItemsNodeTopic) implementsGraphQLInterfaceProjectV2ItemsNode()                    {}
+func (v *ProjectV2ItemsNodeTransferredEvent) implementsGraphQLInterfaceProjectV2ItemsNode()         {}
+func (v *ProjectV2ItemsNodeTree) implementsGraphQLInterfaceProjectV2ItemsNode()                     {}
+func (v *ProjectV2ItemsNodeUnassignedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()          {}
+func (v *ProjectV2ItemsNodeUnlabeledEvent) implementsGraphQLInterfaceProjectV2ItemsNode()           {}
+func (v *ProjectV2ItemsNodeUnlockedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()            {}
+func (v *ProjectV2ItemsNodeUnmarkedAsDuplicateEvent) implementsGraphQLInterfaceProjectV2ItemsNode() {}
+func (v *ProjectV2ItemsNodeUnpinnedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()            {}
+func (v *ProjectV2ItemsNodeUnsubscribedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()        {}
+func (v *ProjectV2ItemsNodeUser) implementsGraphQLInterfaceProjectV2ItemsNode()                     {}
+func (v *ProjectV2ItemsNodeUserBlockedEvent) implementsGraphQLInterfaceProjectV2ItemsNode()         {}
+func (v *ProjectV2ItemsNodeUserContentEdit) implementsGraphQLInterfaceProjectV2ItemsNode()          {}
+func (v *ProjectV2ItemsNodeUserList) implementsGraphQLInterfaceProjectV2ItemsNode()                 {}
+func (v *ProjectV2ItemsNodeUserNamespaceRepository) implementsGraphQLInterfaceProjectV2ItemsNode()  {}
+func (v *ProjectV2ItemsNodeUserStatus) implementsGraphQLInterfaceProjectV2ItemsNode()               {}
+func (v *ProjectV2ItemsNodeVerifiableDomain) implementsGraphQLInterfaceProjectV2ItemsNode()         {}
+func (v *ProjectV2ItemsNodeWorkflow) implementsGraphQLInterfaceProjectV2ItemsNode()                 {}
+func (v *ProjectV2ItemsNodeWorkflowRun) implementsGraphQLInterfaceProjectV2ItemsNode()              {}
+func (v *ProjectV2ItemsNodeWorkflowRunFile) implementsGraphQLInterfaceProjectV2ItemsNode()          {}
+
+func __unmarshalProjectV2ItemsNode(b []byte, v *ProjectV2ItemsNode) error {
+	if string(b) == "null" {
+		return nil
+	}
+
+	var tn struct {
+		TypeName string `json:"__typename"`
+	}
+	err := json.Unmarshal(b, &tn)
+	if err != nil {
+		return err
+	}
+
+	switch tn.TypeName {
+	case "AddedToMergeQueueEvent":
+		*v = new(ProjectV2ItemsNodeAddedToMergeQueueEvent)
+		return json.Unmarshal(b, *v)
+	case "AddedToProjectEvent":
+		*v = new(ProjectV2ItemsNodeAddedToProjectEvent)
+		return json.Unmarshal(b, *v)
+	case "AddedToProjectV2Event":
+		*v = new(ProjectV2ItemsNodeAddedToProjectV2Event)
+		return json.Unmarshal(b, *v)
+	case "App":
+		*v = new(ProjectV2ItemsNodeApp)
+		return json.Unmarshal(b, *v)
+	case "AssignedEvent":
+		*v = new(ProjectV2ItemsNodeAssignedEvent)
+		return json.Unmarshal(b, *v)
+	case "AutoMergeDisabledEvent":
+		*v = new(ProjectV2ItemsNodeAutoMergeDisabledEvent)
+		return json.Unmarshal(b, *v)
+	case "AutoMergeEnabledEvent":
+		*v = new(ProjectV2ItemsNodeAutoMergeEnabledEvent)
+		return json.Unmarshal(b, *v)
+	case "AutoRebaseEnabledEvent":
+		*v = new(ProjectV2ItemsNodeAutoRebaseEnabledEvent)
+		return json.Unmarshal(b, *v)
+	case "AutoSquashEnabledEvent":
+		*v = new(ProjectV2ItemsNodeAutoSquashEnabledEvent)
+		return json.Unmarshal(b, *v)
+	case "AutomaticBaseChangeFailedEvent":
+		*v = new(ProjectV2ItemsNodeAutomaticBaseChangeFailedEvent)
+		return json.Unmarshal(b, *v)
+	case "AutomaticBaseChangeSucceededEvent":
+		*v = new(ProjectV2ItemsNodeAutomaticBaseChangeSucceededEvent)
+		return json.Unmarshal(b, *v)
+	case "BaseRefChangedEvent":
+		*v = new(ProjectV2ItemsNodeBaseRefChangedEvent)
+		return json.Unmarshal(b, *v)
+	case "BaseRefDeletedEvent":
+		*v = new(ProjectV2ItemsNodeBaseRefDeletedEvent)
+		return json.Unmarshal(b, *v)
+	case "BaseRefForcePushedEvent":
+		*v = new(ProjectV2ItemsNodeBaseRefForcePushedEvent)
+		return json.Unmarshal(b, *v)
+	case "Blob":
+		*v = new(ProjectV2ItemsNodeBlob)
+		return json.Unmarshal(b, *v)
+	case "BlockedByAddedEvent":
+		*v = new(ProjectV2ItemsNodeBlockedByAddedEvent)
+		return json.Unmarshal(b, *v)
+	case "BlockedByRemovedEvent":
+		*v = new(ProjectV2ItemsNodeBlockedByRemovedEvent)
+		return json.Unmarshal(b, *v)
+	case "BlockingAddedEvent":
+		*v = new(ProjectV2ItemsNodeBlockingAddedEvent)
+		return json.Unmarshal(b, *v)
+	case "BlockingRemovedEvent":
+		*v = new(ProjectV2ItemsNodeBlockingRemovedEvent)
+		return json.Unmarshal(b, *v)
+	case "Bot":
+		*v = new(ProjectV2ItemsNodeBot)
+		return json.Unmarshal(b, *v)
+	case "BranchProtectionRule":
+		*v = new(ProjectV2ItemsNodeBranchProtectionRule)
+		return json.Unmarshal(b, *v)
+	case "BypassForcePushAllowance":
+		*v = new(ProjectV2ItemsNodeBypassForcePushAllowance)
+		return json.Unmarshal(b, *v)
+	case "BypassPullRequestAllowance":
+		*v = new(ProjectV2ItemsNodeBypassPullRequestAllowance)
+		return json.Unmarshal(b, *v)
+	case "CWE":
+		*v = new(ProjectV2ItemsNodeCWE)
+		return json.Unmarshal(b, *v)
+	case "CheckRun":
+		*v = new(ProjectV2ItemsNodeCheckRun)
+		return json.Unmarshal(b, *v)
+	case "CheckSuite":
+		*v = new(ProjectV2ItemsNodeCheckSuite)
+		return json.Unmarshal(b, *v)
+	case "ClosedEvent":
+		*v = new(ProjectV2ItemsNodeClosedEvent)
+		return json.Unmarshal(b, *v)
+	case "CodeOfConduct":
+		*v = new(ProjectV2ItemsNodeCodeOfConduct)
+		return json.Unmarshal(b, *v)
+	case "CommentDeletedEvent":
+		*v = new(ProjectV2ItemsNodeCommentDeletedEvent)
+		return json.Unmarshal(b, *v)
+	case "Commit":
+		*v = new(ProjectV2ItemsNodeCommit)
+		return json.Unmarshal(b, *v)
+	case "CommitComment":
+		*v = new(ProjectV2ItemsNodeCommitComment)
+		return json.Unmarshal(b, *v)
+	case "CommitCommentThread":
+		*v = new(ProjectV2ItemsNodeCommitCommentThread)
+		return json.Unmarshal(b, *v)
+	case "Comparison":
+		*v = new(ProjectV2ItemsNodeComparison)
+		return json.Unmarshal(b, *v)
+	case "ConnectedEvent":
+		*v = new(ProjectV2ItemsNodeConnectedEvent)
+		return json.Unmarshal(b, *v)
+	case "ConvertToDraftEvent":
+		*v = new(ProjectV2ItemsNodeConvertToDraftEvent)
+		return json.Unmarshal(b, *v)
+	case "ConvertedFromDraftEvent":
+		*v = new(ProjectV2ItemsNodeConvertedFromDraftEvent)
+		return json.Unmarshal(b, *v)
+	case "ConvertedNoteToIssueEvent":
+		*v = new(ProjectV2ItemsNodeConvertedNoteToIssueEvent)
+		return json.Unmarshal(b, *v)
+	case "ConvertedToDiscussionEvent":
+		*v = new(ProjectV2ItemsNodeConvertedToDiscussionEvent)
+		return json.Unmarshal(b, *v)
+	case "CrossReferencedEvent":
+		*v = new(ProjectV2ItemsNodeCrossReferencedEvent)
+		return json.Unmarshal(b, *v)
+	case "DemilestonedEvent":
+		*v = new(ProjectV2ItemsNodeDemilestonedEvent)
+		return json.Unmarshal(b, *v)
+	case "DependencyGraphManifest":
+		*v = new(ProjectV2ItemsNodeDependencyGraphManifest)
+		return json.Unmarshal(b, *v)
+	case "DeployKey":
+		*v = new(ProjectV2ItemsNodeDeployKey)
+		return json.Unmarshal(b, *v)
+	case "DeployedEvent":
+		*v = new(ProjectV2ItemsNodeDeployedEvent)
+		return json.Unmarshal(b, *v)
+	case "Deployment":
+		*v = new(ProjectV2ItemsNodeDeployment)
+		return json.Unmarshal(b, *v)
+	case "DeploymentEnvironmentChangedEvent":
+		*v = new(ProjectV2ItemsNodeDeploymentEnvironmentChangedEvent)
+		return json.Unmarshal(b, *v)
+	case "DeploymentReview":
+		*v = new(ProjectV2ItemsNodeDeploymentReview)
+		return json.Unmarshal(b, *v)
+	case "DeploymentStatus":
+		*v = new(ProjectV2ItemsNodeDeploymentStatus)
+		return json.Unmarshal(b, *v)
+	case "DisconnectedEvent":
+		*v = new(ProjectV2ItemsNodeDisconnectedEvent)
+		return json.Unmarshal(b, *v)
+	case "Discussion":
+		*v = new(ProjectV2ItemsNodeDiscussion)
+		return json.Unmarshal(b, *v)
+	case "DiscussionCategory":
+		*v = new(ProjectV2ItemsNodeDiscussionCategory)
+		return json.Unmarshal(b, *v)
+	case "DiscussionComment":
+		*v = new(ProjectV2ItemsNodeDiscussionComment)
+		return json.Unmarshal(b, *v)
+	case "DiscussionPoll":
+		*v = new(ProjectV2ItemsNodeDiscussionPoll)
+		return json.Unmarshal(b, *v)
+	case "DiscussionPollOption":
+		*v = new(ProjectV2ItemsNodeDiscussionPollOption)
+		return json.Unmarshal(b, *v)
+	case "DraftIssue":
+		*v = new(ProjectV2ItemsNodeDraftIssue)
+		return json.Unmarshal(b, *v)
+	case "Enterprise":
+		*v = new(ProjectV2ItemsNodeEnterprise)
+		return json.Unmarshal(b, *v)
+	case "EnterpriseAdministratorInvitation":
+		*v = new(ProjectV2ItemsNodeEnterpriseAdministratorInvitation)
+		return json.Unmarshal(b, *v)
+	case "EnterpriseIdentityProvider":
+		*v = new(ProjectV2ItemsNodeEnterpriseIdentityProvider)
+		return json.Unmarshal(b, *v)
+	case "EnterpriseMemberInvitation":
+		*v = new(ProjectV2ItemsNodeEnterpriseMemberInvitation)
+		return json.Unmarshal(b, *v)
+	case "EnterpriseRepositoryInfo":
+		*v = new(ProjectV2ItemsNodeEnterpriseRepositoryInfo)
+		return json.Unmarshal(b, *v)
+	case "EnterpriseServerInstallation":
+		*v = new(ProjectV2ItemsNodeEnterpriseServerInstallation)
+		return json.Unmarshal(b, *v)
+	case "EnterpriseServerUserAccount":
+		*v = new(ProjectV2ItemsNodeEnterpriseServerUserAccount)
+		return json.Unmarshal(b, *v)
+	case "EnterpriseServerUserAccountEmail":
+		*v = new(ProjectV2ItemsNodeEnterpriseServerUserAccountEmail)
+		return json.Unmarshal(b, *v)
+	case "EnterpriseServerUserAccountsUpload":
+		*v = new(ProjectV2ItemsNodeEnterpriseServerUserAccountsUpload)
+		return json.Unmarshal(b, *v)
+	case "EnterpriseUserAccount":
+		*v = new(ProjectV2ItemsNodeEnterpriseUserAccount)
+		return json.Unmarshal(b, *v)
+	case "Environment":
+		*v = new(ProjectV2ItemsNodeEnvironment)
+		return json.Unmarshal(b, *v)
+	case "ExternalIdentity":
+		*v = new(ProjectV2ItemsNodeExternalIdentity)
+		return json.Unmarshal(b, *v)
+	case "Gist":
+		*v = new(ProjectV2ItemsNodeGist)
+		return json.Unmarshal(b, *v)
+	case "GistComment":
+		*v = new(ProjectV2ItemsNodeGistComment)
+		return json.Unmarshal(b, *v)
+	case "HeadRefDeletedEvent":
+		*v = new(ProjectV2ItemsNodeHeadRefDeletedEvent)
+		return json.Unmarshal(b, *v)
+	case "HeadRefForcePushedEvent":
+		*v = new(ProjectV2ItemsNodeHeadRefForcePushedEvent)
+		return json.Unmarshal(b, *v)
+	case "HeadRefRestoredEvent":
+		*v = new(ProjectV2ItemsNodeHeadRefRestoredEvent)
+		return json.Unmarshal(b, *v)
+	case "IpAllowListEntry":
+		*v = new(ProjectV2ItemsNodeIpAllowListEntry)
+		return json.Unmarshal(b, *v)
+	case "Issue":
+		*v = new(ProjectV2ItemsNodeIssue)
+		return json.Unmarshal(b, *v)
+	case "IssueComment":
+		*v = new(ProjectV2ItemsNodeIssueComment)
+		return json.Unmarshal(b, *v)
+	case "IssueCommentPinnedEvent":
+		*v = new(ProjectV2ItemsNodeIssueCommentPinnedEvent)
+		return json.Unmarshal(b, *v)
+	case "IssueCommentUnpinnedEvent":
+		*v = new(ProjectV2ItemsNodeIssueCommentUnpinnedEvent)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldAddedEvent":
+		*v = new(ProjectV2ItemsNodeIssueFieldAddedEvent)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldChangedEvent":
+		*v = new(ProjectV2ItemsNodeIssueFieldChangedEvent)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldDate":
+		*v = new(ProjectV2ItemsNodeIssueFieldDate)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldDateValue":
+		*v = new(ProjectV2ItemsNodeIssueFieldDateValue)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldNumber":
+		*v = new(ProjectV2ItemsNodeIssueFieldNumber)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldNumberValue":
+		*v = new(ProjectV2ItemsNodeIssueFieldNumberValue)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldRemovedEvent":
+		*v = new(ProjectV2ItemsNodeIssueFieldRemovedEvent)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldSingleSelect":
+		*v = new(ProjectV2ItemsNodeIssueFieldSingleSelect)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldSingleSelectOption":
+		*v = new(ProjectV2ItemsNodeIssueFieldSingleSelectOption)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldSingleSelectValue":
+		*v = new(ProjectV2ItemsNodeIssueFieldSingleSelectValue)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldText":
+		*v = new(ProjectV2ItemsNodeIssueFieldText)
+		return json.Unmarshal(b, *v)
+	case "IssueFieldTextValue":
+		*v = new(ProjectV2ItemsNodeIssueFieldTextValue)
+		return json.Unmarshal(b, *v)
+	case "IssueType":
+		*v = new(ProjectV2ItemsNodeIssueType)
+		return json.Unmarshal(b, *v)
+	case "IssueTypeAddedEvent":
+		*v = new(ProjectV2ItemsNodeIssueTypeAddedEvent)
+		return json.Unmarshal(b, *v)
+	case "IssueTypeChangedEvent":
+		*v = new(ProjectV2ItemsNodeIssueTypeChangedEvent)
+		return json.Unmarshal(b, *v)
+	case "IssueTypeRemovedEvent":
+		*v = new(ProjectV2ItemsNodeIssueTypeRemovedEvent)
+		return json.Unmarshal(b, *v)
+	case "Label":
+		*v = new(ProjectV2ItemsNodeLabel)
+		return json.Unmarshal(b, *v)
+	case "LabeledEvent":
+		*v = new(ProjectV2ItemsNodeLabeledEvent)
+		return json.Unmarshal(b, *v)
+	case "Language":
+		*v = new(ProjectV2ItemsNodeLanguage)
+		return json.Unmarshal(b, *v)
+	case "License":
+		*v = new(ProjectV2ItemsNodeLicense)
+		return json.Unmarshal(b, *v)
+	case "LinkedBranch":
+		*v = new(ProjectV2ItemsNodeLinkedBranch)
+		return json.Unmarshal(b, *v)
+	case "LockedEvent":
+		*v = new(ProjectV2ItemsNodeLockedEvent)
+		return json.Unmarshal(b, *v)
+	case "Mannequin":
+		*v = new(ProjectV2ItemsNodeMannequin)
+		return json.Unmarshal(b, *v)
+	case "MarkedAsDuplicateEvent":
+		*v = new(ProjectV2ItemsNodeMarkedAsDuplicateEvent)
+		return json.Unmarshal(b, *v)
+	case "MarketplaceCategory":
+		*v = new(ProjectV2ItemsNodeMarketplaceCategory)
+		return json.Unmarshal(b, *v)
+	case "MarketplaceListing":
+		*v = new(ProjectV2ItemsNodeMarketplaceListing)
+		return json.Unmarshal(b, *v)
+	case "MemberFeatureRequestNotification":
+		*v = new(ProjectV2ItemsNodeMemberFeatureRequestNotification)
+		return json.Unmarshal(b, *v)
+	case "MembersCanDeleteReposClearAuditEntry":
+		*v = new(ProjectV2ItemsNodeMembersCanDeleteReposClearAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "MembersCanDeleteReposDisableAuditEntry":
+		*v = new(ProjectV2ItemsNodeMembersCanDeleteReposDisableAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "MembersCanDeleteReposEnableAuditEntry":
+		*v = new(ProjectV2ItemsNodeMembersCanDeleteReposEnableAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "MentionedEvent":
+		*v = new(ProjectV2ItemsNodeMentionedEvent)
+		return json.Unmarshal(b, *v)
+	case "MergeQueue":
+		*v = new(ProjectV2ItemsNodeMergeQueue)
+		return json.Unmarshal(b, *v)
+	case "MergeQueueEntry":
+		*v = new(ProjectV2ItemsNodeMergeQueueEntry)
+		return json.Unmarshal(b, *v)
+	case "MergedEvent":
+		*v = new(ProjectV2ItemsNodeMergedEvent)
+		return json.Unmarshal(b, *v)
+	case "MigrationSource":
+		*v = new(ProjectV2ItemsNodeMigrationSource)
+		return json.Unmarshal(b, *v)
+	case "Milestone":
+		*v = new(ProjectV2ItemsNodeMilestone)
+		return json.Unmarshal(b, *v)
+	case "MilestonedEvent":
+		*v = new(ProjectV2ItemsNodeMilestonedEvent)
+		return json.Unmarshal(b, *v)
+	case "MovedColumnsInProjectEvent":
+		*v = new(ProjectV2ItemsNodeMovedColumnsInProjectEvent)
+		return json.Unmarshal(b, *v)
+	case "OIDCProvider":
+		*v = new(ProjectV2ItemsNodeOIDCProvider)
+		return json.Unmarshal(b, *v)
+	case "OauthApplicationCreateAuditEntry":
+		*v = new(ProjectV2ItemsNodeOauthApplicationCreateAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgAddBillingManagerAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgAddBillingManagerAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgAddMemberAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgAddMemberAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgBlockUserAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgBlockUserAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgConfigDisableCollaboratorsOnlyAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgConfigDisableCollaboratorsOnlyAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgConfigEnableCollaboratorsOnlyAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgConfigEnableCollaboratorsOnlyAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgCreateAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgCreateAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgDisableOauthAppRestrictionsAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgDisableOauthAppRestrictionsAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgDisableSamlAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgDisableSamlAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgDisableTwoFactorRequirementAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgDisableTwoFactorRequirementAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgEnableOauthAppRestrictionsAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgEnableOauthAppRestrictionsAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgEnableSamlAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgEnableSamlAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgEnableTwoFactorRequirementAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgEnableTwoFactorRequirementAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgInviteMemberAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgInviteMemberAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgInviteToBusinessAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgInviteToBusinessAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgOauthAppAccessApprovedAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgOauthAppAccessApprovedAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgOauthAppAccessBlockedAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgOauthAppAccessBlockedAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgOauthAppAccessDeniedAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgOauthAppAccessDeniedAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgOauthAppAccessRequestedAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgOauthAppAccessRequestedAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgOauthAppAccessUnblockedAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgOauthAppAccessUnblockedAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgRemoveBillingManagerAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgRemoveBillingManagerAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgRemoveMemberAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgRemoveMemberAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgRemoveOutsideCollaboratorAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgRemoveOutsideCollaboratorAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgRestoreMemberAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgRestoreMemberAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgUnblockUserAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgUnblockUserAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgUpdateDefaultRepositoryPermissionAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgUpdateDefaultRepositoryPermissionAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgUpdateMemberAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgUpdateMemberAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgUpdateMemberRepositoryCreationPermissionAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgUpdateMemberRepositoryCreationPermissionAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "OrgUpdateMemberRepositoryInvitationPermissionAuditEntry":
+		*v = new(ProjectV2ItemsNodeOrgUpdateMemberRepositoryInvitationPermissionAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "Organization":
+		*v = new(ProjectV2ItemsNodeOrganization)
+		return json.Unmarshal(b, *v)
+	case "OrganizationIdentityProvider":
+		*v = new(ProjectV2ItemsNodeOrganizationIdentityProvider)
+		return json.Unmarshal(b, *v)
+	case "OrganizationInvitation":
+		*v = new(ProjectV2ItemsNodeOrganizationInvitation)
+		return json.Unmarshal(b, *v)
+	case "OrganizationMigration":
+		*v = new(ProjectV2ItemsNodeOrganizationMigration)
+		return json.Unmarshal(b, *v)
+	case "Package":
+		*v = new(ProjectV2ItemsNodePackage)
+		return json.Unmarshal(b, *v)
+	case "PackageFile":
+		*v = new(ProjectV2ItemsNodePackageFile)
+		return json.Unmarshal(b, *v)
+	case "PackageTag":
+		*v = new(ProjectV2ItemsNodePackageTag)
+		return json.Unmarshal(b, *v)
+	case "PackageVersion":
+		*v = new(ProjectV2ItemsNodePackageVersion)
+		return json.Unmarshal(b, *v)
+	case "ParentIssueAddedEvent":
+		*v = new(ProjectV2ItemsNodeParentIssueAddedEvent)
+		return json.Unmarshal(b, *v)
+	case "ParentIssueRemovedEvent":
+		*v = new(ProjectV2ItemsNodeParentIssueRemovedEvent)
+		return json.Unmarshal(b, *v)
+	case "PinnedDiscussion":
+		*v = new(ProjectV2ItemsNodePinnedDiscussion)
+		return json.Unmarshal(b, *v)
+	case "PinnedEnvironment":
+		*v = new(ProjectV2ItemsNodePinnedEnvironment)
+		return json.Unmarshal(b, *v)
+	case "PinnedEvent":
+		*v = new(ProjectV2ItemsNodePinnedEvent)
+		return json.Unmarshal(b, *v)
+	case "PinnedIssue":
+		*v = new(ProjectV2ItemsNodePinnedIssue)
+		return json.Unmarshal(b, *v)
+	case "PinnedIssueComment":
+		*v = new(ProjectV2ItemsNodePinnedIssueComment)
+		return json.Unmarshal(b, *v)
+	case "PrivateRepositoryForkingDisableAuditEntry":
+		*v = new(ProjectV2ItemsNodePrivateRepositoryForkingDisableAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "PrivateRepositoryForkingEnableAuditEntry":
+		*v = new(ProjectV2ItemsNodePrivateRepositoryForkingEnableAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "Project":
+		*v = new(ProjectV2ItemsNodeProject)
+		return json.Unmarshal(b, *v)
+	case "ProjectCard":
+		*v = new(ProjectV2ItemsNodeProjectCard)
+		return json.Unmarshal(b, *v)
+	case "ProjectColumn":
+		*v = new(ProjectV2ItemsNodeProjectColumn)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2":
+		*v = new(ProjectV2ItemsNodeProjectV2)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2Field":
+		*v = new(ProjectV2ItemsNodeProjectV2Field)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2Item":
+		*v = new(ProjectV2ItemsNodeProjectV2Item)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemFieldDateValue":
+		*v = new(ProjectV2ItemsNodeProjectV2ItemFieldDateValue)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemFieldIterationValue":
+		*v = new(ProjectV2ItemsNodeProjectV2ItemFieldIterationValue)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemFieldNumberValue":
+		*v = new(ProjectV2ItemsNodeProjectV2ItemFieldNumberValue)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemFieldSingleSelectValue":
+		*v = new(ProjectV2ItemsNodeProjectV2ItemFieldSingleSelectValue)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemFieldTextValue":
+		*v = new(ProjectV2ItemsNodeProjectV2ItemFieldTextValue)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2ItemStatusChangedEvent":
+		*v = new(ProjectV2ItemsNodeProjectV2ItemStatusChangedEvent)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2IterationField":
+		*v = new(ProjectV2ItemsNodeProjectV2IterationField)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2SingleSelectField":
+		*v = new(ProjectV2ItemsNodeProjectV2SingleSelectField)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2StatusUpdate":
+		*v = new(ProjectV2ItemsNodeProjectV2StatusUpdate)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2View":
+		*v = new(ProjectV2ItemsNodeProjectV2View)
+		return json.Unmarshal(b, *v)
+	case "ProjectV2Workflow":
+		*v = new(ProjectV2ItemsNodeProjectV2Workflow)
+		return json.Unmarshal(b, *v)
+	case "PublicKey":
+		*v = new(ProjectV2ItemsNodePublicKey)
+		return json.Unmarshal(b, *v)
+	case "PullRequest":
+		*v = new(ProjectV2ItemsNodePullRequest)
+		return json.Unmarshal(b, *v)
+	case "PullRequestCommit":
+		*v = new(ProjectV2ItemsNodePullRequestCommit)
+		return json.Unmarshal(b, *v)
+	case "PullRequestCommitCommentThread":
+		*v = new(ProjectV2ItemsNodePullRequestCommitCommentThread)
+		return json.Unmarshal(b, *v)
+	case "PullRequestReview":
+		*v = new(ProjectV2ItemsNodePullRequestReview)
+		return json.Unmarshal(b, *v)
+	case "PullRequestReviewComment":
+		*v = new(ProjectV2ItemsNodePullRequestReviewComment)
+		return json.Unmarshal(b, *v)
+	case "PullRequestReviewThread":
+		*v = new(ProjectV2ItemsNodePullRequestReviewThread)
+		return json.Unmarshal(b, *v)
+	case "PullRequestThread":
+		*v = new(ProjectV2ItemsNodePullRequestThread)
+		return json.Unmarshal(b, *v)
+	case "Push":
+		*v = new(ProjectV2ItemsNodePush)
+		return json.Unmarshal(b, *v)
+	case "PushAllowance":
+		*v = new(ProjectV2ItemsNodePushAllowance)
+		return json.Unmarshal(b, *v)
+	case "Query":
+		*v = new(ProjectV2ItemsNodeQuery)
+		return json.Unmarshal(b, *v)
+	case "Reaction":
+		*v = new(ProjectV2ItemsNodeReaction)
+		return json.Unmarshal(b, *v)
+	case "ReadyForReviewEvent":
+		*v = new(ProjectV2ItemsNodeReadyForReviewEvent)
+		return json.Unmarshal(b, *v)
+	case "Ref":
+		*v = new(ProjectV2ItemsNodeRef)
+		return json.Unmarshal(b, *v)
+	case "ReferencedEvent":
+		*v = new(ProjectV2ItemsNodeReferencedEvent)
+		return json.Unmarshal(b, *v)
+	case "Release":
+		*v = new(ProjectV2ItemsNodeRelease)
+		return json.Unmarshal(b, *v)
+	case "ReleaseAsset":
+		*v = new(ProjectV2ItemsNodeReleaseAsset)
+		return json.Unmarshal(b, *v)
+	case "RemovedFromMergeQueueEvent":
+		*v = new(ProjectV2ItemsNodeRemovedFromMergeQueueEvent)
+		return json.Unmarshal(b, *v)
+	case "RemovedFromProjectEvent":
+		*v = new(ProjectV2ItemsNodeRemovedFromProjectEvent)
+		return json.Unmarshal(b, *v)
+	case "RemovedFromProjectV2Event":
+		*v = new(ProjectV2ItemsNodeRemovedFromProjectV2Event)
+		return json.Unmarshal(b, *v)
+	case "RenamedTitleEvent":
+		*v = new(ProjectV2ItemsNodeRenamedTitleEvent)
+		return json.Unmarshal(b, *v)
+	case "ReopenedEvent":
+		*v = new(ProjectV2ItemsNodeReopenedEvent)
+		return json.Unmarshal(b, *v)
+	case "RepoAccessAuditEntry":
+		*v = new(ProjectV2ItemsNodeRepoAccessAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoAddMemberAuditEntry":
+		*v = new(ProjectV2ItemsNodeRepoAddMemberAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoAddTopicAuditEntry":
+		*v = new(ProjectV2ItemsNodeRepoAddTopicAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoArchivedAuditEntry":
+		*v = new(ProjectV2ItemsNodeRepoArchivedAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoChangeMergeSettingAuditEntry":
+		*v = new(ProjectV2ItemsNodeRepoChangeMergeSettingAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoConfigDisableAnonymousGitAccessAuditEntry":
+		*v = new(ProjectV2ItemsNodeRepoConfigDisableAnonymousGitAccessAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoConfigDisableCollaboratorsOnlyAuditEntry":
+		*v = new(ProjectV2ItemsNodeRepoConfigDisableCollaboratorsOnlyAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoConfigDisableContributorsOnlyAuditEntry":
+		*v = new(ProjectV2ItemsNodeRepoConfigDisableContributorsOnlyAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoConfigDisableSockpuppetDisallowedAuditEntry":
+		*v = new(ProjectV2ItemsNodeRepoConfigDisableSockpuppetDisallowedAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoConfigEnableAnonymousGitAccessAuditEntry":
+		*v = new(ProjectV2ItemsNodeRepoConfigEnableAnonymousGitAccessAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoConfigEnableCollaboratorsOnlyAuditEntry":
+		*v = new(ProjectV2ItemsNodeRepoConfigEnableCollaboratorsOnlyAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoConfigEnableContributorsOnlyAuditEntry":
+		*v = new(ProjectV2ItemsNodeRepoConfigEnableContributorsOnlyAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoConfigEnableSockpuppetDisallowedAuditEntry":
+		*v = new(ProjectV2ItemsNodeRepoConfigEnableSockpuppetDisallowedAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoConfigLockAnonymousGitAccessAuditEntry":
+		*v = new(ProjectV2ItemsNodeRepoConfigLockAnonymousGitAccessAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoConfigUnlockAnonymousGitAccessAuditEntry":
+		*v = new(ProjectV2ItemsNodeRepoConfigUnlockAnonymousGitAccessAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoCreateAuditEntry":
+		*v = new(ProjectV2ItemsNodeRepoCreateAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoDestroyAuditEntry":
+		*v = new(ProjectV2ItemsNodeRepoDestroyAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoRemoveMemberAuditEntry":
+		*v = new(ProjectV2ItemsNodeRepoRemoveMemberAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepoRemoveTopicAuditEntry":
+		*v = new(ProjectV2ItemsNodeRepoRemoveTopicAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "Repository":
+		*v = new(ProjectV2ItemsNodeRepository)
+		return json.Unmarshal(b, *v)
+	case "RepositoryCustomProperty":
+		*v = new(ProjectV2ItemsNodeRepositoryCustomProperty)
+		return json.Unmarshal(b, *v)
+	case "RepositoryInvitation":
+		*v = new(ProjectV2ItemsNodeRepositoryInvitation)
+		return json.Unmarshal(b, *v)
+	case "RepositoryMigration":
+		*v = new(ProjectV2ItemsNodeRepositoryMigration)
+		return json.Unmarshal(b, *v)
+	case "RepositoryRule":
+		*v = new(ProjectV2ItemsNodeRepositoryRule)
+		return json.Unmarshal(b, *v)
+	case "RepositoryRuleset":
+		*v = new(ProjectV2ItemsNodeRepositoryRuleset)
+		return json.Unmarshal(b, *v)
+	case "RepositoryRulesetBypassActor":
+		*v = new(ProjectV2ItemsNodeRepositoryRulesetBypassActor)
+		return json.Unmarshal(b, *v)
+	case "RepositoryTopic":
+		*v = new(ProjectV2ItemsNodeRepositoryTopic)
+		return json.Unmarshal(b, *v)
+	case "RepositoryVisibilityChangeDisableAuditEntry":
+		*v = new(ProjectV2ItemsNodeRepositoryVisibilityChangeDisableAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepositoryVisibilityChangeEnableAuditEntry":
+		*v = new(ProjectV2ItemsNodeRepositoryVisibilityChangeEnableAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "RepositoryVulnerabilityAlert":
+		*v = new(ProjectV2ItemsNodeRepositoryVulnerabilityAlert)
+		return json.Unmarshal(b, *v)
+	case "ReviewDismissalAllowance":
+		*v = new(ProjectV2ItemsNodeReviewDismissalAllowance)
+		return json.Unmarshal(b, *v)
+	case "ReviewDismissedEvent":
+		*v = new(ProjectV2ItemsNodeReviewDismissedEvent)
+		return json.Unmarshal(b, *v)
+	case "ReviewRequest":
+		*v = new(ProjectV2ItemsNodeReviewRequest)
+		return json.Unmarshal(b, *v)
+	case "ReviewRequestRemovedEvent":
+		*v = new(ProjectV2ItemsNodeReviewRequestRemovedEvent)
+		return json.Unmarshal(b, *v)
+	case "ReviewRequestedEvent":
+		*v = new(ProjectV2ItemsNodeReviewRequestedEvent)
+		return json.Unmarshal(b, *v)
+	case "SavedReply":
+		*v = new(ProjectV2ItemsNodeSavedReply)
+		return json.Unmarshal(b, *v)
+	case "SecurityAdvisory":
+		*v = new(ProjectV2ItemsNodeSecurityAdvisory)
+		return json.Unmarshal(b, *v)
+	case "SponsorsActivity":
+		*v = new(ProjectV2ItemsNodeSponsorsActivity)
+		return json.Unmarshal(b, *v)
+	case "SponsorsListing":
+		*v = new(ProjectV2ItemsNodeSponsorsListing)
+		return json.Unmarshal(b, *v)
+	case "SponsorsListingFeaturedItem":
+		*v = new(ProjectV2ItemsNodeSponsorsListingFeaturedItem)
+		return json.Unmarshal(b, *v)
+	case "SponsorsTier":
+		*v = new(ProjectV2ItemsNodeSponsorsTier)
+		return json.Unmarshal(b, *v)
+	case "Sponsorship":
+		*v = new(ProjectV2ItemsNodeSponsorship)
+		return json.Unmarshal(b, *v)
+	case "SponsorshipNewsletter":
+		*v = new(ProjectV2ItemsNodeSponsorshipNewsletter)
+		return json.Unmarshal(b, *v)
+	case "Status":
+		*v = new(ProjectV2ItemsNodeStatus)
+		return json.Unmarshal(b, *v)
+	case "StatusCheckRollup":
+		*v = new(ProjectV2ItemsNodeStatusCheckRollup)
+		return json.Unmarshal(b, *v)
+	case "StatusContext":
+		*v = new(ProjectV2ItemsNodeStatusContext)
+		return json.Unmarshal(b, *v)
+	case "SubIssueAddedEvent":
+		*v = new(ProjectV2ItemsNodeSubIssueAddedEvent)
+		return json.Unmarshal(b, *v)
+	case "SubIssueRemovedEvent":
+		*v = new(ProjectV2ItemsNodeSubIssueRemovedEvent)
+		return json.Unmarshal(b, *v)
+	case "SubscribedEvent":
+		*v = new(ProjectV2ItemsNodeSubscribedEvent)
+		return json.Unmarshal(b, *v)
+	case "Tag":
+		*v = new(ProjectV2ItemsNodeTag)
+		return json.Unmarshal(b, *v)
+	case "Team":
+		*v = new(ProjectV2ItemsNodeTeam)
+		return json.Unmarshal(b, *v)
+	case "TeamAddMemberAuditEntry":
+		*v = new(ProjectV2ItemsNodeTeamAddMemberAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "TeamAddRepositoryAuditEntry":
+		*v = new(ProjectV2ItemsNodeTeamAddRepositoryAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "TeamChangeParentTeamAuditEntry":
+		*v = new(ProjectV2ItemsNodeTeamChangeParentTeamAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "TeamRemoveMemberAuditEntry":
+		*v = new(ProjectV2ItemsNodeTeamRemoveMemberAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "TeamRemoveRepositoryAuditEntry":
+		*v = new(ProjectV2ItemsNodeTeamRemoveRepositoryAuditEntry)
+		return json.Unmarshal(b, *v)
+	case "Topic":
+		*v = new(ProjectV2ItemsNodeTopic)
+		return json.Unmarshal(b, *v)
+	case "TransferredEvent":
+		*v = new(ProjectV2ItemsNodeTransferredEvent)
+		return json.Unmarshal(b, *v)
+	case "Tree":
+		*v = new(ProjectV2ItemsNodeTree)
+		return json.Unmarshal(b, *v)
+	case "UnassignedEvent":
+		*v = new(ProjectV2ItemsNodeUnassignedEvent)
+		return json.Unmarshal(b, *v)
+	case "UnlabeledEvent":
+		*v = new(ProjectV2ItemsNodeUnlabeledEvent)
+		return json.Unmarshal(b, *v)
+	case "UnlockedEvent":
+		*v = new(ProjectV2ItemsNodeUnlockedEvent)
+		return json.Unmarshal(b, *v)
+	case "UnmarkedAsDuplicateEvent":
+		*v = new(ProjectV2ItemsNodeUnmarkedAsDuplicateEvent)
+		return json.Unmarshal(b, *v)
+	case "UnpinnedEvent":
+		*v = new(ProjectV2ItemsNodeUnpinnedEvent)
+		return json.Unmarshal(b, *v)
+	case "UnsubscribedEvent":
+		*v = new(ProjectV2ItemsNodeUnsubscribedEvent)
+		return json.Unmarshal(b, *v)
+	case "User":
+		*v = new(ProjectV2ItemsNodeUser)
+		return json.Unmarshal(b, *v)
+	case "UserBlockedEvent":
+		*v = new(ProjectV2ItemsNodeUserBlockedEvent)
+		return json.Unmarshal(b, *v)
+	case "UserContentEdit":
+		*v = new(ProjectV2ItemsNodeUserContentEdit)
+		return json.Unmarshal(b, *v)
+	case "UserList":
+		*v = new(ProjectV2ItemsNodeUserList)
+		return json.Unmarshal(b, *v)
+	case "UserNamespaceRepository":
+		*v = new(ProjectV2ItemsNodeUserNamespaceRepository)
+		return json.Unmarshal(b, *v)
+	case "UserStatus":
+		*v = new(ProjectV2ItemsNodeUserStatus)
+		return json.Unmarshal(b, *v)
+	case "VerifiableDomain":
+		*v = new(ProjectV2ItemsNodeVerifiableDomain)
+		return json.Unmarshal(b, *v)
+	case "Workflow":
+		*v = new(ProjectV2ItemsNodeWorkflow)
+		return json.Unmarshal(b, *v)
+	case "WorkflowRun":
+		*v = new(ProjectV2ItemsNodeWorkflowRun)
+		return json.Unmarshal(b, *v)
+	case "WorkflowRunFile":
+		*v = new(ProjectV2ItemsNodeWorkflowRunFile)
+		return json.Unmarshal(b, *v)
+	case "":
+		return fmt.Errorf(
+			"response was missing Node.__typename")
+	default:
+		return fmt.Errorf(
+			`unexpected concrete type for ProjectV2ItemsNode: "%v"`, tn.TypeName)
+	}
+}
+
+func __marshalProjectV2ItemsNode(v *ProjectV2ItemsNode) ([]byte, error) {
+
+	var typename string
+	switch v := (*v).(type) {
+	case *ProjectV2ItemsNodeAddedToMergeQueueEvent:
+		typename = "AddedToMergeQueueEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeAddedToMergeQueueEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeAddedToProjectEvent:
+		typename = "AddedToProjectEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeAddedToProjectEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeAddedToProjectV2Event:
+		typename = "AddedToProjectV2Event"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeAddedToProjectV2Event
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeApp:
+		typename = "App"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeApp
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeAssignedEvent:
+		typename = "AssignedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeAssignedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeAutoMergeDisabledEvent:
+		typename = "AutoMergeDisabledEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeAutoMergeDisabledEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeAutoMergeEnabledEvent:
+		typename = "AutoMergeEnabledEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeAutoMergeEnabledEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeAutoRebaseEnabledEvent:
+		typename = "AutoRebaseEnabledEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeAutoRebaseEnabledEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeAutoSquashEnabledEvent:
+		typename = "AutoSquashEnabledEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeAutoSquashEnabledEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeAutomaticBaseChangeFailedEvent:
+		typename = "AutomaticBaseChangeFailedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeAutomaticBaseChangeFailedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeAutomaticBaseChangeSucceededEvent:
+		typename = "AutomaticBaseChangeSucceededEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeAutomaticBaseChangeSucceededEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeBaseRefChangedEvent:
+		typename = "BaseRefChangedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeBaseRefChangedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeBaseRefDeletedEvent:
+		typename = "BaseRefDeletedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeBaseRefDeletedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeBaseRefForcePushedEvent:
+		typename = "BaseRefForcePushedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeBaseRefForcePushedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeBlob:
+		typename = "Blob"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeBlob
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeBlockedByAddedEvent:
+		typename = "BlockedByAddedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeBlockedByAddedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeBlockedByRemovedEvent:
+		typename = "BlockedByRemovedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeBlockedByRemovedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeBlockingAddedEvent:
+		typename = "BlockingAddedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeBlockingAddedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeBlockingRemovedEvent:
+		typename = "BlockingRemovedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeBlockingRemovedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeBot:
+		typename = "Bot"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeBot
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeBranchProtectionRule:
+		typename = "BranchProtectionRule"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeBranchProtectionRule
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeBypassForcePushAllowance:
+		typename = "BypassForcePushAllowance"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeBypassForcePushAllowance
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeBypassPullRequestAllowance:
+		typename = "BypassPullRequestAllowance"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeBypassPullRequestAllowance
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeCWE:
+		typename = "CWE"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeCWE
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeCheckRun:
+		typename = "CheckRun"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeCheckRun
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeCheckSuite:
+		typename = "CheckSuite"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeCheckSuite
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeClosedEvent:
+		typename = "ClosedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeClosedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeCodeOfConduct:
+		typename = "CodeOfConduct"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeCodeOfConduct
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeCommentDeletedEvent:
+		typename = "CommentDeletedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeCommentDeletedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeCommit:
+		typename = "Commit"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeCommit
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeCommitComment:
+		typename = "CommitComment"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeCommitComment
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeCommitCommentThread:
+		typename = "CommitCommentThread"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeCommitCommentThread
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeComparison:
+		typename = "Comparison"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeComparison
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeConnectedEvent:
+		typename = "ConnectedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeConnectedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeConvertToDraftEvent:
+		typename = "ConvertToDraftEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeConvertToDraftEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeConvertedFromDraftEvent:
+		typename = "ConvertedFromDraftEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeConvertedFromDraftEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeConvertedNoteToIssueEvent:
+		typename = "ConvertedNoteToIssueEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeConvertedNoteToIssueEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeConvertedToDiscussionEvent:
+		typename = "ConvertedToDiscussionEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeConvertedToDiscussionEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeCrossReferencedEvent:
+		typename = "CrossReferencedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeCrossReferencedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeDemilestonedEvent:
+		typename = "DemilestonedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeDemilestonedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeDependencyGraphManifest:
+		typename = "DependencyGraphManifest"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeDependencyGraphManifest
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeDeployKey:
+		typename = "DeployKey"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeDeployKey
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeDeployedEvent:
+		typename = "DeployedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeDeployedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeDeployment:
+		typename = "Deployment"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeDeployment
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeDeploymentEnvironmentChangedEvent:
+		typename = "DeploymentEnvironmentChangedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeDeploymentEnvironmentChangedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeDeploymentReview:
+		typename = "DeploymentReview"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeDeploymentReview
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeDeploymentStatus:
+		typename = "DeploymentStatus"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeDeploymentStatus
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeDisconnectedEvent:
+		typename = "DisconnectedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeDisconnectedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeDiscussion:
+		typename = "Discussion"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeDiscussion
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeDiscussionCategory:
+		typename = "DiscussionCategory"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeDiscussionCategory
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeDiscussionComment:
+		typename = "DiscussionComment"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeDiscussionComment
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeDiscussionPoll:
+		typename = "DiscussionPoll"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeDiscussionPoll
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeDiscussionPollOption:
+		typename = "DiscussionPollOption"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeDiscussionPollOption
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeDraftIssue:
+		typename = "DraftIssue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeDraftIssue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeEnterprise:
+		typename = "Enterprise"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeEnterprise
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeEnterpriseAdministratorInvitation:
+		typename = "EnterpriseAdministratorInvitation"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeEnterpriseAdministratorInvitation
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeEnterpriseIdentityProvider:
+		typename = "EnterpriseIdentityProvider"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeEnterpriseIdentityProvider
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeEnterpriseMemberInvitation:
+		typename = "EnterpriseMemberInvitation"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeEnterpriseMemberInvitation
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeEnterpriseRepositoryInfo:
+		typename = "EnterpriseRepositoryInfo"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeEnterpriseRepositoryInfo
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeEnterpriseServerInstallation:
+		typename = "EnterpriseServerInstallation"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeEnterpriseServerInstallation
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeEnterpriseServerUserAccount:
+		typename = "EnterpriseServerUserAccount"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeEnterpriseServerUserAccount
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeEnterpriseServerUserAccountEmail:
+		typename = "EnterpriseServerUserAccountEmail"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeEnterpriseServerUserAccountEmail
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeEnterpriseServerUserAccountsUpload:
+		typename = "EnterpriseServerUserAccountsUpload"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeEnterpriseServerUserAccountsUpload
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeEnterpriseUserAccount:
+		typename = "EnterpriseUserAccount"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeEnterpriseUserAccount
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeEnvironment:
+		typename = "Environment"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeEnvironment
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeExternalIdentity:
+		typename = "ExternalIdentity"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeExternalIdentity
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeGist:
+		typename = "Gist"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeGist
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeGistComment:
+		typename = "GistComment"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeGistComment
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeHeadRefDeletedEvent:
+		typename = "HeadRefDeletedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeHeadRefDeletedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeHeadRefForcePushedEvent:
+		typename = "HeadRefForcePushedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeHeadRefForcePushedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeHeadRefRestoredEvent:
+		typename = "HeadRefRestoredEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeHeadRefRestoredEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeIpAllowListEntry:
+		typename = "IpAllowListEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeIpAllowListEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeIssue:
+		typename = "Issue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeIssue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeIssueComment:
+		typename = "IssueComment"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeIssueComment
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeIssueCommentPinnedEvent:
+		typename = "IssueCommentPinnedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeIssueCommentPinnedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeIssueCommentUnpinnedEvent:
+		typename = "IssueCommentUnpinnedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeIssueCommentUnpinnedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeIssueFieldAddedEvent:
+		typename = "IssueFieldAddedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeIssueFieldAddedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeIssueFieldChangedEvent:
+		typename = "IssueFieldChangedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeIssueFieldChangedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeIssueFieldDate:
+		typename = "IssueFieldDate"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeIssueFieldDate
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeIssueFieldDateValue:
+		typename = "IssueFieldDateValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeIssueFieldDateValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeIssueFieldNumber:
+		typename = "IssueFieldNumber"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeIssueFieldNumber
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeIssueFieldNumberValue:
+		typename = "IssueFieldNumberValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeIssueFieldNumberValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeIssueFieldRemovedEvent:
+		typename = "IssueFieldRemovedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeIssueFieldRemovedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeIssueFieldSingleSelect:
+		typename = "IssueFieldSingleSelect"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeIssueFieldSingleSelect
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeIssueFieldSingleSelectOption:
+		typename = "IssueFieldSingleSelectOption"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeIssueFieldSingleSelectOption
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeIssueFieldSingleSelectValue:
+		typename = "IssueFieldSingleSelectValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeIssueFieldSingleSelectValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeIssueFieldText:
+		typename = "IssueFieldText"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeIssueFieldText
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeIssueFieldTextValue:
+		typename = "IssueFieldTextValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeIssueFieldTextValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeIssueType:
+		typename = "IssueType"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeIssueType
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeIssueTypeAddedEvent:
+		typename = "IssueTypeAddedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeIssueTypeAddedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeIssueTypeChangedEvent:
+		typename = "IssueTypeChangedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeIssueTypeChangedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeIssueTypeRemovedEvent:
+		typename = "IssueTypeRemovedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeIssueTypeRemovedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeLabel:
+		typename = "Label"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeLabel
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeLabeledEvent:
+		typename = "LabeledEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeLabeledEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeLanguage:
+		typename = "Language"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeLanguage
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeLicense:
+		typename = "License"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeLicense
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeLinkedBranch:
+		typename = "LinkedBranch"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeLinkedBranch
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeLockedEvent:
+		typename = "LockedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeLockedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeMannequin:
+		typename = "Mannequin"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeMannequin
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeMarkedAsDuplicateEvent:
+		typename = "MarkedAsDuplicateEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeMarkedAsDuplicateEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeMarketplaceCategory:
+		typename = "MarketplaceCategory"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeMarketplaceCategory
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeMarketplaceListing:
+		typename = "MarketplaceListing"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeMarketplaceListing
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeMemberFeatureRequestNotification:
+		typename = "MemberFeatureRequestNotification"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeMemberFeatureRequestNotification
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeMembersCanDeleteReposClearAuditEntry:
+		typename = "MembersCanDeleteReposClearAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeMembersCanDeleteReposClearAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeMembersCanDeleteReposDisableAuditEntry:
+		typename = "MembersCanDeleteReposDisableAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeMembersCanDeleteReposDisableAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeMembersCanDeleteReposEnableAuditEntry:
+		typename = "MembersCanDeleteReposEnableAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeMembersCanDeleteReposEnableAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeMentionedEvent:
+		typename = "MentionedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeMentionedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeMergeQueue:
+		typename = "MergeQueue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeMergeQueue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeMergeQueueEntry:
+		typename = "MergeQueueEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeMergeQueueEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeMergedEvent:
+		typename = "MergedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeMergedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeMigrationSource:
+		typename = "MigrationSource"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeMigrationSource
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeMilestone:
+		typename = "Milestone"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeMilestone
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeMilestonedEvent:
+		typename = "MilestonedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeMilestonedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeMovedColumnsInProjectEvent:
+		typename = "MovedColumnsInProjectEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeMovedColumnsInProjectEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOIDCProvider:
+		typename = "OIDCProvider"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOIDCProvider
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOauthApplicationCreateAuditEntry:
+		typename = "OauthApplicationCreateAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOauthApplicationCreateAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgAddBillingManagerAuditEntry:
+		typename = "OrgAddBillingManagerAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgAddBillingManagerAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgAddMemberAuditEntry:
+		typename = "OrgAddMemberAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgAddMemberAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgBlockUserAuditEntry:
+		typename = "OrgBlockUserAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgBlockUserAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgConfigDisableCollaboratorsOnlyAuditEntry:
+		typename = "OrgConfigDisableCollaboratorsOnlyAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgConfigDisableCollaboratorsOnlyAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgConfigEnableCollaboratorsOnlyAuditEntry:
+		typename = "OrgConfigEnableCollaboratorsOnlyAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgConfigEnableCollaboratorsOnlyAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgCreateAuditEntry:
+		typename = "OrgCreateAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgCreateAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgDisableOauthAppRestrictionsAuditEntry:
+		typename = "OrgDisableOauthAppRestrictionsAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgDisableOauthAppRestrictionsAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgDisableSamlAuditEntry:
+		typename = "OrgDisableSamlAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgDisableSamlAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgDisableTwoFactorRequirementAuditEntry:
+		typename = "OrgDisableTwoFactorRequirementAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgDisableTwoFactorRequirementAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgEnableOauthAppRestrictionsAuditEntry:
+		typename = "OrgEnableOauthAppRestrictionsAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgEnableOauthAppRestrictionsAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgEnableSamlAuditEntry:
+		typename = "OrgEnableSamlAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgEnableSamlAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgEnableTwoFactorRequirementAuditEntry:
+		typename = "OrgEnableTwoFactorRequirementAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgEnableTwoFactorRequirementAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgInviteMemberAuditEntry:
+		typename = "OrgInviteMemberAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgInviteMemberAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgInviteToBusinessAuditEntry:
+		typename = "OrgInviteToBusinessAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgInviteToBusinessAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgOauthAppAccessApprovedAuditEntry:
+		typename = "OrgOauthAppAccessApprovedAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgOauthAppAccessApprovedAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgOauthAppAccessBlockedAuditEntry:
+		typename = "OrgOauthAppAccessBlockedAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgOauthAppAccessBlockedAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgOauthAppAccessDeniedAuditEntry:
+		typename = "OrgOauthAppAccessDeniedAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgOauthAppAccessDeniedAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgOauthAppAccessRequestedAuditEntry:
+		typename = "OrgOauthAppAccessRequestedAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgOauthAppAccessRequestedAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgOauthAppAccessUnblockedAuditEntry:
+		typename = "OrgOauthAppAccessUnblockedAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgOauthAppAccessUnblockedAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgRemoveBillingManagerAuditEntry:
+		typename = "OrgRemoveBillingManagerAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgRemoveBillingManagerAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgRemoveMemberAuditEntry:
+		typename = "OrgRemoveMemberAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgRemoveMemberAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgRemoveOutsideCollaboratorAuditEntry:
+		typename = "OrgRemoveOutsideCollaboratorAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgRemoveOutsideCollaboratorAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgRestoreMemberAuditEntry:
+		typename = "OrgRestoreMemberAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgRestoreMemberAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgUnblockUserAuditEntry:
+		typename = "OrgUnblockUserAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgUnblockUserAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgUpdateDefaultRepositoryPermissionAuditEntry:
+		typename = "OrgUpdateDefaultRepositoryPermissionAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgUpdateDefaultRepositoryPermissionAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgUpdateMemberAuditEntry:
+		typename = "OrgUpdateMemberAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgUpdateMemberAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgUpdateMemberRepositoryCreationPermissionAuditEntry:
+		typename = "OrgUpdateMemberRepositoryCreationPermissionAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgUpdateMemberRepositoryCreationPermissionAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrgUpdateMemberRepositoryInvitationPermissionAuditEntry:
+		typename = "OrgUpdateMemberRepositoryInvitationPermissionAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrgUpdateMemberRepositoryInvitationPermissionAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrganization:
+		typename = "Organization"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrganization
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrganizationIdentityProvider:
+		typename = "OrganizationIdentityProvider"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrganizationIdentityProvider
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrganizationInvitation:
+		typename = "OrganizationInvitation"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrganizationInvitation
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeOrganizationMigration:
+		typename = "OrganizationMigration"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeOrganizationMigration
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodePackage:
+		typename = "Package"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodePackage
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodePackageFile:
+		typename = "PackageFile"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodePackageFile
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodePackageTag:
+		typename = "PackageTag"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodePackageTag
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodePackageVersion:
+		typename = "PackageVersion"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodePackageVersion
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeParentIssueAddedEvent:
+		typename = "ParentIssueAddedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeParentIssueAddedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeParentIssueRemovedEvent:
+		typename = "ParentIssueRemovedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeParentIssueRemovedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodePinnedDiscussion:
+		typename = "PinnedDiscussion"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodePinnedDiscussion
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodePinnedEnvironment:
+		typename = "PinnedEnvironment"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodePinnedEnvironment
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodePinnedEvent:
+		typename = "PinnedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodePinnedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodePinnedIssue:
+		typename = "PinnedIssue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodePinnedIssue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodePinnedIssueComment:
+		typename = "PinnedIssueComment"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodePinnedIssueComment
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodePrivateRepositoryForkingDisableAuditEntry:
+		typename = "PrivateRepositoryForkingDisableAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodePrivateRepositoryForkingDisableAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodePrivateRepositoryForkingEnableAuditEntry:
+		typename = "PrivateRepositoryForkingEnableAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodePrivateRepositoryForkingEnableAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeProject:
+		typename = "Project"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeProject
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeProjectCard:
+		typename = "ProjectCard"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeProjectCard
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeProjectColumn:
+		typename = "ProjectColumn"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeProjectColumn
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeProjectV2:
+		typename = "ProjectV2"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeProjectV2
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeProjectV2Field:
+		typename = "ProjectV2Field"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeProjectV2Field
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeProjectV2Item:
+		typename = "ProjectV2Item"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeProjectV2Item
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeProjectV2ItemFieldDateValue:
+		typename = "ProjectV2ItemFieldDateValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeProjectV2ItemFieldDateValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeProjectV2ItemFieldIterationValue:
+		typename = "ProjectV2ItemFieldIterationValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeProjectV2ItemFieldIterationValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeProjectV2ItemFieldNumberValue:
+		typename = "ProjectV2ItemFieldNumberValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeProjectV2ItemFieldNumberValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeProjectV2ItemFieldSingleSelectValue:
+		typename = "ProjectV2ItemFieldSingleSelectValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeProjectV2ItemFieldSingleSelectValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeProjectV2ItemFieldTextValue:
+		typename = "ProjectV2ItemFieldTextValue"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeProjectV2ItemFieldTextValue
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeProjectV2ItemStatusChangedEvent:
+		typename = "ProjectV2ItemStatusChangedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeProjectV2ItemStatusChangedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeProjectV2IterationField:
+		typename = "ProjectV2IterationField"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeProjectV2IterationField
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeProjectV2SingleSelectField:
+		typename = "ProjectV2SingleSelectField"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeProjectV2SingleSelectField
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeProjectV2StatusUpdate:
+		typename = "ProjectV2StatusUpdate"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeProjectV2StatusUpdate
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeProjectV2View:
+		typename = "ProjectV2View"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeProjectV2View
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeProjectV2Workflow:
+		typename = "ProjectV2Workflow"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeProjectV2Workflow
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodePublicKey:
+		typename = "PublicKey"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodePublicKey
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodePullRequest:
+		typename = "PullRequest"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodePullRequest
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodePullRequestCommit:
+		typename = "PullRequestCommit"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodePullRequestCommit
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodePullRequestCommitCommentThread:
+		typename = "PullRequestCommitCommentThread"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodePullRequestCommitCommentThread
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodePullRequestReview:
+		typename = "PullRequestReview"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodePullRequestReview
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodePullRequestReviewComment:
+		typename = "PullRequestReviewComment"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodePullRequestReviewComment
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodePullRequestReviewThread:
+		typename = "PullRequestReviewThread"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodePullRequestReviewThread
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodePullRequestThread:
+		typename = "PullRequestThread"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodePullRequestThread
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodePush:
+		typename = "Push"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodePush
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodePushAllowance:
+		typename = "PushAllowance"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodePushAllowance
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeQuery:
+		typename = "Query"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeQuery
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeReaction:
+		typename = "Reaction"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeReaction
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeReadyForReviewEvent:
+		typename = "ReadyForReviewEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeReadyForReviewEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRef:
+		typename = "Ref"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRef
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeReferencedEvent:
+		typename = "ReferencedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeReferencedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRelease:
+		typename = "Release"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRelease
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeReleaseAsset:
+		typename = "ReleaseAsset"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeReleaseAsset
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRemovedFromMergeQueueEvent:
+		typename = "RemovedFromMergeQueueEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRemovedFromMergeQueueEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRemovedFromProjectEvent:
+		typename = "RemovedFromProjectEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRemovedFromProjectEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRemovedFromProjectV2Event:
+		typename = "RemovedFromProjectV2Event"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRemovedFromProjectV2Event
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRenamedTitleEvent:
+		typename = "RenamedTitleEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRenamedTitleEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeReopenedEvent:
+		typename = "ReopenedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeReopenedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepoAccessAuditEntry:
+		typename = "RepoAccessAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepoAccessAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepoAddMemberAuditEntry:
+		typename = "RepoAddMemberAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepoAddMemberAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepoAddTopicAuditEntry:
+		typename = "RepoAddTopicAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepoAddTopicAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepoArchivedAuditEntry:
+		typename = "RepoArchivedAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepoArchivedAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepoChangeMergeSettingAuditEntry:
+		typename = "RepoChangeMergeSettingAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepoChangeMergeSettingAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepoConfigDisableAnonymousGitAccessAuditEntry:
+		typename = "RepoConfigDisableAnonymousGitAccessAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepoConfigDisableAnonymousGitAccessAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepoConfigDisableCollaboratorsOnlyAuditEntry:
+		typename = "RepoConfigDisableCollaboratorsOnlyAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepoConfigDisableCollaboratorsOnlyAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepoConfigDisableContributorsOnlyAuditEntry:
+		typename = "RepoConfigDisableContributorsOnlyAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepoConfigDisableContributorsOnlyAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepoConfigDisableSockpuppetDisallowedAuditEntry:
+		typename = "RepoConfigDisableSockpuppetDisallowedAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepoConfigDisableSockpuppetDisallowedAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepoConfigEnableAnonymousGitAccessAuditEntry:
+		typename = "RepoConfigEnableAnonymousGitAccessAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepoConfigEnableAnonymousGitAccessAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepoConfigEnableCollaboratorsOnlyAuditEntry:
+		typename = "RepoConfigEnableCollaboratorsOnlyAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepoConfigEnableCollaboratorsOnlyAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepoConfigEnableContributorsOnlyAuditEntry:
+		typename = "RepoConfigEnableContributorsOnlyAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepoConfigEnableContributorsOnlyAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepoConfigEnableSockpuppetDisallowedAuditEntry:
+		typename = "RepoConfigEnableSockpuppetDisallowedAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepoConfigEnableSockpuppetDisallowedAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepoConfigLockAnonymousGitAccessAuditEntry:
+		typename = "RepoConfigLockAnonymousGitAccessAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepoConfigLockAnonymousGitAccessAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepoConfigUnlockAnonymousGitAccessAuditEntry:
+		typename = "RepoConfigUnlockAnonymousGitAccessAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepoConfigUnlockAnonymousGitAccessAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepoCreateAuditEntry:
+		typename = "RepoCreateAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepoCreateAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepoDestroyAuditEntry:
+		typename = "RepoDestroyAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepoDestroyAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepoRemoveMemberAuditEntry:
+		typename = "RepoRemoveMemberAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepoRemoveMemberAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepoRemoveTopicAuditEntry:
+		typename = "RepoRemoveTopicAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepoRemoveTopicAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepository:
+		typename = "Repository"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepository
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepositoryCustomProperty:
+		typename = "RepositoryCustomProperty"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepositoryCustomProperty
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepositoryInvitation:
+		typename = "RepositoryInvitation"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepositoryInvitation
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepositoryMigration:
+		typename = "RepositoryMigration"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepositoryMigration
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepositoryRule:
+		typename = "RepositoryRule"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepositoryRule
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepositoryRuleset:
+		typename = "RepositoryRuleset"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepositoryRuleset
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepositoryRulesetBypassActor:
+		typename = "RepositoryRulesetBypassActor"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepositoryRulesetBypassActor
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepositoryTopic:
+		typename = "RepositoryTopic"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepositoryTopic
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepositoryVisibilityChangeDisableAuditEntry:
+		typename = "RepositoryVisibilityChangeDisableAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepositoryVisibilityChangeDisableAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepositoryVisibilityChangeEnableAuditEntry:
+		typename = "RepositoryVisibilityChangeEnableAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepositoryVisibilityChangeEnableAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeRepositoryVulnerabilityAlert:
+		typename = "RepositoryVulnerabilityAlert"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeRepositoryVulnerabilityAlert
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeReviewDismissalAllowance:
+		typename = "ReviewDismissalAllowance"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeReviewDismissalAllowance
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeReviewDismissedEvent:
+		typename = "ReviewDismissedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeReviewDismissedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeReviewRequest:
+		typename = "ReviewRequest"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeReviewRequest
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeReviewRequestRemovedEvent:
+		typename = "ReviewRequestRemovedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeReviewRequestRemovedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeReviewRequestedEvent:
+		typename = "ReviewRequestedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeReviewRequestedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeSavedReply:
+		typename = "SavedReply"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeSavedReply
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeSecurityAdvisory:
+		typename = "SecurityAdvisory"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeSecurityAdvisory
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeSponsorsActivity:
+		typename = "SponsorsActivity"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeSponsorsActivity
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeSponsorsListing:
+		typename = "SponsorsListing"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeSponsorsListing
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeSponsorsListingFeaturedItem:
+		typename = "SponsorsListingFeaturedItem"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeSponsorsListingFeaturedItem
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeSponsorsTier:
+		typename = "SponsorsTier"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeSponsorsTier
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeSponsorship:
+		typename = "Sponsorship"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeSponsorship
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeSponsorshipNewsletter:
+		typename = "SponsorshipNewsletter"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeSponsorshipNewsletter
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeStatus:
+		typename = "Status"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeStatus
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeStatusCheckRollup:
+		typename = "StatusCheckRollup"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeStatusCheckRollup
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeStatusContext:
+		typename = "StatusContext"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeStatusContext
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeSubIssueAddedEvent:
+		typename = "SubIssueAddedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeSubIssueAddedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeSubIssueRemovedEvent:
+		typename = "SubIssueRemovedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeSubIssueRemovedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeSubscribedEvent:
+		typename = "SubscribedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeSubscribedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeTag:
+		typename = "Tag"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeTag
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeTeam:
+		typename = "Team"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeTeam
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeTeamAddMemberAuditEntry:
+		typename = "TeamAddMemberAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeTeamAddMemberAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeTeamAddRepositoryAuditEntry:
+		typename = "TeamAddRepositoryAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeTeamAddRepositoryAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeTeamChangeParentTeamAuditEntry:
+		typename = "TeamChangeParentTeamAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeTeamChangeParentTeamAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeTeamRemoveMemberAuditEntry:
+		typename = "TeamRemoveMemberAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeTeamRemoveMemberAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeTeamRemoveRepositoryAuditEntry:
+		typename = "TeamRemoveRepositoryAuditEntry"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeTeamRemoveRepositoryAuditEntry
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeTopic:
+		typename = "Topic"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeTopic
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeTransferredEvent:
+		typename = "TransferredEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeTransferredEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeTree:
+		typename = "Tree"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeTree
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeUnassignedEvent:
+		typename = "UnassignedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeUnassignedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeUnlabeledEvent:
+		typename = "UnlabeledEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeUnlabeledEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeUnlockedEvent:
+		typename = "UnlockedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeUnlockedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeUnmarkedAsDuplicateEvent:
+		typename = "UnmarkedAsDuplicateEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeUnmarkedAsDuplicateEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeUnpinnedEvent:
+		typename = "UnpinnedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeUnpinnedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeUnsubscribedEvent:
+		typename = "UnsubscribedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeUnsubscribedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeUser:
+		typename = "User"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeUser
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeUserBlockedEvent:
+		typename = "UserBlockedEvent"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeUserBlockedEvent
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeUserContentEdit:
+		typename = "UserContentEdit"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeUserContentEdit
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeUserList:
+		typename = "UserList"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeUserList
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeUserNamespaceRepository:
+		typename = "UserNamespaceRepository"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeUserNamespaceRepository
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeUserStatus:
+		typename = "UserStatus"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeUserStatus
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeVerifiableDomain:
+		typename = "VerifiableDomain"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeVerifiableDomain
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeWorkflow:
+		typename = "Workflow"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeWorkflow
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeWorkflowRun:
+		typename = "WorkflowRun"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeWorkflowRun
+		}{typename, v}
+		return json.Marshal(result)
+	case *ProjectV2ItemsNodeWorkflowRunFile:
+		typename = "WorkflowRunFile"
+
+		result := struct {
+			TypeName string `json:"__typename"`
+			*ProjectV2ItemsNodeWorkflowRunFile
+		}{typename, v}
+		return json.Marshal(result)
+	case nil:
+		return []byte("null"), nil
+	default:
+		return nil, fmt.Errorf(
+			`unexpected concrete type for ProjectV2ItemsNode: "%T"`, v)
+	}
+}
+
+// ProjectV2ItemsNodeAddedToMergeQueueEvent includes the requested fields of the GraphQL type AddedToMergeQueueEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents an 'added_to_merge_queue' event on a given pull request.
+type ProjectV2ItemsNodeAddedToMergeQueueEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeAddedToMergeQueueEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeAddedToMergeQueueEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeAddedToProjectEvent includes the requested fields of the GraphQL type AddedToProjectEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'added_to_project' event on a given issue or pull request.
+type ProjectV2ItemsNodeAddedToProjectEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeAddedToProjectEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeAddedToProjectEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeAddedToProjectV2Event includes the requested fields of the GraphQL type AddedToProjectV2Event.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'added_to_project_v2' event on a given issue or pull request.
+type ProjectV2ItemsNodeAddedToProjectV2Event struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeAddedToProjectV2Event.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeAddedToProjectV2Event) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeApp includes the requested fields of the GraphQL type App.
+// The GraphQL type's documentation follows.
+//
+// A GitHub App.
+type ProjectV2ItemsNodeApp struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeApp.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeApp) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeAssignedEvent includes the requested fields of the GraphQL type AssignedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents an 'assigned' event on any assignable object.
+type ProjectV2ItemsNodeAssignedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeAssignedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeAssignedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeAutoMergeDisabledEvent includes the requested fields of the GraphQL type AutoMergeDisabledEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'auto_merge_disabled' event on a given pull request.
+type ProjectV2ItemsNodeAutoMergeDisabledEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeAutoMergeDisabledEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeAutoMergeDisabledEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeAutoMergeEnabledEvent includes the requested fields of the GraphQL type AutoMergeEnabledEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'auto_merge_enabled' event on a given pull request.
+type ProjectV2ItemsNodeAutoMergeEnabledEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeAutoMergeEnabledEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeAutoMergeEnabledEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeAutoRebaseEnabledEvent includes the requested fields of the GraphQL type AutoRebaseEnabledEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'auto_rebase_enabled' event on a given pull request.
+type ProjectV2ItemsNodeAutoRebaseEnabledEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeAutoRebaseEnabledEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeAutoRebaseEnabledEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeAutoSquashEnabledEvent includes the requested fields of the GraphQL type AutoSquashEnabledEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'auto_squash_enabled' event on a given pull request.
+type ProjectV2ItemsNodeAutoSquashEnabledEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeAutoSquashEnabledEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeAutoSquashEnabledEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeAutomaticBaseChangeFailedEvent includes the requested fields of the GraphQL type AutomaticBaseChangeFailedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'automatic_base_change_failed' event on a given pull request.
+type ProjectV2ItemsNodeAutomaticBaseChangeFailedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeAutomaticBaseChangeFailedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeAutomaticBaseChangeFailedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeAutomaticBaseChangeSucceededEvent includes the requested fields of the GraphQL type AutomaticBaseChangeSucceededEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'automatic_base_change_succeeded' event on a given pull request.
+type ProjectV2ItemsNodeAutomaticBaseChangeSucceededEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeAutomaticBaseChangeSucceededEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeAutomaticBaseChangeSucceededEvent) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeBaseRefChangedEvent includes the requested fields of the GraphQL type BaseRefChangedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'base_ref_changed' event on a given issue or pull request.
+type ProjectV2ItemsNodeBaseRefChangedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeBaseRefChangedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeBaseRefChangedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeBaseRefDeletedEvent includes the requested fields of the GraphQL type BaseRefDeletedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'base_ref_deleted' event on a given pull request.
+type ProjectV2ItemsNodeBaseRefDeletedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeBaseRefDeletedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeBaseRefDeletedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeBaseRefForcePushedEvent includes the requested fields of the GraphQL type BaseRefForcePushedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'base_ref_force_pushed' event on a given pull request.
+type ProjectV2ItemsNodeBaseRefForcePushedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeBaseRefForcePushedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeBaseRefForcePushedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeBlob includes the requested fields of the GraphQL type Blob.
+// The GraphQL type's documentation follows.
+//
+// Represents a Git blob.
+type ProjectV2ItemsNodeBlob struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeBlob.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeBlob) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeBlockedByAddedEvent includes the requested fields of the GraphQL type BlockedByAddedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'blocked_by_added' event on a given issue.
+type ProjectV2ItemsNodeBlockedByAddedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeBlockedByAddedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeBlockedByAddedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeBlockedByRemovedEvent includes the requested fields of the GraphQL type BlockedByRemovedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'blocked_by_removed' event on a given issue.
+type ProjectV2ItemsNodeBlockedByRemovedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeBlockedByRemovedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeBlockedByRemovedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeBlockingAddedEvent includes the requested fields of the GraphQL type BlockingAddedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'blocking_added' event on a given issue.
+type ProjectV2ItemsNodeBlockingAddedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeBlockingAddedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeBlockingAddedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeBlockingRemovedEvent includes the requested fields of the GraphQL type BlockingRemovedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'blocking_removed' event on a given issue.
+type ProjectV2ItemsNodeBlockingRemovedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeBlockingRemovedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeBlockingRemovedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeBot includes the requested fields of the GraphQL type Bot.
+// The GraphQL type's documentation follows.
+//
+// A special type of user which takes actions on behalf of GitHub Apps.
+type ProjectV2ItemsNodeBot struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeBot.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeBot) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeBranchProtectionRule includes the requested fields of the GraphQL type BranchProtectionRule.
+// The GraphQL type's documentation follows.
+//
+// A branch protection rule.
+type ProjectV2ItemsNodeBranchProtectionRule struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeBranchProtectionRule.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeBranchProtectionRule) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeBypassForcePushAllowance includes the requested fields of the GraphQL type BypassForcePushAllowance.
+// The GraphQL type's documentation follows.
+//
+// A user, team, or app who has the ability to bypass a force push requirement on a protected branch.
+type ProjectV2ItemsNodeBypassForcePushAllowance struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeBypassForcePushAllowance.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeBypassForcePushAllowance) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeBypassPullRequestAllowance includes the requested fields of the GraphQL type BypassPullRequestAllowance.
+// The GraphQL type's documentation follows.
+//
+// A user, team, or app who has the ability to bypass a pull request requirement on a protected branch.
+type ProjectV2ItemsNodeBypassPullRequestAllowance struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeBypassPullRequestAllowance.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeBypassPullRequestAllowance) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeCWE includes the requested fields of the GraphQL type CWE.
+// The GraphQL type's documentation follows.
+//
+// A common weakness enumeration
+type ProjectV2ItemsNodeCWE struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeCWE.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeCWE) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeCheckRun includes the requested fields of the GraphQL type CheckRun.
+// The GraphQL type's documentation follows.
+//
+// A check run.
+type ProjectV2ItemsNodeCheckRun struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeCheckRun.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeCheckRun) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeCheckSuite includes the requested fields of the GraphQL type CheckSuite.
+// The GraphQL type's documentation follows.
+//
+// A check suite.
+type ProjectV2ItemsNodeCheckSuite struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeCheckSuite.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeCheckSuite) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeClosedEvent includes the requested fields of the GraphQL type ClosedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'closed' event on any `Closable`.
+type ProjectV2ItemsNodeClosedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeClosedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeClosedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeCodeOfConduct includes the requested fields of the GraphQL type CodeOfConduct.
+// The GraphQL type's documentation follows.
+//
+// The Code of Conduct for a repository
+type ProjectV2ItemsNodeCodeOfConduct struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeCodeOfConduct.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeCodeOfConduct) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeCommentDeletedEvent includes the requested fields of the GraphQL type CommentDeletedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'comment_deleted' event on a given issue or pull request.
+type ProjectV2ItemsNodeCommentDeletedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeCommentDeletedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeCommentDeletedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeCommit includes the requested fields of the GraphQL type Commit.
+// The GraphQL type's documentation follows.
+//
+// Represents a Git commit.
+type ProjectV2ItemsNodeCommit struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeCommit.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeCommit) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeCommitComment includes the requested fields of the GraphQL type CommitComment.
+// The GraphQL type's documentation follows.
+//
+// Represents a comment on a given Commit.
+type ProjectV2ItemsNodeCommitComment struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeCommitComment.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeCommitComment) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeCommitCommentThread includes the requested fields of the GraphQL type CommitCommentThread.
+// The GraphQL type's documentation follows.
+//
+// A thread of comments on a commit.
+type ProjectV2ItemsNodeCommitCommentThread struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeCommitCommentThread.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeCommitCommentThread) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeComparison includes the requested fields of the GraphQL type Comparison.
+// The GraphQL type's documentation follows.
+//
+// Represents a comparison between two commit revisions.
+type ProjectV2ItemsNodeComparison struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeComparison.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeComparison) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeConnectedEvent includes the requested fields of the GraphQL type ConnectedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'connected' event on a given issue or pull request.
+type ProjectV2ItemsNodeConnectedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeConnectedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeConnectedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeConvertToDraftEvent includes the requested fields of the GraphQL type ConvertToDraftEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'convert_to_draft' event on a given pull request.
+type ProjectV2ItemsNodeConvertToDraftEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeConvertToDraftEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeConvertToDraftEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeConvertedFromDraftEvent includes the requested fields of the GraphQL type ConvertedFromDraftEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'converted_from_draft' event on a given issue or pull request.
+type ProjectV2ItemsNodeConvertedFromDraftEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeConvertedFromDraftEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeConvertedFromDraftEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeConvertedNoteToIssueEvent includes the requested fields of the GraphQL type ConvertedNoteToIssueEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'converted_note_to_issue' event on a given issue or pull request.
+type ProjectV2ItemsNodeConvertedNoteToIssueEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeConvertedNoteToIssueEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeConvertedNoteToIssueEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeConvertedToDiscussionEvent includes the requested fields of the GraphQL type ConvertedToDiscussionEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'converted_to_discussion' event on a given issue.
+type ProjectV2ItemsNodeConvertedToDiscussionEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeConvertedToDiscussionEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeConvertedToDiscussionEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeCrossReferencedEvent includes the requested fields of the GraphQL type CrossReferencedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a mention made by one issue or pull request to another.
+type ProjectV2ItemsNodeCrossReferencedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeCrossReferencedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeCrossReferencedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeDemilestonedEvent includes the requested fields of the GraphQL type DemilestonedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'demilestoned' event on a given issue or pull request.
+type ProjectV2ItemsNodeDemilestonedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeDemilestonedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeDemilestonedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeDependencyGraphManifest includes the requested fields of the GraphQL type DependencyGraphManifest.
+// The GraphQL type's documentation follows.
+//
+// Dependency manifest for a repository
+type ProjectV2ItemsNodeDependencyGraphManifest struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeDependencyGraphManifest.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeDependencyGraphManifest) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeDeployKey includes the requested fields of the GraphQL type DeployKey.
+// The GraphQL type's documentation follows.
+//
+// A repository deploy key.
+type ProjectV2ItemsNodeDeployKey struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeDeployKey.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeDeployKey) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeDeployedEvent includes the requested fields of the GraphQL type DeployedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'deployed' event on a given pull request.
+type ProjectV2ItemsNodeDeployedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeDeployedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeDeployedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeDeployment includes the requested fields of the GraphQL type Deployment.
+// The GraphQL type's documentation follows.
+//
+// Represents triggered deployment instance.
+type ProjectV2ItemsNodeDeployment struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeDeployment.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeDeployment) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeDeploymentEnvironmentChangedEvent includes the requested fields of the GraphQL type DeploymentEnvironmentChangedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'deployment_environment_changed' event on a given pull request.
+type ProjectV2ItemsNodeDeploymentEnvironmentChangedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeDeploymentEnvironmentChangedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeDeploymentEnvironmentChangedEvent) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeDeploymentReview includes the requested fields of the GraphQL type DeploymentReview.
+// The GraphQL type's documentation follows.
+//
+// A deployment review.
+type ProjectV2ItemsNodeDeploymentReview struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeDeploymentReview.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeDeploymentReview) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeDeploymentStatus includes the requested fields of the GraphQL type DeploymentStatus.
+// The GraphQL type's documentation follows.
+//
+// Describes the status of a given deployment attempt.
+type ProjectV2ItemsNodeDeploymentStatus struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeDeploymentStatus.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeDeploymentStatus) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeDisconnectedEvent includes the requested fields of the GraphQL type DisconnectedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'disconnected' event on a given issue or pull request.
+type ProjectV2ItemsNodeDisconnectedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeDisconnectedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeDisconnectedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeDiscussion includes the requested fields of the GraphQL type Discussion.
+// The GraphQL type's documentation follows.
+//
+// A discussion in a repository.
+type ProjectV2ItemsNodeDiscussion struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeDiscussion.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeDiscussion) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeDiscussionCategory includes the requested fields of the GraphQL type DiscussionCategory.
+// The GraphQL type's documentation follows.
+//
+// A category for discussions in a repository.
+type ProjectV2ItemsNodeDiscussionCategory struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeDiscussionCategory.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeDiscussionCategory) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeDiscussionComment includes the requested fields of the GraphQL type DiscussionComment.
+// The GraphQL type's documentation follows.
+//
+// A comment on a discussion.
+type ProjectV2ItemsNodeDiscussionComment struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeDiscussionComment.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeDiscussionComment) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeDiscussionPoll includes the requested fields of the GraphQL type DiscussionPoll.
+// The GraphQL type's documentation follows.
+//
+// A poll for a discussion.
+type ProjectV2ItemsNodeDiscussionPoll struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeDiscussionPoll.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeDiscussionPoll) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeDiscussionPollOption includes the requested fields of the GraphQL type DiscussionPollOption.
+// The GraphQL type's documentation follows.
+//
+// An option for a discussion poll.
+type ProjectV2ItemsNodeDiscussionPollOption struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeDiscussionPollOption.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeDiscussionPollOption) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeDraftIssue includes the requested fields of the GraphQL type DraftIssue.
+// The GraphQL type's documentation follows.
+//
+// A draft issue within a project.
+type ProjectV2ItemsNodeDraftIssue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeDraftIssue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeDraftIssue) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeEnterprise includes the requested fields of the GraphQL type Enterprise.
+// The GraphQL type's documentation follows.
+//
+// An account to manage multiple organizations with consolidated policy and billing.
+type ProjectV2ItemsNodeEnterprise struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeEnterprise.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeEnterprise) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeEnterpriseAdministratorInvitation includes the requested fields of the GraphQL type EnterpriseAdministratorInvitation.
+// The GraphQL type's documentation follows.
+//
+// An invitation for a user to become an owner or billing manager of an enterprise.
+type ProjectV2ItemsNodeEnterpriseAdministratorInvitation struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeEnterpriseAdministratorInvitation.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeEnterpriseAdministratorInvitation) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeEnterpriseIdentityProvider includes the requested fields of the GraphQL type EnterpriseIdentityProvider.
+// The GraphQL type's documentation follows.
+//
+// An identity provider configured to provision identities for an enterprise.
+// Visible to enterprise owners or enterprise owners' personal access tokens
+// (classic) with read:enterprise or admin:enterprise scope.
+type ProjectV2ItemsNodeEnterpriseIdentityProvider struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeEnterpriseIdentityProvider.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeEnterpriseIdentityProvider) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeEnterpriseMemberInvitation includes the requested fields of the GraphQL type EnterpriseMemberInvitation.
+// The GraphQL type's documentation follows.
+//
+// An invitation for a user to become an unaffiliated member of an enterprise.
+type ProjectV2ItemsNodeEnterpriseMemberInvitation struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeEnterpriseMemberInvitation.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeEnterpriseMemberInvitation) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeEnterpriseRepositoryInfo includes the requested fields of the GraphQL type EnterpriseRepositoryInfo.
+// The GraphQL type's documentation follows.
+//
+// A subset of repository information queryable from an enterprise.
+type ProjectV2ItemsNodeEnterpriseRepositoryInfo struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeEnterpriseRepositoryInfo.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeEnterpriseRepositoryInfo) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeEnterpriseServerInstallation includes the requested fields of the GraphQL type EnterpriseServerInstallation.
+// The GraphQL type's documentation follows.
+//
+// An Enterprise Server installation.
+type ProjectV2ItemsNodeEnterpriseServerInstallation struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeEnterpriseServerInstallation.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeEnterpriseServerInstallation) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeEnterpriseServerUserAccount includes the requested fields of the GraphQL type EnterpriseServerUserAccount.
+// The GraphQL type's documentation follows.
+//
+// A user account on an Enterprise Server installation.
+type ProjectV2ItemsNodeEnterpriseServerUserAccount struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeEnterpriseServerUserAccount.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeEnterpriseServerUserAccount) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeEnterpriseServerUserAccountEmail includes the requested fields of the GraphQL type EnterpriseServerUserAccountEmail.
+// The GraphQL type's documentation follows.
+//
+// An email belonging to a user account on an Enterprise Server installation.
+type ProjectV2ItemsNodeEnterpriseServerUserAccountEmail struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeEnterpriseServerUserAccountEmail.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeEnterpriseServerUserAccountEmail) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeEnterpriseServerUserAccountsUpload includes the requested fields of the GraphQL type EnterpriseServerUserAccountsUpload.
+// The GraphQL type's documentation follows.
+//
+// A user accounts upload from an Enterprise Server installation.
+type ProjectV2ItemsNodeEnterpriseServerUserAccountsUpload struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeEnterpriseServerUserAccountsUpload.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeEnterpriseServerUserAccountsUpload) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeEnterpriseUserAccount includes the requested fields of the GraphQL type EnterpriseUserAccount.
+// The GraphQL type's documentation follows.
+//
+// An account for a user who is an admin of an enterprise or a member of an enterprise through one or more organizations.
+type ProjectV2ItemsNodeEnterpriseUserAccount struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeEnterpriseUserAccount.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeEnterpriseUserAccount) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeEnvironment includes the requested fields of the GraphQL type Environment.
+// The GraphQL type's documentation follows.
+//
+// An environment.
+type ProjectV2ItemsNodeEnvironment struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeEnvironment.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeEnvironment) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeExternalIdentity includes the requested fields of the GraphQL type ExternalIdentity.
+// The GraphQL type's documentation follows.
+//
+// An external identity provisioned by SAML SSO or SCIM. If SAML is configured on
+// the organization, the external identity is visible to (1) organization owners,
+// (2) organization owners' personal access tokens (classic) with read:org or
+// admin:org scope, (3) GitHub App with an installation token with read or write
+// access to members. If SAML is configured on the enterprise, the external
+// identity is visible to (1) enterprise owners, (2) enterprise owners' personal
+// access tokens (classic) with read:enterprise or admin:enterprise scope.
+type ProjectV2ItemsNodeExternalIdentity struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeExternalIdentity.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeExternalIdentity) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeGist includes the requested fields of the GraphQL type Gist.
+// The GraphQL type's documentation follows.
+//
+// A Gist.
+type ProjectV2ItemsNodeGist struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeGist.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeGist) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeGistComment includes the requested fields of the GraphQL type GistComment.
+// The GraphQL type's documentation follows.
+//
+// Represents a comment on an Gist.
+type ProjectV2ItemsNodeGistComment struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeGistComment.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeGistComment) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeHeadRefDeletedEvent includes the requested fields of the GraphQL type HeadRefDeletedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'head_ref_deleted' event on a given pull request.
+type ProjectV2ItemsNodeHeadRefDeletedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeHeadRefDeletedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeHeadRefDeletedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeHeadRefForcePushedEvent includes the requested fields of the GraphQL type HeadRefForcePushedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'head_ref_force_pushed' event on a given pull request.
+type ProjectV2ItemsNodeHeadRefForcePushedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeHeadRefForcePushedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeHeadRefForcePushedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeHeadRefRestoredEvent includes the requested fields of the GraphQL type HeadRefRestoredEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'head_ref_restored' event on a given pull request.
+type ProjectV2ItemsNodeHeadRefRestoredEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeHeadRefRestoredEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeHeadRefRestoredEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeIpAllowListEntry includes the requested fields of the GraphQL type IpAllowListEntry.
+// The GraphQL type's documentation follows.
+//
+// An IP address or range of addresses that is allowed to access an owner's resources.
+type ProjectV2ItemsNodeIpAllowListEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeIpAllowListEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeIpAllowListEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeIssue includes the requested fields of the GraphQL type Issue.
+// The GraphQL type's documentation follows.
+//
+// An Issue is a place to discuss ideas, enhancements, tasks, and bugs for a project.
+type ProjectV2ItemsNodeIssue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeIssue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeIssue) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeIssueComment includes the requested fields of the GraphQL type IssueComment.
+// The GraphQL type's documentation follows.
+//
+// Represents a comment on an Issue.
+type ProjectV2ItemsNodeIssueComment struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeIssueComment.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeIssueComment) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeIssueCommentPinnedEvent includes the requested fields of the GraphQL type IssueCommentPinnedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'issue_comment_pinned' event on a given issue.
+type ProjectV2ItemsNodeIssueCommentPinnedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeIssueCommentPinnedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeIssueCommentPinnedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeIssueCommentUnpinnedEvent includes the requested fields of the GraphQL type IssueCommentUnpinnedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'issue_comment_unpinned' event on a given issue.
+type ProjectV2ItemsNodeIssueCommentUnpinnedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeIssueCommentUnpinnedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeIssueCommentUnpinnedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeIssueFieldAddedEvent includes the requested fields of the GraphQL type IssueFieldAddedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'issue_field_added' event on a given issue.
+type ProjectV2ItemsNodeIssueFieldAddedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeIssueFieldAddedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeIssueFieldAddedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeIssueFieldChangedEvent includes the requested fields of the GraphQL type IssueFieldChangedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'issue_field_changed' event on a given issue.
+type ProjectV2ItemsNodeIssueFieldChangedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeIssueFieldChangedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeIssueFieldChangedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeIssueFieldDate includes the requested fields of the GraphQL type IssueFieldDate.
+// The GraphQL type's documentation follows.
+//
+// Represents a date issue field.
+type ProjectV2ItemsNodeIssueFieldDate struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeIssueFieldDate.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeIssueFieldDate) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeIssueFieldDateValue includes the requested fields of the GraphQL type IssueFieldDateValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a date field in an Issue item.
+type ProjectV2ItemsNodeIssueFieldDateValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeIssueFieldDateValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeIssueFieldDateValue) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeIssueFieldNumber includes the requested fields of the GraphQL type IssueFieldNumber.
+// The GraphQL type's documentation follows.
+//
+// Represents a number issue field.
+type ProjectV2ItemsNodeIssueFieldNumber struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeIssueFieldNumber.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeIssueFieldNumber) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeIssueFieldNumberValue includes the requested fields of the GraphQL type IssueFieldNumberValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a number field in an Issue item.
+type ProjectV2ItemsNodeIssueFieldNumberValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeIssueFieldNumberValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeIssueFieldNumberValue) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeIssueFieldRemovedEvent includes the requested fields of the GraphQL type IssueFieldRemovedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'issue_field_removed' event on a given issue.
+type ProjectV2ItemsNodeIssueFieldRemovedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeIssueFieldRemovedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeIssueFieldRemovedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeIssueFieldSingleSelect includes the requested fields of the GraphQL type IssueFieldSingleSelect.
+// The GraphQL type's documentation follows.
+//
+// Represents a single select issue field.
+type ProjectV2ItemsNodeIssueFieldSingleSelect struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeIssueFieldSingleSelect.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeIssueFieldSingleSelect) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeIssueFieldSingleSelectOption includes the requested fields of the GraphQL type IssueFieldSingleSelectOption.
+// The GraphQL type's documentation follows.
+//
+// Represents an option in a single-select issue field.
+type ProjectV2ItemsNodeIssueFieldSingleSelectOption struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeIssueFieldSingleSelectOption.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeIssueFieldSingleSelectOption) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeIssueFieldSingleSelectValue includes the requested fields of the GraphQL type IssueFieldSingleSelectValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a single select field in an Issue item.
+type ProjectV2ItemsNodeIssueFieldSingleSelectValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeIssueFieldSingleSelectValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeIssueFieldSingleSelectValue) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeIssueFieldText includes the requested fields of the GraphQL type IssueFieldText.
+// The GraphQL type's documentation follows.
+//
+// Represents a text issue field.
+type ProjectV2ItemsNodeIssueFieldText struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeIssueFieldText.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeIssueFieldText) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeIssueFieldTextValue includes the requested fields of the GraphQL type IssueFieldTextValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a text field in an Issue item.
+type ProjectV2ItemsNodeIssueFieldTextValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeIssueFieldTextValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeIssueFieldTextValue) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeIssueType includes the requested fields of the GraphQL type IssueType.
+// The GraphQL type's documentation follows.
+//
+// Represents the type of Issue.
+type ProjectV2ItemsNodeIssueType struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeIssueType.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeIssueType) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeIssueTypeAddedEvent includes the requested fields of the GraphQL type IssueTypeAddedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'issue_type_added' event on a given issue.
+type ProjectV2ItemsNodeIssueTypeAddedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeIssueTypeAddedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeIssueTypeAddedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeIssueTypeChangedEvent includes the requested fields of the GraphQL type IssueTypeChangedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'issue_type_changed' event on a given issue.
+type ProjectV2ItemsNodeIssueTypeChangedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeIssueTypeChangedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeIssueTypeChangedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeIssueTypeRemovedEvent includes the requested fields of the GraphQL type IssueTypeRemovedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'issue_type_removed' event on a given issue.
+type ProjectV2ItemsNodeIssueTypeRemovedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeIssueTypeRemovedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeIssueTypeRemovedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeItemsProjectV2ItemConnection includes the requested fields of the GraphQL type ProjectV2ItemConnection.
+// The GraphQL type's documentation follows.
+//
+// The connection type for ProjectV2Item.
+type ProjectV2ItemsNodeItemsProjectV2ItemConnection struct {
+	// A list of nodes.
+	Nodes []*ProjectV2ItemNode `json:"nodes"`
+}
+
+// GetNodes returns ProjectV2ItemsNodeItemsProjectV2ItemConnection.Nodes, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeItemsProjectV2ItemConnection) GetNodes() []*ProjectV2ItemNode {
+	return v.Nodes
+}
+
+// ProjectV2ItemsNodeLabel includes the requested fields of the GraphQL type Label.
+// The GraphQL type's documentation follows.
+//
+// A label for categorizing Issues, Pull Requests, Milestones, or Discussions with a given Repository.
+type ProjectV2ItemsNodeLabel struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeLabel.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeLabel) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeLabeledEvent includes the requested fields of the GraphQL type LabeledEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'labeled' event on a given issue or pull request.
+type ProjectV2ItemsNodeLabeledEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeLabeledEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeLabeledEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeLanguage includes the requested fields of the GraphQL type Language.
+// The GraphQL type's documentation follows.
+//
+// Represents a given language found in repositories.
+type ProjectV2ItemsNodeLanguage struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeLanguage.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeLanguage) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeLicense includes the requested fields of the GraphQL type License.
+// The GraphQL type's documentation follows.
+//
+// A repository's open source license
+type ProjectV2ItemsNodeLicense struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeLicense.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeLicense) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeLinkedBranch includes the requested fields of the GraphQL type LinkedBranch.
+// The GraphQL type's documentation follows.
+//
+// A branch linked to an issue.
+type ProjectV2ItemsNodeLinkedBranch struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeLinkedBranch.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeLinkedBranch) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeLockedEvent includes the requested fields of the GraphQL type LockedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'locked' event on a given issue or pull request.
+type ProjectV2ItemsNodeLockedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeLockedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeLockedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeMannequin includes the requested fields of the GraphQL type Mannequin.
+// The GraphQL type's documentation follows.
+//
+// A placeholder user for attribution of imported data on GitHub.
+type ProjectV2ItemsNodeMannequin struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeMannequin.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeMannequin) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeMarkedAsDuplicateEvent includes the requested fields of the GraphQL type MarkedAsDuplicateEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'marked_as_duplicate' event on a given issue or pull request.
+type ProjectV2ItemsNodeMarkedAsDuplicateEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeMarkedAsDuplicateEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeMarkedAsDuplicateEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeMarketplaceCategory includes the requested fields of the GraphQL type MarketplaceCategory.
+// The GraphQL type's documentation follows.
+//
+// A public description of a Marketplace category.
+type ProjectV2ItemsNodeMarketplaceCategory struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeMarketplaceCategory.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeMarketplaceCategory) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeMarketplaceListing includes the requested fields of the GraphQL type MarketplaceListing.
+// The GraphQL type's documentation follows.
+//
+// A listing in the GitHub integration marketplace.
+type ProjectV2ItemsNodeMarketplaceListing struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeMarketplaceListing.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeMarketplaceListing) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeMemberFeatureRequestNotification includes the requested fields of the GraphQL type MemberFeatureRequestNotification.
+// The GraphQL type's documentation follows.
+//
+// Represents a member feature request notification
+type ProjectV2ItemsNodeMemberFeatureRequestNotification struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeMemberFeatureRequestNotification.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeMemberFeatureRequestNotification) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeMembersCanDeleteReposClearAuditEntry includes the requested fields of the GraphQL type MembersCanDeleteReposClearAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a members_can_delete_repos.clear event.
+type ProjectV2ItemsNodeMembersCanDeleteReposClearAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeMembersCanDeleteReposClearAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeMembersCanDeleteReposClearAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeMembersCanDeleteReposDisableAuditEntry includes the requested fields of the GraphQL type MembersCanDeleteReposDisableAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a members_can_delete_repos.disable event.
+type ProjectV2ItemsNodeMembersCanDeleteReposDisableAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeMembersCanDeleteReposDisableAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeMembersCanDeleteReposDisableAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeMembersCanDeleteReposEnableAuditEntry includes the requested fields of the GraphQL type MembersCanDeleteReposEnableAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a members_can_delete_repos.enable event.
+type ProjectV2ItemsNodeMembersCanDeleteReposEnableAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeMembersCanDeleteReposEnableAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeMembersCanDeleteReposEnableAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeMentionedEvent includes the requested fields of the GraphQL type MentionedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'mentioned' event on a given issue or pull request.
+type ProjectV2ItemsNodeMentionedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeMentionedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeMentionedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeMergeQueue includes the requested fields of the GraphQL type MergeQueue.
+// The GraphQL type's documentation follows.
+//
+// The queue of pull request entries to be merged into a protected branch in a repository.
+type ProjectV2ItemsNodeMergeQueue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeMergeQueue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeMergeQueue) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeMergeQueueEntry includes the requested fields of the GraphQL type MergeQueueEntry.
+// The GraphQL type's documentation follows.
+//
+// Entries in a MergeQueue
+type ProjectV2ItemsNodeMergeQueueEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeMergeQueueEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeMergeQueueEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeMergedEvent includes the requested fields of the GraphQL type MergedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'merged' event on a given pull request.
+type ProjectV2ItemsNodeMergedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeMergedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeMergedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeMigrationSource includes the requested fields of the GraphQL type MigrationSource.
+// The GraphQL type's documentation follows.
+//
+// A GitHub Enterprise Importer (GEI) migration source.
+type ProjectV2ItemsNodeMigrationSource struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeMigrationSource.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeMigrationSource) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeMilestone includes the requested fields of the GraphQL type Milestone.
+// The GraphQL type's documentation follows.
+//
+// Represents a Milestone object on a given repository.
+type ProjectV2ItemsNodeMilestone struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeMilestone.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeMilestone) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeMilestonedEvent includes the requested fields of the GraphQL type MilestonedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'milestoned' event on a given issue or pull request.
+type ProjectV2ItemsNodeMilestonedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeMilestonedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeMilestonedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeMovedColumnsInProjectEvent includes the requested fields of the GraphQL type MovedColumnsInProjectEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'moved_columns_in_project' event on a given issue or pull request.
+type ProjectV2ItemsNodeMovedColumnsInProjectEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeMovedColumnsInProjectEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeMovedColumnsInProjectEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeOIDCProvider includes the requested fields of the GraphQL type OIDCProvider.
+// The GraphQL type's documentation follows.
+//
+// An OIDC identity provider configured to provision identities for an enterprise.
+// Visible to enterprise owners or enterprise owners' personal access tokens
+// (classic) with read:enterprise or admin:enterprise scope.
+type ProjectV2ItemsNodeOIDCProvider struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOIDCProvider.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOIDCProvider) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeOauthApplicationCreateAuditEntry includes the requested fields of the GraphQL type OauthApplicationCreateAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a oauth_application.create event.
+type ProjectV2ItemsNodeOauthApplicationCreateAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOauthApplicationCreateAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOauthApplicationCreateAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeOrgAddBillingManagerAuditEntry includes the requested fields of the GraphQL type OrgAddBillingManagerAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.add_billing_manager
+type ProjectV2ItemsNodeOrgAddBillingManagerAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgAddBillingManagerAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgAddBillingManagerAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeOrgAddMemberAuditEntry includes the requested fields of the GraphQL type OrgAddMemberAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.add_member
+type ProjectV2ItemsNodeOrgAddMemberAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgAddMemberAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgAddMemberAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeOrgBlockUserAuditEntry includes the requested fields of the GraphQL type OrgBlockUserAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.block_user
+type ProjectV2ItemsNodeOrgBlockUserAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgBlockUserAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgBlockUserAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeOrgConfigDisableCollaboratorsOnlyAuditEntry includes the requested fields of the GraphQL type OrgConfigDisableCollaboratorsOnlyAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.config.disable_collaborators_only event.
+type ProjectV2ItemsNodeOrgConfigDisableCollaboratorsOnlyAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgConfigDisableCollaboratorsOnlyAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgConfigDisableCollaboratorsOnlyAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeOrgConfigEnableCollaboratorsOnlyAuditEntry includes the requested fields of the GraphQL type OrgConfigEnableCollaboratorsOnlyAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.config.enable_collaborators_only event.
+type ProjectV2ItemsNodeOrgConfigEnableCollaboratorsOnlyAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgConfigEnableCollaboratorsOnlyAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgConfigEnableCollaboratorsOnlyAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeOrgCreateAuditEntry includes the requested fields of the GraphQL type OrgCreateAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.create event.
+type ProjectV2ItemsNodeOrgCreateAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgCreateAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgCreateAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeOrgDisableOauthAppRestrictionsAuditEntry includes the requested fields of the GraphQL type OrgDisableOauthAppRestrictionsAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.disable_oauth_app_restrictions event.
+type ProjectV2ItemsNodeOrgDisableOauthAppRestrictionsAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgDisableOauthAppRestrictionsAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgDisableOauthAppRestrictionsAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeOrgDisableSamlAuditEntry includes the requested fields of the GraphQL type OrgDisableSamlAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.disable_saml event.
+type ProjectV2ItemsNodeOrgDisableSamlAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgDisableSamlAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgDisableSamlAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeOrgDisableTwoFactorRequirementAuditEntry includes the requested fields of the GraphQL type OrgDisableTwoFactorRequirementAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.disable_two_factor_requirement event.
+type ProjectV2ItemsNodeOrgDisableTwoFactorRequirementAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgDisableTwoFactorRequirementAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgDisableTwoFactorRequirementAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeOrgEnableOauthAppRestrictionsAuditEntry includes the requested fields of the GraphQL type OrgEnableOauthAppRestrictionsAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.enable_oauth_app_restrictions event.
+type ProjectV2ItemsNodeOrgEnableOauthAppRestrictionsAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgEnableOauthAppRestrictionsAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgEnableOauthAppRestrictionsAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeOrgEnableSamlAuditEntry includes the requested fields of the GraphQL type OrgEnableSamlAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.enable_saml event.
+type ProjectV2ItemsNodeOrgEnableSamlAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgEnableSamlAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgEnableSamlAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeOrgEnableTwoFactorRequirementAuditEntry includes the requested fields of the GraphQL type OrgEnableTwoFactorRequirementAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.enable_two_factor_requirement event.
+type ProjectV2ItemsNodeOrgEnableTwoFactorRequirementAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgEnableTwoFactorRequirementAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgEnableTwoFactorRequirementAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeOrgInviteMemberAuditEntry includes the requested fields of the GraphQL type OrgInviteMemberAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.invite_member event.
+type ProjectV2ItemsNodeOrgInviteMemberAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgInviteMemberAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgInviteMemberAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeOrgInviteToBusinessAuditEntry includes the requested fields of the GraphQL type OrgInviteToBusinessAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.invite_to_business event.
+type ProjectV2ItemsNodeOrgInviteToBusinessAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgInviteToBusinessAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgInviteToBusinessAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeOrgOauthAppAccessApprovedAuditEntry includes the requested fields of the GraphQL type OrgOauthAppAccessApprovedAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.oauth_app_access_approved event.
+type ProjectV2ItemsNodeOrgOauthAppAccessApprovedAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgOauthAppAccessApprovedAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgOauthAppAccessApprovedAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeOrgOauthAppAccessBlockedAuditEntry includes the requested fields of the GraphQL type OrgOauthAppAccessBlockedAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.oauth_app_access_blocked event.
+type ProjectV2ItemsNodeOrgOauthAppAccessBlockedAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgOauthAppAccessBlockedAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgOauthAppAccessBlockedAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeOrgOauthAppAccessDeniedAuditEntry includes the requested fields of the GraphQL type OrgOauthAppAccessDeniedAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.oauth_app_access_denied event.
+type ProjectV2ItemsNodeOrgOauthAppAccessDeniedAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgOauthAppAccessDeniedAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgOauthAppAccessDeniedAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeOrgOauthAppAccessRequestedAuditEntry includes the requested fields of the GraphQL type OrgOauthAppAccessRequestedAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.oauth_app_access_requested event.
+type ProjectV2ItemsNodeOrgOauthAppAccessRequestedAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgOauthAppAccessRequestedAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgOauthAppAccessRequestedAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeOrgOauthAppAccessUnblockedAuditEntry includes the requested fields of the GraphQL type OrgOauthAppAccessUnblockedAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.oauth_app_access_unblocked event.
+type ProjectV2ItemsNodeOrgOauthAppAccessUnblockedAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgOauthAppAccessUnblockedAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgOauthAppAccessUnblockedAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeOrgRemoveBillingManagerAuditEntry includes the requested fields of the GraphQL type OrgRemoveBillingManagerAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.remove_billing_manager event.
+type ProjectV2ItemsNodeOrgRemoveBillingManagerAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgRemoveBillingManagerAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgRemoveBillingManagerAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeOrgRemoveMemberAuditEntry includes the requested fields of the GraphQL type OrgRemoveMemberAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.remove_member event.
+type ProjectV2ItemsNodeOrgRemoveMemberAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgRemoveMemberAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgRemoveMemberAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeOrgRemoveOutsideCollaboratorAuditEntry includes the requested fields of the GraphQL type OrgRemoveOutsideCollaboratorAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.remove_outside_collaborator event.
+type ProjectV2ItemsNodeOrgRemoveOutsideCollaboratorAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgRemoveOutsideCollaboratorAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgRemoveOutsideCollaboratorAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeOrgRestoreMemberAuditEntry includes the requested fields of the GraphQL type OrgRestoreMemberAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.restore_member event.
+type ProjectV2ItemsNodeOrgRestoreMemberAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgRestoreMemberAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgRestoreMemberAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeOrgUnblockUserAuditEntry includes the requested fields of the GraphQL type OrgUnblockUserAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.unblock_user
+type ProjectV2ItemsNodeOrgUnblockUserAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgUnblockUserAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgUnblockUserAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeOrgUpdateDefaultRepositoryPermissionAuditEntry includes the requested fields of the GraphQL type OrgUpdateDefaultRepositoryPermissionAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.update_default_repository_permission
+type ProjectV2ItemsNodeOrgUpdateDefaultRepositoryPermissionAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgUpdateDefaultRepositoryPermissionAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgUpdateDefaultRepositoryPermissionAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeOrgUpdateMemberAuditEntry includes the requested fields of the GraphQL type OrgUpdateMemberAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.update_member event.
+type ProjectV2ItemsNodeOrgUpdateMemberAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgUpdateMemberAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgUpdateMemberAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeOrgUpdateMemberRepositoryCreationPermissionAuditEntry includes the requested fields of the GraphQL type OrgUpdateMemberRepositoryCreationPermissionAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.update_member_repository_creation_permission event.
+type ProjectV2ItemsNodeOrgUpdateMemberRepositoryCreationPermissionAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgUpdateMemberRepositoryCreationPermissionAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgUpdateMemberRepositoryCreationPermissionAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeOrgUpdateMemberRepositoryInvitationPermissionAuditEntry includes the requested fields of the GraphQL type OrgUpdateMemberRepositoryInvitationPermissionAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a org.update_member_repository_invitation_permission event.
+type ProjectV2ItemsNodeOrgUpdateMemberRepositoryInvitationPermissionAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrgUpdateMemberRepositoryInvitationPermissionAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrgUpdateMemberRepositoryInvitationPermissionAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeOrganization includes the requested fields of the GraphQL type Organization.
+// The GraphQL type's documentation follows.
+//
+// An account on GitHub, with one or more owners, that has repositories, members and teams.
+type ProjectV2ItemsNodeOrganization struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrganization.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrganization) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeOrganizationIdentityProvider includes the requested fields of the GraphQL type OrganizationIdentityProvider.
+// The GraphQL type's documentation follows.
+//
+// An Identity Provider configured to provision SAML and SCIM identities for
+// Organizations. Visible to (1) organization owners, (2) organization owners'
+// personal access tokens (classic) with read:org or admin:org scope, (3) GitHub
+// App with an installation token with read or write access to members.
+type ProjectV2ItemsNodeOrganizationIdentityProvider struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrganizationIdentityProvider.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrganizationIdentityProvider) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeOrganizationInvitation includes the requested fields of the GraphQL type OrganizationInvitation.
+// The GraphQL type's documentation follows.
+//
+// An Invitation for a user to an organization.
+type ProjectV2ItemsNodeOrganizationInvitation struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrganizationInvitation.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrganizationInvitation) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeOrganizationMigration includes the requested fields of the GraphQL type OrganizationMigration.
+// The GraphQL type's documentation follows.
+//
+// A GitHub Enterprise Importer (GEI) organization migration.
+type ProjectV2ItemsNodeOrganizationMigration struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeOrganizationMigration.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeOrganizationMigration) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodePackage includes the requested fields of the GraphQL type Package.
+// The GraphQL type's documentation follows.
+//
+// Information for an uploaded package.
+type ProjectV2ItemsNodePackage struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodePackage.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodePackage) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodePackageFile includes the requested fields of the GraphQL type PackageFile.
+// The GraphQL type's documentation follows.
+//
+// A file in a package version.
+type ProjectV2ItemsNodePackageFile struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodePackageFile.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodePackageFile) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodePackageTag includes the requested fields of the GraphQL type PackageTag.
+// The GraphQL type's documentation follows.
+//
+// A version tag contains the mapping between a tag name and a version.
+type ProjectV2ItemsNodePackageTag struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodePackageTag.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodePackageTag) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodePackageVersion includes the requested fields of the GraphQL type PackageVersion.
+// The GraphQL type's documentation follows.
+//
+// Information about a specific package version.
+type ProjectV2ItemsNodePackageVersion struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodePackageVersion.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodePackageVersion) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeParentIssueAddedEvent includes the requested fields of the GraphQL type ParentIssueAddedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'parent_issue_added' event on a given issue.
+type ProjectV2ItemsNodeParentIssueAddedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeParentIssueAddedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeParentIssueAddedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeParentIssueRemovedEvent includes the requested fields of the GraphQL type ParentIssueRemovedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'parent_issue_removed' event on a given issue.
+type ProjectV2ItemsNodeParentIssueRemovedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeParentIssueRemovedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeParentIssueRemovedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodePinnedDiscussion includes the requested fields of the GraphQL type PinnedDiscussion.
+// The GraphQL type's documentation follows.
+//
+// A Pinned Discussion is a discussion pinned to a repository's index page.
+type ProjectV2ItemsNodePinnedDiscussion struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodePinnedDiscussion.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodePinnedDiscussion) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodePinnedEnvironment includes the requested fields of the GraphQL type PinnedEnvironment.
+// The GraphQL type's documentation follows.
+//
+// Represents a pinned environment on a given repository
+type ProjectV2ItemsNodePinnedEnvironment struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodePinnedEnvironment.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodePinnedEnvironment) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodePinnedEvent includes the requested fields of the GraphQL type PinnedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'pinned' event on a given issue or pull request.
+type ProjectV2ItemsNodePinnedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodePinnedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodePinnedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodePinnedIssue includes the requested fields of the GraphQL type PinnedIssue.
+// The GraphQL type's documentation follows.
+//
+// A Pinned Issue is a issue pinned to a repository's index page.
+type ProjectV2ItemsNodePinnedIssue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodePinnedIssue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodePinnedIssue) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodePinnedIssueComment includes the requested fields of the GraphQL type PinnedIssueComment.
+// The GraphQL type's documentation follows.
+//
+// A comment pinned to an Issue.
+type ProjectV2ItemsNodePinnedIssueComment struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodePinnedIssueComment.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodePinnedIssueComment) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodePrivateRepositoryForkingDisableAuditEntry includes the requested fields of the GraphQL type PrivateRepositoryForkingDisableAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a private_repository_forking.disable event.
+type ProjectV2ItemsNodePrivateRepositoryForkingDisableAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodePrivateRepositoryForkingDisableAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodePrivateRepositoryForkingDisableAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodePrivateRepositoryForkingEnableAuditEntry includes the requested fields of the GraphQL type PrivateRepositoryForkingEnableAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a private_repository_forking.enable event.
+type ProjectV2ItemsNodePrivateRepositoryForkingEnableAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodePrivateRepositoryForkingEnableAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodePrivateRepositoryForkingEnableAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeProject includes the requested fields of the GraphQL type Project.
+// The GraphQL type's documentation follows.
+//
+// Projects manage issues, pull requests and notes within a project owner.
+type ProjectV2ItemsNodeProject struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeProject.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeProject) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeProjectCard includes the requested fields of the GraphQL type ProjectCard.
+// The GraphQL type's documentation follows.
+//
+// A card in a project.
+type ProjectV2ItemsNodeProjectCard struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeProjectCard.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeProjectCard) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeProjectColumn includes the requested fields of the GraphQL type ProjectColumn.
+// The GraphQL type's documentation follows.
+//
+// A column inside a project.
+type ProjectV2ItemsNodeProjectColumn struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeProjectColumn.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeProjectColumn) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeProjectV2 includes the requested fields of the GraphQL type ProjectV2.
+// The GraphQL type's documentation follows.
+//
+// New projects that manage issues, pull requests and drafts using tables and boards.
+type ProjectV2ItemsNodeProjectV2 struct {
+	Typename *string `json:"__typename"`
+	// List of items in the project
+	Items *ProjectV2ItemsNodeItemsProjectV2ItemConnection `json:"items"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeProjectV2.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeProjectV2) GetTypename() *string { return v.Typename }
+
+// GetItems returns ProjectV2ItemsNodeProjectV2.Items, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeProjectV2) GetItems() *ProjectV2ItemsNodeItemsProjectV2ItemConnection {
+	return v.Items
+}
+
+// ProjectV2ItemsNodeProjectV2Field includes the requested fields of the GraphQL type ProjectV2Field.
+// The GraphQL type's documentation follows.
+//
+// A field inside a project.
+type ProjectV2ItemsNodeProjectV2Field struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeProjectV2Field.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeProjectV2Field) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeProjectV2Item includes the requested fields of the GraphQL type ProjectV2Item.
+// The GraphQL type's documentation follows.
+//
+// An item within a Project.
+type ProjectV2ItemsNodeProjectV2Item struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeProjectV2Item.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeProjectV2Item) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeProjectV2ItemFieldDateValue includes the requested fields of the GraphQL type ProjectV2ItemFieldDateValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a date field in a Project item.
+type ProjectV2ItemsNodeProjectV2ItemFieldDateValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeProjectV2ItemFieldDateValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeProjectV2ItemFieldDateValue) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeProjectV2ItemFieldIterationValue includes the requested fields of the GraphQL type ProjectV2ItemFieldIterationValue.
+// The GraphQL type's documentation follows.
+//
+// The value of an iteration field in a Project item.
+type ProjectV2ItemsNodeProjectV2ItemFieldIterationValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeProjectV2ItemFieldIterationValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeProjectV2ItemFieldIterationValue) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeProjectV2ItemFieldNumberValue includes the requested fields of the GraphQL type ProjectV2ItemFieldNumberValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a number field in a Project item.
+type ProjectV2ItemsNodeProjectV2ItemFieldNumberValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeProjectV2ItemFieldNumberValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeProjectV2ItemFieldNumberValue) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeProjectV2ItemFieldSingleSelectValue includes the requested fields of the GraphQL type ProjectV2ItemFieldSingleSelectValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a single select field in a Project item.
+type ProjectV2ItemsNodeProjectV2ItemFieldSingleSelectValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeProjectV2ItemFieldSingleSelectValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeProjectV2ItemFieldSingleSelectValue) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeProjectV2ItemFieldTextValue includes the requested fields of the GraphQL type ProjectV2ItemFieldTextValue.
+// The GraphQL type's documentation follows.
+//
+// The value of a text field in a Project item.
+type ProjectV2ItemsNodeProjectV2ItemFieldTextValue struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeProjectV2ItemFieldTextValue.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeProjectV2ItemFieldTextValue) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeProjectV2ItemStatusChangedEvent includes the requested fields of the GraphQL type ProjectV2ItemStatusChangedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'project_v2_item_status_changed' event on a given issue or pull request.
+type ProjectV2ItemsNodeProjectV2ItemStatusChangedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeProjectV2ItemStatusChangedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeProjectV2ItemStatusChangedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeProjectV2IterationField includes the requested fields of the GraphQL type ProjectV2IterationField.
+// The GraphQL type's documentation follows.
+//
+// An iteration field inside a project.
+type ProjectV2ItemsNodeProjectV2IterationField struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeProjectV2IterationField.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeProjectV2IterationField) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeProjectV2SingleSelectField includes the requested fields of the GraphQL type ProjectV2SingleSelectField.
+// The GraphQL type's documentation follows.
+//
+// A single select field inside a project.
+type ProjectV2ItemsNodeProjectV2SingleSelectField struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeProjectV2SingleSelectField.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeProjectV2SingleSelectField) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeProjectV2StatusUpdate includes the requested fields of the GraphQL type ProjectV2StatusUpdate.
+// The GraphQL type's documentation follows.
+//
+// A status update within a project.
+type ProjectV2ItemsNodeProjectV2StatusUpdate struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeProjectV2StatusUpdate.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeProjectV2StatusUpdate) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeProjectV2View includes the requested fields of the GraphQL type ProjectV2View.
+// The GraphQL type's documentation follows.
+//
+// A view within a ProjectV2.
+type ProjectV2ItemsNodeProjectV2View struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeProjectV2View.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeProjectV2View) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeProjectV2Workflow includes the requested fields of the GraphQL type ProjectV2Workflow.
+// The GraphQL type's documentation follows.
+//
+// A workflow inside a project.
+type ProjectV2ItemsNodeProjectV2Workflow struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeProjectV2Workflow.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeProjectV2Workflow) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodePublicKey includes the requested fields of the GraphQL type PublicKey.
+// The GraphQL type's documentation follows.
+//
+// A user's public key.
+type ProjectV2ItemsNodePublicKey struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodePublicKey.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodePublicKey) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodePullRequest includes the requested fields of the GraphQL type PullRequest.
+// The GraphQL type's documentation follows.
+//
+// A repository pull request.
+type ProjectV2ItemsNodePullRequest struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodePullRequest.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodePullRequest) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodePullRequestCommit includes the requested fields of the GraphQL type PullRequestCommit.
+// The GraphQL type's documentation follows.
+//
+// Represents a Git commit part of a pull request.
+type ProjectV2ItemsNodePullRequestCommit struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodePullRequestCommit.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodePullRequestCommit) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodePullRequestCommitCommentThread includes the requested fields of the GraphQL type PullRequestCommitCommentThread.
+// The GraphQL type's documentation follows.
+//
+// Represents a commit comment thread part of a pull request.
+type ProjectV2ItemsNodePullRequestCommitCommentThread struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodePullRequestCommitCommentThread.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodePullRequestCommitCommentThread) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodePullRequestReview includes the requested fields of the GraphQL type PullRequestReview.
+// The GraphQL type's documentation follows.
+//
+// A review object for a given pull request.
+type ProjectV2ItemsNodePullRequestReview struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodePullRequestReview.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodePullRequestReview) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodePullRequestReviewComment includes the requested fields of the GraphQL type PullRequestReviewComment.
+// The GraphQL type's documentation follows.
+//
+// A review comment associated with a given repository pull request.
+type ProjectV2ItemsNodePullRequestReviewComment struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodePullRequestReviewComment.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodePullRequestReviewComment) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodePullRequestReviewThread includes the requested fields of the GraphQL type PullRequestReviewThread.
+// The GraphQL type's documentation follows.
+//
+// A threaded list of comments for a given pull request.
+type ProjectV2ItemsNodePullRequestReviewThread struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodePullRequestReviewThread.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodePullRequestReviewThread) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodePullRequestThread includes the requested fields of the GraphQL type PullRequestThread.
+// The GraphQL type's documentation follows.
+//
+// A threaded list of comments for a given pull request.
+type ProjectV2ItemsNodePullRequestThread struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodePullRequestThread.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodePullRequestThread) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodePush includes the requested fields of the GraphQL type Push.
+// The GraphQL type's documentation follows.
+//
+// A Git push.
+type ProjectV2ItemsNodePush struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodePush.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodePush) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodePushAllowance includes the requested fields of the GraphQL type PushAllowance.
+// The GraphQL type's documentation follows.
+//
+// A team, user, or app who has the ability to push to a protected branch.
+type ProjectV2ItemsNodePushAllowance struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodePushAllowance.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodePushAllowance) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeQuery includes the requested fields of the GraphQL type Query.
+// The GraphQL type's documentation follows.
+//
+// The query root of GitHub's GraphQL interface.
+type ProjectV2ItemsNodeQuery struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeQuery.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeQuery) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeReaction includes the requested fields of the GraphQL type Reaction.
+// The GraphQL type's documentation follows.
+//
+// An emoji reaction to a particular piece of content.
+type ProjectV2ItemsNodeReaction struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeReaction.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeReaction) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeReadyForReviewEvent includes the requested fields of the GraphQL type ReadyForReviewEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'ready_for_review' event on a given pull request.
+type ProjectV2ItemsNodeReadyForReviewEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeReadyForReviewEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeReadyForReviewEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRef includes the requested fields of the GraphQL type Ref.
+// The GraphQL type's documentation follows.
+//
+// Represents a Git reference.
+type ProjectV2ItemsNodeRef struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRef.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRef) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeReferencedEvent includes the requested fields of the GraphQL type ReferencedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'referenced' event on a given `ReferencedSubject`.
+type ProjectV2ItemsNodeReferencedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeReferencedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeReferencedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRelease includes the requested fields of the GraphQL type Release.
+// The GraphQL type's documentation follows.
+//
+// A release contains the content for a release.
+type ProjectV2ItemsNodeRelease struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRelease.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRelease) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeReleaseAsset includes the requested fields of the GraphQL type ReleaseAsset.
+// The GraphQL type's documentation follows.
+//
+// A release asset contains the content for a release asset.
+type ProjectV2ItemsNodeReleaseAsset struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeReleaseAsset.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeReleaseAsset) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRemovedFromMergeQueueEvent includes the requested fields of the GraphQL type RemovedFromMergeQueueEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'removed_from_merge_queue' event on a given pull request.
+type ProjectV2ItemsNodeRemovedFromMergeQueueEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRemovedFromMergeQueueEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRemovedFromMergeQueueEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRemovedFromProjectEvent includes the requested fields of the GraphQL type RemovedFromProjectEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'removed_from_project' event on a given issue or pull request.
+type ProjectV2ItemsNodeRemovedFromProjectEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRemovedFromProjectEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRemovedFromProjectEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRemovedFromProjectV2Event includes the requested fields of the GraphQL type RemovedFromProjectV2Event.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'removed_from_project_v2' event on a given issue or pull request.
+type ProjectV2ItemsNodeRemovedFromProjectV2Event struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRemovedFromProjectV2Event.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRemovedFromProjectV2Event) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRenamedTitleEvent includes the requested fields of the GraphQL type RenamedTitleEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'renamed' event on a given issue or pull request
+type ProjectV2ItemsNodeRenamedTitleEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRenamedTitleEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRenamedTitleEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeReopenedEvent includes the requested fields of the GraphQL type ReopenedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'reopened' event on any `Closable`.
+type ProjectV2ItemsNodeReopenedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeReopenedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeReopenedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRepoAccessAuditEntry includes the requested fields of the GraphQL type RepoAccessAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.access event.
+type ProjectV2ItemsNodeRepoAccessAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepoAccessAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepoAccessAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRepoAddMemberAuditEntry includes the requested fields of the GraphQL type RepoAddMemberAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.add_member event.
+type ProjectV2ItemsNodeRepoAddMemberAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepoAddMemberAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepoAddMemberAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRepoAddTopicAuditEntry includes the requested fields of the GraphQL type RepoAddTopicAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.add_topic event.
+type ProjectV2ItemsNodeRepoAddTopicAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepoAddTopicAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepoAddTopicAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRepoArchivedAuditEntry includes the requested fields of the GraphQL type RepoArchivedAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.archived event.
+type ProjectV2ItemsNodeRepoArchivedAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepoArchivedAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepoArchivedAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRepoChangeMergeSettingAuditEntry includes the requested fields of the GraphQL type RepoChangeMergeSettingAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.change_merge_setting event.
+type ProjectV2ItemsNodeRepoChangeMergeSettingAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepoChangeMergeSettingAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepoChangeMergeSettingAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRepoConfigDisableAnonymousGitAccessAuditEntry includes the requested fields of the GraphQL type RepoConfigDisableAnonymousGitAccessAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.config.disable_anonymous_git_access event.
+type ProjectV2ItemsNodeRepoConfigDisableAnonymousGitAccessAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepoConfigDisableAnonymousGitAccessAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepoConfigDisableAnonymousGitAccessAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeRepoConfigDisableCollaboratorsOnlyAuditEntry includes the requested fields of the GraphQL type RepoConfigDisableCollaboratorsOnlyAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.config.disable_collaborators_only event.
+type ProjectV2ItemsNodeRepoConfigDisableCollaboratorsOnlyAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepoConfigDisableCollaboratorsOnlyAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepoConfigDisableCollaboratorsOnlyAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeRepoConfigDisableContributorsOnlyAuditEntry includes the requested fields of the GraphQL type RepoConfigDisableContributorsOnlyAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.config.disable_contributors_only event.
+type ProjectV2ItemsNodeRepoConfigDisableContributorsOnlyAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepoConfigDisableContributorsOnlyAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepoConfigDisableContributorsOnlyAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeRepoConfigDisableSockpuppetDisallowedAuditEntry includes the requested fields of the GraphQL type RepoConfigDisableSockpuppetDisallowedAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.config.disable_sockpuppet_disallowed event.
+type ProjectV2ItemsNodeRepoConfigDisableSockpuppetDisallowedAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepoConfigDisableSockpuppetDisallowedAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepoConfigDisableSockpuppetDisallowedAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeRepoConfigEnableAnonymousGitAccessAuditEntry includes the requested fields of the GraphQL type RepoConfigEnableAnonymousGitAccessAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.config.enable_anonymous_git_access event.
+type ProjectV2ItemsNodeRepoConfigEnableAnonymousGitAccessAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepoConfigEnableAnonymousGitAccessAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepoConfigEnableAnonymousGitAccessAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeRepoConfigEnableCollaboratorsOnlyAuditEntry includes the requested fields of the GraphQL type RepoConfigEnableCollaboratorsOnlyAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.config.enable_collaborators_only event.
+type ProjectV2ItemsNodeRepoConfigEnableCollaboratorsOnlyAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepoConfigEnableCollaboratorsOnlyAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepoConfigEnableCollaboratorsOnlyAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeRepoConfigEnableContributorsOnlyAuditEntry includes the requested fields of the GraphQL type RepoConfigEnableContributorsOnlyAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.config.enable_contributors_only event.
+type ProjectV2ItemsNodeRepoConfigEnableContributorsOnlyAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepoConfigEnableContributorsOnlyAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepoConfigEnableContributorsOnlyAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeRepoConfigEnableSockpuppetDisallowedAuditEntry includes the requested fields of the GraphQL type RepoConfigEnableSockpuppetDisallowedAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.config.enable_sockpuppet_disallowed event.
+type ProjectV2ItemsNodeRepoConfigEnableSockpuppetDisallowedAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepoConfigEnableSockpuppetDisallowedAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepoConfigEnableSockpuppetDisallowedAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeRepoConfigLockAnonymousGitAccessAuditEntry includes the requested fields of the GraphQL type RepoConfigLockAnonymousGitAccessAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.config.lock_anonymous_git_access event.
+type ProjectV2ItemsNodeRepoConfigLockAnonymousGitAccessAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepoConfigLockAnonymousGitAccessAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepoConfigLockAnonymousGitAccessAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeRepoConfigUnlockAnonymousGitAccessAuditEntry includes the requested fields of the GraphQL type RepoConfigUnlockAnonymousGitAccessAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.config.unlock_anonymous_git_access event.
+type ProjectV2ItemsNodeRepoConfigUnlockAnonymousGitAccessAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepoConfigUnlockAnonymousGitAccessAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepoConfigUnlockAnonymousGitAccessAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeRepoCreateAuditEntry includes the requested fields of the GraphQL type RepoCreateAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.create event.
+type ProjectV2ItemsNodeRepoCreateAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepoCreateAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepoCreateAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRepoDestroyAuditEntry includes the requested fields of the GraphQL type RepoDestroyAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.destroy event.
+type ProjectV2ItemsNodeRepoDestroyAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepoDestroyAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepoDestroyAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRepoRemoveMemberAuditEntry includes the requested fields of the GraphQL type RepoRemoveMemberAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.remove_member event.
+type ProjectV2ItemsNodeRepoRemoveMemberAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepoRemoveMemberAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepoRemoveMemberAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRepoRemoveTopicAuditEntry includes the requested fields of the GraphQL type RepoRemoveTopicAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repo.remove_topic event.
+type ProjectV2ItemsNodeRepoRemoveTopicAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepoRemoveTopicAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepoRemoveTopicAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRepository includes the requested fields of the GraphQL type Repository.
+// The GraphQL type's documentation follows.
+//
+// A repository contains the content for a project.
+type ProjectV2ItemsNodeRepository struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepository.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepository) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRepositoryCustomProperty includes the requested fields of the GraphQL type RepositoryCustomProperty.
+// The GraphQL type's documentation follows.
+//
+// A repository custom property.
+type ProjectV2ItemsNodeRepositoryCustomProperty struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepositoryCustomProperty.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepositoryCustomProperty) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRepositoryInvitation includes the requested fields of the GraphQL type RepositoryInvitation.
+// The GraphQL type's documentation follows.
+//
+// An invitation for a user to be added to a repository.
+type ProjectV2ItemsNodeRepositoryInvitation struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepositoryInvitation.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepositoryInvitation) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRepositoryMigration includes the requested fields of the GraphQL type RepositoryMigration.
+// The GraphQL type's documentation follows.
+//
+// A GitHub Enterprise Importer (GEI) repository migration.
+type ProjectV2ItemsNodeRepositoryMigration struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepositoryMigration.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepositoryMigration) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRepositoryRule includes the requested fields of the GraphQL type RepositoryRule.
+// The GraphQL type's documentation follows.
+//
+// A repository rule.
+type ProjectV2ItemsNodeRepositoryRule struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepositoryRule.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepositoryRule) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRepositoryRuleset includes the requested fields of the GraphQL type RepositoryRuleset.
+// The GraphQL type's documentation follows.
+//
+// A repository ruleset.
+type ProjectV2ItemsNodeRepositoryRuleset struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepositoryRuleset.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepositoryRuleset) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRepositoryRulesetBypassActor includes the requested fields of the GraphQL type RepositoryRulesetBypassActor.
+// The GraphQL type's documentation follows.
+//
+// A team or app that has the ability to bypass a rules defined on a ruleset
+type ProjectV2ItemsNodeRepositoryRulesetBypassActor struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepositoryRulesetBypassActor.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepositoryRulesetBypassActor) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRepositoryTopic includes the requested fields of the GraphQL type RepositoryTopic.
+// The GraphQL type's documentation follows.
+//
+// A repository-topic connects a repository to a topic.
+type ProjectV2ItemsNodeRepositoryTopic struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepositoryTopic.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepositoryTopic) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeRepositoryVisibilityChangeDisableAuditEntry includes the requested fields of the GraphQL type RepositoryVisibilityChangeDisableAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repository_visibility_change.disable event.
+type ProjectV2ItemsNodeRepositoryVisibilityChangeDisableAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepositoryVisibilityChangeDisableAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepositoryVisibilityChangeDisableAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeRepositoryVisibilityChangeEnableAuditEntry includes the requested fields of the GraphQL type RepositoryVisibilityChangeEnableAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a repository_visibility_change.enable event.
+type ProjectV2ItemsNodeRepositoryVisibilityChangeEnableAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepositoryVisibilityChangeEnableAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepositoryVisibilityChangeEnableAuditEntry) GetTypename() *string {
+	return v.Typename
+}
+
+// ProjectV2ItemsNodeRepositoryVulnerabilityAlert includes the requested fields of the GraphQL type RepositoryVulnerabilityAlert.
+// The GraphQL type's documentation follows.
+//
+// A Dependabot alert for a repository with a dependency affected by a security vulnerability.
+type ProjectV2ItemsNodeRepositoryVulnerabilityAlert struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeRepositoryVulnerabilityAlert.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeRepositoryVulnerabilityAlert) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeReviewDismissalAllowance includes the requested fields of the GraphQL type ReviewDismissalAllowance.
+// The GraphQL type's documentation follows.
+//
+// A user, team, or app who has the ability to dismiss a review on a protected branch.
+type ProjectV2ItemsNodeReviewDismissalAllowance struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeReviewDismissalAllowance.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeReviewDismissalAllowance) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeReviewDismissedEvent includes the requested fields of the GraphQL type ReviewDismissedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'review_dismissed' event on a given issue or pull request.
+type ProjectV2ItemsNodeReviewDismissedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeReviewDismissedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeReviewDismissedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeReviewRequest includes the requested fields of the GraphQL type ReviewRequest.
+// The GraphQL type's documentation follows.
+//
+// A request for a user to review a pull request.
+type ProjectV2ItemsNodeReviewRequest struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeReviewRequest.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeReviewRequest) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeReviewRequestRemovedEvent includes the requested fields of the GraphQL type ReviewRequestRemovedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents an 'review_request_removed' event on a given pull request.
+type ProjectV2ItemsNodeReviewRequestRemovedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeReviewRequestRemovedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeReviewRequestRemovedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeReviewRequestedEvent includes the requested fields of the GraphQL type ReviewRequestedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents an 'review_requested' event on a given pull request.
+type ProjectV2ItemsNodeReviewRequestedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeReviewRequestedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeReviewRequestedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeSavedReply includes the requested fields of the GraphQL type SavedReply.
+// The GraphQL type's documentation follows.
+//
+// A Saved Reply is text a user can use to reply quickly.
+type ProjectV2ItemsNodeSavedReply struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeSavedReply.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeSavedReply) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeSecurityAdvisory includes the requested fields of the GraphQL type SecurityAdvisory.
+// The GraphQL type's documentation follows.
+//
+// A GitHub Security Advisory
+type ProjectV2ItemsNodeSecurityAdvisory struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeSecurityAdvisory.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeSecurityAdvisory) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeSponsorsActivity includes the requested fields of the GraphQL type SponsorsActivity.
+// The GraphQL type's documentation follows.
+//
+// An event related to sponsorship activity.
+type ProjectV2ItemsNodeSponsorsActivity struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeSponsorsActivity.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeSponsorsActivity) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeSponsorsListing includes the requested fields of the GraphQL type SponsorsListing.
+// The GraphQL type's documentation follows.
+//
+// A GitHub Sponsors listing.
+type ProjectV2ItemsNodeSponsorsListing struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeSponsorsListing.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeSponsorsListing) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeSponsorsListingFeaturedItem includes the requested fields of the GraphQL type SponsorsListingFeaturedItem.
+// The GraphQL type's documentation follows.
+//
+// A record that is promoted on a GitHub Sponsors profile.
+type ProjectV2ItemsNodeSponsorsListingFeaturedItem struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeSponsorsListingFeaturedItem.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeSponsorsListingFeaturedItem) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeSponsorsTier includes the requested fields of the GraphQL type SponsorsTier.
+// The GraphQL type's documentation follows.
+//
+// A GitHub Sponsors tier associated with a GitHub Sponsors listing.
+type ProjectV2ItemsNodeSponsorsTier struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeSponsorsTier.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeSponsorsTier) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeSponsorship includes the requested fields of the GraphQL type Sponsorship.
+// The GraphQL type's documentation follows.
+//
+// A sponsorship relationship between a sponsor and a maintainer
+type ProjectV2ItemsNodeSponsorship struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeSponsorship.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeSponsorship) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeSponsorshipNewsletter includes the requested fields of the GraphQL type SponsorshipNewsletter.
+// The GraphQL type's documentation follows.
+//
+// An update sent to sponsors of a user or organization on GitHub Sponsors.
+type ProjectV2ItemsNodeSponsorshipNewsletter struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeSponsorshipNewsletter.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeSponsorshipNewsletter) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeStatus includes the requested fields of the GraphQL type Status.
+// The GraphQL type's documentation follows.
+//
+// Represents a commit status.
+type ProjectV2ItemsNodeStatus struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeStatus.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeStatus) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeStatusCheckRollup includes the requested fields of the GraphQL type StatusCheckRollup.
+// The GraphQL type's documentation follows.
+//
+// Represents the rollup for both the check runs and status for a commit.
+type ProjectV2ItemsNodeStatusCheckRollup struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeStatusCheckRollup.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeStatusCheckRollup) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeStatusContext includes the requested fields of the GraphQL type StatusContext.
+// The GraphQL type's documentation follows.
+//
+// Represents an individual commit status context
+type ProjectV2ItemsNodeStatusContext struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeStatusContext.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeStatusContext) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeSubIssueAddedEvent includes the requested fields of the GraphQL type SubIssueAddedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'sub_issue_added' event on a given issue.
+type ProjectV2ItemsNodeSubIssueAddedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeSubIssueAddedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeSubIssueAddedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeSubIssueRemovedEvent includes the requested fields of the GraphQL type SubIssueRemovedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'sub_issue_removed' event on a given issue.
+type ProjectV2ItemsNodeSubIssueRemovedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeSubIssueRemovedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeSubIssueRemovedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeSubscribedEvent includes the requested fields of the GraphQL type SubscribedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'subscribed' event on a given `Subscribable`.
+type ProjectV2ItemsNodeSubscribedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeSubscribedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeSubscribedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeTag includes the requested fields of the GraphQL type Tag.
+// The GraphQL type's documentation follows.
+//
+// Represents a Git tag.
+type ProjectV2ItemsNodeTag struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeTag.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeTag) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeTeam includes the requested fields of the GraphQL type Team.
+// The GraphQL type's documentation follows.
+//
+// A team of users in an organization.
+type ProjectV2ItemsNodeTeam struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeTeam.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeTeam) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeTeamAddMemberAuditEntry includes the requested fields of the GraphQL type TeamAddMemberAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a team.add_member event.
+type ProjectV2ItemsNodeTeamAddMemberAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeTeamAddMemberAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeTeamAddMemberAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeTeamAddRepositoryAuditEntry includes the requested fields of the GraphQL type TeamAddRepositoryAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a team.add_repository event.
+type ProjectV2ItemsNodeTeamAddRepositoryAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeTeamAddRepositoryAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeTeamAddRepositoryAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeTeamChangeParentTeamAuditEntry includes the requested fields of the GraphQL type TeamChangeParentTeamAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a team.change_parent_team event.
+type ProjectV2ItemsNodeTeamChangeParentTeamAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeTeamChangeParentTeamAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeTeamChangeParentTeamAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeTeamRemoveMemberAuditEntry includes the requested fields of the GraphQL type TeamRemoveMemberAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a team.remove_member event.
+type ProjectV2ItemsNodeTeamRemoveMemberAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeTeamRemoveMemberAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeTeamRemoveMemberAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeTeamRemoveRepositoryAuditEntry includes the requested fields of the GraphQL type TeamRemoveRepositoryAuditEntry.
+// The GraphQL type's documentation follows.
+//
+// Audit log entry for a team.remove_repository event.
+type ProjectV2ItemsNodeTeamRemoveRepositoryAuditEntry struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeTeamRemoveRepositoryAuditEntry.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeTeamRemoveRepositoryAuditEntry) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeTopic includes the requested fields of the GraphQL type Topic.
+// The GraphQL type's documentation follows.
+//
+// A topic aggregates entities that are related to a subject.
+type ProjectV2ItemsNodeTopic struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeTopic.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeTopic) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeTransferredEvent includes the requested fields of the GraphQL type TransferredEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'transferred' event on a given issue or pull request.
+type ProjectV2ItemsNodeTransferredEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeTransferredEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeTransferredEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeTree includes the requested fields of the GraphQL type Tree.
+// The GraphQL type's documentation follows.
+//
+// Represents a Git tree.
+type ProjectV2ItemsNodeTree struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeTree.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeTree) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeUnassignedEvent includes the requested fields of the GraphQL type UnassignedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents an 'unassigned' event on any assignable object.
+type ProjectV2ItemsNodeUnassignedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeUnassignedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeUnassignedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeUnlabeledEvent includes the requested fields of the GraphQL type UnlabeledEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents an 'unlabeled' event on a given issue or pull request.
+type ProjectV2ItemsNodeUnlabeledEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeUnlabeledEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeUnlabeledEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeUnlockedEvent includes the requested fields of the GraphQL type UnlockedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents an 'unlocked' event on a given issue or pull request.
+type ProjectV2ItemsNodeUnlockedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeUnlockedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeUnlockedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeUnmarkedAsDuplicateEvent includes the requested fields of the GraphQL type UnmarkedAsDuplicateEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents an 'unmarked_as_duplicate' event on a given issue or pull request.
+type ProjectV2ItemsNodeUnmarkedAsDuplicateEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeUnmarkedAsDuplicateEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeUnmarkedAsDuplicateEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeUnpinnedEvent includes the requested fields of the GraphQL type UnpinnedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents an 'unpinned' event on a given issue or pull request.
+type ProjectV2ItemsNodeUnpinnedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeUnpinnedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeUnpinnedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeUnsubscribedEvent includes the requested fields of the GraphQL type UnsubscribedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents an 'unsubscribed' event on a given `Subscribable`.
+type ProjectV2ItemsNodeUnsubscribedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeUnsubscribedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeUnsubscribedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeUser includes the requested fields of the GraphQL type User.
+// The GraphQL type's documentation follows.
+//
+// A user is an individual's account on GitHub that owns repositories and can make new content.
+type ProjectV2ItemsNodeUser struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeUser.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeUser) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeUserBlockedEvent includes the requested fields of the GraphQL type UserBlockedEvent.
+// The GraphQL type's documentation follows.
+//
+// Represents a 'user_blocked' event on a given user.
+type ProjectV2ItemsNodeUserBlockedEvent struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeUserBlockedEvent.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeUserBlockedEvent) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeUserContentEdit includes the requested fields of the GraphQL type UserContentEdit.
+// The GraphQL type's documentation follows.
+//
+// An edit on user content
+type ProjectV2ItemsNodeUserContentEdit struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeUserContentEdit.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeUserContentEdit) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeUserList includes the requested fields of the GraphQL type UserList.
+// The GraphQL type's documentation follows.
+//
+// A user-curated list of repositories
+type ProjectV2ItemsNodeUserList struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeUserList.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeUserList) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeUserNamespaceRepository includes the requested fields of the GraphQL type UserNamespaceRepository.
+// The GraphQL type's documentation follows.
+//
+// A repository owned by an Enterprise Managed user.
+type ProjectV2ItemsNodeUserNamespaceRepository struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeUserNamespaceRepository.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeUserNamespaceRepository) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeUserStatus includes the requested fields of the GraphQL type UserStatus.
+// The GraphQL type's documentation follows.
+//
+// The user's description of what they're currently doing.
+type ProjectV2ItemsNodeUserStatus struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeUserStatus.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeUserStatus) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeVerifiableDomain includes the requested fields of the GraphQL type VerifiableDomain.
+// The GraphQL type's documentation follows.
+//
+// A domain that can be verified or approved for an organization or an enterprise.
+type ProjectV2ItemsNodeVerifiableDomain struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeVerifiableDomain.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeVerifiableDomain) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeWorkflow includes the requested fields of the GraphQL type Workflow.
+// The GraphQL type's documentation follows.
+//
+// A workflow contains meta information about an Actions workflow file.
+type ProjectV2ItemsNodeWorkflow struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeWorkflow.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeWorkflow) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeWorkflowRun includes the requested fields of the GraphQL type WorkflowRun.
+// The GraphQL type's documentation follows.
+//
+// A workflow run.
+type ProjectV2ItemsNodeWorkflowRun struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeWorkflowRun.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeWorkflowRun) GetTypename() *string { return v.Typename }
+
+// ProjectV2ItemsNodeWorkflowRunFile includes the requested fields of the GraphQL type WorkflowRunFile.
+// The GraphQL type's documentation follows.
+//
+// An executed workflow file for a workflow run.
+type ProjectV2ItemsNodeWorkflowRunFile struct {
+	Typename *string `json:"__typename"`
+}
+
+// GetTypename returns ProjectV2ItemsNodeWorkflowRunFile.Typename, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeWorkflowRunFile) GetTypename() *string { return v.Typename }
+
 // Represents an iteration
 type ProjectV2Iteration struct {
 	// The duration of the iteration, in days.
@@ -2991,6 +18873,25 @@ func (v *ProjectV2Iteration) GetStartDate() string { return v.StartDate }
 
 // GetTitle returns ProjectV2Iteration.Title, and is useful for accessing the field via an interface.
 func (v *ProjectV2Iteration) GetTitle() string { return v.Title }
+
+// ProjectV2IterationConfig includes the requested fields of the GraphQL type ProjectV2IterationFieldConfiguration.
+// The GraphQL type's documentation follows.
+//
+// Iteration field configuration for a project.
+type ProjectV2IterationConfig struct {
+	// The iteration's iterations
+	Iterations []*ProjectV2IterationOption `json:"iterations"`
+	// The iteration's completed iterations
+	CompletedIterations []*ProjectV2IterationOption `json:"completedIterations"`
+}
+
+// GetIterations returns ProjectV2IterationConfig.Iterations, and is useful for accessing the field via an interface.
+func (v *ProjectV2IterationConfig) GetIterations() []*ProjectV2IterationOption { return v.Iterations }
+
+// GetCompletedIterations returns ProjectV2IterationConfig.CompletedIterations, and is useful for accessing the field via an interface.
+func (v *ProjectV2IterationConfig) GetCompletedIterations() []*ProjectV2IterationOption {
+	return v.CompletedIterations
+}
 
 // Represents an iteration field configuration.
 type ProjectV2IterationFieldConfigurationInput struct {
@@ -3012,6 +18913,33 @@ func (v *ProjectV2IterationFieldConfigurationInput) GetIterations() []*ProjectV2
 
 // GetStartDate returns ProjectV2IterationFieldConfigurationInput.StartDate, and is useful for accessing the field via an interface.
 func (v *ProjectV2IterationFieldConfigurationInput) GetStartDate() string { return v.StartDate }
+
+// ProjectV2IterationOption includes the requested fields of the GraphQL type ProjectV2IterationFieldIteration.
+// The GraphQL type's documentation follows.
+//
+// Iteration field iteration settings for a project.
+type ProjectV2IterationOption struct {
+	// The iteration's ID.
+	Id string `json:"id"`
+	// The iteration's title.
+	Title string `json:"title"`
+	// The iteration's start date
+	StartDate string `json:"startDate"`
+	// The iteration's duration in days
+	Duration int `json:"duration"`
+}
+
+// GetId returns ProjectV2IterationOption.Id, and is useful for accessing the field via an interface.
+func (v *ProjectV2IterationOption) GetId() string { return v.Id }
+
+// GetTitle returns ProjectV2IterationOption.Title, and is useful for accessing the field via an interface.
+func (v *ProjectV2IterationOption) GetTitle() string { return v.Title }
+
+// GetStartDate returns ProjectV2IterationOption.StartDate, and is useful for accessing the field via an interface.
+func (v *ProjectV2IterationOption) GetStartDate() string { return v.StartDate }
+
+// GetDuration returns ProjectV2IterationOption.Duration, and is useful for accessing the field via an interface.
+func (v *ProjectV2IterationOption) GetDuration() int { return v.Duration }
 
 // The display color of a single-select field option.
 type ProjectV2SingleSelectFieldOptionColor string
@@ -3072,6 +19000,24 @@ func (v *ProjectV2SingleSelectFieldOptionInput) GetId() *string { return v.Id }
 
 // GetName returns ProjectV2SingleSelectFieldOptionInput.Name, and is useful for accessing the field via an interface.
 func (v *ProjectV2SingleSelectFieldOptionInput) GetName() string { return v.Name }
+
+// The possible states of a pull request.
+type PullRequestState string
+
+const (
+	// A pull request that has been closed without being merged.
+	PullRequestStateClosed PullRequestState = "CLOSED"
+	// A pull request that has been closed by being merged.
+	PullRequestStateMerged PullRequestState = "MERGED"
+	// A pull request that is still open.
+	PullRequestStateOpen PullRequestState = "OPEN"
+)
+
+var AllPullRequestState = []PullRequestState{
+	PullRequestStateClosed,
+	PullRequestStateMerged,
+	PullRequestStateOpen,
+}
 
 // The possible target states when updating a pull request.
 type PullRequestUpdateState string
@@ -3580,6 +19526,30 @@ func (v *__ListMilestonesInput) GetName() string { return v.Name }
 
 // GetFirst returns __ListMilestonesInput.First, and is useful for accessing the field via an interface.
 func (v *__ListMilestonesInput) GetFirst() int { return v.First }
+
+// __ListProjectV2FieldsInput is used internally by genqlient
+type __ListProjectV2FieldsInput struct {
+	ProjectId string `json:"projectId"`
+	First     int    `json:"first"`
+}
+
+// GetProjectId returns __ListProjectV2FieldsInput.ProjectId, and is useful for accessing the field via an interface.
+func (v *__ListProjectV2FieldsInput) GetProjectId() string { return v.ProjectId }
+
+// GetFirst returns __ListProjectV2FieldsInput.First, and is useful for accessing the field via an interface.
+func (v *__ListProjectV2FieldsInput) GetFirst() int { return v.First }
+
+// __ListProjectV2ItemsInput is used internally by genqlient
+type __ListProjectV2ItemsInput struct {
+	ProjectId string `json:"projectId"`
+	First     int    `json:"first"`
+}
+
+// GetProjectId returns __ListProjectV2ItemsInput.ProjectId, and is useful for accessing the field via an interface.
+func (v *__ListProjectV2ItemsInput) GetProjectId() string { return v.ProjectId }
+
+// GetFirst returns __ListProjectV2ItemsInput.First, and is useful for accessing the field via an interface.
+func (v *__ListProjectV2ItemsInput) GetFirst() int { return v.First }
 
 // __ListRepoIssuesInput is used internally by genqlient
 type __ListRepoIssuesInput struct {
@@ -4345,6 +20315,213 @@ func ListMilestones(
 	}
 
 	data_ = &ListMilestonesResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by ListProjectV2Fields.
+const ListProjectV2Fields_Operation = `
+query ListProjectV2Fields ($projectId: ID!, $first: Int!) {
+	node(id: $projectId) {
+		__typename
+		... on ProjectV2 {
+			fields(first: $first) {
+				nodes {
+					__typename
+					... on ProjectV2FieldCommon {
+						id
+						name
+						dataType
+					}
+					... on ProjectV2SingleSelectField {
+						options {
+							id
+							name
+						}
+					}
+					... on ProjectV2IterationField {
+						configuration {
+							iterations {
+								id
+								title
+								startDate
+								duration
+							}
+							completedIterations {
+								id
+								title
+								startDate
+								duration
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+`
+
+func ListProjectV2Fields(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	projectId string,
+	first int,
+) (data_ *ListProjectV2FieldsResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "ListProjectV2Fields",
+		Query:  ListProjectV2Fields_Operation,
+		Variables: &__ListProjectV2FieldsInput{
+			ProjectId: projectId,
+			First:     first,
+		},
+	}
+
+	data_ = &ListProjectV2FieldsResponse{}
+	resp_ := &graphql.Response{Data: data_}
+
+	err_ = client_.MakeRequest(
+		ctx_,
+		req_,
+		resp_,
+	)
+
+	return data_, err_
+}
+
+// The query executed by ListProjectV2Items.
+const ListProjectV2Items_Operation = `
+query ListProjectV2Items ($projectId: ID!, $first: Int!) {
+	node(id: $projectId) {
+		__typename
+		... on ProjectV2 {
+			items(first: $first) {
+				nodes {
+					id
+					updatedAt
+					content {
+						__typename
+						... on Issue {
+							id
+							number
+							title
+							url
+							issueState: state
+							updatedAt
+							closedAt
+							author {
+								__typename
+								login
+							}
+							assignees(first: 10) {
+								nodes {
+									login
+								}
+							}
+						}
+						... on PullRequest {
+							id
+							number
+							title
+							url
+							prState: state
+							updatedAt
+							mergedAt
+							author {
+								__typename
+								login
+							}
+							assignees(first: 10) {
+								nodes {
+									login
+								}
+							}
+						}
+						... on DraftIssue {
+							id
+							title
+							body
+						}
+					}
+					fieldValues(first: 30) {
+						nodes {
+							__typename
+							... on ProjectV2ItemFieldSingleSelectValue {
+								optionId
+								name
+								field {
+									__typename
+									... on ProjectV2FieldCommon {
+										id
+										name
+									}
+								}
+							}
+							... on ProjectV2ItemFieldIterationValue {
+								iterationId
+								title
+								startDate
+								duration
+								field {
+									__typename
+									... on ProjectV2FieldCommon {
+										id
+										name
+									}
+								}
+							}
+							... on ProjectV2ItemFieldTextValue {
+								text
+								field {
+									__typename
+									... on ProjectV2FieldCommon {
+										id
+										name
+									}
+								}
+							}
+							... on ProjectV2ItemFieldDateValue {
+								date
+								field {
+									__typename
+									... on ProjectV2FieldCommon {
+										id
+										name
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+`
+
+func ListProjectV2Items(
+	ctx_ context.Context,
+	client_ graphql.Client,
+	projectId string,
+	first int,
+) (data_ *ListProjectV2ItemsResponse, err_ error) {
+	req_ := &graphql.Request{
+		OpName: "ListProjectV2Items",
+		Query:  ListProjectV2Items_Operation,
+		Variables: &__ListProjectV2ItemsInput{
+			ProjectId: projectId,
+			First:     first,
+		},
+	}
+
+	data_ = &ListProjectV2ItemsResponse{}
 	resp_ := &graphql.Response{Data: data_}
 
 	err_ = client_.MakeRequest(
