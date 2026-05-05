@@ -74,7 +74,7 @@ func runListRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, l
 	}
 	if resp.Repository == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
-		return ErrSilent
+		return ErrSilentRuntime
 	}
 	if len(resp.Repository.Issues.Nodes) == 0 {
 		fmt.Fprintln(c.OutOrStdout(), r.T("list.empty"))
@@ -106,7 +106,7 @@ func runListProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	if pid == "" {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
-		return ErrSilent
+		return ErrSilentRuntime
 	}
 	var resp queries.ListProjectV2ItemsResponse
 	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Items, map[string]any{
@@ -116,7 +116,7 @@ func runListProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	if resp.Node == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
-		return ErrSilent
+		return ErrSilentRuntime
 	}
 	if len(resp.Node.Items.Nodes) == 0 {
 		fmt.Fprintln(c.OutOrStdout(), r.T("list.empty.project"))
@@ -128,18 +128,19 @@ func runListProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	return nil
 }
 
-// ErrSilent signals that an error has already been written to stderr and the
-// caller should exit non-zero without a duplicate error print.
-var ErrSilent = errors.New("silent error")
-
 // localizedError renders any internal error carrying an i18n.Localized payload
-// using the resolved locale, prints it to stderr, and returns ErrSilent.
-// Errors that don't implement Localized are returned as-is.
+// using the resolved locale, prints it to stderr, and returns either
+// [ErrSilentArgs] (when err is a known arg-validation domain error type) or
+// [ErrSilentRuntime] (otherwise). Errors that don't implement Localized are
+// returned as-is so cobra surfaces them normally.
 func localizedError(c *cobra.Command, r Resolved, err error) error {
 	var loc i18n.Localized
 	if errors.As(err, &loc) {
 		fmt.Fprintln(c.ErrOrStderr(), loc.Localize(r.Locale))
-		return ErrSilent
+		if classifyArgError(err) {
+			return ErrSilentArgs
+		}
+		return ErrSilentRuntime
 	}
 	return err
 }
