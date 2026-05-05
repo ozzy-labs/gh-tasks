@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check PR title format
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const title = context.payload.pull_request.title;
@@ -37,10 +37,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check branch name format
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const branch = context.payload.pull_request.head.ref;
+            const actor = context.payload.pull_request.user?.login ?? '';
             const pattern = /^(feat|fix|docs|style|refactor|perf|test|build|ci|chore)\/.+/;
 
             if (branch === 'main') {
@@ -50,6 +51,11 @@ jobs:
 
             if (branch.startsWith('release-please--')) {
               core.info('Branch is a release-please auto PR, skipping check');
+              return;
+            }
+
+            if (actor === 'dependabot[bot]' || branch.startsWith('dependabot/')) {
+              core.info(`Branch is managed by Dependabot (${branch}), skipping check`);
               return;
             }
 
@@ -63,4 +69,4 @@ jobs:
             } else {
               core.info('Branch name follows naming convention');
             }
-          # end: ozzy-labs/commons
+# end: ozzy-labs/commons
