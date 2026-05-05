@@ -2149,6 +2149,151 @@ func TestProjectsInit_TemplateNotFound(t *testing.T) {
 	}
 }
 
+// ===== projects (group) + init-templates wiring ============================
+//
+// These tests pin the cobra wiring of the `projects` subcommand group and
+// the small bundled-template printer. They do NOT exercise GitHub API
+// surface — `runProjectsInit` already has full mutation/skip/error coverage
+// in the TestProjectsInit_* block above. Their job is to lock the
+// command-tree shape (groups, available subcommands, flag rejection) and
+// the literal stdout that operators copy-paste into their own YAML files
+// when bootstrapping a board.
+
+// TestProjectsCmd_NoArgs pins that running `gh tasks projects` without any
+// subcommand emits the i18n `error.projects.subcommandRequired` notice on
+// stderr and exits with [cmd.ErrSilent] (via the underlying
+// [cmd.ErrSilentArgs]). Stdout must stay empty because the parent agent
+// pipes the output of `projects init-templates` into a YAML file — any
+// stray group-level chatter would corrupt that pipe.
+func TestProjectsCmd_NoArgs(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{}
+	d := testDeps(g)
+	stdout, stderr, err := runCmd(t, d, "projects")
+	if !errors.Is(err, cmd.ErrSilent) {
+		t.Fatalf("expected ErrSilent for no-subcommand projects, got %v", err)
+	}
+	assertI18nMessage(t, stderr.String(), i18n.LocaleEN,
+		"error.projects.subcommandRequired")
+	if stdout.Len() != 0 {
+		t.Errorf("expected empty stdout when no subcommand is given, got:\n%s", stdout.String())
+	}
+}
+
+// TestProjectsCmd_HelpFlag pins that `gh tasks projects --help` produces
+// cobra's standard help layout and lists both `init` and `init-templates`
+// under "Available Commands:". This guards against accidental subcommand
+// removal / rename — the group wiring inside `newProjectsCmd` is exercised
+// only when `AddCommand` is consulted by cobra during help rendering.
+func TestProjectsCmd_HelpFlag(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "projects", "--help")
+	if err != nil {
+		t.Fatalf("Execute --help: %v", err)
+	}
+	got := stdout.String()
+	for _, want := range []string{"Available Commands:", "init", "init-templates"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("expected %q in projects --help output, got:\n%s", want, got)
+		}
+	}
+}
+
+// TestProjectsInitTemplates_PrintsUserYaml pins that the `# --template
+// user` section of `init-templates` carries the bundled user-scope YAML
+// (name + fields + Status + Iteration). The literal copy that operators
+// pipe into their own YAML files is part of the public CLI contract, so
+// the assertion locks the structural markers (top-level keys + scope
+// title + the two required fields) rather than the entire string body.
+func TestProjectsInitTemplates_PrintsUserYaml(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "projects", "init-templates")
+	if err != nil {
+		t.Fatalf("Execute init-templates: %v", err)
+	}
+	got := stdout.String()
+	for _, want := range []string{
+		"# --template user",
+		"name: gh-tasks user scope",
+		"fields:",
+		"- name: Status",
+		"type: single_select",
+		"- name: Iteration",
+		"type: iteration",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("user template section missing %q, got:\n%s", want, got)
+		}
+	}
+}
+
+// TestProjectsInitTemplates_PrintsOrgYaml pins the `# --template org`
+// section, which extends the user template with `Repository` (built-in
+// field type) and a free-form `Project` single_select. Operators rely on
+// these two extra fields to coordinate cross-repo work in a team Project,
+// so any drift in the bundled YAML body is a customer-visible change.
+func TestProjectsInitTemplates_PrintsOrgYaml(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "projects", "init-templates")
+	if err != nil {
+		t.Fatalf("Execute init-templates: %v", err)
+	}
+	got := stdout.String()
+	for _, want := range []string{
+		"# --template org",
+		"name: gh-tasks org scope",
+		"- name: Repository",
+		"type: repository",
+		"- name: Project",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("org template section missing %q, got:\n%s", want, got)
+		}
+	}
+	// The org section must follow the user section (the printer emits
+	// user first, then a blank line, then org). Verify the ordering so a
+	// future refactor that swaps them can't slip through.
+	userIdx := strings.Index(got, "# --template user")
+	orgIdx := strings.Index(got, "# --template org")
+	if userIdx < 0 || orgIdx < 0 || userIdx >= orgIdx {
+		t.Errorf("expected user section before org section, indices user=%d org=%d:\n%s",
+			userIdx, orgIdx, got)
+	}
+}
+
+// TestProjectsInitTemplates_InvalidTemplate pins that `init-templates`
+// rejects unknown flags such as `--template foo`. The command is a small
+// stdout printer that takes no flags by design (it emits both bundled
+// templates unconditionally), so cobra's unknown-flag error is the
+// expected behaviour. This guards against a future refactor that
+// silently absorbs / ignores unrecognised flags.
+func TestProjectsInitTemplates_InvalidTemplate(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{}
+	d := testDeps(g)
+	_, stderr, err := runCmd(t, d, "projects", "init-templates", "--template", "foo")
+	if err == nil {
+		t.Fatalf("expected error for --template flag on init-templates, got nil")
+	}
+	// cobra surfaces unknown flags via "unknown flag" in the error / stderr.
+	combined := err.Error() + "\n" + stderr.String()
+	if !strings.Contains(combined, "unknown flag") {
+		t.Errorf("expected 'unknown flag' in error/stderr, got err=%v stderr=%s",
+			err, stderr.String())
+	}
+}
+
 // ===== --lang flag E2E ======================================================
 //
 // These tests exercise the full cobra → deps.Resolve → r.T wiring rather than
