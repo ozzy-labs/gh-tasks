@@ -119,6 +119,35 @@ func TestAdd_ProjectDraftItem(t *testing.T) {
 	}
 }
 
+func TestAdd_OrgProjectDraftItem(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetOrgProjectV2 (", Data: orgProject("PVT_org")},
+		{
+			MatchSubstring: "mutation AddProjectV2DraftIssue (",
+			Data:           map[string]any{"addProjectV2DraftIssue": map[string]any{"projectItem": map[string]any{"id": "DI_org"}}},
+		},
+	}}
+	d := testDeps(g, func(d *cmd.Deps) {
+		d.HasGitRemote = func() bool { return false }
+		d.LoadConfig = func() (config.AppConfig, error) {
+			return config.AppConfig{OrgProject: project.Ref{Owner: "octo", Number: 7}}, nil
+		}
+	})
+	stdout, _, err := runCmd(t, d, "add", "Org idea", "--scope=org")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	got := stdout.String()
+	if !strings.Contains(got, "Draft item added to project") {
+		t.Errorf("expected add.created.project prefix, got:\n%s", got)
+	}
+	if !strings.Contains(got, "DI_org") {
+		t.Errorf("expected created draft id, got:\n%s", got)
+	}
+}
+
 func TestAdd_RepoMissingRepository(t *testing.T) {
 	t.Parallel()
 
