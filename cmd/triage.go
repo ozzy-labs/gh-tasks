@@ -71,6 +71,7 @@ func runTriageRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
 	}
+	warnIfTruncated(c, r, "repo_issues", len(resp.Repository.Issues.Nodes), triageFetchLimit)
 	type triageHit struct {
 		Number int
 		Title  string
@@ -78,6 +79,9 @@ func runTriageRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 	}
 	hits := []triageHit{}
 	for _, n := range resp.Repository.Issues.Nodes {
+		if n == nil {
+			continue
+		}
 		if len(n.Labels.Nodes) == 0 {
 			hits = append(hits, triageHit{Number: n.Number, Title: n.Title, URL: n.Url})
 			if len(hits) >= limit {
@@ -112,7 +116,7 @@ func runTriageProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 	}
 	pid, err := projectitem.ResolveProjectNodeID(ctx, clients.GraphQL, sc, pref)
 	if err != nil {
-		return err
+		return localizedError(c, r, err)
 	}
 	if pid == "" {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
@@ -126,8 +130,10 @@ func runTriageProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
+	items := projectitem.ItemsFromResponse(resp)
+	warnIfTruncated(c, r, "project_items", len(items), triageFetchLimit)
 	hits := []*queries.ProjectV2ItemNode{}
-	for _, item := range projectitem.ItemsFromResponse(resp) {
+	for _, item := range items {
 		if item == nil {
 			continue
 		}

@@ -72,6 +72,12 @@ func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 	if err != nil {
 		return fmt.Errorf("list merged PRs: %w", err)
 	}
+	if closedResp.Repository != nil {
+		warnIfTruncated(c, r, "closed_issues", len(closedResp.Repository.Issues.Nodes), reviewFetchLimit)
+	}
+	if prsResp.Repository != nil {
+		warnIfTruncated(c, r, "merged_prs", len(prsResp.Repository.PullRequests.Nodes), reviewFetchLimit)
+	}
 	type closedItem struct {
 		Number int
 		Title  string
@@ -80,6 +86,9 @@ func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 	closed := []closedItem{}
 	if closedResp.Repository != nil {
 		for _, n := range closedResp.Repository.Issues.Nodes {
+			if n == nil {
+				continue
+			}
 			closedAt := ""
 			if n.ClosedAt != nil {
 				closedAt = *n.ClosedAt
@@ -97,6 +106,9 @@ func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 	merged := []mergedItem{}
 	if prsResp.Repository != nil {
 		for _, n := range prsResp.Repository.PullRequests.Nodes {
+			if n == nil {
+				continue
+			}
 			mergedAt := ""
 			if n.MergedAt != nil {
 				mergedAt = *n.MergedAt
@@ -145,7 +157,7 @@ func runReviewProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 	}
 	pid, err := projectitem.ResolveProjectNodeID(ctx, clients.GraphQL, sc, pref)
 	if err != nil {
-		return err
+		return localizedError(c, r, err)
 	}
 	if pid == "" {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
@@ -159,8 +171,10 @@ func runReviewProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
+	items := projectitem.ItemsFromResponse(resp)
+	warnIfTruncated(c, r, "project_items", len(items), reviewFetchLimit)
 	completed := []*queries.ProjectV2ItemNode{}
-	for _, item := range projectitem.ItemsFromResponse(resp) {
+	for _, item := range items {
 		if item == nil {
 			continue
 		}

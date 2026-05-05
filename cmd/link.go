@@ -105,7 +105,7 @@ func runLinkProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	pid, err := projectitem.ResolveProjectNodeID(ctx, clients.GraphQL, sc, pref)
 	if err != nil {
-		return err
+		return localizedError(c, r, err)
 	}
 	if pid == "" {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))

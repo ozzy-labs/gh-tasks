@@ -105,7 +105,7 @@ func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	pid, err := projectitem.ResolveProjectNodeID(ctx, clients.GraphQL, sc, pref)
 	if err != nil {
-		return err
+		return localizedError(c, r, err)
 	}
 	if pid == "" {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
@@ -136,15 +136,24 @@ func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	if err != nil {
 		return fmt.Errorf("list project items: %w", err)
 	}
+	itemList := projectitem.ItemsFromResponse(itemsResp)
 	var target *queries.ProjectV2ItemNode
-	for _, n := range projectitem.ItemsFromResponse(itemsResp) {
+	for _, n := range itemList {
 		if n != nil && n.Id == itemID {
 			target = n
 			break
 		}
 	}
 	if target == nil {
-		fmt.Fprintln(c.ErrOrStderr(), r.T("error.projectItem.notFound", "id", itemID))
+		// Distinguish "not found in the page" from "not found in the
+		// project at all": when the response was at the page limit the
+		// caller should know pagination might have hidden the item, since
+		// operations.graphql currently has no pageInfo wiring.
+		if len(itemList) >= doneItemsLimit {
+			fmt.Fprintln(c.ErrOrStderr(), r.T("error.done.searchLimit", "id", itemID, "limit", doneItemsLimit))
+		} else {
+			fmt.Fprintln(c.ErrOrStderr(), r.T("error.projectItem.notFound", "id", itemID))
+		}
 		return ErrSilentRuntime
 	}
 	if isAlreadyDone(target, statusField.ID, doneOption.ID) {

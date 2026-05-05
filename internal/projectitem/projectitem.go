@@ -15,6 +15,29 @@ import (
 	"github.com/ozzy-labs/gh-tasks/internal/scope"
 )
 
+// ProjectItemError carries a localized payload for failures inside this
+// package (currently: GraphQL transport errors during project node ID
+// resolution). It satisfies [i18n.Localized] via the embedded Payload, so
+// the cmd layer's localizedError helper can render it in the active locale.
+//
+// Use errors.As(err, &target) to test for this type:
+//
+//	var pe *projectitem.ProjectItemError
+//	if errors.As(err, &pe) { ... }
+type ProjectItemError struct {
+	i18n.Payload
+	cause error
+}
+
+// Error renders the en-locale message so log/wrap paths still surface a
+// human-readable string when bypassing localizedError.
+func (e *ProjectItemError) Error() string { return e.Localize(i18n.LocaleEN) }
+
+// Unwrap exposes the underlying cause (typically a github transport
+// error) so callers can keep using errors.Is / errors.As for transport
+// classification.
+func (e *ProjectItemError) Unwrap() error { return e.cause }
+
 // ResolveProjectNodeID resolves a [project.Ref] to its Projects v2 node id by
 // issuing the appropriate GraphQL query for the scope. Returns ("", nil) when
 // the project cannot be found (wrong owner, wrong number, or insufficient
@@ -23,6 +46,10 @@ import (
 // Calling this with [scope.Repo] is a programmer error (Projects v2 are not
 // used in repo scope) and returns a localizable [scope.ScopeError]. Callers
 // should resolve the project ahead of this call via [project.Resolve].
+//
+// GraphQL transport errors are wrapped in a [ProjectItemError] so the cmd
+// layer can surface a localized message instead of cobra's default
+// "Error: get org project: ..." prefix.
 func ResolveProjectNodeID(ctx context.Context, gql github.GraphQLClient, sc scope.Scope, ref project.Ref) (string, error) {
 	if sc == scope.Repo {
 		return "", &scope.ScopeError{Payload: i18n.NewPayload("error.scope.invalidForProjectResolution")}
@@ -32,7 +59,13 @@ func ResolveProjectNodeID(ctx context.Context, gql github.GraphQLClient, sc scop
 	if sc == scope.Org {
 		resp, err := queries.GetOrgProjectV2(ctx, gqlClient, ref.Owner, ref.Number)
 		if err != nil {
-			return "", fmt.Errorf("get org project: %w", err)
+			return "", &ProjectItemError{
+				Payload: i18n.NewPayload(
+					"error.projectitem.getOrgProjectFailed",
+					"owner", ref.Owner, "number", ref.Number, "reason", err.Error(),
+				),
+				cause: err,
+			}
 		}
 		if resp.Organization == nil || resp.Organization.ProjectV2 == nil {
 			return "", nil
@@ -42,7 +75,13 @@ func ResolveProjectNodeID(ctx context.Context, gql github.GraphQLClient, sc scop
 
 	resp, err := queries.GetUserProjectV2(ctx, gqlClient, ref.Owner, ref.Number)
 	if err != nil {
-		return "", fmt.Errorf("get user project: %w", err)
+		return "", &ProjectItemError{
+			Payload: i18n.NewPayload(
+				"error.projectitem.getUserProjectFailed",
+				"owner", ref.Owner, "number", ref.Number, "reason", err.Error(),
+			),
+			cause: err,
+		}
 	}
 	if resp.User == nil || resp.User.ProjectV2 == nil {
 		return "", nil

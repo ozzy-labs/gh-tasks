@@ -1,18 +1,24 @@
 // Package skills parses skill SSOT files (frontmatter + body) and resolves
-// SKILL.md / SKILL.en.md pairs.
+// SKILL.md / SKILL.en.md pairs. SKILL.md is the canonical (ja) source; the
+// adjacent SKILL.en.md is its English mirror and is validated for presence
+// and basic frontmatter integrity at load time so silent translation drift
+// fails the build instead of leaking through to adapters.
 package skills
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
-// Skill is the canonical (ja SSOT) shape passed to adapters. Mirrors the TS
-// `Skill` type 1:1.
+// Skill is the canonical (ja SSOT) shape passed to adapters.
 type Skill struct {
 	Name          string
 	Description   string
@@ -29,33 +35,63 @@ type OutputFile struct {
 	Content      string
 }
 
-// frontmatterRe matches a leading YAML frontmatter block. Mirrors the TS
-// implementation: `^---\n(...)\n---\n`.
-// Strict LF + bare "---" fences; matches scripts/lib/frontmatter.mjs.
-var frontmatterRe = regexp.MustCompile(`(?s)^---\n(.*?)\n---\n`)
+// frontmatterRe matches a leading YAML frontmatter block. Accepts both LF
+// and CRLF line endings; an optional UTF-8 BOM is stripped before matching
+// in [ParseDocument].
+var frontmatterRe = regexp.MustCompile(`(?s)^---\r?\n(.*?)\r?\n---\r?\n`)
 
-// ParseDocument splits frontmatter (key: value lines) from body. fileLabel is
-// included in error messages.
+// utf8BOM is the UTF-8 byte-order-mark sequence (U+FEFF). Built from raw
+// bytes so the non-ASCII repo lint (check-i18n) doesn't flag it as a
+// forgotten i18n key \u2014 BOM handling has no localized text.
+var utf8BOM = string([]byte{0xEF, 0xBB, 0xBF})
+
+// ParseDocument splits frontmatter (YAML key/value lines) from body.
+// fileLabel is included in error messages.
+//
+// The frontmatter block is parsed with gopkg.in/yaml.v3, so values may
+// contain `:` (e.g. `allowed-tools: Bash(gh:*)`) without truncation. A
+// previous hand-rolled `strings.Index(line, ":")` parser silently dropped
+// everything after the first `:` in such values. CRLF line endings and
+// a leading UTF-8 BOM (some editors save SKILL.md that way) are accepted.
 func ParseDocument(text, fileLabel string) (map[string]string, string, error) {
+	text = strings.TrimPrefix(text, utf8BOM)
 	m := frontmatterRe.FindStringSubmatchIndex(text)
 	if m == nil {
 		return nil, "", fmt.Errorf("%s: missing frontmatter (--- ... ---)", fileLabel)
 	}
 	header := text[m[2]:m[3]]
 	body := text[m[1]:]
-	frontmatter := map[string]string{}
-	for _, line := range strings.Split(header, "\n") {
-		idx := strings.Index(line, ":")
-		if idx == -1 {
+
+	var raw map[string]any
+	if err := yaml.Unmarshal([]byte(header), &raw); err != nil {
+		return nil, "", fmt.Errorf("%s: frontmatter YAML parse failed: %w", fileLabel, err)
+	}
+	frontmatter := make(map[string]string, len(raw))
+	for k, v := range raw {
+		if k == "" {
 			continue
 		}
-		key := strings.TrimSpace(line[:idx])
-		value := strings.TrimSpace(line[idx+1:])
-		if key != "" {
-			frontmatter[key] = value
-		}
+		frontmatter[k] = stringifyYAMLValue(v)
 	}
 	return frontmatter, body, nil
+}
+
+// stringifyYAMLValue collapses a yaml.v3 decoded value into a string.
+// Scalars round-trip via fmt.Sprint; nil becomes "" so an explicitly null
+// frontmatter key looks the same as an absent key to AssertRequiredFields.
+// Sequences / mappings are not expected in the current SKILL.md schema, but
+// if one ever appears it is rendered with %v rather than silently dropped.
+func stringifyYAMLValue(v any) string {
+	if v == nil {
+		return ""
+	}
+	switch t := v.(type) {
+	case string:
+		return t
+	case []any, map[string]any:
+		return fmt.Sprintf("%v", t)
+	}
+	return fmt.Sprint(v)
 }
 
 // AssertRequiredFields returns an error when any required key is missing or
@@ -87,6 +123,12 @@ var defaultRequiredFields = []string{
 
 // Load reads each skills/<name>/SKILL.md, validates the frontmatter, and
 // returns the parsed Skill list sorted by name.
+//
+// SKILL.en.md is also loaded and validated when present. Its absence is a
+// hard error (every skill must ship a mirror); when present, its
+// frontmatter `name` must match SKILL.md's name, and its `locale` must be
+// "en". This catches the most common drift scenarios — copy/paste errors,
+// missed renames, and locale typos — that the adapters previously ignored.
 func Load(srcDir string, opts LoadOptions) ([]Skill, error) {
 	required := opts.Required
 	if len(required) == 0 {
@@ -98,16 +140,28 @@ func Load(srcDir string, opts LoadOptions) ([]Skill, error) {
 	}
 	names := []string{}
 	for _, e := range entries {
-		if e.IsDir() {
-			names = append(names, e.Name())
+		if !e.IsDir() {
+			continue
 		}
+		name := e.Name()
+		if strings.HasPrefix(name, ".") || strings.HasPrefix(name, "_") {
+			continue
+		}
+		names = append(names, name)
 	}
 	sort.Strings(names)
 	skills := []Skill{}
 	for _, name := range names {
-		path := filepath.Join(srcDir, name, "SKILL.md")
-		raw, err := os.ReadFile(path) //nolint:gosec // SSOT path is internal
+		skillDir := filepath.Join(srcDir, name)
+		path := filepath.Join(skillDir, "SKILL.md")
+		raw, err := os.ReadFile(path) //nolint:gosec // SSOT path is internal: srcDir is caller-provided and walked above
 		if err != nil {
+			if errors.Is(err, fs.ErrNotExist) {
+				// Tolerate non-skill subdirectories silently rather than
+				// failing the entire build when the user drops a stray
+				// folder under skills/.
+				continue
+			}
 			return nil, fmt.Errorf("read %s: %w", path, err)
 		}
 		label := fmt.Sprintf("skills/%s/SKILL.md", name)
@@ -130,6 +184,9 @@ func Load(srcDir string, opts LoadOptions) ([]Skill, error) {
 				label, fm["locale"],
 			)
 		}
+		if err := assertEnglishMirror(skillDir, name); err != nil {
+			return nil, err
+		}
 		skills = append(skills, Skill{
 			Name:          name,
 			Description:   fm["description"],
@@ -141,4 +198,39 @@ func Load(srcDir string, opts LoadOptions) ([]Skill, error) {
 		})
 	}
 	return skills, nil
+}
+
+// assertEnglishMirror validates that <skillDir>/SKILL.en.md exists and that
+// its frontmatter is internally consistent (name matches the canonical
+// skill name, locale is "en"). Body content is not compared against
+// SKILL.md — translation freshness is the author's responsibility — but
+// these structural checks ensure adapters that ever consume the mirror are
+// not silently emitting stale or mismatched metadata.
+func assertEnglishMirror(skillDir, name string) error {
+	mirrorPath := filepath.Join(skillDir, "SKILL.en.md")
+	mirrorLabel := fmt.Sprintf("skills/%s/SKILL.en.md", name)
+	mirrorRaw, err := os.ReadFile(mirrorPath) //nolint:gosec // mirrorPath is built under the validated skillDir
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return fmt.Errorf("%s: SKILL.en.md mirror is missing — every skill must ship a SKILL.en.md alongside SKILL.md", mirrorLabel)
+		}
+		return fmt.Errorf("read %s: %w", mirrorPath, err)
+	}
+	mirrorFm, _, err := ParseDocument(string(mirrorRaw), mirrorLabel)
+	if err != nil {
+		return err
+	}
+	if got := mirrorFm["name"]; got != name {
+		return fmt.Errorf(
+			"%s: frontmatter name=%q does not match canonical SKILL.md name=%q",
+			mirrorLabel, got, name,
+		)
+	}
+	if got := mirrorFm["locale"]; got != "en" {
+		return fmt.Errorf(
+			"%s: frontmatter locale=%q must be 'en'",
+			mirrorLabel, got,
+		)
+	}
+	return nil
 }

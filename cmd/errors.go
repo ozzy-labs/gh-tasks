@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/ozzy-labs/gh-tasks/internal/config"
+	"github.com/ozzy-labs/gh-tasks/internal/i18n"
 	"github.com/ozzy-labs/gh-tasks/internal/period"
 	"github.com/ozzy-labs/gh-tasks/internal/project"
 	"github.com/ozzy-labs/gh-tasks/internal/repo"
@@ -47,14 +48,44 @@ func classifyArgError(err error) bool {
 		projectErr *project.ProjectError
 		periodErr  *period.PeriodError
 		configErr  *config.ConfigError
+		argErr     *cmdArgError
 	)
 	switch {
 	case errors.As(err, &scopeErr),
 		errors.As(err, &repoErr),
 		errors.As(err, &projectErr),
 		errors.As(err, &periodErr),
-		errors.As(err, &configErr):
+		errors.As(err, &configErr),
+		errors.As(err, &argErr):
 		return true
 	}
 	return false
+}
+
+// cmdArgError is a localized error owned by a cmd-layer flag/arg validator
+// that doesn't have a domain package counterpart (e.g. `--since` parsing on
+// the standup command). It satisfies [i18n.Localized] via the embedded
+// Payload and is recognized by [classifyArgError] so it maps to
+// [ErrSilentArgs] / exit 2.
+type cmdArgError struct{ i18n.Payload }
+
+// Error renders the en-locale message so log/wrap paths still surface a
+// human-readable string when bypassing localizedError.
+func (e *cmdArgError) Error() string { return e.Localize(i18n.LocaleEN) }
+
+func newArgError(key string, args ...any) *cmdArgError {
+	return &cmdArgError{Payload: i18n.NewPayload(key, args...)}
+}
+
+// cmdRuntimeError is a localized error owned by a cmd-layer runtime check
+// that doesn't have a domain package counterpart (e.g. an unexpectedly empty
+// viewer login on standup --mine). Maps to [ErrSilentRuntime] / exit 1.
+type cmdRuntimeError struct{ i18n.Payload }
+
+// Error renders the en-locale message so log/wrap paths still surface a
+// human-readable string when bypassing localizedError.
+func (e *cmdRuntimeError) Error() string { return e.Localize(i18n.LocaleEN) }
+
+func newRuntimeError(key string, args ...any) *cmdRuntimeError {
+	return &cmdRuntimeError{Payload: i18n.NewPayload(key, args...)}
 }

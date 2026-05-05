@@ -5,7 +5,6 @@ package repo
 import (
 	"context"
 	"os/exec"
-	"regexp"
 	"strings"
 
 	"github.com/ozzy-labs/gh-tasks/internal/i18n"
@@ -89,8 +88,6 @@ func ParseOwnerName(value string) (Ident, error) {
 	return Ident{Owner: parts[0], Name: parts[1]}, nil
 }
 
-var remotePattern = regexp.MustCompile(`[:/]([^/:]+)/([^/]+?)(?:\.git)?/?$`)
-
 // ExtractFromRemote pulls owner/name out of a git remote URL.
 //
 // Supported forms:
@@ -98,13 +95,45 @@ var remotePattern = regexp.MustCompile(`[:/]([^/:]+)/([^/]+?)(?:\.git)?/?$`)
 //   - SSH (URI):      ssh://git@github.com/owner/name.git
 //   - HTTPS:          https://github.com/owner/name.git
 //   - Trailing .git is optional; a single trailing slash is accepted.
+//
+// URLs whose path has more or fewer than two segments are rejected. A
+// previous regex-only implementation matched the last two segments
+// greedily, which silently misextracted "extra/path" from URLs like
+// "https://github.com/owner/name/extra/path".
 func ExtractFromRemote(url string) (string, error) {
 	url = strings.TrimSpace(url)
-	m := remotePattern.FindStringSubmatch(url)
-	if m == nil {
+	path := extractRemotePath(url)
+	if path == "" {
 		return "", newError("error.repo.cannotExtractFromRemote", "url", url)
 	}
-	return m[1] + "/" + m[2], nil
+	path = strings.TrimSuffix(path, "/")
+	path = strings.TrimSuffix(path, ".git")
+	parts := strings.Split(path, "/")
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", newError("error.repo.cannotExtractFromRemote", "url", url)
+	}
+	return parts[0] + "/" + parts[1], nil
+}
+
+// extractRemotePath returns the path portion of a git remote URL after
+// the host/auth prefix. Returns "" when no recognized host/path
+// boundary is present.
+func extractRemotePath(url string) string {
+	if i := strings.Index(url, "://"); i >= 0 {
+		rest := url[i+3:]
+		j := strings.Index(rest, "/")
+		if j < 0 {
+			return ""
+		}
+		return rest[j+1:]
+	}
+	// scp-like SSH form: user@host:path. Require the colon to be
+	// preceded by "@" so we don't misinterpret a bare "owner:name"
+	// string as a remote URL.
+	if i := strings.Index(url, ":"); i >= 0 && strings.Contains(url[:i], "@") {
+		return url[i+1:]
+	}
+	return ""
 }
 
 // defaultGetRemoteURL invokes `git remote get-url origin` bounded by ctx so

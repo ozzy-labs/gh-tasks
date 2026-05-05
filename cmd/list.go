@@ -74,11 +74,15 @@ func runListRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, l
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
 	}
+	warnIfTruncated(c, r, "repo_issues", len(resp.Repository.Issues.Nodes), limit)
 	if len(resp.Repository.Issues.Nodes) == 0 {
 		fmt.Fprintln(c.OutOrStdout(), r.T("list.empty"))
 		return nil
 	}
 	for _, issue := range resp.Repository.Issues.Nodes {
+		if issue == nil {
+			continue
+		}
 		fmt.Fprintf(c.OutOrStdout(), "#%d  %s\n  %s\n", issue.Number, issue.Title, issue.Url)
 	}
 	return nil
@@ -100,7 +104,7 @@ func runListProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	pid, err := projectitem.ResolveProjectNodeID(ctx, clients.GraphQL, sc, pref)
 	if err != nil {
-		return err
+		return localizedError(c, r, err)
 	}
 	if pid == "" {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
@@ -115,6 +119,7 @@ func runListProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		return ErrSilentRuntime
 	}
 	items := projectitem.ItemsFromResponse(resp)
+	warnIfTruncated(c, r, "project_items", len(items), limit)
 	if len(items) == 0 {
 		fmt.Fprintln(c.OutOrStdout(), r.T("list.empty.project"))
 		return nil

@@ -38,18 +38,50 @@ func TestParseDocument(t *testing.T) {
 		}
 	})
 
-	t.Run("ignores-blank-keys", func(t *testing.T) {
+	t.Run("rejects-blank-keys", func(t *testing.T) {
 		t.Parallel()
+		// gopkg.in/yaml.v3 parses `: value` as a malformed mapping key.
+		// The legacy line-based parser silently dropped the entry; the
+		// stricter YAML-based parser surfaces it as a parse error so a
+		// genuinely broken frontmatter cannot reach the adapter pipeline.
 		text := "---\n: empty-key-value\nname: ok\n---\nbody\n"
+		_, _, err := skills.ParseDocument(text, "label")
+		if err == nil {
+			t.Fatal("expected parse error for blank key, got nil")
+		}
+		if !strings.Contains(err.Error(), "frontmatter YAML parse failed") {
+			t.Errorf("expected parse-failure message, got %v", err)
+		}
+	})
+
+	t.Run("value-with-colon", func(t *testing.T) {
+		t.Parallel()
+		// Regression: the legacy parser used strings.Index(line, ":") and
+		// truncated everything after the first `:` in the value, silently
+		// corrupting `allowed-tools: Bash(gh:*)` to `Bash(gh`. yaml.v3
+		// preserves the full scalar.
+		text := "---\nallowed-tools: Bash(gh:*)\n---\nbody\n"
 		fm, _, err := skills.ParseDocument(text, "label")
 		if err != nil {
 			t.Fatalf("err: %v", err)
 		}
-		if _, has := fm[""]; has {
-			t.Errorf("blank key should be skipped")
+		if got, want := fm["allowed-tools"], "Bash(gh:*)"; got != want {
+			t.Errorf("got %q, want %q", got, want)
 		}
-		if fm["name"] != "ok" {
+	})
+
+	t.Run("crlf-line-endings", func(t *testing.T) {
+		t.Parallel()
+		text := "---\r\nname: foo\r\n---\r\nbody\r\n"
+		fm, body, err := skills.ParseDocument(text, "label")
+		if err != nil {
+			t.Fatalf("err: %v", err)
+		}
+		if fm["name"] != "foo" {
 			t.Errorf("got %q", fm["name"])
+		}
+		if !strings.Contains(body, "body") {
+			t.Errorf("body=%q", body)
 		}
 	})
 }

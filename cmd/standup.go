@@ -43,7 +43,10 @@ func runStandup(ctx context.Context, c *cobra.Command, deps Deps) error {
 	if err != nil {
 		return localizedError(c, r, err)
 	}
-	since := standupSince(c, deps.Now())
+	since, err := standupSince(c, deps.Now())
+	if err != nil {
+		return localizedError(c, r, err)
+	}
 	mine, _ := c.Flags().GetBool("mine")
 	if sc == scope.Repo {
 		return runStandupRepo(ctx, c, deps, r, since, mine)
@@ -66,9 +69,10 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		if err != nil {
 			return fmt.Errorf("get viewer login: %w", err)
 		}
-		if v != nil && v.Viewer != nil {
-			viewerLogin = v.Viewer.Login
+		if v == nil || v.Viewer == nil || v.Viewer.Login == "" {
+			return localizedError(c, r, newRuntimeError("error.standup.viewerLoginUnresolved"))
 		}
+		viewerLogin = v.Viewer.Login
 	}
 	gqlClient := clients.AsGenqlientClient()
 	closedResp, err := queries.ListClosedIssues(ctx, gqlClient, id.Owner, id.Name, standupFetchLimit)
@@ -83,6 +87,15 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	if err != nil {
 		return fmt.Errorf("list repo issues: %w", err)
 	}
+	if closedResp.Repository != nil {
+		warnIfTruncated(c, r, "closed_issues", len(closedResp.Repository.Issues.Nodes), standupFetchLimit)
+	}
+	if prsResp.Repository != nil {
+		warnIfTruncated(c, r, "merged_prs", len(prsResp.Repository.PullRequests.Nodes), standupFetchLimit)
+	}
+	if openResp.Repository != nil {
+		warnIfTruncated(c, r, "open_issues", len(openResp.Repository.Issues.Nodes), standupFetchLimit)
+	}
 
 	type closedItem struct {
 		Number int
@@ -92,6 +105,9 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	closed := []closedItem{}
 	if closedResp.Repository != nil {
 		for _, n := range closedResp.Repository.Issues.Nodes {
+			if n == nil {
+				continue
+			}
 			closedAt := ""
 			if n.ClosedAt != nil {
 				closedAt = *n.ClosedAt
@@ -126,6 +142,9 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	merged := []mergedItem{}
 	if prsResp.Repository != nil {
 		for _, n := range prsResp.Repository.PullRequests.Nodes {
+			if n == nil {
+				continue
+			}
 			mergedAt := ""
 			if n.MergedAt != nil {
 				mergedAt = *n.MergedAt
@@ -160,6 +179,9 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	open := []openItem{}
 	if openResp.Repository != nil {
 		for _, n := range openResp.Repository.Issues.Nodes {
+			if n == nil {
+				continue
+			}
 			if !timeAtOrAfter(n.UpdatedAt, since) {
 				continue
 			}
@@ -233,13 +255,14 @@ func runStandupProject(ctx context.Context, c *cobra.Command, deps Deps, r Resol
 		if err != nil {
 			return fmt.Errorf("get viewer login: %w", err)
 		}
-		if v != nil && v.Viewer != nil {
-			viewerLogin = v.Viewer.Login
+		if v == nil || v.Viewer == nil || v.Viewer.Login == "" {
+			return localizedError(c, r, newRuntimeError("error.standup.viewerLoginUnresolved"))
 		}
+		viewerLogin = v.Viewer.Login
 	}
 	pid, err := projectitem.ResolveProjectNodeID(ctx, clients.GraphQL, sc, pref)
 	if err != nil {
-		return err
+		return localizedError(c, r, err)
 	}
 	if pid == "" {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
@@ -253,9 +276,11 @@ func runStandupProject(ctx context.Context, c *cobra.Command, deps Deps, r Resol
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
+	items := projectitem.ItemsFromResponse(resp)
+	warnIfTruncated(c, r, "project_items", len(items), standupFetchLimit)
 	yesterday := []*queries.ProjectV2ItemNode{}
 	today := []*queries.ProjectV2ItemNode{}
-	for _, item := range projectitem.ItemsFromResponse(resp) {
+	for _, item := range items {
 		if item == nil {
 			continue
 		}
@@ -298,14 +323,16 @@ func runStandupProject(ctx context.Context, c *cobra.Command, deps Deps, r Resol
 	return nil
 }
 
-func standupSince(c *cobra.Command, now time.Time) time.Time {
+func standupSince(c *cobra.Command, now time.Time) (time.Time, error) {
 	since, _ := c.Flags().GetString("since")
-	if since != "" {
-		if t, err := time.Parse(time.RFC3339, since); err == nil {
-			return t
-		}
+	if since == "" {
+		return now.Add(-24 * time.Hour), nil
 	}
-	return now.Add(-24 * time.Hour)
+	t, err := time.Parse(time.RFC3339, since)
+	if err != nil {
+		return time.Time{}, newArgError("error.standup.invalidSince", "value", since)
+	}
+	return t, nil
 }
 
 func timeAtOrAfter(iso string, threshold time.Time) bool {
