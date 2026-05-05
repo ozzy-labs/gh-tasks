@@ -174,6 +174,47 @@ func TestReview_UserProjectEmptyPlaceholder(t *testing.T) {
 	}
 }
 
+// TestReview_ProjectExcludesItemsWithoutStatus exercises the isItemDone
+// (cmd/standup.go:379) `status == ""` false branch via runReviewProject:
+// items whose fieldValues.nodes is empty (no Status field value at all)
+// must not appear in the completed list, even when they fall inside the
+// period range. Complements TestReview_OrgProjectDoneFilter which only
+// covers Done vs Todo (status present in both cases).
+func TestReview_ProjectExcludesItemsWithoutStatus(t *testing.T) {
+	t.Parallel()
+
+	items := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "items": map[string]any{"nodes": []any{
+		map[string]any{
+			"id": "ITEM_NO_STATUS", "updatedAt": "2026-05-04T08:00:00Z",
+			"content": map[string]any{
+				"__typename": "Issue", "id": "I_no", "number": 200, "title": "Status-less", "url": "u/200",
+			},
+			"fieldValues": map[string]any{"nodes": []any{}},
+		},
+	}}}}
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetUserProjectV2 (", Data: userProject("PVT_user")},
+		{MatchSubstring: "query ListProjectV2Items (", Data: items},
+	}}
+	d := testDeps(g, func(d *cmd.Deps) {
+		d.HasGitRemote = func() bool { return false }
+		d.LoadConfig = func() (config.AppConfig, error) {
+			return config.AppConfig{UserProject: project.Ref{Owner: "ozzy", Number: 9}}, nil
+		}
+	})
+	stdout, _, err := runCmd(t, d, "review", "--scope", "user", "--period", "weekly")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	got := stdout.String()
+	if strings.Contains(got, "Status-less") || strings.Contains(got, "#200") {
+		t.Errorf("item without Status leaked into completed list:\n%s", got)
+	}
+	if !strings.Contains(got, "No project items completed in this range") {
+		t.Errorf("expected review.empty.project placeholder, got:\n%s", got)
+	}
+}
+
 func TestReview_PeriodFlagInvalid(t *testing.T) {
 	t.Parallel()
 

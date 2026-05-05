@@ -5,6 +5,7 @@ package cmd_test
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -248,4 +249,52 @@ func TestDone_ProjectItemNotFound(t *testing.T) {
 	}
 	assertI18nMessage(t, stderr.String(), i18n.LocaleEN,
 		"error.projectItem.notFound", "id", "ITEM_X")
+}
+
+// TestDone_ProjectSearchLimitHint exercises the `len(itemList) >= doneItemsLimit`
+// branch in runDoneProject (cmd/done.go:158): when the linear search fills the
+// page-size cap of 100 items and the target id is not among them, the user
+// gets the searchLimit hint instead of plain notFound, so they understand the
+// id might exist beyond the bounded scan.
+func TestDone_ProjectSearchLimitHint(t *testing.T) {
+	t.Parallel()
+
+	fields := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "fields": map[string]any{"nodes": []any{
+		map[string]any{
+			"__typename": "ProjectV2SingleSelectField", "id": "F_STATUS", "name": "Status", "dataType": "SINGLE_SELECT",
+			"options": []any{
+				map[string]any{"id": "OPT_TODO", "name": "Todo"},
+				map[string]any{"id": "OPT_DONE", "name": "Done"},
+			},
+		},
+	}}}}
+	nodes := make([]any, 100)
+	for i := range nodes {
+		nodes[i] = map[string]any{
+			"id": fmt.Sprintf("ITEM_%03d", i), "updatedAt": "2026-05-04T08:00:00Z",
+			"content":     map[string]any{"__typename": "Issue", "id": fmt.Sprintf("I_%03d", i), "number": i + 1, "title": "x", "url": "u/x"},
+			"fieldValues": map[string]any{"nodes": []any{}},
+		}
+	}
+	items := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "items": map[string]any{
+		"nodes":    nodes,
+		"pageInfo": map[string]any{"hasNextPage": false, "endCursor": nil},
+	}}}
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetUserProjectV2 (", Data: userProject("PVT_user")},
+		{MatchSubstring: "query ListProjectV2Fields (", Data: fields},
+		{MatchSubstring: "query ListProjectV2Items (", Data: items},
+	}}
+	d := testDeps(g, func(d *cmd.Deps) {
+		d.HasGitRemote = func() bool { return false }
+		d.LoadConfig = func() (config.AppConfig, error) {
+			return config.AppConfig{UserProject: project.Ref{Owner: "ozzy", Number: 9}}, nil
+		}
+	})
+	_, stderr, err := runCmd(t, d, "done", "ITEM_MISSING", "--scope=user")
+	if !errors.Is(err, cmd.ErrSilent) {
+		t.Fatalf("expected ErrSilent, got %v", err)
+	}
+	assertI18nMessage(t, stderr.String(), i18n.LocaleEN,
+		"error.done.searchLimit", "id", "ITEM_MISSING", "limit", 100)
 }
