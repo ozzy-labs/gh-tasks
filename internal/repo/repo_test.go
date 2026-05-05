@@ -2,6 +2,9 @@ package repo_test
 
 import (
 	"context"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"testing"
 
 	"github.com/ozzy-labs/gh-tasks/internal/repo"
@@ -171,5 +174,146 @@ func TestResolve_ContextHonoured(t *testing.T) {
 	})
 	if err == nil {
 		t.Fatalf("want error from missing remote; got nil")
+	}
+}
+
+// TestResolve_DefaultGetRemoteURL_NoRemote pins the failure branch of
+// defaultGetRemoteURL by exercising it through Resolve in a directory that
+// is *not* a git repository. The helper must return ("", false) so Resolve
+// surfaces the localized "error.repo.notResolved" code.
+//
+// Together with TestResolve_DefaultGetRemoteURL_Success (success branch via a
+// real git fixture) and TestResolve_ContextHonoured (cancelled-context
+// branch), the three tests cover defaultGetRemoteURL's full surface without
+// stubbing exec.Command.
+func TestResolve_DefaultGetRemoteURL_NoRemote(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skipf("git not on PATH: %v", err)
+	}
+	// Cannot t.Parallel() because we mutate cwd.
+	chdirToTempOrSkip(t)
+	_, err := repo.Resolve(repo.ResolveOptions{}) // no flag, no override → default
+	if err == nil {
+		t.Fatal("expected error when no remote is resolvable; got nil")
+	}
+}
+
+// TestResolve_DefaultGetRemoteURL_Success pins the happy path of
+// defaultGetRemoteURL by initialising a temp git repo with a fixed `origin`
+// remote, chdir-ing into it, and asserting that Resolve (with default
+// helper) returns the parsed Ident.
+//
+// This is the only test that exercises the "git ran successfully and
+// returned a non-empty URL" branch of defaultGetRemoteURL without
+// stubbing exec.Command. It is necessarily non-parallel (chdir).
+func TestResolve_DefaultGetRemoteURL_Success(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skipf("git not on PATH: %v", err)
+	}
+	dir := chdirToTempOrSkip(t)
+
+	// Initialise a minimal repo. `git init` writes only into dir.
+	mustRunGit(t, dir, "init", "--quiet", "-b", "main")
+	// Set deterministic identity so the init doesn't barf on missing
+	// user.email in sandboxed CI. Use --local to keep the change scoped.
+	mustRunGit(t, dir, "config", "--local", "user.email", "test@example.invalid")
+	mustRunGit(t, dir, "config", "--local", "user.name", "test")
+	// Add a fixed origin we can assert against. The URL doesn't need to
+	// be reachable — `git remote get-url` just reads .git/config.
+	const wantURL = "git@github.com:ozzy-labs/test-fixture.git"
+	mustRunGit(t, dir, "remote", "add", "origin", wantURL)
+
+	got, err := repo.Resolve(repo.ResolveOptions{})
+	if err != nil {
+		t.Fatalf("Resolve: %v", err)
+	}
+	if got.String() != "ozzy-labs/test-fixture" {
+		t.Errorf("got %q, want %q", got.String(), "ozzy-labs/test-fixture")
+	}
+}
+
+// chdirToTempOrSkip creates a TempDir, resolves symlinks, chdirs into it
+// via t.Chdir (auto-restored on cleanup, mutually exclusive with t.Parallel
+// so concurrent tests can't race the process-global cwd), unsets git
+// environment variables that would force `git remote get-url origin` to
+// read from a different repo, and skips the test if any ancestor contains
+// `.git` (which would taint git's lookup). Returns the resolved temp path.
+//
+// The git env-var hygiene matters because lefthook invokes the test binary
+// from a `git push` pre-push hook, and `git push` exports GIT_DIR /
+// GIT_WORK_TREE so subprocess `git` calls bypass the cwd-based lookup. The
+// production defaultGetRemoteURL inherits these too — that's the
+// historically intended behaviour for users invoking the CLI from within a
+// hook — but the tests in this file need a deterministic isolated repo.
+func chdirToTempOrSkip(t *testing.T) string {
+	t.Helper()
+	tmp := t.TempDir()
+	resolved, err := filepath.EvalSymlinks(tmp)
+	if err != nil {
+		resolved = tmp
+	}
+	if hasAncestorGitDir(resolved) {
+		t.Skipf("temp dir %q has an ancestor .git; git would inherit it", resolved)
+	}
+	// Unset every GIT_* variable that would redirect a child `git`
+	// invocation away from the cwd-based discovery path. We register the
+	// original value with a Cleanup so a panic-free teardown restores
+	// inherited state (lefthook → `git push` populates GIT_DIR /
+	// GIT_WORK_TREE before invoking the test binary from a pre-push hook).
+	//
+	// List sourced from `git help environment`'s "repository locations"
+	// section. We use os.Unsetenv (not t.Setenv("","")) because git
+	// distinguishes "GIT_DIR unset" from "GIT_DIR=''" — the latter is
+	// treated as a literal empty path and aborts.
+	for _, key := range []string{
+		"GIT_DIR",
+		"GIT_WORK_TREE",
+		"GIT_COMMON_DIR",
+		"GIT_INDEX_FILE",
+		"GIT_OBJECT_DIRECTORY",
+	} {
+		key := key
+		prev, ok := os.LookupEnv(key)
+		_ = os.Unsetenv(key)
+		t.Cleanup(func() {
+			if ok {
+				_ = os.Setenv(key, prev)
+			}
+		})
+	}
+	t.Chdir(resolved)
+	return resolved
+}
+
+// mustRunGit runs `git -C dir <args...>` and fails the test on non-zero exit.
+// Used by the success-path fixture to set up a deterministic origin remote.
+func mustRunGit(t *testing.T, dir string, args ...string) {
+	t.Helper()
+	full := append([]string{"-C", dir}, args...)
+	cmd := exec.Command("git", full...)
+	// Ignore any user-level git config that might interfere (commit.gpgsign,
+	// init.defaultBranch hooks, etc).
+	cmd.Env = append(os.Environ(),
+		"GIT_CONFIG_GLOBAL=/dev/null",
+		"GIT_CONFIG_SYSTEM=/dev/null",
+	)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("git %v: %v\n%s", args, err, out)
+	}
+}
+
+// hasAncestorGitDir walks up from dir looking for a `.git` directory or
+// file (worktree marker). Used by chdirToTempOrSkip to skip when running
+// inside a git repo would taint the result.
+func hasAncestorGitDir(dir string) bool {
+	for {
+		if _, err := os.Stat(filepath.Join(dir, ".git")); err == nil {
+			return true
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return false
+		}
+		dir = parent
 	}
 }
