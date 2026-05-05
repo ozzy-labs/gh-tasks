@@ -16,7 +16,7 @@ import (
 	"github.com/ozzy-labs/gh-tasks/internal/projectitem"
 )
 
-// Inlined copies of packages/templates/projects-v2/{user,org}.yaml. They are
+// Inlined copies of templates/projects-v2/{user,org}.yaml. They are
 // embedded as string constants so the single-binary build stays self-contained
 // even though the YAML files remain the documentation SSOT.
 
