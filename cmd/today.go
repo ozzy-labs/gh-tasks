@@ -63,6 +63,7 @@ func runTodayRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, 
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
 	}
+	warnIfTruncated(c, r, kindRepoIssues, len(resp.Repository.Issues.Nodes), todayFetchLimit)
 	type issueNode = queries.ListRepoIssuesRepositoryIssuesIssueConnectionNodesIssue
 	hits := []*issueNode{}
 	for _, issue := range resp.Repository.Issues.Nodes {
@@ -103,7 +104,7 @@ func runTodayProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolve
 	}
 	pid, err := projectitem.ResolveProjectNodeID(ctx, clients.GraphQL, sc, pref)
 	if err != nil {
-		return err
+		return localizedError(c, r, err)
 	}
 	if pid == "" {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
@@ -117,8 +118,10 @@ func runTodayProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolve
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
+	items := projectitem.ItemsFromResponse(resp)
+	warnIfTruncated(c, r, kindProjectItems, len(items), todayFetchLimit)
 	hits := []*queries.ProjectV2ItemNode{}
-	for _, item := range projectitem.ItemsFromResponse(resp) {
+	for _, item := range items {
 		if item == nil {
 			continue
 		}

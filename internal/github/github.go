@@ -22,8 +22,10 @@ import (
 // AuthError is returned when no GitHub token can be resolved.
 type AuthError struct{ i18n.Payload }
 
-// Error satisfies the error interface.
-func (e *AuthError) Error() string { return e.Key }
+// Error satisfies the error interface. Returns the en-locale rendered
+// message rather than the raw key, so wrap chains and other paths that
+// bypass localizedError still surface a human-readable string.
+func (e *AuthError) Error() string { return e.Localize(i18n.LocaleEN) }
 
 // AsAuthError unwraps err into an AuthError.
 func AsAuthError(err error) (*AuthError, bool) {

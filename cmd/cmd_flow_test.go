@@ -407,6 +407,46 @@ func TestStandup_SinceFlag(t *testing.T) {
 	}
 }
 
+// TestStandup_SinceInvalidFailsFast pins the fail-fast contract for
+// --since. The legacy implementation silently fell back to "24h ago" on a
+// parse failure; the parsed-flag value should now classify as arg
+// validation (exit 2) so the user notices their mistake instead of
+// reading results scoped to a different window than they intended.
+func TestStandup_SinceInvalidFailsFast(t *testing.T) {
+	t.Parallel()
+
+	g := &fakeGraphQL{}
+	d := testDeps(g)
+	_, stderr, err := runCmd(t, d, "standup", "--since", "not-a-timestamp")
+	if !errors.Is(err, cmd.ErrSilentArgs) {
+		t.Fatalf("expected ErrSilentArgs for unparseable --since, got %v", err)
+	}
+	if !strings.Contains(stderr.String(), "not-a-timestamp") {
+		t.Errorf("expected localized error to embed the rejected value, got:\n%s", stderr.String())
+	}
+}
+
+// TestStandup_MineViewerLoginUnresolvedFailsFast pins the fail-fast
+// contract for --mine when the GraphQL response omits viewer.login (e.g.
+// the active token has no associated user). Previously matchesViewer
+// silently treated an empty viewer as "match everything", so the user
+// got an unfiltered standup labelled as if --mine had taken effect.
+func TestStandup_MineViewerLoginUnresolvedFailsFast(t *testing.T) {
+	t.Parallel()
+
+	g := &fakeGraphQL{responses: []fakeResponse{
+		{matchSubstring: "query GetViewerLogin", data: map[string]any{"viewer": nil}},
+	}}
+	d := testDeps(g)
+	_, stderr, err := runCmd(t, d, "standup", "--since", "2026-05-04T00:00:00Z", "--mine")
+	if !errors.Is(err, cmd.ErrSilentRuntime) {
+		t.Fatalf("expected ErrSilentRuntime when viewer login is unresolved, got %v", err)
+	}
+	if !strings.Contains(stderr.String(), "viewer login") {
+		t.Errorf("expected localized message about viewer login on stderr, got:\n%s", stderr.String())
+	}
+}
+
 func TestStandup_MineFiltersAndAnnotates(t *testing.T) {
 	t.Parallel()
 

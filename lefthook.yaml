@@ -11,11 +11,19 @@ pre-commit:
   commands:
     check-yaml-extension:
       glob: '**/*.yml'
+      # Reject `.yml` to enforce the `.yaml` convention. Some upstream
+      # tools / vendored manifests force `.yml` (e.g. action.yml from
+      # third-party reusable workflows); list those here as needed.
+      exclude:
+        - 'node_modules/**'
+        - '**/node_modules/**'
       run: 'echo "❌ .yml files found. Use .yaml extension instead." && exit 1'
-    gofumpt:
-      glob: '**/*.go'
-      run: mise exec -- gofumpt -w {staged_files}
-      stage_fixed: true
+    # golangci-lint v2 has gofumpt / goimports / gci in its `formatters`
+    # block (.golangci.yaml), so `golangci-lint run --fix` already applies
+    # the same rewrites as a standalone `gofumpt -w` would. Running both
+    # in parallel previously raced — each step started from the unmodified
+    # file content, and whichever finished last clobbered the other's
+    # output. Trust golangci-lint as the single Go formatter.
     golangci-lint:
       glob: '**/*.go'
       run: mise exec -- golangci-lint run --fix --timeout 5m

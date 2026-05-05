@@ -38,18 +38,50 @@ func TestParseDocument(t *testing.T) {
 		}
 	})
 
-	t.Run("ignores-blank-keys", func(t *testing.T) {
+	t.Run("rejects-blank-keys", func(t *testing.T) {
 		t.Parallel()
+		// gopkg.in/yaml.v3 parses `: value` as a malformed mapping key.
+		// The legacy line-based parser silently dropped the entry; the
+		// stricter YAML-based parser surfaces it as a parse error so a
+		// genuinely broken frontmatter cannot reach the adapter pipeline.
 		text := "---\n: empty-key-value\nname: ok\n---\nbody\n"
+		_, _, err := skills.ParseDocument(text, "label")
+		if err == nil {
+			t.Fatal("expected parse error for blank key, got nil")
+		}
+		if !strings.Contains(err.Error(), "frontmatter YAML parse failed") {
+			t.Errorf("expected parse-failure message, got %v", err)
+		}
+	})
+
+	t.Run("value-with-colon", func(t *testing.T) {
+		t.Parallel()
+		// Regression: the legacy parser used strings.Index(line, ":") and
+		// truncated everything after the first `:` in the value, silently
+		// corrupting `allowed-tools: Bash(gh:*)` to `Bash(gh`. yaml.v3
+		// preserves the full scalar.
+		text := "---\nallowed-tools: Bash(gh:*)\n---\nbody\n"
 		fm, _, err := skills.ParseDocument(text, "label")
 		if err != nil {
 			t.Fatalf("err: %v", err)
 		}
-		if _, has := fm[""]; has {
-			t.Errorf("blank key should be skipped")
+		if got, want := fm["allowed-tools"], "Bash(gh:*)"; got != want {
+			t.Errorf("got %q, want %q", got, want)
 		}
-		if fm["name"] != "ok" {
+	})
+
+	t.Run("crlf-line-endings", func(t *testing.T) {
+		t.Parallel()
+		text := "---\r\nname: foo\r\n---\r\nbody\r\n"
+		fm, body, err := skills.ParseDocument(text, "label")
+		if err != nil {
+			t.Fatalf("err: %v", err)
+		}
+		if fm["name"] != "foo" {
 			t.Errorf("got %q", fm["name"])
+		}
+		if !strings.Contains(body, "body") {
+			t.Errorf("body=%q", body)
 		}
 	})
 }
@@ -125,3 +157,110 @@ func TestLoadGuards(t *testing.T) {
 		})
 	}
 }
+
+// TestLoadEnglishMirrorGuards pins the three failure modes of the
+// SKILL.en.md mirror validation: missing file, name-frontmatter
+// mismatch, and a locale that isn't "en".
+func TestLoadEnglishMirrorGuards(t *testing.T) {
+	t.Parallel()
+
+	const validJaFront = "---\n" +
+		"name: alpha\n" +
+		"description: d\n" +
+		"locale: ja\n" +
+		"---\nbody\n"
+
+	cases := []struct {
+		label      string
+		mirror     *string // nil → don't write SKILL.en.md at all
+		wantSubstr string
+	}{
+		{
+			label:      "mirror-missing",
+			mirror:     nil,
+			wantSubstr: "SKILL.en.md mirror is missing",
+		},
+		{
+			label: "mirror-name-mismatch",
+			mirror: ptr("---\n" +
+				"name: not-alpha\n" +
+				"description: en\n" +
+				"locale: en\n" +
+				"---\nbody\n"),
+			wantSubstr: `frontmatter name="not-alpha"`,
+		},
+		{
+			label: "mirror-locale-not-en",
+			mirror: ptr("---\n" +
+				"name: alpha\n" +
+				"description: en\n" +
+				"locale: fr\n" +
+				"---\nbody\n"),
+			wantSubstr: `locale="fr" must be 'en'`,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.label, func(t *testing.T) {
+			t.Parallel()
+			srcDir := t.TempDir()
+			skillDir := filepath.Join(srcDir, "alpha")
+			if err := os.MkdirAll(skillDir, 0o755); err != nil {
+				t.Fatalf("mkdir: %v", err)
+			}
+			if err := os.WriteFile(filepath.Join(skillDir, "SKILL.md"), []byte(validJaFront), 0o600); err != nil {
+				t.Fatalf("write SKILL.md: %v", err)
+			}
+			if tc.mirror != nil {
+				if err := os.WriteFile(filepath.Join(skillDir, "SKILL.en.md"), []byte(*tc.mirror), 0o600); err != nil {
+					t.Fatalf("write SKILL.en.md: %v", err)
+				}
+			}
+
+			_, err := skills.Load(srcDir, skills.LoadOptions{
+				Required: []string{"name", "locale"},
+			})
+			if err == nil {
+				t.Fatalf("expected error, got nil")
+			}
+			if !strings.Contains(err.Error(), tc.wantSubstr) {
+				t.Errorf("error %q does not contain %q", err.Error(), tc.wantSubstr)
+			}
+		})
+	}
+}
+
+// TestLoadEnglishMirrorAccepted pins the happy path: a SKILL.md + a
+// well-formed SKILL.en.md mirror loads cleanly.
+func TestLoadEnglishMirrorAccepted(t *testing.T) {
+	t.Parallel()
+	srcDir := t.TempDir()
+	skillDir := filepath.Join(srcDir, "alpha")
+	if err := os.MkdirAll(skillDir, 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(skillDir, "SKILL.md"), []byte(
+		"---\nname: alpha\ndescription: d\nlocale: ja\n---\nbody\n",
+	), 0o600); err != nil {
+		t.Fatalf("write SKILL.md: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(skillDir, "SKILL.en.md"), []byte(
+		"---\nname: alpha\ndescription: en\nlocale: en\n---\nbody\n",
+	), 0o600); err != nil {
+		t.Fatalf("write SKILL.en.md: %v", err)
+	}
+	loaded, err := skills.Load(srcDir, skills.LoadOptions{
+		Required: []string{"name", "locale"},
+	})
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if len(loaded) != 1 {
+		t.Fatalf("loaded %d skills; want 1", len(loaded))
+	}
+	if loaded[0].Name != "alpha" {
+		t.Errorf("got name=%q, want alpha", loaded[0].Name)
+	}
+}
+
+func ptr[T any](v T) *T { return &v }
