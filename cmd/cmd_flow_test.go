@@ -2158,3 +2158,311 @@ func TestProjectsInit_TemplateNotFound(t *testing.T) {
 		t.Errorf("expected yamlRead error, got:\n%s", stderr.String())
 	}
 }
+
+// ===== --lang flag E2E ======================================================
+//
+// These tests exercise the full cobra → deps.Resolve → r.T wiring rather than
+// the i18n.ResolveLocaleFor unit (covered by internal/i18n/i18n_test.go). The
+// goal is to pin the contract that user-supplied `--lang ja` actually flips
+// command output to the ja catalog, including when env / config disagree.
+
+// TestList_LangJaSwitchesOutput pins that `--lang ja` causes the list-empty
+// placeholder to render from the ja catalog. The default-locale TestList_RepoEmpty
+// asserts the en string above; this test asserts the ja counterpart so any
+// regression that drops the --lang wiring fails here.
+func TestList_LangJaSwitchesOutput(t *testing.T) {
+	t.Parallel()
+
+	g := &fakeGraphQL{responses: []fakeResponse{
+		{matchSubstring: "query ListRepoIssues (", data: repoIssuesPayload()},
+	}}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "--lang", "ja", "list")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	wantJA := i18n.T(i18n.LocaleJA, "list.empty")
+	if !strings.Contains(stdout.String(), wantJA) {
+		t.Errorf("expected ja list.empty %q, got:\n%s", wantJA, stdout.String())
+	}
+	wantEN := i18n.T(i18n.LocaleEN, "list.empty")
+	if strings.Contains(stdout.String(), wantEN) {
+		t.Errorf("expected ja-only output, but en %q leaked through:\n%s", wantEN, stdout.String())
+	}
+}
+
+// TestList_LangFlagOverridesEnvAndConfig pins the precedence contract: a
+// `--lang ja` flag wins over both LANG=en* env and a config carrying
+// Locale=en. ResolveLocaleFor unit tests cover this for the resolver in
+// isolation; here we exercise the whole cmd-layer wiring (cobra persistent
+// flag → flagString → langArgv → ResolveLocaleFor) end-to-end.
+func TestList_LangFlagOverridesEnvAndConfig(t *testing.T) {
+	t.Parallel()
+
+	g := &fakeGraphQL{responses: []fakeResponse{
+		{matchSubstring: "query ListRepoIssues (", data: repoIssuesPayload()},
+	}}
+	d := testDeps(g, func(d *cmd.Deps) {
+		d.Env = func(key string) string {
+			if key == "LANG" {
+				return "en_US.UTF-8"
+			}
+			return ""
+		}
+		d.LoadConfig = func() (config.AppConfig, error) {
+			return config.AppConfig{Locale: i18n.LocaleEN}, nil
+		}
+	})
+	stdout, _, err := runCmd(t, d, "--lang", "ja", "list")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	wantJA := i18n.T(i18n.LocaleJA, "list.empty")
+	if !strings.Contains(stdout.String(), wantJA) {
+		t.Errorf("--lang ja must win over LANG=en + config Locale=en; got:\n%s", stdout.String())
+	}
+}
+
+// TestRoot_LangResolutionPriority is a table-driven flow test of the
+// flag > config > env > default precedence chain. Each row drives a list
+// command with empty repo issues so the output reduces to the localized
+// list.empty placeholder, which we assert is sourced from the expected
+// catalog. Covers all four resolution branches in deps.Resolve.
+func TestRoot_LangResolutionPriority(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name       string
+		flagArgs   []string
+		envLang    string
+		cfgLocale  i18n.Locale
+		wantLocale i18n.Locale
+	}{
+		{
+			name:       "flag_wins_over_config_and_env",
+			flagArgs:   []string{"--lang", "ja"},
+			envLang:    "en_US.UTF-8",
+			cfgLocale:  i18n.LocaleEN,
+			wantLocale: i18n.LocaleJA,
+		},
+		{
+			name:       "config_wins_when_no_flag",
+			flagArgs:   nil,
+			envLang:    "en_US.UTF-8",
+			cfgLocale:  i18n.LocaleJA,
+			wantLocale: i18n.LocaleJA,
+		},
+		{
+			name:       "env_wins_when_no_flag_no_config",
+			flagArgs:   nil,
+			envLang:    "ja_JP.UTF-8",
+			cfgLocale:  "",
+			wantLocale: i18n.LocaleJA,
+		},
+		{
+			name:       "default_en_when_nothing_set",
+			flagArgs:   nil,
+			envLang:    "",
+			cfgLocale:  "",
+			wantLocale: i18n.LocaleEN,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			g := &fakeGraphQL{responses: []fakeResponse{
+				{matchSubstring: "query ListRepoIssues (", data: repoIssuesPayload()},
+			}}
+			env := tc.envLang
+			cfg := tc.cfgLocale
+			d := testDeps(g, func(d *cmd.Deps) {
+				d.Env = func(key string) string {
+					if key == "LANG" {
+						return env
+					}
+					return ""
+				}
+				d.LoadConfig = func() (config.AppConfig, error) {
+					return config.AppConfig{Locale: cfg}, nil
+				}
+			})
+			args := append([]string{}, tc.flagArgs...)
+			args = append(args, "list")
+			stdout, _, err := runCmd(t, d, args...)
+			if err != nil {
+				t.Fatalf("Execute: %v", err)
+			}
+			want := i18n.T(tc.wantLocale, "list.empty")
+			if !strings.Contains(stdout.String(), want) {
+				t.Errorf("locale %q: expected %q in output, got:\n%s", tc.wantLocale, want, stdout.String())
+			}
+			// Also assert the opposite catalog's string is NOT present so we
+			// don't accidentally match a substring shared between locales.
+			otherLocale := i18n.LocaleEN
+			if tc.wantLocale == i18n.LocaleEN {
+				otherLocale = i18n.LocaleJA
+			}
+			other := i18n.T(otherLocale, "list.empty")
+			if other != want && strings.Contains(stdout.String(), other) {
+				t.Errorf("locale %q: unexpected %q (other locale) leaked into output:\n%s", tc.wantLocale, other, stdout.String())
+			}
+		})
+	}
+}
+
+// ===== --mine viewer matching ===============================================
+//
+// matchesViewerOnItem (cmd/standup.go) is exercised via the org-scope standup
+// path. Each case constructs a single project item and checks whether the
+// item leaks past the --mine filter when viewer.login is "alice".
+
+// standupOrgMineDeps builds the testDeps shape used by all --mine matrix
+// tests below: org-scope, no git remote, OrgProject pre-set in config.
+func standupOrgMineDeps(t *testing.T, g *fakeGraphQL) cmd.Deps {
+	t.Helper()
+	return testDeps(g, func(d *cmd.Deps) {
+		d.HasGitRemote = func() bool { return false }
+		d.LoadConfig = func() (config.AppConfig, error) {
+			return config.AppConfig{OrgProject: project.Ref{Owner: "octo", Number: 7}}, nil
+		}
+	})
+}
+
+// standupOrgMineItem builds the canonical "in-progress Issue at since+1h"
+// project-item shape used by the --mine matrix tests. Caller customizes
+// the author / assignees fields per case.
+func standupOrgMineItem(id, title, authorLogin string, assignees []string) map[string]any {
+	assigneeNodes := make([]any, 0, len(assignees))
+	for _, a := range assignees {
+		assigneeNodes = append(assigneeNodes, map[string]any{"login": a})
+	}
+	var author any
+	if authorLogin != "" {
+		author = map[string]any{"__typename": "User", "login": authorLogin}
+	}
+	return map[string]any{
+		"id":        id,
+		"updatedAt": "2026-05-04T10:00:00Z",
+		"content": map[string]any{
+			"__typename": "Issue", "id": "I_" + id, "number": 1, "title": title, "url": "u/" + id,
+			"author":    author,
+			"assignees": map[string]any{"nodes": assigneeNodes},
+		},
+		"fieldValues": map[string]any{"nodes": []any{
+			map[string]any{
+				"__typename": "ProjectV2ItemFieldSingleSelectValue",
+				"optionId":   "OPT_TODO",
+				"name":       "Todo",
+				"field":      map[string]any{"__typename": "ProjectV2SingleSelectField", "id": "F_S", "name": "Status"},
+			},
+		}},
+	}
+}
+
+// TestStandup_MineMatchesAuthor pins the author-only branch of
+// matchesViewerOnItem: viewer.login matches content.author and assignees is
+// empty.
+func TestStandup_MineMatchesAuthor(t *testing.T) {
+	t.Parallel()
+
+	items := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "items": map[string]any{"nodes": []any{
+		standupOrgMineItem("AUTH", "Authored item", "alice", nil),
+	}}}}
+	g := &fakeGraphQL{responses: []fakeResponse{
+		{matchSubstring: "query GetViewerLogin", data: map[string]any{"viewer": map[string]any{"login": "alice"}}},
+		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
+		{matchSubstring: "query ListProjectV2Items (", data: items},
+	}}
+	d := standupOrgMineDeps(t, g)
+	stdout, _, err := runCmd(t, d, "standup", "--since", "2026-05-04T00:00:00Z", "--scope", "org", "--mine")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	if !strings.Contains(stdout.String(), "Authored item") {
+		t.Errorf("author-match must surface item, got:\n%s", stdout.String())
+	}
+}
+
+// TestStandup_MineMatchesAssignee pins the assignee-membership branch: the
+// viewer is one of the assignees while the author is somebody else. This
+// is the branch that was uncovered before (matchesViewerOnItem 55.6%).
+func TestStandup_MineMatchesAssignee(t *testing.T) {
+	t.Parallel()
+
+	items := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "items": map[string]any{"nodes": []any{
+		standupOrgMineItem("ASSN", "Assigned to alice", "bob", []string{"carol", "alice"}),
+	}}}}
+	g := &fakeGraphQL{responses: []fakeResponse{
+		{matchSubstring: "query GetViewerLogin", data: map[string]any{"viewer": map[string]any{"login": "alice"}}},
+		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
+		{matchSubstring: "query ListProjectV2Items (", data: items},
+	}}
+	d := standupOrgMineDeps(t, g)
+	stdout, _, err := runCmd(t, d, "standup", "--since", "2026-05-04T00:00:00Z", "--scope", "org", "--mine")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	if !strings.Contains(stdout.String(), "Assigned to alice") {
+		t.Errorf("assignee-match must surface item, got:\n%s", stdout.String())
+	}
+}
+
+// TestStandup_MineMatchesNeither pins the exclude-when-no-match branch:
+// the viewer is neither the author nor in the assignees list, so the item
+// must drop out. The today-section placeholder (standup.empty.project)
+// signals successful filtering.
+func TestStandup_MineMatchesNeither(t *testing.T) {
+	t.Parallel()
+
+	items := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "items": map[string]any{"nodes": []any{
+		standupOrgMineItem("OTHR", "Their item", "bob", []string{"carol"}),
+	}}}}
+	g := &fakeGraphQL{responses: []fakeResponse{
+		{matchSubstring: "query GetViewerLogin", data: map[string]any{"viewer": map[string]any{"login": "alice"}}},
+		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
+		{matchSubstring: "query ListProjectV2Items (", data: items},
+	}}
+	d := standupOrgMineDeps(t, g)
+	stdout, _, err := runCmd(t, d, "standup", "--since", "2026-05-04T00:00:00Z", "--scope", "org", "--mine")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	got := stdout.String()
+	if strings.Contains(got, "Their item") {
+		t.Errorf("non-matching item must be filtered out under --mine, got:\n%s", got)
+	}
+	// Both Yesterday and Today sections should fall back to the empty
+	// placeholder, since the only candidate item was filtered.
+	emptyPlaceholder := i18n.T(i18n.LocaleEN, "standup.empty.project")
+	if !strings.Contains(got, emptyPlaceholder) {
+		t.Errorf("expected empty.project placeholder after filtering, got:\n%s", got)
+	}
+}
+
+// TestStandup_MineMatchesAuthorAndAssignee pins the dedup contract: when the
+// viewer is both author and an assignee, the item appears exactly once
+// (matchesViewerOnItem returns true on the author check before falling
+// through to the assignee loop).
+func TestStandup_MineMatchesAuthorAndAssignee(t *testing.T) {
+	t.Parallel()
+
+	items := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "items": map[string]any{"nodes": []any{
+		standupOrgMineItem("DUAL", "Self assigned", "alice", []string{"alice", "bob"}),
+	}}}}
+	g := &fakeGraphQL{responses: []fakeResponse{
+		{matchSubstring: "query GetViewerLogin", data: map[string]any{"viewer": map[string]any{"login": "alice"}}},
+		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
+		{matchSubstring: "query ListProjectV2Items (", data: items},
+	}}
+	d := standupOrgMineDeps(t, g)
+	stdout, _, err := runCmd(t, d, "standup", "--since", "2026-05-04T00:00:00Z", "--scope", "org", "--mine")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	got := stdout.String()
+	if n := strings.Count(got, "Self assigned"); n != 1 {
+		t.Errorf("expected exactly one occurrence of item title, got %d in:\n%s", n, got)
+	}
+}
