@@ -1,0 +1,30 @@
+name: release-smoke
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install gh-tasks extension
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh extension install ozzy-labs/gh-tasks
+      - name: Verify version output
+        run: |
+          out=$(gh tasks --version)
+          echo "$out"
+          echo "$out" | grep -E "^gh-tasks version v?[0-9]+\.[0-9]+\.[0-9]+"
+      - name: Verify help output
+        run: gh tasks --help | grep -q "Available Commands"
+      - name: Verify subcommand help reaches all major commands
+        run: |-
+          for cmd in add list today 'done' standup review plan triage link projects; do
+            gh tasks "$cmd" --help >/dev/null
+          done
