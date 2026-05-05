@@ -35,7 +35,7 @@ override:
   - path: ^internal/github/queries$
     threshold: 72
   - path: ^internal/github$
-    threshold: 29
+    threshold: 86
   - path: ^internal/i18ncheck$
     threshold: 77
   - path: ^internal/i18n$
