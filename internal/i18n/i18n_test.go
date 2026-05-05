@@ -233,3 +233,58 @@ func TestKeys(t *testing.T) {
 func lookupFn(env map[string]string) i18n.EnvLookup {
 	return func(k string) string { return env[k] }
 }
+
+// TestJoinPipe pins the contract of [i18n.JoinPipe], the generic helper
+// used for "list of valid values" rendering in error messages
+// (e.g. error.locale.invalid renders Locales as "ja | en"). Callers
+// pass any named string slice (Locale, scope.Scope, period.Period) so
+// the test exercises both raw string and named-string-type inputs.
+func TestJoinPipe(t *testing.T) {
+	t.Parallel()
+
+	t.Run("empty", func(t *testing.T) {
+		t.Parallel()
+		if got := i18n.JoinPipe([]string{}); got != "" {
+			t.Errorf("empty: got %q, want \"\"", got)
+		}
+	})
+
+	t.Run("single", func(t *testing.T) {
+		t.Parallel()
+		if got := i18n.JoinPipe([]string{"only"}); got != "only" {
+			t.Errorf("single: got %q, want %q", got, "only")
+		}
+	})
+
+	t.Run("multiple", func(t *testing.T) {
+		t.Parallel()
+		if got := i18n.JoinPipe([]string{"a", "b", "c"}); got != "a | b | c" {
+			t.Errorf("multiple: got %q, want %q", got, "a | b | c")
+		}
+	})
+
+	t.Run("named-string-type", func(t *testing.T) {
+		t.Parallel()
+		// Locale is `~string`, exercising the generic constraint.
+		if got := i18n.JoinPipe(i18n.Locales); got != "ja | en" {
+			t.Errorf("Locales: got %q, want %q", got, "ja | en")
+		}
+	})
+}
+
+// TestT_EmptyLocale pins the empty-Locale fallback in [i18n.lookup]: when a
+// caller passes Locale("") (e.g. an unresolved zero value before
+// ResolveLocale runs), T must still emit a usable English message rather
+// than the raw key, because callers print the result directly to stderr.
+func TestT_EmptyLocale(t *testing.T) {
+	t.Parallel()
+
+	got := i18n.T(i18n.Locale(""), "list.empty")
+	if got == "list.empty" {
+		t.Fatalf("empty locale fell through to raw key; expected en fallback")
+	}
+	enGot := i18n.T(i18n.LocaleEN, "list.empty")
+	if got != enGot {
+		t.Errorf("empty-locale rendering should match en fallback: got %q, en %q", got, enGot)
+	}
+}

@@ -442,6 +442,72 @@ func makeProjectV2Items(start, count int) []*queries.ProjectV2ItemNode {
 	return out
 }
 
+// TestPaginateProjectV2Items_NilEndCursorBreaksLoop pins the safety branch
+// in PaginateProjectV2Items where `pageInfo.endCursor` is nil (or empty)
+// despite `hasNextPage=true`. The implementation must break out instead of
+// re-issuing a request with the same nil cursor (which would either
+// duplicate page 1 forever or hit the maxPages safety valve only after 10
+// wasted round-trips). The fake registers exactly one step; a second call
+// would fail the script-exhausted assertion.
+func TestPaginateProjectV2Items_NilEndCursorBreaksLoop(t *testing.T) {
+	t.Parallel()
+	steps := []scriptStep{
+		{
+			op: "ListProjectV2Items", wantSize: 100, wantAfter: nil,
+			respond: func(out any) {
+				r := out.(*queries.ListProjectV2ItemsResponse)
+				// hasNextPage=true with endCursor=nil — the corrupt-cursor
+				// shape we want the paginator to detect and stop on.
+				node := projectItemsNode(makeProjectV2Items(0, 50), true, nil)
+				var asIface queries.ProjectV2ItemsNode = node
+				r.Node = &asIface
+			},
+		},
+	}
+	client := &scriptedClient{t: t, steps: steps}
+	got, err := queries.PaginateProjectV2Items(context.Background(), client, "PVT_1", 500)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(got) != 50 {
+		t.Errorf("expected 50 items (page 1 only), got %d", len(got))
+	}
+	if client.cursor != 1 {
+		t.Errorf("expected exactly 1 request (no follow-up on nil cursor), got %d", client.cursor)
+	}
+}
+
+// TestPaginateProjectV2Fields_NilEndCursorBreaksLoop is the Fields-paginator
+// counterpart of TestPaginateProjectV2Items_NilEndCursorBreaksLoop. Same
+// invariant, separate paginator function — both share the cursor-validity
+// guard but the regression risk is independent.
+func TestPaginateProjectV2Fields_NilEndCursorBreaksLoop(t *testing.T) {
+	t.Parallel()
+	steps := []scriptStep{
+		{
+			op: "ListProjectV2Fields", wantSize: 100, wantAfter: nil,
+			respond: func(out any) {
+				r := out.(*queries.ListProjectV2FieldsResponse)
+				one := &queries.ProjectV2FieldNodeProjectV2Field{Id: "F_1", Name: "Foo", DataType: "TEXT"}
+				node := projectFieldsNode([]queries.ProjectV2FieldNode{one}, true, nil)
+				var asIface queries.ProjectV2FieldsNode = node
+				r.Node = &asIface
+			},
+		},
+	}
+	client := &scriptedClient{t: t, steps: steps}
+	got, err := queries.PaginateProjectV2Fields(context.Background(), client, "PVT_1", 500)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(got) != 1 {
+		t.Errorf("expected 1 field (page 1 only), got %d", len(got))
+	}
+	if client.cursor != 1 {
+		t.Errorf("expected exactly 1 request (no follow-up on nil cursor), got %d", client.cursor)
+	}
+}
+
 // TestPaginateProjectV2Items_MultiPage pins the cursor-propagation contract
 // for the Projects v2 items paginator, mirroring the multi-page coverage that
 // already exists for PaginateRepoIssues / PaginateMergedPRs. The fake serves

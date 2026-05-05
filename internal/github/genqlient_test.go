@@ -153,3 +153,63 @@ func TestGenqlientAdapter_NilInner(t *testing.T) {
 		t.Fatalf("expected error for nil inner client, got nil")
 	}
 }
+
+// TestGenqlientAdapter_TypedNilPointerVariables exercises the
+// `string(buf) == "null"` early return inside marshalVars: when a caller
+// passes a typed nil pointer (e.g. `(*FooVars)(nil)`), json.Marshal
+// renders it as `"null"` and the adapter must collapse that back to nil
+// vars rather than passing an empty `{}` payload to the underlying
+// GraphQL client.
+func TestGenqlientAdapter_TypedNilPointerVariables(t *testing.T) {
+	t.Parallel()
+
+	type FooVars struct {
+		Owner string `json:"owner"`
+	}
+	rec := &testfake.RecordingGraphQL{Resp: map[string]any{}}
+	clients := &github.Clients{GraphQL: rec}
+	adapter := clients.AsGenqlientClient()
+
+	req := &gqlclient.Request{
+		Query:     "query Q { __typename }",
+		Variables: (*FooVars)(nil),
+	}
+	resp := &gqlclient.Response{Data: &struct{}{}}
+	if err := adapter.MakeRequest(context.Background(), req, resp); err != nil {
+		t.Fatalf("MakeRequest: %v", err)
+	}
+	if len(rec.Calls) != 1 {
+		t.Fatalf("expected 1 call, got %d", len(rec.Calls))
+	}
+	if rec.Calls[0].Vars != nil {
+		t.Errorf("typed nil pointer must collapse to nil vars, got %#v", rec.Calls[0].Vars)
+	}
+}
+
+// TestGenqlientAdapter_UnmarshalableVariables exercises the
+// `json.Marshal` error branch in marshalVars: when Variables contains a
+// channel (which encoding/json refuses), the adapter must surface the
+// wrapped error instead of silently passing an empty map.
+func TestGenqlientAdapter_UnmarshalableVariables(t *testing.T) {
+	t.Parallel()
+
+	type ChanVars struct {
+		C chan int `json:"c"`
+	}
+	rec := &testfake.RecordingGraphQL{}
+	clients := &github.Clients{GraphQL: rec}
+	adapter := clients.AsGenqlientClient()
+
+	req := &gqlclient.Request{
+		Query:     "query Q { __typename }",
+		Variables: &ChanVars{C: make(chan int)},
+	}
+	resp := &gqlclient.Response{Data: &struct{}{}}
+	err := adapter.MakeRequest(context.Background(), req, resp)
+	if err == nil {
+		t.Fatal("expected marshal error, got nil")
+	}
+	if len(rec.Calls) != 0 {
+		t.Errorf("inner client must not be called when marshal fails, got %d calls", len(rec.Calls))
+	}
+}
