@@ -558,3 +558,360 @@ func TestResolveProjectNodeID(t *testing.T) {
 		}
 	})
 }
+
+// issueItemWithAssignees builds an Issue-content item whose Assignees
+// connection is populated with the supplied logins (and optionally a nil
+// node, to exercise assigneeLogins's nil-skip branch).
+func issueItemWithAssignees(logins []string, includeNilNode bool) *queries.ProjectV2ItemNode {
+	nodes := make([]*queries.ProjectV2ItemContentAssigneeLogin, 0, len(logins)+1)
+	if includeNilNode {
+		nodes = append(nodes, nil)
+	}
+	for _, l := range logins {
+		nodes = append(nodes, &queries.ProjectV2ItemContentAssigneeLogin{Login: l})
+	}
+	var content queries.ProjectV2ItemContent = &queries.ProjectV2ItemContentIssue{
+		Id:        "I_x",
+		Number:    1,
+		Title:     "t",
+		Url:       "u",
+		Assignees: &queries.ProjectV2ItemContentAssignees{Nodes: nodes},
+	}
+	return &queries.ProjectV2ItemNode{
+		Id:          "ITEM_A",
+		Content:     &content,
+		FieldValues: &queries.ProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection{},
+	}
+}
+
+// prItemWithAssignees mirrors issueItemWithAssignees but via the PullRequest
+// content variant. assigneeLogins is shared by both content branches in
+// ContentOf, so this exercises the same helper from the PR call site.
+func prItemWithAssignees(logins []string) *queries.ProjectV2ItemNode {
+	nodes := make([]*queries.ProjectV2ItemContentAssigneeLogin, 0, len(logins))
+	for _, l := range logins {
+		nodes = append(nodes, &queries.ProjectV2ItemContentAssigneeLogin{Login: l})
+	}
+	var content queries.ProjectV2ItemContent = &queries.ProjectV2ItemContentPullRequest{
+		Id:        "P_x",
+		Number:    2,
+		Title:     "t",
+		Url:       "u",
+		Assignees: &queries.ProjectV2ItemContentAssignees{Nodes: nodes},
+	}
+	return &queries.ProjectV2ItemNode{
+		Id:          "ITEM_B",
+		Content:     &content,
+		FieldValues: &queries.ProjectV2ItemNodeFieldValuesProjectV2ItemFieldValueConnection{},
+	}
+}
+
+// TestContentOfAssignees exercises the unexported assigneeLogins helper
+// indirectly through ContentOf. It pins the {0,1,N,nil-skip} cases plus
+// the nil-Assignees-pointer branch (issue without assignees connection).
+func TestContentOfAssignees(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name string
+		item *queries.ProjectV2ItemNode
+		want []string
+	}{
+		{
+			name: "issue-nil-assignees-connection",
+			// Plain issueItem fixture leaves Assignees == nil; assigneeLogins
+			// must return nil rather than panicking.
+			item: issueItem(1, "t", "u"),
+			want: nil,
+		},
+		{
+			name: "issue-zero-assignees",
+			item: issueItemWithAssignees(nil, false),
+			want: []string{},
+		},
+		{
+			name: "issue-one-assignee",
+			item: issueItemWithAssignees([]string{"alice"}, false),
+			want: []string{"alice"},
+		},
+		{
+			name: "issue-many-assignees-preserve-order",
+			item: issueItemWithAssignees([]string{"alice", "bob", "carol"}, false),
+			want: []string{"alice", "bob", "carol"},
+		},
+		{
+			name: "issue-skips-nil-node",
+			// A nil entry in the connection's Nodes slice must be skipped,
+			// not dereferenced.
+			item: issueItemWithAssignees([]string{"alice", "bob"}, true),
+			want: []string{"alice", "bob"},
+		},
+		{
+			name: "pr-many-assignees-preserve-order",
+			item: prItemWithAssignees([]string{"x", "y", "z"}),
+			want: []string{"x", "y", "z"},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := projectitem.ContentOf(tc.item).Assignees
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("ContentOf(...).Assignees (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+// fieldCommon builds a ProjectV2FieldNode of the "Common" (plain
+// ProjectV2Field) variant — the one used for TEXT / DATE / NUMBER etc.
+func fieldCommon(id, name string, dt queries.ProjectV2FieldType) queries.ProjectV2FieldNode {
+	return &queries.ProjectV2FieldNodeProjectV2Field{
+		Id:       id,
+		Name:     name,
+		DataType: dt,
+	}
+}
+
+// fieldSingleSelect builds a ProjectV2FieldNode of the SingleSelect variant
+// with the supplied options. Pass options=nil to verify the empty-options
+// branch still produces a non-nil (but empty) Options slice.
+func fieldSingleSelect(id, name string, options []projectitem.FieldOption, includeNilOption bool) queries.ProjectV2FieldNode {
+	opts := make([]*queries.ProjectV2FieldNodeOptionsProjectV2SingleSelectFieldOption, 0, len(options)+1)
+	if includeNilOption {
+		opts = append(opts, nil)
+	}
+	for _, o := range options {
+		opts = append(opts, &queries.ProjectV2FieldNodeOptionsProjectV2SingleSelectFieldOption{
+			Id: o.ID, Name: o.Name,
+		})
+	}
+	return &queries.ProjectV2FieldNodeProjectV2SingleSelectField{
+		Id:       id,
+		Name:     name,
+		DataType: queries.ProjectV2FieldTypeSingleSelect,
+		Options:  opts,
+	}
+}
+
+// fieldIteration builds a ProjectV2FieldNode of the Iteration variant.
+// Pass cfg=nil to exercise the FieldsOf branch that leaves Configuration
+// unset (Configuration field stays nil on the resulting FieldDescriptor).
+func fieldIteration(id, name string, cfg *queries.ProjectV2IterationConfig) queries.ProjectV2FieldNode {
+	return &queries.ProjectV2FieldNodeProjectV2IterationField{
+		Id:            id,
+		Name:          name,
+		DataType:      queries.ProjectV2FieldTypeIteration,
+		Configuration: cfg,
+	}
+}
+
+func TestFieldsOf(t *testing.T) {
+	t.Parallel()
+
+	t.Run("nil-slice", func(t *testing.T) {
+		t.Parallel()
+		got := projectitem.FieldsOf(nil)
+		if len(got) != 0 {
+			t.Errorf("got %#v, want empty slice", got)
+		}
+	})
+
+	t.Run("empty-slice", func(t *testing.T) {
+		t.Parallel()
+		got := projectitem.FieldsOf([]queries.ProjectV2FieldNode{})
+		if len(got) != 0 {
+			t.Errorf("got %#v, want empty slice", got)
+		}
+	})
+
+	t.Run("skips-nil-element", func(t *testing.T) {
+		t.Parallel()
+		got := projectitem.FieldsOf([]queries.ProjectV2FieldNode{nil})
+		if len(got) != 0 {
+			t.Errorf("got %#v, want empty slice when only nil entries", got)
+		}
+	})
+
+	t.Run("mixed-three-variants-preserve-order", func(t *testing.T) {
+		t.Parallel()
+		// Sprint 11 + Sprint 12 active, Sprint 10 completed — order matters
+		// in the response and must be preserved end-to-end.
+		cfg := &queries.ProjectV2IterationConfig{
+			Iterations: []*queries.ProjectV2IterationOption{
+				{Id: "I_11", Title: "Sprint 11", StartDate: "2026-04-21", Duration: 7},
+				{Id: "I_12", Title: "Sprint 12", StartDate: "2026-04-28", Duration: 7},
+			},
+			CompletedIterations: []*queries.ProjectV2IterationOption{
+				{Id: "I_10", Title: "Sprint 10", StartDate: "2026-04-14", Duration: 7},
+			},
+		}
+		fields := []queries.ProjectV2FieldNode{
+			fieldCommon("F_text", "Notes", queries.ProjectV2FieldTypeText),
+			nil, // must be skipped, must not break ordering of the rest
+			fieldSingleSelect("F_status", "Status",
+				[]projectitem.FieldOption{
+					{ID: "O_todo", Name: "Todo"},
+					{ID: "O_done", Name: "Done"},
+				},
+				true, // include a nil option entry to exercise the inner skip
+			),
+			fieldIteration("F_iter", "Sprint", cfg),
+		}
+		want := []projectitem.FieldDescriptor{
+			{ID: "F_text", Name: "Notes", DataType: "TEXT", Options: nil, Configuration: nil},
+			{
+				ID: "F_status", Name: "Status", DataType: "SINGLE_SELECT",
+				Options: []projectitem.FieldOption{
+					{ID: "O_todo", Name: "Todo"},
+					{ID: "O_done", Name: "Done"},
+				},
+			},
+			{
+				ID: "F_iter", Name: "Sprint", DataType: "ITERATION",
+				Configuration: &projectitem.IterationConfiguration{
+					Iterations: []projectitem.IterationOption{
+						{ID: "I_11", Title: "Sprint 11", StartDate: "2026-04-21", Duration: 7},
+						{ID: "I_12", Title: "Sprint 12", StartDate: "2026-04-28", Duration: 7},
+					},
+					CompletedIterations: []projectitem.IterationOption{
+						{ID: "I_10", Title: "Sprint 10", StartDate: "2026-04-14", Duration: 7},
+					},
+				},
+			},
+		}
+		got := projectitem.FieldsOf(fields)
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("FieldsOf (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("single-select-empty-options", func(t *testing.T) {
+		t.Parallel()
+		// FieldsOf always allocates an Options slice for SINGLE_SELECT; with
+		// zero source options it must remain non-nil (callers can iterate
+		// without nil-guarding) but length 0.
+		fields := []queries.ProjectV2FieldNode{
+			fieldSingleSelect("F_ss", "Empty", nil, false),
+		}
+		got := projectitem.FieldsOf(fields)
+		if len(got) != 1 {
+			t.Fatalf("got %d descriptors, want 1", len(got))
+		}
+		if got[0].Options == nil {
+			t.Errorf("Options is nil, want non-nil empty slice")
+		}
+		if len(got[0].Options) != 0 {
+			t.Errorf("Options len = %d, want 0", len(got[0].Options))
+		}
+	})
+
+	t.Run("iteration-nil-configuration", func(t *testing.T) {
+		t.Parallel()
+		// When Configuration is nil on the source node, FieldsOf must leave
+		// the descriptor's Configuration unset (zero value) and NOT call
+		// iterationConfigOf with a nil pointer.
+		fields := []queries.ProjectV2FieldNode{
+			fieldIteration("F_iter", "Sprint", nil),
+		}
+		got := projectitem.FieldsOf(fields)
+		want := []projectitem.FieldDescriptor{
+			{ID: "F_iter", Name: "Sprint", DataType: "ITERATION", Configuration: nil},
+		}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("FieldsOf (-want +got):\n%s", diff)
+		}
+	})
+}
+
+// TestFieldsOfIterationConfigShape exercises iterationConfigOf branches
+// (active-only, completed-only, nil-element skip) indirectly through
+// FieldsOf, which is the only public entry that reaches it.
+func TestFieldsOfIterationConfigShape(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name string
+		cfg  *queries.ProjectV2IterationConfig
+		want *projectitem.IterationConfiguration
+	}{
+		{
+			name: "active-only",
+			cfg: &queries.ProjectV2IterationConfig{
+				Iterations: []*queries.ProjectV2IterationOption{
+					{Id: "I_1", Title: "S1", StartDate: "2026-01-01", Duration: 7},
+					{Id: "I_2", Title: "S2", StartDate: "2026-01-08", Duration: 7},
+				},
+			},
+			want: &projectitem.IterationConfiguration{
+				Iterations: []projectitem.IterationOption{
+					{ID: "I_1", Title: "S1", StartDate: "2026-01-01", Duration: 7},
+					{ID: "I_2", Title: "S2", StartDate: "2026-01-08", Duration: 7},
+				},
+				CompletedIterations: []projectitem.IterationOption{},
+			},
+		},
+		{
+			name: "completed-only",
+			cfg: &queries.ProjectV2IterationConfig{
+				CompletedIterations: []*queries.ProjectV2IterationOption{
+					{Id: "I_0", Title: "S0", StartDate: "2025-12-25", Duration: 7},
+				},
+			},
+			want: &projectitem.IterationConfiguration{
+				Iterations: []projectitem.IterationOption{},
+				CompletedIterations: []projectitem.IterationOption{
+					{ID: "I_0", Title: "S0", StartDate: "2025-12-25", Duration: 7},
+				},
+			},
+		},
+		{
+			name: "both-empty",
+			// Empty (but non-nil) input lists must produce empty (non-nil)
+			// output lists — callers can iterate safely either way.
+			cfg: &queries.ProjectV2IterationConfig{},
+			want: &projectitem.IterationConfiguration{
+				Iterations:          []projectitem.IterationOption{},
+				CompletedIterations: []projectitem.IterationOption{},
+			},
+		},
+		{
+			name: "skips-nil-iteration-entries",
+			cfg: &queries.ProjectV2IterationConfig{
+				Iterations: []*queries.ProjectV2IterationOption{
+					nil,
+					{Id: "I_a", Title: "Sa", StartDate: "2026-02-01", Duration: 14},
+				},
+				CompletedIterations: []*queries.ProjectV2IterationOption{
+					{Id: "I_b", Title: "Sb", StartDate: "2026-01-18", Duration: 14},
+					nil,
+				},
+			},
+			want: &projectitem.IterationConfiguration{
+				Iterations: []projectitem.IterationOption{
+					{ID: "I_a", Title: "Sa", StartDate: "2026-02-01", Duration: 14},
+				},
+				CompletedIterations: []projectitem.IterationOption{
+					{ID: "I_b", Title: "Sb", StartDate: "2026-01-18", Duration: 14},
+				},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			fields := []queries.ProjectV2FieldNode{
+				fieldIteration("F_iter", "Sprint", tc.cfg),
+			}
+			got := projectitem.FieldsOf(fields)
+			if len(got) != 1 {
+				t.Fatalf("got %d descriptors, want 1", len(got))
+			}
+			if diff := cmp.Diff(tc.want, got[0].Configuration); diff != "" {
+				t.Errorf("Configuration (-want +got):\n%s", diff)
+			}
+		})
+	}
+}

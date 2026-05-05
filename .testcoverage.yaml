@@ -43,7 +43,7 @@ override:
   - path: ^internal/period$
     threshold: 87
   - path: ^internal/projectitem$
-    threshold: 59
+    threshold: 92
   - path: ^internal/project$
     threshold: 85
   - path: ^internal/repo$
