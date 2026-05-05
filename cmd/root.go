@@ -4,8 +4,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Version is overridden at build time via -ldflags.
-var Version = "0.0.0-dev"
+// Version reflects the current release tag. release-please rewrites the literal
+// on each release via the x-release-please-version annotation below; the value
+// committed in main between releases is the prior tag (i.e. matches what `gh
+// extension install` would have fetched at that point).
+var Version = "0.0.0-dev" // x-release-please-version
 
 // Root constructs the gh-tasks cobra root command using DefaultDeps.
 func Root() *cobra.Command {
