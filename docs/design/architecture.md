@@ -11,7 +11,7 @@
                     │   src/skills/{name}/        │ ← skill SSOT (ja)
                     │     SKILL.md / SKILL.en.md  │
                     └────────────┬────────────────┘
-                                 │ build-skills.mjs (per-adapter transform)
+                                 │ gh tasks build-skills (per-adapter transform)
                                  ▼
                     ┌─────────────────────────────┐
                     │   dist/{adapter-id}/        │ ← 4 adapter 出力
@@ -70,7 +70,6 @@ gh-tasks/
 ├── dist/{adapter-id}/                 # adapter 出力(.gitignore、build-skills で再生成)
 ├── .claude/skills/ .agents/skills/    # ローカル staged コピー(dogfooding)
 ├── skills-sync/                       # consumer 向け Renovate preset
-├── packages/gh-tasks/ scripts/        # 旧 TS 実装(Phase 7 で削除予定)
 ├── go.mod / go.sum / .golangci.yaml / genqlient.yaml
 └── .github/workflows/                 # ci.yaml(go ジョブ含)+ release.yaml(precompile-action)
 ```
@@ -150,8 +149,8 @@ func (e *ScopeError) Error() string { return e.Key }
 
 詳細は `docs/design/adapter-pipeline.md` を参照。要約:
 
-1. `src/skills/{name}/SKILL.md`(ja SSOT)を `scripts/build-skills.mjs` が読み込み
-2. 4 adapter(claude-code / codex-cli / gemini-cli / copilot)が `dist/{adapter-id}/` に各エージェント形式で出力
+1. `src/skills/{name}/SKILL.md`(ja SSOT)を `gh tasks build-skills`(`cmd/build_skills.go`)が読み込み
+2. 4 adapter(claude-code / codex-cli / gemini-cli / copilot、`internal/adapters/`)が `dist/{adapter-id}/` に各エージェント形式で出力
 3. consumer リポは `skills-sync/{adapter}.json` Renovate preset を extend し、`sync-skills.sh` で `dist/` 内容を取り込む
 
 ## テスト構成

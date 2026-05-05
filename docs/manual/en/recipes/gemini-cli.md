@@ -15,7 +15,7 @@ Gemini CLI reads the file pointed to by `context.fileName` in `.gemini/settings.
 
 ```bash
 # 1. Build the adapter outputs in gh-tasks
-pnpm run build:skills    # emits dist/gemini-cli/AGENTS.md.snippet
+gh tasks build-skills    # emits dist/gemini-cli/AGENTS.md.snippet
 
 # 2. From the consumer repo root, run commons' sync-skills.sh with MARKER_TAG override
 MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \

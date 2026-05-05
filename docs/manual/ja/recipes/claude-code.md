@@ -15,7 +15,7 @@ Claude Code は `.claude/skills/{name}/SKILL.md` を skill 定義として読み
 
 ```bash
 # 1. gh-tasks 側で adapter 出力を生成
-pnpm run build:skills    # dist/claude-code/.claude/skills/{name}/SKILL.md を生成
+gh tasks build-skills    # dist/claude-code/.claude/skills/{name}/SKILL.md を生成
 
 # 2. consumer リポのルートで commons の sync-skills.sh を MARKER_TAG 上書きで実行
 MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \

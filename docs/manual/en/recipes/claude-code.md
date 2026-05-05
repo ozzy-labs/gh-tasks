@@ -15,7 +15,7 @@ Claude Code reads skill definitions from `.claude/skills/{name}/SKILL.md`. The `
 
 ```bash
 # 1. Build the adapter outputs in gh-tasks
-pnpm run build:skills    # generates dist/claude-code/.claude/skills/{name}/SKILL.md
+gh tasks build-skills    # generates dist/claude-code/.claude/skills/{name}/SKILL.md
 
 # 2. From the consumer repo root, run commons' sync-skills.sh with MARKER_TAG override
 MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \

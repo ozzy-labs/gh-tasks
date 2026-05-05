@@ -56,7 +56,7 @@ GitHub's official `gh agent-task` (preview) is close in name to this extension's
 
 **Cause**: no platform binary in the GitHub Release.
 
-**Fix**: confirm your platform is in the 5 published targets (darwin x86_64 / arm64, linux x86_64 / arm64, windows x86_64; see [repo-internal ADR-0001](../../../adr/0001-use-bun-compile-for-binary.md)). On unsupported platforms, run from source: `git clone` + `bun run`.
+**Fix**: confirm your platform is in the 5 published targets (darwin x86_64 / arm64, linux x86_64 / arm64, windows x86_64; see [repo-internal ADR-0006](../../../adr/0006-go-and-cobra-migration.md)). On unsupported platforms, run from source: `git clone` + `go build` (or `go run .`).
 
 ## Related
 

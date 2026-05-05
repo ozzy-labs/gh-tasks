@@ -18,7 +18,7 @@ Codex CLI starts from `AGENTS.md` and resolves referenced skills from `.agents/s
 
 ```bash
 # 1. Build the adapter outputs in gh-tasks
-pnpm run build:skills    # generates dist/codex-cli/.agents/skills/{name}/SKILL.md and dist/codex-cli/AGENTS.md.snippet
+gh tasks build-skills    # generates dist/codex-cli/.agents/skills/{name}/SKILL.md and dist/codex-cli/AGENTS.md.snippet
 
 # 2. From the consumer repo root, run commons' sync-skills.sh with MARKER_TAG override
 MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \

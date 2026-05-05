@@ -15,7 +15,7 @@ GitHub Copilot reads `.github/copilot-instructions.md` as its top-level instruct
 
 ```bash
 # 1. Build the adapter outputs in gh-tasks
-pnpm run build:skills    # emits dist/copilot/.github/copilot-instructions.md.snippet
+gh tasks build-skills    # emits dist/copilot/.github/copilot-instructions.md.snippet
 
 # 2. From the consumer repo root, run commons' sync-skills.sh with MARKER_TAG override
 MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \

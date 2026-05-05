@@ -15,7 +15,7 @@ Gemini CLI は `.gemini/settings.json` の `context.fileName` で指定したフ
 
 ```bash
 # 1. gh-tasks 側で adapter 出力を生成
-pnpm run build:skills    # dist/gemini-cli/AGENTS.md.snippet を生成
+gh tasks build-skills    # dist/gemini-cli/AGENTS.md.snippet を生成
 
 # 2. consumer リポのルートで commons の sync-skills.sh を MARKER_TAG 上書きで実行
 MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \
