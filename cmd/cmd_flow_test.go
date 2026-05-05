@@ -1509,6 +1509,263 @@ func TestPlan_ProjectIterationFallback(t *testing.T) {
 	}
 }
 
+// TestPlan_ProjectIterationUpdated covers the write half of `runPlanProject`
+// without --dry-run: when an in-range item is *not* already on the target
+// iteration, the command issues an UpdateProjectV2ItemFieldValue mutation
+// and prints `plan.iterationUpdated.project`. The test wires a
+// captureGraphQL around the fake to assert the mutation input shape (project
+// id, item id, field id, iteration id) instead of just the human output, so
+// a future refactor that swaps the mutation but keeps the message can't
+// silently regress.
+func TestPlan_ProjectIterationUpdated(t *testing.T) {
+	t.Parallel()
+
+	fields := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "fields": map[string]any{"nodes": []any{
+		map[string]any{
+			"__typename": "ProjectV2IterationField", "id": "F_IT", "name": "Iteration", "dataType": "ITERATION",
+			"configuration": map[string]any{
+				"iterations": []any{
+					map[string]any{"id": "IT_1", "title": "Daily 2026-05-04", "startDate": "2026-05-04", "duration": 1},
+				},
+				"completedIterations": []any{},
+			},
+		},
+	}}}}
+	items := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "items": map[string]any{"nodes": []any{
+		map[string]any{
+			"id": "ITEM_a", "updatedAt": "2026-05-04T08:00:00Z",
+			"content": map[string]any{
+				"__typename": "Issue", "id": "I_a", "number": 11, "title": "Wire iteration", "url": "u/11",
+			},
+			"fieldValues": map[string]any{"nodes": []any{}},
+		},
+	}}}}
+	g := &fakeGraphQL{responses: []fakeResponse{
+		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
+		{matchSubstring: "query ListProjectV2Fields (", data: fields},
+		{matchSubstring: "query ListProjectV2Items (", data: items},
+		{
+			matchSubstring: "mutation UpdateProjectV2ItemFieldValue (",
+			data: map[string]any{"updateProjectV2ItemFieldValue": map[string]any{"projectV2Item": map[string]any{
+				"id": "ITEM_a",
+			}}},
+		},
+	}}
+	var capturedInput map[string]any
+	wrap := &captureGraphQL{inner: g, capture: func(query string, vars map[string]any) {
+		if !strings.Contains(query, "mutation UpdateProjectV2ItemFieldValue (") {
+			return
+		}
+		if in, ok := vars["input"].(map[string]any); ok {
+			capturedInput = in
+		}
+	}}
+	d := testDeps(g, func(d *cmd.Deps) {
+		d.HasGitRemote = func() bool { return false }
+		d.LoadConfig = func() (config.AppConfig, error) {
+			return config.AppConfig{OrgProject: project.Ref{Owner: "octo", Number: 7}}, nil
+		}
+		d.NewClients = func() (*github.Clients, error) {
+			return &github.Clients{Host: "github.com", GraphQL: wrap, REST: fakeREST{}}, nil
+		}
+	})
+	stdout, _, err := runCmd(t, d, "plan", "--scope=org", "--period", "daily")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	got := stdout.String()
+	if !strings.Contains(got, "Project item iteration updated") {
+		t.Errorf("expected plan.iterationUpdated.project on stdout, got:\n%s", got)
+	}
+	if !strings.Contains(got, "#11") {
+		t.Errorf("expected updated-item label `#11`, got:\n%s", got)
+	}
+	if capturedInput == nil {
+		t.Fatalf("expected UpdateProjectV2ItemFieldValue mutation to be invoked, captured none")
+	}
+	if capturedInput["projectId"] != "PVT_org" {
+		t.Errorf("input.projectId = %v, want PVT_org", capturedInput["projectId"])
+	}
+	if capturedInput["itemId"] != "ITEM_a" {
+		t.Errorf("input.itemId = %v, want ITEM_a", capturedInput["itemId"])
+	}
+	if capturedInput["fieldId"] != "F_IT" {
+		t.Errorf("input.fieldId = %v, want F_IT", capturedInput["fieldId"])
+	}
+	value, _ := capturedInput["value"].(map[string]any)
+	if value == nil || value["iterationId"] != "IT_1" {
+		t.Errorf("input.value.iterationId mismatch, got value=%v", value)
+	}
+}
+
+// TestPlan_ProjectAlreadyOnIteration covers the skip branch: when an
+// in-range item already carries the resolved iteration id on the iteration
+// field, `runPlanProject` must NOT call UpdateProjectV2ItemFieldValue and
+// must surface `plan.iterationAlreadySet.project`. The fake registers no
+// mutation response, so an accidental call would surface as `no fake
+// response matched` and fail the test loudly.
+func TestPlan_ProjectAlreadyOnIteration(t *testing.T) {
+	t.Parallel()
+
+	fields := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "fields": map[string]any{"nodes": []any{
+		map[string]any{
+			"__typename": "ProjectV2IterationField", "id": "F_IT", "name": "Iteration", "dataType": "ITERATION",
+			"configuration": map[string]any{
+				"iterations": []any{
+					map[string]any{"id": "IT_1", "title": "Daily 2026-05-04", "startDate": "2026-05-04", "duration": 1},
+				},
+				"completedIterations": []any{},
+			},
+		},
+	}}}}
+	items := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "items": map[string]any{"nodes": []any{
+		map[string]any{
+			"id": "ITEM_b", "updatedAt": "2026-05-04T08:00:00Z",
+			"content": map[string]any{
+				"__typename": "Issue", "id": "I_b", "number": 22, "title": "Already wired", "url": "u/22",
+			},
+			"fieldValues": map[string]any{"nodes": []any{
+				map[string]any{
+					"__typename":  "ProjectV2ItemFieldIterationValue",
+					"iterationId": "IT_1",
+					"title":       "Daily 2026-05-04",
+					"startDate":   "2026-05-04",
+					"duration":    1,
+					"field": map[string]any{
+						"__typename": "ProjectV2IterationField", "id": "F_IT", "name": "Iteration",
+					},
+				},
+			}},
+		},
+	}}}}
+	g := &fakeGraphQL{responses: []fakeResponse{
+		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
+		{matchSubstring: "query ListProjectV2Fields (", data: fields},
+		{matchSubstring: "query ListProjectV2Items (", data: items},
+	}}
+	d := testDeps(g, func(d *cmd.Deps) {
+		d.HasGitRemote = func() bool { return false }
+		d.LoadConfig = func() (config.AppConfig, error) {
+			return config.AppConfig{OrgProject: project.Ref{Owner: "octo", Number: 7}}, nil
+		}
+	})
+	stdout, _, err := runCmd(t, d, "plan", "--scope=org", "--period", "daily")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	got := stdout.String()
+	if !strings.Contains(got, "Skipped (already on the target iteration)") {
+		t.Errorf("expected plan.iterationAlreadySet.project, got:\n%s", got)
+	}
+	if !strings.Contains(got, "#22") {
+		t.Errorf("expected describeItem `#22`, got:\n%s", got)
+	}
+}
+
+// TestPlan_ProjectNotFound covers the project-resolution failure path: when
+// PaginateProjectV2Fields returns ErrProjectNotFound (e.g. project deleted
+// after the initial id resolve), `runPlanProject` must surface the
+// localized `error.project.notFound` on stderr and return ErrSilent so the
+// CLI exits with a clean code. The mutation responses are intentionally
+// absent.
+func TestPlan_ProjectNotFound(t *testing.T) {
+	t.Parallel()
+
+	// First the project resolves fine, then ListProjectV2Fields returns a
+	// node payload without the ProjectV2 inline fragment; the paginator
+	// translates that into ErrProjectNotFound, exercising the
+	// errors.Is(err, queries.ErrProjectNotFound) branch in runPlanProject.
+	g := &fakeGraphQL{responses: []fakeResponse{
+		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
+		{
+			matchSubstring: "query ListProjectV2Fields (",
+			// Wrong concrete type triggers ErrProjectNotFound inside the
+			// ProjectV2-typed paginator.
+			data: map[string]any{"node": map[string]any{"__typename": "Issue"}},
+		},
+	}}
+	d := testDeps(g, func(d *cmd.Deps) {
+		d.HasGitRemote = func() bool { return false }
+		d.LoadConfig = func() (config.AppConfig, error) {
+			return config.AppConfig{OrgProject: project.Ref{Owner: "octo", Number: 7}}, nil
+		}
+	})
+	_, stderr, err := runCmd(t, d, "plan", "--scope=org", "--period", "daily")
+	if !errors.Is(err, cmd.ErrSilent) {
+		t.Fatalf("expected ErrSilent, got %v", err)
+	}
+	if !strings.Contains(stderr.String(), "Project not found") {
+		t.Errorf("expected localized error.project.notFound on stderr, got:\n%s", stderr.String())
+	}
+}
+
+// TestPlan_ProjectIterationFieldMissing exercises the
+// `error.plan.iterationFieldMissing` branch: a project whose fields list
+// carries no ITERATION-typed entry must surface the localized message and
+// return ErrSilent without ever calling the items query.
+func TestPlan_ProjectIterationFieldMissing(t *testing.T) {
+	t.Parallel()
+
+	fields := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "fields": map[string]any{"nodes": []any{
+		map[string]any{
+			"__typename": "ProjectV2SingleSelectField", "id": "F_S", "name": "Status", "dataType": "SINGLE_SELECT",
+			"options": []any{},
+		},
+	}}}}
+	g := &fakeGraphQL{responses: []fakeResponse{
+		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
+		{matchSubstring: "query ListProjectV2Fields (", data: fields},
+	}}
+	d := testDeps(g, func(d *cmd.Deps) {
+		d.HasGitRemote = func() bool { return false }
+		d.LoadConfig = func() (config.AppConfig, error) {
+			return config.AppConfig{OrgProject: project.Ref{Owner: "octo", Number: 7}}, nil
+		}
+	})
+	_, stderr, err := runCmd(t, d, "plan", "--scope=org", "--period", "daily")
+	if !errors.Is(err, cmd.ErrSilent) {
+		t.Fatalf("expected ErrSilent, got %v", err)
+	}
+	if !strings.Contains(stderr.String(), "no `Iteration` field") {
+		t.Errorf("expected error.plan.iterationFieldMissing on stderr, got:\n%s", stderr.String())
+	}
+}
+
+// TestPlan_ProjectNoIterationsAvailable covers the second mid-flow guard:
+// the iteration field exists but its configuration carries an empty
+// iterations list (resolveTargetIteration returns nil). The command must
+// emit `error.plan.noIterationsAvailable` and return ErrSilent.
+func TestPlan_ProjectNoIterationsAvailable(t *testing.T) {
+	t.Parallel()
+
+	fields := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "fields": map[string]any{"nodes": []any{
+		map[string]any{
+			"__typename": "ProjectV2IterationField", "id": "F_IT", "name": "Iteration", "dataType": "ITERATION",
+			"configuration": map[string]any{
+				"iterations":          []any{},
+				"completedIterations": []any{},
+			},
+		},
+	}}}}
+	g := &fakeGraphQL{responses: []fakeResponse{
+		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
+		{matchSubstring: "query ListProjectV2Fields (", data: fields},
+	}}
+	d := testDeps(g, func(d *cmd.Deps) {
+		d.HasGitRemote = func() bool { return false }
+		d.LoadConfig = func() (config.AppConfig, error) {
+			return config.AppConfig{OrgProject: project.Ref{Owner: "octo", Number: 7}}, nil
+		}
+	})
+	_, stderr, err := runCmd(t, d, "plan", "--scope=org", "--period", "daily")
+	if !errors.Is(err, cmd.ErrSilent) {
+		t.Fatalf("expected ErrSilent, got %v", err)
+	}
+	if !strings.Contains(stderr.String(), "has no iterations configured") {
+		t.Errorf("expected error.plan.noIterationsAvailable on stderr, got:\n%s", stderr.String())
+	}
+}
+
 // ===== Triage ==============================================================
 
 func TestTriage_RepoUnlabelledOnly(t *testing.T) {
