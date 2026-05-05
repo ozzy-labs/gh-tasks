@@ -232,6 +232,55 @@ func TestResolve_DefaultGetRemoteURL_Success(t *testing.T) {
 	}
 }
 
+// TestResolve_DefaultGetRemoteURL_IgnoresInheritedGitDir is the regression
+// guard for #301: when `gh tasks` is invoked from a git hook (or any process
+// that exports GIT_DIR), the child `git remote get-url origin` must still see
+// the cwd-based repo, not whatever GIT_DIR points at.
+//
+// Setup mirrors TestResolve_DefaultGetRemoteURL_Success but additionally
+// points GIT_DIR at a *different* repo with a different origin URL. The fix
+// (defaultGetRemoteURL clears GIT_* via cleanGitEnv) makes git ignore the
+// inherited GIT_DIR and read the cwd's .git/config.
+func TestResolve_DefaultGetRemoteURL_IgnoresInheritedGitDir(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skipf("git not on PATH: %v", err)
+	}
+	// Cannot t.Parallel(): chdir + Setenv mutate process-global state.
+	dir := chdirToTempOrSkip(t)
+
+	// Initialise the cwd repo with the URL we expect Resolve to return.
+	mustRunGit(t, dir, "init", "--quiet", "-b", "main")
+	mustRunGit(t, dir, "config", "--local", "user.email", "test@example.invalid")
+	mustRunGit(t, dir, "config", "--local", "user.name", "test")
+	const cwdURL = "git@github.com:ozzy-labs/cwd-fixture.git"
+	mustRunGit(t, dir, "remote", "add", "origin", cwdURL)
+
+	// Initialise a *different* repo to point GIT_DIR at. Its origin URL
+	// must be distinguishable so we can prove which one git read.
+	other := t.TempDir()
+	if resolved, err := filepath.EvalSymlinks(other); err == nil {
+		other = resolved
+	}
+	mustRunGit(t, other, "init", "--quiet", "-b", "main")
+	mustRunGit(t, other, "config", "--local", "user.email", "test@example.invalid")
+	mustRunGit(t, other, "config", "--local", "user.name", "test")
+	mustRunGit(t, other, "remote", "add", "origin", "git@github.com:ozzy-labs/wrong-fixture.git")
+
+	// Export GIT_DIR pointing at the *other* repo. Without the fix,
+	// git inherits this and reports the wrong-fixture URL. t.Setenv
+	// auto-restores on cleanup.
+	t.Setenv("GIT_DIR", filepath.Join(other, ".git"))
+
+	got, err := repo.Resolve(repo.ResolveOptions{})
+	if err != nil {
+		t.Fatalf("Resolve: %v", err)
+	}
+	if got.String() != "ozzy-labs/cwd-fixture" {
+		t.Errorf("got %q; want %q (GIT_DIR leaked into child git)",
+			got.String(), "ozzy-labs/cwd-fixture")
+	}
+}
+
 // chdirToTempOrSkip creates a TempDir, resolves symlinks, chdirs into it
 // via t.Chdir (auto-restored on cleanup, mutually exclusive with t.Parallel
 // so concurrent tests can't race the process-global cwd), unsets git
