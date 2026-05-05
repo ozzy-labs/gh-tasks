@@ -235,7 +235,7 @@ func runProjectsInit(ctx context.Context, c *cobra.Command, deps Deps, yamlPath 
 		Title:   title,
 	})
 	if err != nil {
-		return fmt.Errorf("create project: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "create project", err)
 	}
 	project := pResp.CreateProjectV2.ProjectV2
 	fmt.Fprintln(c.OutOrStdout(),
@@ -247,7 +247,7 @@ func runProjectsInit(ctx context.Context, c *cobra.Command, deps Deps, yamlPath 
 	// "Project not found" path used at command entry.
 	fieldNodes, err := queries.PaginateProjectV2Fields(ctx, gqlClient, project.Id, 100)
 	if err != nil {
-		return fmt.Errorf("list project fields: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "list project fields", err)
 	}
 	existingNames := map[string]bool{}
 	for _, f := range projectitem.FieldsOf(fieldNodes) {
@@ -277,7 +277,7 @@ func runProjectsInit(ctx context.Context, c *cobra.Command, deps Deps, yamlPath 
 		}
 		created, err := queries.CreateProjectV2Field(ctx, gqlClient, input)
 		if err != nil {
-			return fmt.Errorf("create project field: %w", err)
+			return wrapTransport(c.ErrOrStderr(), r.Locale, "create project field", err)
 		}
 		name, dataType := projectV2FieldDescriptor(created.CreateProjectV2Field.ProjectV2Field)
 		fmt.Fprintln(c.OutOrStdout(),

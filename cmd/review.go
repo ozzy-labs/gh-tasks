@@ -71,7 +71,7 @@ func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 		return ErrSilentRuntime
 	}
 	if err != nil {
-		return fmt.Errorf("list closed issues: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "list closed issues", err)
 	}
 	mergedPRs, err := queries.PaginateMergedPRs(ctx, gqlClient, id.Owner, id.Name, reviewFetchLimit)
 	if errors.Is(err, queries.ErrRepoNotFound) {
@@ -79,7 +79,7 @@ func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 		return ErrSilentRuntime
 	}
 	if err != nil {
-		return fmt.Errorf("list merged PRs: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "list merged PRs", err)
 	}
 	type closedItem struct {
 		Number int
@@ -168,7 +168,7 @@ func runReviewProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 		return ErrSilentRuntime
 	}
 	if err != nil {
-		return fmt.Errorf("list project items: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "list project items", err)
 	}
 	completed := []*queries.ProjectV2ItemNode{}
 	for _, item := range items {

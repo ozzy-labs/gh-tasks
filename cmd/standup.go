@@ -68,7 +68,7 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	if mine {
 		v, err := queries.GetViewerLogin(ctx, clients.AsGenqlientClient())
 		if err != nil {
-			return fmt.Errorf("get viewer login: %w", err)
+			return wrapTransport(c.ErrOrStderr(), r.Locale, "get viewer login", err)
 		}
 		if v == nil || v.Viewer == nil || v.Viewer.Login == "" {
 			return localizedError(c, r, newRuntimeError("error.standup.viewerLoginUnresolved"))
@@ -82,7 +82,7 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		return ErrSilentRuntime
 	}
 	if err != nil {
-		return fmt.Errorf("list closed issues: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "list closed issues", err)
 	}
 	mergedPRs, err := queries.PaginateMergedPRs(ctx, gqlClient, id.Owner, id.Name, standupFetchLimit)
 	if errors.Is(err, queries.ErrRepoNotFound) {
@@ -90,7 +90,7 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		return ErrSilentRuntime
 	}
 	if err != nil {
-		return fmt.Errorf("list merged PRs: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "list merged PRs", err)
 	}
 	openIssues, err := queries.PaginateRepoIssues(ctx, gqlClient, id.Owner, id.Name, standupFetchLimit)
 	if errors.Is(err, queries.ErrRepoNotFound) {
@@ -98,7 +98,7 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		return ErrSilentRuntime
 	}
 	if err != nil {
-		return fmt.Errorf("list repo issues: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "list repo issues", err)
 	}
 
 	type closedItem struct {
@@ -251,7 +251,7 @@ func runStandupProject(ctx context.Context, c *cobra.Command, deps Deps, r Resol
 	if mine {
 		v, err := queries.GetViewerLogin(ctx, clients.AsGenqlientClient())
 		if err != nil {
-			return fmt.Errorf("get viewer login: %w", err)
+			return wrapTransport(c.ErrOrStderr(), r.Locale, "get viewer login", err)
 		}
 		if v == nil || v.Viewer == nil || v.Viewer.Login == "" {
 			return localizedError(c, r, newRuntimeError("error.standup.viewerLoginUnresolved"))
@@ -272,7 +272,7 @@ func runStandupProject(ctx context.Context, c *cobra.Command, deps Deps, r Resol
 		return ErrSilentRuntime
 	}
 	if err != nil {
-		return fmt.Errorf("list project items: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "list project items", err)
 	}
 	yesterday := []*queries.ProjectV2ItemNode{}
 	today := []*queries.ProjectV2ItemNode{}
