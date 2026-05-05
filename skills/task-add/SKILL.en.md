@@ -1,6 +1,6 @@
 ---
 name: task-add
-description: Capture a task from conversation context. Auto-detects whether the target is a GitHub Issue, Project draft item, or repo Milestone, and dispatches via `gh tasks add`.
+description: Capture a task from conversation context. Creates a GitHub Issue (repo scope) or Project draft item (org/user scope) via `gh tasks add`.
 allowed-tools: Bash(gh:*)
 locale: en
 ---

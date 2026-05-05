@@ -10,7 +10,7 @@ The CLI consolidates Projects v2 access into a single binary + skill bundle, dis
 
 ## Status
 
-v0.1.0 — feature-complete. The CLI commands and skills described below are implemented and tested across all three scopes (`repo` / `org` / `user`); the release tag is published via release-please. See [docs/adr/](docs/adr/) for repo-internal decisions and [docs/manual/en/](docs/manual/en/) for the user manual.
+v0.1.0 — feature-complete. The CLI commands and skills described below are implemented and tested across all three scopes (`repo` / `org` / `user`). Releases are managed by release-please. See [docs/adr/](docs/adr/) for repo-internal decisions and [docs/manual/en/](docs/manual/en/) for the user manual.
 
 ## Install
 
@@ -31,14 +31,16 @@ The extension inherits authentication from `gh auth login` — no separate token
 | Command | Purpose |
 | --- | --- |
 | `gh tasks add <title>` | Add an Issue or Project draft item. `--scope repo\|org\|user`, `--repo <name>`, `--project <id>` |
-| `gh tasks list` / `gh tasks today` | List filtered tasks (scope-aware). `--limit <N>` (default 30) |
+| `gh tasks list` | List filtered tasks (scope-aware). `--limit <N>` (default 30) |
+| `gh tasks today` | Show tasks due / scheduled today |
 | `gh tasks plan [--period daily\|weekly\|sprint] [--dry-run]` | Plan a week / iteration (Milestone for repo, Iteration for org/user) |
 | `gh tasks triage [--limit <N>]` | Triage untriaged Issues / draft items (default 20) |
 | `gh tasks done <id>` | Close an Issue (repo) or set Status → Done (org/user) |
 | `gh tasks review [--period daily\|weekly\|sprint]` | Retrospective summary |
 | `gh tasks standup [--mine] [--since <iso8601>]` | Activity summary (default last 24h) |
 | `gh tasks link <pr> <task>` | Link a PR to an Issue / Project item |
-| `gh tasks projects init` | Bootstrap a Project v2 from a yaml template (`--template`, `--owner`, `--title`) |
+| `gh tasks projects init [yaml-path]` | Bootstrap a Project v2 from a yaml template (`--template`, `--owner`, `--title`, `--dry-run`) |
+| `gh tasks projects init-templates` | Print the bundled `user` / `org` field templates |
 
 Default `--scope` resolves in this order: explicit `--scope` flag → current working directory's git remote (`origin` present → `repo`) → `~/.config/ozzylabs/gh-tasks.toml` `default_scope` → `user`. Full flag reference: [docs/manual/en/reference/cli.md](docs/manual/en/reference/cli.md).
 

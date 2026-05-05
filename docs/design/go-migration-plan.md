@@ -7,6 +7,13 @@
 - Scope: `packages/gh-tasks/` + `scripts/` + toolchain
 - Owner: ozzy
 
+> **本ドキュメントは歴史的記録**: 移行は 2026-05 に完了済。Phase / DoD のチェックボックスは計画書時点の表記を保持し、後付けで `[x]` に更新しない方針(完了状況は `Status: Completed` で示す)。
+>
+> **計画と最終実装で異なった主な箇所**:
+>
+> - i18n は `nicksnyder/go-i18n/v2` 採用案だったが、最終実装は標準 `embed` + 自前 JSON unmarshal(`internal/i18n/i18n.go`)。go-i18n は不採用(軽量化のため)。
+> - Repository 検出は `cli/go-gh/v2/pkg/repository` の `Current()` 採用案だったが、最終実装は `internal/repo` の独自 git remote 解析 + `--repo` flag(テスト容易性のため)。
+>
 > **更新履歴**
 >
 > - 2026-05-04 初版（goreleaser 採用案）

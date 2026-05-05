@@ -22,7 +22,7 @@
 - Binary build / release: `cli/gh-extension-precompile@v2`(SLSA attestations、manifest.yml 自動生成)
 - Linting / formatting: `golangci-lint` v2(`gofumpt` + `goimports` + `gci`)、yamllint + yamlfmt、markdownlint-cli2、shellcheck + shfmt
 - Vulnerability scan: `govulncheck`(text + SARIF を Code Scanning に出力)
-- Git hooks: lefthook(commit-msg: commitlint、pre-commit: linters + `gh tasks check-i18n`、pre-push: `go test`)
+- Git hooks: lefthook(commit-msg: commitlint、pre-commit: linters + `gh tasks check-i18n` (本体 + `--refs`)、pre-push: `go test` + branch 名チェック)
 - Testing: 標準 `testing` + `google/go-cmp`、`go test -race -shuffle=on` を CI 必須(repo-internal ADR-0008)
 
 > 移行履歴: 2026-04 までは Bun --compile + TypeScript で実装(ADR-0001 / 0003)。2026-05 から Go へ完全移行(計画書: `docs/design/go-migration-plan.md`、後継 ADR-0006 / 0007 / 0008)。
@@ -42,7 +42,8 @@ internal/               → ドメインロジック
   ├── scope/ repo/      → 3-scope (repo/org/user) 抽象 + リポ解決
   ├── project/ projectitem/ period/ config/ → ドメイン helpers
   ├── skills/           → SKILL.md frontmatter parse + Load
-  └── adapters/         → 4 エージェント向け OutputFile 生成
+  ├── adapters/         → 4 エージェント向け OutputFile 生成
+  └── testfake/         → GraphQL/REST テスト用 fake (cmd/internal 共通)
 skills/             → skill SSOT(SKILL.md = ja、SKILL.en.md = en)
 dist/{adapter}/         → adapter 出力(`gh tasks build-skills` で生成)
 docs/manual/{en,ja}/    → ユーザーマニュアル(en SSOT、ja mirror)
@@ -105,8 +106,8 @@ yamllint . && yamlfmt . && markdownlint-cli2 '**/*.md'   # 共有 lint
 
 ## gh-tasks Skills
 
-- `task-add` — 会話文脈からタスクを追加する。GitHub Issue / Project draft item / repo Milestone を自動判定し、`gh tasks add` を呼び出す。
-- `task-link-pr` — PR を Issue / Project 項目と紐付ける。`gh tasks link <pr> <task>` を呼び出して GitHub の relation を作成する。
+- `task-add` — 会話文脈からタスクを追加する。scope に応じて GitHub Issue (repo) または Project draft item (org/user) を作成し、`gh tasks add` を呼び出す。
+- `task-link-pr` — PR を Issue / Project 項目と紐付ける。`gh tasks link <pr> <task>` を呼び出し、repo scope は PR body に `Closes #N` を追記、org/user scope は PR と Issue を同じ Project v2 に bind する。
 - `task-plan` — 日次 / 週次 / イテレーション計画を実行する。`gh tasks plan` を呼び出して該当 scope の Milestone (repo) または Iteration (org/user) で計画項目を整理する。
 - `task-review` — 振り返りサマリを生成する。`gh tasks review --period daily|weekly|sprint` を呼び出して期間内の Issue close / PR merge / Project アイテムの完了を要約する。
 - `task-standup` — 直近活動のスタンドアップ用サマリを生成する。`gh tasks standup [--mine]` を呼び出してチーム / 個人の動きを共有可能な形に整形する。
@@ -116,9 +117,13 @@ yamllint . && yamlfmt . && markdownlint-cli2 '**/*.md'   # 共有 lint
 
 ## Adapter Files
 
-| Agent | Configuration |
-| ----- | ------------- |
-| Claude Code | `CLAUDE.md`, `.claude/` |
-| Gemini CLI | `.gemini/settings.json` → `AGENTS.md` |
-| Codex CLI | `AGENTS.md` + `.agents/skills/` |
-| GitHub Copilot | `AGENTS.md` + `.agents/skills/` |
+`gh tasks build-skills` が `dist/{adapter}/` 配下に出力するファイル(consumer リポへ sync される):
+
+| Agent | Adapter Output |
+| ----- | -------------- |
+| Claude Code | `.claude/skills/<name>/SKILL.md` |
+| Codex CLI | `.agents/skills/<name>/SKILL.md` + `AGENTS.md.snippet` |
+| Gemini CLI | `.gemini/settings.json` + `AGENTS.md.snippet` |
+| GitHub Copilot | `.github/copilot-instructions.md.snippet` |
+
+`AGENTS.md.snippet` / `copilot-instructions.md.snippet` は consumer 側の `AGENTS.md` / `.github/copilot-instructions.md` の marker block (`<!-- begin: @ozzylabs/gh-tasks -->` ～ `<!-- end -->`) に挿入される(idempotent)。

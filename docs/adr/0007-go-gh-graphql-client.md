@@ -26,7 +26,7 @@ Go CLI の GitHub API アクセスは **`cli/go-gh/v2/pkg/api`** に統一する
 - **REST クライアント**: 必要時のみ `api.NewRESTClient`
 - **Auth トークン解決**: `auth.TokenForHost(host)` — `GH_TOKEN` / `GITHUB_TOKEN` / `GH_ENTERPRISE_TOKEN` / `oauth_token` / system keyring を統合解決
 - **Host 解決**: `auth.DefaultHost()`（`GH_HOST` / hosts.yml 自動考慮）、Enterprise は `auth.IsEnterprise(host)` で判定
-- **Repository 検出**: `repository.Current()`（`GH_REPO` / git remote / 既知 host から自動）
+- **Repository 検出**: `internal/repo` パッケージで実装(`--repo` flag → 作業ディレクトリの git remote 解析)。`cli/go-gh/v2/pkg/repository` の `Current()` は不採用 — `internal/repo` 独自実装の方がフェイク差し込みでテスト容易、`GH_REPO` / hosts.yml の解決が必要になった時点で導入を検討する
 - **GraphQL クエリ集約**: `internal/github/queries/` に `.graphql` ファイル + `Khan/genqlient` で型生成
   - `go.mod` の `tool` ディレクティブで genqlient を管理（Go 1.24+、`tools.go` の blank import 不要）
 - **エラー処理**: `errors.Is` / `errors.As` + `%w` ラップ。`api.HTTPError` を i18n キー（`error.graphql.*`）へ写像

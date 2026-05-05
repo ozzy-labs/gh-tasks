@@ -12,3 +12,4 @@ ignores:
   # Synced from @ozzylabs/skills via sync-skills.sh; lint upstream not here.
   - ".agents/skills/**"
   - ".claude/skills/**"
+  - ".claude/routines/**"

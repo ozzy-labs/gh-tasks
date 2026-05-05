@@ -22,6 +22,11 @@ skills/
 gh tasks build-skills
 ```
 
-adapter 機構経由で `dist/{claude-code,codex-cli,gemini-cli,copilot}/.agents/skills/{name}/SKILL.md` を生成する。`gh tasks` バイナリが未インストールの場合は `go run . build-skills` でリポルートから直接実行できる。
+adapter 機構経由で以下を生成する(`gh tasks` バイナリが未インストールの場合は `go run . build-skills` でリポルートから直接実行できる):
+
+- `dist/claude-code/.claude/skills/{name}/SKILL.md`
+- `dist/codex-cli/.agents/skills/{name}/SKILL.md` + `AGENTS.md.snippet`
+- `dist/gemini-cli/.gemini/settings.json` + `AGENTS.md.snippet`
+- `dist/copilot/.github/copilot-instructions.md.snippet`
 
 consumer 側の sync 手順は [`configs/skills-sync/README.md`](../configs/skills-sync/README.md) を参照(Renovate preset + `MARKER_TAG=@ozzylabs/gh-tasks` での `sync-skills.sh`)。

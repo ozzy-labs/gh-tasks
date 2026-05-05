@@ -52,8 +52,8 @@ formatters:
 
 ### Hooks
 
-- **pre-commit**: `gofmt -l` + `golangci-lint run --fix`
-- **pre-push**: `go test ./...`（`-race` は CI でのみ実行、ローカルは速度優先）
+- **pre-commit**: `golangci-lint run --fix` のみ(`gofumpt` を含む `formatters` セクションを v2 が一括適用するため、別途の `gofmt -l` は競合 / 二重実行になり外す)
+- **pre-push**: `go test ./...`(`-race` は CI でのみ実行、ローカルは速度優先) + branch 名チェック(`<type>/<slug>` 形式の検証、`main` 直接 push を防ぐ)
 
 ## Consequences
 
