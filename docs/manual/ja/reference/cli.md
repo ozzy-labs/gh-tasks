@@ -149,7 +149,7 @@ gh tasks link <pr> <task> [--scope ...] [--repo ...] [--project ...]
 
 ## Exit code
 
-レガシー TS 実装と同じく、`gh tasks` は非ゼロ exit を 2 種類に分けている:
+`gh tasks` は非ゼロ exit を 2 種類に分けている:
 
 - `0` — 成功
 - `1` — runtime 失敗: GitHub API エラー、token / auth 不在、repo / project / issue が API レスポンスで見つからなかった、その他の実行時失敗

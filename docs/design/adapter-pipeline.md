@@ -51,8 +51,8 @@ consumer リポの .claude/skills/、AGENTS.md(marker block)、
 ```markdown
 ---
 name: task-add
-description: 会話文脈からタスクを追加する。GitHub Issue / Project draft item / repo Milestone を自動判定し、`gh tasks add` を呼び出す。
-description_en: Capture a task from conversation context. Auto-detects whether the target is a GitHub Issue, Project draft item, or repo Milestone, and dispatches via `gh tasks add`.
+description: 会話文脈からタスクを追加する。scope に応じて GitHub Issue (repo) または Project draft item (org/user) を作成し、`gh tasks add` を呼び出す。
+description_en: Capture a task from conversation context. Creates a GitHub Issue (repo scope) or Project draft item (org/user scope) via `gh tasks add`.
 allowed-tools: Bash(gh:*)
 locale: ja
 ---

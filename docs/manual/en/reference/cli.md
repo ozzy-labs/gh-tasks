@@ -149,7 +149,7 @@ gh tasks link <pr> <task> [--scope ...] [--repo ...] [--project ...]
 
 ## Exit codes
 
-Following the legacy TS implementation, `gh tasks` distinguishes two non-zero exit codes:
+`gh tasks` distinguishes two non-zero exit codes:
 
 - `0` — success
 - `1` — runtime failure: GitHub API error, missing token / auth, repo / project / issue not found in the API response, or other operational failure
