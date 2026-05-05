@@ -89,66 +89,6 @@ func ResolveProjectNodeID(ctx context.Context, gql github.GraphQLClient, sc scop
 	return resp.User.ProjectV2.Id, nil
 }
 
-// ItemsFromResponse extracts the items slice from a [ListProjectV2Items]
-// response, returning nil when the project node is missing or has the
-// wrong concrete type (genqlient models `node(id:)` as a Node interface
-// because the schema's resolver could in principle return any
-// Node-implementing type — `... on ProjectV2` narrows what we read but
-// the static return type stays an interface).
-func ItemsFromResponse(resp *queries.ListProjectV2ItemsResponse) []*queries.ProjectV2ItemNode {
-	if resp == nil || resp.Node == nil {
-		return nil
-	}
-	pv2, ok := (*resp.Node).(*queries.ProjectV2ItemsNodeProjectV2)
-	if !ok || pv2 == nil || pv2.Items == nil {
-		return nil
-	}
-	return pv2.Items.Nodes
-}
-
-// FieldsFromResponse extracts the fields slice from a [ListProjectV2Fields]
-// response. Same caveat as [ItemsFromResponse]: genqlient's response model
-// goes through the Node interface, so callers must accept that the typed
-// projection may be empty when the server returns a non-ProjectV2 Node.
-func FieldsFromResponse(resp *queries.ListProjectV2FieldsResponse) []queries.ProjectV2FieldNode {
-	if resp == nil || resp.Node == nil {
-		return nil
-	}
-	pv2, ok := (*resp.Node).(*queries.ProjectV2FieldsNodeProjectV2)
-	if !ok || pv2 == nil || pv2.Fields == nil {
-		return nil
-	}
-	out := make([]queries.ProjectV2FieldNode, 0, len(pv2.Fields.Nodes))
-	for _, n := range pv2.Fields.Nodes {
-		if n == nil || *n == nil {
-			continue
-		}
-		out = append(out, *n)
-	}
-	return out
-}
-
-// HasProjectNode reports whether the [ListProjectV2ItemsResponse]'s Node
-// field resolved to a ProjectV2 (i.e. the project id was valid). Used by
-// callers to distinguish "project not found" from "project has zero items".
-func HasProjectNode(resp *queries.ListProjectV2ItemsResponse) bool {
-	if resp == nil || resp.Node == nil {
-		return false
-	}
-	_, ok := (*resp.Node).(*queries.ProjectV2ItemsNodeProjectV2)
-	return ok
-}
-
-// HasFieldsNode reports whether the [ListProjectV2FieldsResponse]'s Node
-// field resolved to a ProjectV2.
-func HasFieldsNode(resp *queries.ListProjectV2FieldsResponse) bool {
-	if resp == nil || resp.Node == nil {
-		return false
-	}
-	_, ok := (*resp.Node).(*queries.ProjectV2FieldsNodeProjectV2)
-	return ok
-}
-
 // ContentSummary is a flat view of the union content for a Projects v2 item.
 // Issue / PullRequest carry Number, Title, URL, State, UpdatedAt, optional
 // ClosedAt / MergedAt / Author / Assignees. DraftIssue carries only Title
@@ -359,10 +299,12 @@ type IterationOption struct {
 	Duration  int
 }
 
-// FieldsOf flattens the fields slice from a [ListProjectV2Fields] response
-// into a list of [FieldDescriptor]. Use together with [FieldsFromResponse]:
+// FieldsOf flattens the fields slice returned by
+// [queries.PaginateProjectV2Fields] into a list of [FieldDescriptor]:
 //
-//	fields := projectitem.FieldsOf(projectitem.FieldsFromResponse(resp))
+//	nodes, err := queries.PaginateProjectV2Fields(ctx, client, pid, limit)
+//	if err != nil { ... }
+//	fields := projectitem.FieldsOf(nodes)
 func FieldsOf(fields []queries.ProjectV2FieldNode) []FieldDescriptor {
 	out := make([]FieldDescriptor, 0, len(fields))
 	for _, f := range fields {

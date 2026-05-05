@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -64,19 +65,21 @@ func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 		return localizedError(c, r, err)
 	}
 	gqlClient := clients.AsGenqlientClient()
-	closedResp, err := queries.ListClosedIssues(ctx, gqlClient, id.Owner, id.Name, reviewFetchLimit)
+	closedIssues, err := queries.PaginateClosedIssues(ctx, gqlClient, id.Owner, id.Name, reviewFetchLimit)
+	if errors.Is(err, queries.ErrRepoNotFound) {
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
+		return ErrSilentRuntime
+	}
 	if err != nil {
 		return fmt.Errorf("list closed issues: %w", err)
 	}
-	prsResp, err := queries.ListMergedPRs(ctx, gqlClient, id.Owner, id.Name, reviewFetchLimit)
+	mergedPRs, err := queries.PaginateMergedPRs(ctx, gqlClient, id.Owner, id.Name, reviewFetchLimit)
+	if errors.Is(err, queries.ErrRepoNotFound) {
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
+		return ErrSilentRuntime
+	}
 	if err != nil {
 		return fmt.Errorf("list merged PRs: %w", err)
-	}
-	if closedResp.Repository != nil {
-		warnIfTruncated(c, r, kindClosedIssues, len(closedResp.Repository.Issues.Nodes), reviewFetchLimit)
-	}
-	if prsResp.Repository != nil {
-		warnIfTruncated(c, r, kindMergedPRs, len(prsResp.Repository.PullRequests.Nodes), reviewFetchLimit)
 	}
 	type closedItem struct {
 		Number int
@@ -84,18 +87,16 @@ func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 		URL    string
 	}
 	closed := []closedItem{}
-	if closedResp.Repository != nil {
-		for _, n := range closedResp.Repository.Issues.Nodes {
-			if n == nil {
-				continue
-			}
-			closedAt := ""
-			if n.ClosedAt != nil {
-				closedAt = *n.ClosedAt
-			}
-			if withinPeriodRange(closedAt, rng) {
-				closed = append(closed, closedItem{Number: n.Number, Title: n.Title, URL: n.Url})
-			}
+	for _, n := range closedIssues {
+		if n == nil {
+			continue
+		}
+		closedAt := ""
+		if n.ClosedAt != nil {
+			closedAt = *n.ClosedAt
+		}
+		if withinPeriodRange(closedAt, rng) {
+			closed = append(closed, closedItem{Number: n.Number, Title: n.Title, URL: n.Url})
 		}
 	}
 	type mergedItem struct {
@@ -104,18 +105,16 @@ func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 		URL    string
 	}
 	merged := []mergedItem{}
-	if prsResp.Repository != nil {
-		for _, n := range prsResp.Repository.PullRequests.Nodes {
-			if n == nil {
-				continue
-			}
-			mergedAt := ""
-			if n.MergedAt != nil {
-				mergedAt = *n.MergedAt
-			}
-			if withinPeriodRange(mergedAt, rng) {
-				merged = append(merged, mergedItem{Number: n.Number, Title: n.Title, URL: n.Url})
-			}
+	for _, n := range mergedPRs {
+		if n == nil {
+			continue
+		}
+		mergedAt := ""
+		if n.MergedAt != nil {
+			mergedAt = *n.MergedAt
+		}
+		if withinPeriodRange(mergedAt, rng) {
+			merged = append(merged, mergedItem{Number: n.Number, Title: n.Title, URL: n.Url})
 		}
 	}
 	out := c.OutOrStdout()
@@ -163,16 +162,14 @@ func runReviewProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	resp, err := queries.ListProjectV2Items(ctx, clients.AsGenqlientClient(), pid, reviewFetchLimit)
-	if err != nil {
-		return fmt.Errorf("list project items: %w", err)
-	}
-	if !projectitem.HasProjectNode(resp) {
+	items, err := queries.PaginateProjectV2Items(ctx, clients.AsGenqlientClient(), pid, reviewFetchLimit)
+	if errors.Is(err, queries.ErrProjectNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	items := projectitem.ItemsFromResponse(resp)
-	warnIfTruncated(c, r, kindProjectItems, len(items), reviewFetchLimit)
+	if err != nil {
+		return fmt.Errorf("list project items: %w", err)
+	}
 	completed := []*queries.ProjectV2ItemNode{}
 	for _, item := range items {
 		if item == nil {

@@ -241,12 +241,16 @@ func runProjectsInit(ctx context.Context, c *cobra.Command, deps Deps, yamlPath 
 	fmt.Fprintln(c.OutOrStdout(),
 		r.T("projectsInit.created", "url", project.Url))
 
-	existing, err := queries.ListProjectV2Fields(ctx, gqlClient, project.Id, 100)
+	// We just created the project, so it must resolve. If pagination
+	// somehow returns ErrProjectNotFound here it indicates an upstream
+	// inconsistency — surface it as a wrapped error rather than the
+	// "Project not found" path used at command entry.
+	fieldNodes, err := queries.PaginateProjectV2Fields(ctx, gqlClient, project.Id, 100)
 	if err != nil {
 		return fmt.Errorf("list project fields: %w", err)
 	}
 	existingNames := map[string]bool{}
-	for _, f := range projectitem.FieldsOf(projectitem.FieldsFromResponse(existing)) {
+	for _, f := range projectitem.FieldsOf(fieldNodes) {
 		existingNames[strings.ToLower(f.Name)] = true
 	}
 

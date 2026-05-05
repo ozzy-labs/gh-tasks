@@ -1314,8 +1314,15 @@ func (v *ListClosedIssuesRepository) GetIssues() *ListClosedIssuesRepositoryIssu
 //
 // The connection type for Issue.
 type ListClosedIssuesRepositoryIssuesIssueConnection struct {
+	// Information to aid in pagination.
+	PageInfo *ListClosedIssuesRepositoryIssuesIssueConnectionPageInfo `json:"pageInfo"`
 	// A list of nodes.
 	Nodes []*ListClosedIssuesRepositoryIssuesIssueConnectionNodesIssue `json:"nodes"`
+}
+
+// GetPageInfo returns ListClosedIssuesRepositoryIssuesIssueConnection.PageInfo, and is useful for accessing the field via an interface.
+func (v *ListClosedIssuesRepositoryIssuesIssueConnection) GetPageInfo() *ListClosedIssuesRepositoryIssuesIssueConnectionPageInfo {
+	return v.PageInfo
 }
 
 // GetNodes returns ListClosedIssuesRepositoryIssuesIssueConnection.Nodes, and is useful for accessing the field via an interface.
@@ -1706,6 +1713,27 @@ func (v *ListClosedIssuesRepositoryIssuesIssueConnectionNodesIssueAuthorUser) Ge
 	return v.Login
 }
 
+// ListClosedIssuesRepositoryIssuesIssueConnectionPageInfo includes the requested fields of the GraphQL type PageInfo.
+// The GraphQL type's documentation follows.
+//
+// Information about pagination in a connection.
+type ListClosedIssuesRepositoryIssuesIssueConnectionPageInfo struct {
+	// When paginating forwards, are there more items?
+	HasNextPage bool `json:"hasNextPage"`
+	// When paginating forwards, the cursor to continue.
+	EndCursor *string `json:"endCursor"`
+}
+
+// GetHasNextPage returns ListClosedIssuesRepositoryIssuesIssueConnectionPageInfo.HasNextPage, and is useful for accessing the field via an interface.
+func (v *ListClosedIssuesRepositoryIssuesIssueConnectionPageInfo) GetHasNextPage() bool {
+	return v.HasNextPage
+}
+
+// GetEndCursor returns ListClosedIssuesRepositoryIssuesIssueConnectionPageInfo.EndCursor, and is useful for accessing the field via an interface.
+func (v *ListClosedIssuesRepositoryIssuesIssueConnectionPageInfo) GetEndCursor() *string {
+	return v.EndCursor
+}
+
 // ListClosedIssuesResponse is returned by ListClosedIssues on success.
 type ListClosedIssuesResponse struct {
 	// Lookup a given repository by the owner and repository name.
@@ -1734,8 +1762,15 @@ func (v *ListMergedPRsRepository) GetPullRequests() *ListMergedPRsRepositoryPull
 //
 // The connection type for PullRequest.
 type ListMergedPRsRepositoryPullRequestsPullRequestConnection struct {
+	// Information to aid in pagination.
+	PageInfo *ListMergedPRsRepositoryPullRequestsPullRequestConnectionPageInfo `json:"pageInfo"`
 	// A list of nodes.
 	Nodes []*ListMergedPRsRepositoryPullRequestsPullRequestConnectionNodesPullRequest `json:"nodes"`
+}
+
+// GetPageInfo returns ListMergedPRsRepositoryPullRequestsPullRequestConnection.PageInfo, and is useful for accessing the field via an interface.
+func (v *ListMergedPRsRepositoryPullRequestsPullRequestConnection) GetPageInfo() *ListMergedPRsRepositoryPullRequestsPullRequestConnectionPageInfo {
+	return v.PageInfo
 }
 
 // GetNodes returns ListMergedPRsRepositoryPullRequestsPullRequestConnection.Nodes, and is useful for accessing the field via an interface.
@@ -2134,6 +2169,27 @@ func (v *ListMergedPRsRepositoryPullRequestsPullRequestConnectionNodesPullReques
 	return v.Login
 }
 
+// ListMergedPRsRepositoryPullRequestsPullRequestConnectionPageInfo includes the requested fields of the GraphQL type PageInfo.
+// The GraphQL type's documentation follows.
+//
+// Information about pagination in a connection.
+type ListMergedPRsRepositoryPullRequestsPullRequestConnectionPageInfo struct {
+	// When paginating forwards, are there more items?
+	HasNextPage bool `json:"hasNextPage"`
+	// When paginating forwards, the cursor to continue.
+	EndCursor *string `json:"endCursor"`
+}
+
+// GetHasNextPage returns ListMergedPRsRepositoryPullRequestsPullRequestConnectionPageInfo.HasNextPage, and is useful for accessing the field via an interface.
+func (v *ListMergedPRsRepositoryPullRequestsPullRequestConnectionPageInfo) GetHasNextPage() bool {
+	return v.HasNextPage
+}
+
+// GetEndCursor returns ListMergedPRsRepositoryPullRequestsPullRequestConnectionPageInfo.EndCursor, and is useful for accessing the field via an interface.
+func (v *ListMergedPRsRepositoryPullRequestsPullRequestConnectionPageInfo) GetEndCursor() *string {
+	return v.EndCursor
+}
+
 // ListMergedPRsResponse is returned by ListMergedPRs on success.
 type ListMergedPRsResponse struct {
 	// Lookup a given repository by the owner and repository name.
@@ -2162,8 +2218,15 @@ func (v *ListMilestonesRepository) GetMilestones() *ListMilestonesRepositoryMile
 //
 // The connection type for Milestone.
 type ListMilestonesRepositoryMilestonesMilestoneConnection struct {
+	// Information to aid in pagination.
+	PageInfo *ListMilestonesRepositoryMilestonesMilestoneConnectionPageInfo `json:"pageInfo"`
 	// A list of nodes.
 	Nodes []*ListMilestonesRepositoryMilestonesMilestoneConnectionNodesMilestone `json:"nodes"`
+}
+
+// GetPageInfo returns ListMilestonesRepositoryMilestonesMilestoneConnection.PageInfo, and is useful for accessing the field via an interface.
+func (v *ListMilestonesRepositoryMilestonesMilestoneConnection) GetPageInfo() *ListMilestonesRepositoryMilestonesMilestoneConnectionPageInfo {
+	return v.PageInfo
 }
 
 // GetNodes returns ListMilestonesRepositoryMilestonesMilestoneConnection.Nodes, and is useful for accessing the field via an interface.
@@ -2197,6 +2260,27 @@ func (v *ListMilestonesRepositoryMilestonesMilestoneConnectionNodesMilestone) Ge
 // GetTitle returns ListMilestonesRepositoryMilestonesMilestoneConnectionNodesMilestone.Title, and is useful for accessing the field via an interface.
 func (v *ListMilestonesRepositoryMilestonesMilestoneConnectionNodesMilestone) GetTitle() string {
 	return v.Title
+}
+
+// ListMilestonesRepositoryMilestonesMilestoneConnectionPageInfo includes the requested fields of the GraphQL type PageInfo.
+// The GraphQL type's documentation follows.
+//
+// Information about pagination in a connection.
+type ListMilestonesRepositoryMilestonesMilestoneConnectionPageInfo struct {
+	// When paginating forwards, are there more items?
+	HasNextPage bool `json:"hasNextPage"`
+	// When paginating forwards, the cursor to continue.
+	EndCursor *string `json:"endCursor"`
+}
+
+// GetHasNextPage returns ListMilestonesRepositoryMilestonesMilestoneConnectionPageInfo.HasNextPage, and is useful for accessing the field via an interface.
+func (v *ListMilestonesRepositoryMilestonesMilestoneConnectionPageInfo) GetHasNextPage() bool {
+	return v.HasNextPage
+}
+
+// GetEndCursor returns ListMilestonesRepositoryMilestonesMilestoneConnectionPageInfo.EndCursor, and is useful for accessing the field via an interface.
+func (v *ListMilestonesRepositoryMilestonesMilestoneConnectionPageInfo) GetEndCursor() *string {
+	return v.EndCursor
 }
 
 // ListMilestonesResponse is returned by ListMilestones on success.
@@ -2377,8 +2461,15 @@ func (v *ListRepoIssuesRepository) GetIssues() *ListRepoIssuesRepositoryIssuesIs
 //
 // The connection type for Issue.
 type ListRepoIssuesRepositoryIssuesIssueConnection struct {
+	// Information to aid in pagination.
+	PageInfo *ListRepoIssuesRepositoryIssuesIssueConnectionPageInfo `json:"pageInfo"`
 	// A list of nodes.
 	Nodes []*ListRepoIssuesRepositoryIssuesIssueConnectionNodesIssue `json:"nodes"`
+}
+
+// GetPageInfo returns ListRepoIssuesRepositoryIssuesIssueConnection.PageInfo, and is useful for accessing the field via an interface.
+func (v *ListRepoIssuesRepositoryIssuesIssueConnection) GetPageInfo() *ListRepoIssuesRepositoryIssuesIssueConnectionPageInfo {
+	return v.PageInfo
 }
 
 // GetNodes returns ListRepoIssuesRepositoryIssuesIssueConnection.Nodes, and is useful for accessing the field via an interface.
@@ -2769,6 +2860,27 @@ func (v *ListRepoIssuesRepositoryIssuesIssueConnectionNodesIssueAuthorUser) GetL
 	return v.Login
 }
 
+// ListRepoIssuesRepositoryIssuesIssueConnectionPageInfo includes the requested fields of the GraphQL type PageInfo.
+// The GraphQL type's documentation follows.
+//
+// Information about pagination in a connection.
+type ListRepoIssuesRepositoryIssuesIssueConnectionPageInfo struct {
+	// When paginating forwards, are there more items?
+	HasNextPage bool `json:"hasNextPage"`
+	// When paginating forwards, the cursor to continue.
+	EndCursor *string `json:"endCursor"`
+}
+
+// GetHasNextPage returns ListRepoIssuesRepositoryIssuesIssueConnectionPageInfo.HasNextPage, and is useful for accessing the field via an interface.
+func (v *ListRepoIssuesRepositoryIssuesIssueConnectionPageInfo) GetHasNextPage() bool {
+	return v.HasNextPage
+}
+
+// GetEndCursor returns ListRepoIssuesRepositoryIssuesIssueConnectionPageInfo.EndCursor, and is useful for accessing the field via an interface.
+func (v *ListRepoIssuesRepositoryIssuesIssueConnectionPageInfo) GetEndCursor() *string {
+	return v.EndCursor
+}
+
 // ListRepoIssuesResponse is returned by ListRepoIssues on success.
 type ListRepoIssuesResponse struct {
 	// Lookup a given repository by the owner and repository name.
@@ -2797,8 +2909,15 @@ func (v *ListRepoIssuesWithLabelsRepository) GetIssues() *ListRepoIssuesWithLabe
 //
 // The connection type for Issue.
 type ListRepoIssuesWithLabelsRepositoryIssuesIssueConnection struct {
+	// Information to aid in pagination.
+	PageInfo *ListRepoIssuesWithLabelsRepositoryIssuesIssueConnectionPageInfo `json:"pageInfo"`
 	// A list of nodes.
 	Nodes []*ListRepoIssuesWithLabelsRepositoryIssuesIssueConnectionNodesIssue `json:"nodes"`
+}
+
+// GetPageInfo returns ListRepoIssuesWithLabelsRepositoryIssuesIssueConnection.PageInfo, and is useful for accessing the field via an interface.
+func (v *ListRepoIssuesWithLabelsRepositoryIssuesIssueConnection) GetPageInfo() *ListRepoIssuesWithLabelsRepositoryIssuesIssueConnectionPageInfo {
+	return v.PageInfo
 }
 
 // GetNodes returns ListRepoIssuesWithLabelsRepositoryIssuesIssueConnection.Nodes, and is useful for accessing the field via an interface.
@@ -2883,6 +3002,27 @@ func (v *ListRepoIssuesWithLabelsRepositoryIssuesIssueConnectionNodesIssueLabels
 	return v.Name
 }
 
+// ListRepoIssuesWithLabelsRepositoryIssuesIssueConnectionPageInfo includes the requested fields of the GraphQL type PageInfo.
+// The GraphQL type's documentation follows.
+//
+// Information about pagination in a connection.
+type ListRepoIssuesWithLabelsRepositoryIssuesIssueConnectionPageInfo struct {
+	// When paginating forwards, are there more items?
+	HasNextPage bool `json:"hasNextPage"`
+	// When paginating forwards, the cursor to continue.
+	EndCursor *string `json:"endCursor"`
+}
+
+// GetHasNextPage returns ListRepoIssuesWithLabelsRepositoryIssuesIssueConnectionPageInfo.HasNextPage, and is useful for accessing the field via an interface.
+func (v *ListRepoIssuesWithLabelsRepositoryIssuesIssueConnectionPageInfo) GetHasNextPage() bool {
+	return v.HasNextPage
+}
+
+// GetEndCursor returns ListRepoIssuesWithLabelsRepositoryIssuesIssueConnectionPageInfo.EndCursor, and is useful for accessing the field via an interface.
+func (v *ListRepoIssuesWithLabelsRepositoryIssuesIssueConnectionPageInfo) GetEndCursor() *string {
+	return v.EndCursor
+}
+
 // ListRepoIssuesWithLabelsResponse is returned by ListRepoIssuesWithLabels on success.
 type ListRepoIssuesWithLabelsResponse struct {
 	// Lookup a given repository by the owner and repository name.
@@ -2913,8 +3053,15 @@ func (v *ListRepoIssuesWithMilestoneRepository) GetIssues() *ListRepoIssuesWithM
 //
 // The connection type for Issue.
 type ListRepoIssuesWithMilestoneRepositoryIssuesIssueConnection struct {
+	// Information to aid in pagination.
+	PageInfo *ListRepoIssuesWithMilestoneRepositoryIssuesIssueConnectionPageInfo `json:"pageInfo"`
 	// A list of nodes.
 	Nodes []*ListRepoIssuesWithMilestoneRepositoryIssuesIssueConnectionNodesIssue `json:"nodes"`
+}
+
+// GetPageInfo returns ListRepoIssuesWithMilestoneRepositoryIssuesIssueConnection.PageInfo, and is useful for accessing the field via an interface.
+func (v *ListRepoIssuesWithMilestoneRepositoryIssuesIssueConnection) GetPageInfo() *ListRepoIssuesWithMilestoneRepositoryIssuesIssueConnectionPageInfo {
+	return v.PageInfo
 }
 
 // GetNodes returns ListRepoIssuesWithMilestoneRepositoryIssuesIssueConnection.Nodes, and is useful for accessing the field via an interface.
@@ -2997,6 +3144,27 @@ func (v *ListRepoIssuesWithMilestoneRepositoryIssuesIssueConnectionNodesIssueMil
 // GetTitle returns ListRepoIssuesWithMilestoneRepositoryIssuesIssueConnectionNodesIssueMilestone.Title, and is useful for accessing the field via an interface.
 func (v *ListRepoIssuesWithMilestoneRepositoryIssuesIssueConnectionNodesIssueMilestone) GetTitle() string {
 	return v.Title
+}
+
+// ListRepoIssuesWithMilestoneRepositoryIssuesIssueConnectionPageInfo includes the requested fields of the GraphQL type PageInfo.
+// The GraphQL type's documentation follows.
+//
+// Information about pagination in a connection.
+type ListRepoIssuesWithMilestoneRepositoryIssuesIssueConnectionPageInfo struct {
+	// When paginating forwards, are there more items?
+	HasNextPage bool `json:"hasNextPage"`
+	// When paginating forwards, the cursor to continue.
+	EndCursor *string `json:"endCursor"`
+}
+
+// GetHasNextPage returns ListRepoIssuesWithMilestoneRepositoryIssuesIssueConnectionPageInfo.HasNextPage, and is useful for accessing the field via an interface.
+func (v *ListRepoIssuesWithMilestoneRepositoryIssuesIssueConnectionPageInfo) GetHasNextPage() bool {
+	return v.HasNextPage
+}
+
+// GetEndCursor returns ListRepoIssuesWithMilestoneRepositoryIssuesIssueConnectionPageInfo.EndCursor, and is useful for accessing the field via an interface.
+func (v *ListRepoIssuesWithMilestoneRepositoryIssuesIssueConnectionPageInfo) GetEndCursor() *string {
+	return v.EndCursor
 }
 
 // ListRepoIssuesWithMilestoneResponse is returned by ListRepoIssuesWithMilestone on success.
@@ -7797,8 +7965,15 @@ func (v *ProjectV2FieldsNodeExternalIdentity) GetTypename() *string { return v.T
 //
 // The connection type for ProjectV2FieldConfiguration.
 type ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection struct {
+	// Information to aid in pagination.
+	PageInfo *ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnectionPageInfo `json:"pageInfo"`
 	// A list of nodes.
 	Nodes []*ProjectV2FieldNode `json:"-"`
+}
+
+// GetPageInfo returns ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection.PageInfo, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection) GetPageInfo() *ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnectionPageInfo {
+	return v.PageInfo
 }
 
 // GetNodes returns ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection.Nodes, and is useful for accessing the field via an interface.
@@ -7847,6 +8022,8 @@ func (v *ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection) Unmarsh
 }
 
 type __premarshalProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection struct {
+	PageInfo *ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnectionPageInfo `json:"pageInfo"`
+
 	Nodes []json.RawMessage `json:"nodes"`
 }
 
@@ -7861,6 +8038,7 @@ func (v *ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection) Marshal
 func (v *ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection) __premarshalJSON() (*__premarshalProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection, error) {
 	var retval __premarshalProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection
 
+	retval.PageInfo = v.PageInfo
 	{
 
 		dst := &retval.Nodes
@@ -7882,6 +8060,27 @@ func (v *ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnection) __prema
 		}
 	}
 	return &retval, nil
+}
+
+// ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnectionPageInfo includes the requested fields of the GraphQL type PageInfo.
+// The GraphQL type's documentation follows.
+//
+// Information about pagination in a connection.
+type ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnectionPageInfo struct {
+	// When paginating forwards, are there more items?
+	HasNextPage bool `json:"hasNextPage"`
+	// When paginating forwards, the cursor to continue.
+	EndCursor *string `json:"endCursor"`
+}
+
+// GetHasNextPage returns ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnectionPageInfo.HasNextPage, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnectionPageInfo) GetHasNextPage() bool {
+	return v.HasNextPage
+}
+
+// GetEndCursor returns ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnectionPageInfo.EndCursor, and is useful for accessing the field via an interface.
+func (v *ProjectV2FieldsNodeFieldsProjectV2FieldConfigurationConnectionPageInfo) GetEndCursor() *string {
+	return v.EndCursor
 }
 
 // ProjectV2FieldsNodeGist includes the requested fields of the GraphQL type Gist.
@@ -16753,13 +16952,41 @@ func (v *ProjectV2ItemsNodeIssueTypeRemovedEvent) GetTypename() *string { return
 //
 // The connection type for ProjectV2Item.
 type ProjectV2ItemsNodeItemsProjectV2ItemConnection struct {
+	// Information to aid in pagination.
+	PageInfo *ProjectV2ItemsNodeItemsProjectV2ItemConnectionPageInfo `json:"pageInfo"`
 	// A list of nodes.
 	Nodes []*ProjectV2ItemNode `json:"nodes"`
+}
+
+// GetPageInfo returns ProjectV2ItemsNodeItemsProjectV2ItemConnection.PageInfo, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeItemsProjectV2ItemConnection) GetPageInfo() *ProjectV2ItemsNodeItemsProjectV2ItemConnectionPageInfo {
+	return v.PageInfo
 }
 
 // GetNodes returns ProjectV2ItemsNodeItemsProjectV2ItemConnection.Nodes, and is useful for accessing the field via an interface.
 func (v *ProjectV2ItemsNodeItemsProjectV2ItemConnection) GetNodes() []*ProjectV2ItemNode {
 	return v.Nodes
+}
+
+// ProjectV2ItemsNodeItemsProjectV2ItemConnectionPageInfo includes the requested fields of the GraphQL type PageInfo.
+// The GraphQL type's documentation follows.
+//
+// Information about pagination in a connection.
+type ProjectV2ItemsNodeItemsProjectV2ItemConnectionPageInfo struct {
+	// When paginating forwards, are there more items?
+	HasNextPage bool `json:"hasNextPage"`
+	// When paginating forwards, the cursor to continue.
+	EndCursor *string `json:"endCursor"`
+}
+
+// GetHasNextPage returns ProjectV2ItemsNodeItemsProjectV2ItemConnectionPageInfo.HasNextPage, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeItemsProjectV2ItemConnectionPageInfo) GetHasNextPage() bool {
+	return v.HasNextPage
+}
+
+// GetEndCursor returns ProjectV2ItemsNodeItemsProjectV2ItemConnectionPageInfo.EndCursor, and is useful for accessing the field via an interface.
+func (v *ProjectV2ItemsNodeItemsProjectV2ItemConnectionPageInfo) GetEndCursor() *string {
+	return v.EndCursor
 }
 
 // ProjectV2ItemsNodeLabel includes the requested fields of the GraphQL type Label.
@@ -19481,9 +19708,10 @@ func (v *__GetUserProjectV2Input) GetNumber() int { return v.Number }
 
 // __ListClosedIssuesInput is used internally by genqlient
 type __ListClosedIssuesInput struct {
-	Owner string `json:"owner"`
-	Name  string `json:"name"`
-	First int    `json:"first"`
+	Owner string  `json:"owner"`
+	Name  string  `json:"name"`
+	First int     `json:"first"`
+	After *string `json:"after"`
 }
 
 // GetOwner returns __ListClosedIssuesInput.Owner, and is useful for accessing the field via an interface.
@@ -19495,11 +19723,15 @@ func (v *__ListClosedIssuesInput) GetName() string { return v.Name }
 // GetFirst returns __ListClosedIssuesInput.First, and is useful for accessing the field via an interface.
 func (v *__ListClosedIssuesInput) GetFirst() int { return v.First }
 
+// GetAfter returns __ListClosedIssuesInput.After, and is useful for accessing the field via an interface.
+func (v *__ListClosedIssuesInput) GetAfter() *string { return v.After }
+
 // __ListMergedPRsInput is used internally by genqlient
 type __ListMergedPRsInput struct {
-	Owner string `json:"owner"`
-	Name  string `json:"name"`
-	First int    `json:"first"`
+	Owner string  `json:"owner"`
+	Name  string  `json:"name"`
+	First int     `json:"first"`
+	After *string `json:"after"`
 }
 
 // GetOwner returns __ListMergedPRsInput.Owner, and is useful for accessing the field via an interface.
@@ -19511,11 +19743,15 @@ func (v *__ListMergedPRsInput) GetName() string { return v.Name }
 // GetFirst returns __ListMergedPRsInput.First, and is useful for accessing the field via an interface.
 func (v *__ListMergedPRsInput) GetFirst() int { return v.First }
 
+// GetAfter returns __ListMergedPRsInput.After, and is useful for accessing the field via an interface.
+func (v *__ListMergedPRsInput) GetAfter() *string { return v.After }
+
 // __ListMilestonesInput is used internally by genqlient
 type __ListMilestonesInput struct {
-	Owner string `json:"owner"`
-	Name  string `json:"name"`
-	First int    `json:"first"`
+	Owner string  `json:"owner"`
+	Name  string  `json:"name"`
+	First int     `json:"first"`
+	After *string `json:"after"`
 }
 
 // GetOwner returns __ListMilestonesInput.Owner, and is useful for accessing the field via an interface.
@@ -19527,10 +19763,14 @@ func (v *__ListMilestonesInput) GetName() string { return v.Name }
 // GetFirst returns __ListMilestonesInput.First, and is useful for accessing the field via an interface.
 func (v *__ListMilestonesInput) GetFirst() int { return v.First }
 
+// GetAfter returns __ListMilestonesInput.After, and is useful for accessing the field via an interface.
+func (v *__ListMilestonesInput) GetAfter() *string { return v.After }
+
 // __ListProjectV2FieldsInput is used internally by genqlient
 type __ListProjectV2FieldsInput struct {
-	ProjectId string `json:"projectId"`
-	First     int    `json:"first"`
+	ProjectId string  `json:"projectId"`
+	First     int     `json:"first"`
+	After     *string `json:"after"`
 }
 
 // GetProjectId returns __ListProjectV2FieldsInput.ProjectId, and is useful for accessing the field via an interface.
@@ -19539,10 +19779,14 @@ func (v *__ListProjectV2FieldsInput) GetProjectId() string { return v.ProjectId 
 // GetFirst returns __ListProjectV2FieldsInput.First, and is useful for accessing the field via an interface.
 func (v *__ListProjectV2FieldsInput) GetFirst() int { return v.First }
 
+// GetAfter returns __ListProjectV2FieldsInput.After, and is useful for accessing the field via an interface.
+func (v *__ListProjectV2FieldsInput) GetAfter() *string { return v.After }
+
 // __ListProjectV2ItemsInput is used internally by genqlient
 type __ListProjectV2ItemsInput struct {
-	ProjectId string `json:"projectId"`
-	First     int    `json:"first"`
+	ProjectId string  `json:"projectId"`
+	First     int     `json:"first"`
+	After     *string `json:"after"`
 }
 
 // GetProjectId returns __ListProjectV2ItemsInput.ProjectId, and is useful for accessing the field via an interface.
@@ -19551,11 +19795,15 @@ func (v *__ListProjectV2ItemsInput) GetProjectId() string { return v.ProjectId }
 // GetFirst returns __ListProjectV2ItemsInput.First, and is useful for accessing the field via an interface.
 func (v *__ListProjectV2ItemsInput) GetFirst() int { return v.First }
 
+// GetAfter returns __ListProjectV2ItemsInput.After, and is useful for accessing the field via an interface.
+func (v *__ListProjectV2ItemsInput) GetAfter() *string { return v.After }
+
 // __ListRepoIssuesInput is used internally by genqlient
 type __ListRepoIssuesInput struct {
-	Owner string `json:"owner"`
-	Name  string `json:"name"`
-	First int    `json:"first"`
+	Owner string  `json:"owner"`
+	Name  string  `json:"name"`
+	First int     `json:"first"`
+	After *string `json:"after"`
 }
 
 // GetOwner returns __ListRepoIssuesInput.Owner, and is useful for accessing the field via an interface.
@@ -19567,11 +19815,15 @@ func (v *__ListRepoIssuesInput) GetName() string { return v.Name }
 // GetFirst returns __ListRepoIssuesInput.First, and is useful for accessing the field via an interface.
 func (v *__ListRepoIssuesInput) GetFirst() int { return v.First }
 
+// GetAfter returns __ListRepoIssuesInput.After, and is useful for accessing the field via an interface.
+func (v *__ListRepoIssuesInput) GetAfter() *string { return v.After }
+
 // __ListRepoIssuesWithLabelsInput is used internally by genqlient
 type __ListRepoIssuesWithLabelsInput struct {
-	Owner string `json:"owner"`
-	Name  string `json:"name"`
-	First int    `json:"first"`
+	Owner string  `json:"owner"`
+	Name  string  `json:"name"`
+	First int     `json:"first"`
+	After *string `json:"after"`
 }
 
 // GetOwner returns __ListRepoIssuesWithLabelsInput.Owner, and is useful for accessing the field via an interface.
@@ -19583,11 +19835,15 @@ func (v *__ListRepoIssuesWithLabelsInput) GetName() string { return v.Name }
 // GetFirst returns __ListRepoIssuesWithLabelsInput.First, and is useful for accessing the field via an interface.
 func (v *__ListRepoIssuesWithLabelsInput) GetFirst() int { return v.First }
 
+// GetAfter returns __ListRepoIssuesWithLabelsInput.After, and is useful for accessing the field via an interface.
+func (v *__ListRepoIssuesWithLabelsInput) GetAfter() *string { return v.After }
+
 // __ListRepoIssuesWithMilestoneInput is used internally by genqlient
 type __ListRepoIssuesWithMilestoneInput struct {
-	Owner string `json:"owner"`
-	Name  string `json:"name"`
-	First int    `json:"first"`
+	Owner string  `json:"owner"`
+	Name  string  `json:"name"`
+	First int     `json:"first"`
+	After *string `json:"after"`
 }
 
 // GetOwner returns __ListRepoIssuesWithMilestoneInput.Owner, and is useful for accessing the field via an interface.
@@ -19598,6 +19854,9 @@ func (v *__ListRepoIssuesWithMilestoneInput) GetName() string { return v.Name }
 
 // GetFirst returns __ListRepoIssuesWithMilestoneInput.First, and is useful for accessing the field via an interface.
 func (v *__ListRepoIssuesWithMilestoneInput) GetFirst() int { return v.First }
+
+// GetAfter returns __ListRepoIssuesWithMilestoneInput.After, and is useful for accessing the field via an interface.
+func (v *__ListRepoIssuesWithMilestoneInput) GetAfter() *string { return v.After }
 
 // __UpdateIssueMilestoneInput is used internally by genqlient
 type __UpdateIssueMilestoneInput struct {
@@ -20170,9 +20429,13 @@ func GetViewerLogin(
 
 // The query executed by ListClosedIssues.
 const ListClosedIssues_Operation = `
-query ListClosedIssues ($owner: String!, $name: String!, $first: Int!) {
+query ListClosedIssues ($owner: String!, $name: String!, $first: Int!, $after: String) {
 	repository(owner: $owner, name: $name) {
-		issues(first: $first, states: CLOSED, orderBy: {field:UPDATED_AT,direction:DESC}) {
+		issues(first: $first, after: $after, states: CLOSED, orderBy: {field:UPDATED_AT,direction:DESC}) {
+			pageInfo {
+				hasNextPage
+				endCursor
+			}
 			nodes {
 				id
 				number
@@ -20202,6 +20465,7 @@ func ListClosedIssues(
 	owner string,
 	name string,
 	first int,
+	after *string,
 ) (data_ *ListClosedIssuesResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "ListClosedIssues",
@@ -20210,6 +20474,7 @@ func ListClosedIssues(
 			Owner: owner,
 			Name:  name,
 			First: first,
+			After: after,
 		},
 	}
 
@@ -20227,9 +20492,13 @@ func ListClosedIssues(
 
 // The query executed by ListMergedPRs.
 const ListMergedPRs_Operation = `
-query ListMergedPRs ($owner: String!, $name: String!, $first: Int!) {
+query ListMergedPRs ($owner: String!, $name: String!, $first: Int!, $after: String) {
 	repository(owner: $owner, name: $name) {
-		pullRequests(first: $first, states: MERGED, orderBy: {field:UPDATED_AT,direction:DESC}) {
+		pullRequests(first: $first, after: $after, states: MERGED, orderBy: {field:UPDATED_AT,direction:DESC}) {
+			pageInfo {
+				hasNextPage
+				endCursor
+			}
 			nodes {
 				id
 				number
@@ -20258,6 +20527,7 @@ func ListMergedPRs(
 	owner string,
 	name string,
 	first int,
+	after *string,
 ) (data_ *ListMergedPRsResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "ListMergedPRs",
@@ -20266,6 +20536,7 @@ func ListMergedPRs(
 			Owner: owner,
 			Name:  name,
 			First: first,
+			After: after,
 		},
 	}
 
@@ -20283,9 +20554,13 @@ func ListMergedPRs(
 
 // The query executed by ListMilestones.
 const ListMilestones_Operation = `
-query ListMilestones ($owner: String!, $name: String!, $first: Int!) {
+query ListMilestones ($owner: String!, $name: String!, $first: Int!, $after: String) {
 	repository(owner: $owner, name: $name) {
-		milestones(first: $first, states: OPEN, orderBy: {field:UPDATED_AT,direction:DESC}) {
+		milestones(first: $first, after: $after, states: OPEN, orderBy: {field:UPDATED_AT,direction:DESC}) {
+			pageInfo {
+				hasNextPage
+				endCursor
+			}
 			nodes {
 				id
 				number
@@ -20303,6 +20578,7 @@ func ListMilestones(
 	owner string,
 	name string,
 	first int,
+	after *string,
 ) (data_ *ListMilestonesResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "ListMilestones",
@@ -20311,6 +20587,7 @@ func ListMilestones(
 			Owner: owner,
 			Name:  name,
 			First: first,
+			After: after,
 		},
 	}
 
@@ -20328,11 +20605,15 @@ func ListMilestones(
 
 // The query executed by ListProjectV2Fields.
 const ListProjectV2Fields_Operation = `
-query ListProjectV2Fields ($projectId: ID!, $first: Int!) {
+query ListProjectV2Fields ($projectId: ID!, $first: Int!, $after: String) {
 	node(id: $projectId) {
 		__typename
 		... on ProjectV2 {
-			fields(first: $first) {
+			fields(first: $first, after: $after) {
+				pageInfo {
+					hasNextPage
+					endCursor
+				}
 				nodes {
 					__typename
 					... on ProjectV2FieldCommon {
@@ -20374,6 +20655,7 @@ func ListProjectV2Fields(
 	client_ graphql.Client,
 	projectId string,
 	first int,
+	after *string,
 ) (data_ *ListProjectV2FieldsResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "ListProjectV2Fields",
@@ -20381,6 +20663,7 @@ func ListProjectV2Fields(
 		Variables: &__ListProjectV2FieldsInput{
 			ProjectId: projectId,
 			First:     first,
+			After:     after,
 		},
 	}
 
@@ -20398,11 +20681,15 @@ func ListProjectV2Fields(
 
 // The query executed by ListProjectV2Items.
 const ListProjectV2Items_Operation = `
-query ListProjectV2Items ($projectId: ID!, $first: Int!) {
+query ListProjectV2Items ($projectId: ID!, $first: Int!, $after: String) {
 	node(id: $projectId) {
 		__typename
 		... on ProjectV2 {
-			items(first: $first) {
+			items(first: $first, after: $after) {
+				pageInfo {
+					hasNextPage
+					endCursor
+				}
 				nodes {
 					id
 					updatedAt
@@ -20511,6 +20798,7 @@ func ListProjectV2Items(
 	client_ graphql.Client,
 	projectId string,
 	first int,
+	after *string,
 ) (data_ *ListProjectV2ItemsResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "ListProjectV2Items",
@@ -20518,6 +20806,7 @@ func ListProjectV2Items(
 		Variables: &__ListProjectV2ItemsInput{
 			ProjectId: projectId,
 			First:     first,
+			After:     after,
 		},
 	}
 
@@ -20535,9 +20824,13 @@ func ListProjectV2Items(
 
 // The query executed by ListRepoIssues.
 const ListRepoIssues_Operation = `
-query ListRepoIssues ($owner: String!, $name: String!, $first: Int!) {
+query ListRepoIssues ($owner: String!, $name: String!, $first: Int!, $after: String) {
 	repository(owner: $owner, name: $name) {
-		issues(first: $first, states: OPEN, orderBy: {field:UPDATED_AT,direction:DESC}) {
+		issues(first: $first, after: $after, states: OPEN, orderBy: {field:UPDATED_AT,direction:DESC}) {
+			pageInfo {
+				hasNextPage
+				endCursor
+			}
 			nodes {
 				id
 				number
@@ -20567,6 +20860,7 @@ func ListRepoIssues(
 	owner string,
 	name string,
 	first int,
+	after *string,
 ) (data_ *ListRepoIssuesResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "ListRepoIssues",
@@ -20575,6 +20869,7 @@ func ListRepoIssues(
 			Owner: owner,
 			Name:  name,
 			First: first,
+			After: after,
 		},
 	}
 
@@ -20592,9 +20887,13 @@ func ListRepoIssues(
 
 // The query executed by ListRepoIssuesWithLabels.
 const ListRepoIssuesWithLabels_Operation = `
-query ListRepoIssuesWithLabels ($owner: String!, $name: String!, $first: Int!) {
+query ListRepoIssuesWithLabels ($owner: String!, $name: String!, $first: Int!, $after: String) {
 	repository(owner: $owner, name: $name) {
-		issues(first: $first, states: OPEN, orderBy: {field:UPDATED_AT,direction:DESC}) {
+		issues(first: $first, after: $after, states: OPEN, orderBy: {field:UPDATED_AT,direction:DESC}) {
+			pageInfo {
+				hasNextPage
+				endCursor
+			}
 			nodes {
 				id
 				number
@@ -20620,6 +20919,7 @@ func ListRepoIssuesWithLabels(
 	owner string,
 	name string,
 	first int,
+	after *string,
 ) (data_ *ListRepoIssuesWithLabelsResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "ListRepoIssuesWithLabels",
@@ -20628,6 +20928,7 @@ func ListRepoIssuesWithLabels(
 			Owner: owner,
 			Name:  name,
 			First: first,
+			After: after,
 		},
 	}
 
@@ -20645,9 +20946,13 @@ func ListRepoIssuesWithLabels(
 
 // The query executed by ListRepoIssuesWithMilestone.
 const ListRepoIssuesWithMilestone_Operation = `
-query ListRepoIssuesWithMilestone ($owner: String!, $name: String!, $first: Int!) {
+query ListRepoIssuesWithMilestone ($owner: String!, $name: String!, $first: Int!, $after: String) {
 	repository(owner: $owner, name: $name) {
-		issues(first: $first, states: OPEN, orderBy: {field:UPDATED_AT,direction:DESC}) {
+		issues(first: $first, after: $after, states: OPEN, orderBy: {field:UPDATED_AT,direction:DESC}) {
+			pageInfo {
+				hasNextPage
+				endCursor
+			}
 			nodes {
 				id
 				number
@@ -20672,6 +20977,7 @@ func ListRepoIssuesWithMilestone(
 	owner string,
 	name string,
 	first int,
+	after *string,
 ) (data_ *ListRepoIssuesWithMilestoneResponse, err_ error) {
 	req_ := &graphql.Request{
 		OpName: "ListRepoIssuesWithMilestone",
@@ -20680,6 +20986,7 @@ func ListRepoIssuesWithMilestone(
 			Owner: owner,
 			Name:  name,
 			First: first,
+			After: after,
 		},
 	}
 

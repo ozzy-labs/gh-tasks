@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -55,18 +56,16 @@ func runTodayRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, 
 	if err != nil {
 		return localizedError(c, r, err)
 	}
-	resp, err := queries.ListRepoIssues(ctx, clients.AsGenqlientClient(), id.Owner, id.Name, todayFetchLimit)
-	if err != nil {
-		return fmt.Errorf("list repo issues: %w", err)
-	}
-	if resp.Repository == nil {
+	issues, err := queries.PaginateRepoIssues(ctx, clients.AsGenqlientClient(), id.Owner, id.Name, todayFetchLimit)
+	if errors.Is(err, queries.ErrRepoNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
 	}
-	warnIfTruncated(c, r, kindRepoIssues, len(resp.Repository.Issues.Nodes), todayFetchLimit)
-	type issueNode = queries.ListRepoIssuesRepositoryIssuesIssueConnectionNodesIssue
-	hits := []*issueNode{}
-	for _, issue := range resp.Repository.Issues.Nodes {
+	if err != nil {
+		return fmt.Errorf("list repo issues: %w", err)
+	}
+	hits := []*queries.RepoIssue{}
+	for _, issue := range issues {
 		if issue == nil {
 			continue
 		}
@@ -110,16 +109,14 @@ func runTodayProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolve
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	resp, err := queries.ListProjectV2Items(ctx, clients.AsGenqlientClient(), pid, todayFetchLimit)
-	if err != nil {
-		return fmt.Errorf("list project items: %w", err)
-	}
-	if !projectitem.HasProjectNode(resp) {
+	items, err := queries.PaginateProjectV2Items(ctx, clients.AsGenqlientClient(), pid, todayFetchLimit)
+	if errors.Is(err, queries.ErrProjectNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	items := projectitem.ItemsFromResponse(resp)
-	warnIfTruncated(c, r, kindProjectItems, len(items), todayFetchLimit)
+	if err != nil {
+		return fmt.Errorf("list project items: %w", err)
+	}
 	hits := []*queries.ProjectV2ItemNode{}
 	for _, item := range items {
 		if item == nil {
