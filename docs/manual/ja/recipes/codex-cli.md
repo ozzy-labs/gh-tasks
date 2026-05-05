@@ -18,7 +18,7 @@ Codex CLI は `AGENTS.md` を起点として、参照される skill 本体を `
 
 ```bash
 # 1. gh-tasks 側で adapter 出力を生成
-pnpm run build:skills    # dist/codex-cli/.agents/skills/{name}/SKILL.md と dist/codex-cli/AGENTS.md.snippet を生成
+gh tasks build-skills    # dist/codex-cli/.agents/skills/{name}/SKILL.md と dist/codex-cli/AGENTS.md.snippet を生成
 
 # 2. consumer リポのルートで commons の sync-skills.sh を MARKER_TAG 上書きで実行
 MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \

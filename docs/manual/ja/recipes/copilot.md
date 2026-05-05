@@ -15,7 +15,7 @@ GitHub Copilot は `.github/copilot-instructions.md` を最上位の指示書と
 
 ```bash
 # 1. gh-tasks 側で adapter 出力を生成
-pnpm run build:skills    # dist/copilot/.github/copilot-instructions.md.snippet を生成
+gh tasks build-skills    # dist/copilot/.github/copilot-instructions.md.snippet を生成
 
 # 2. consumer リポのルートで commons の sync-skills.sh を MARKER_TAG 上書きで実行
 MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \
