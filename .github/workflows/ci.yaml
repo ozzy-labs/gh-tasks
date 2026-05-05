@@ -28,7 +28,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          # Match the toolchain directive in go.mod (`toolchain go1.26.0`).
+          # Reading `go-version-file` picks up only the `go` directive
+          # (1.25.0), which then triggers toolchain auto-download for
+          # `compile` (1.26.0) — that mix breaks `-coverprofile`
+          # instrumentation with "compile version does not match go tool
+          # version" errors. Pinning the installed Go to the latest 1.26.x
+          # keeps stdlib and toolchain in sync, and `1.26` (no patch)
+          # auto-picks the newest patch so govulncheck does not flag stdlib
+          # vulnerabilities fixed in subsequent point releases.
+          go-version: '1.26'
           cache: true
 
       - name: go vet
@@ -43,8 +52,22 @@ jobs:
             exit 1
           fi
 
-      - name: go test (race + shuffle)
-        run: go test -race -shuffle=on ./...
+      - name: go test (race + shuffle + coverage)
+        run: go test -race -shuffle=on -coverprofile=coverage.out -covermode=atomic ./...
+
+      - name: per-package coverage gate
+        uses: vladopajic/go-test-coverage@v2
+        with:
+          config: ./.testcoverage.yaml
+
+      - name: upload coverage profile
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-profile
+          path: coverage.out
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
@@ -55,12 +78,12 @@ jobs:
       - name: govulncheck (text, fail-fast)
         uses: golang/govulncheck-action@v1
         with:
-          go-version-file: go.mod
+          go-version-input: '1.26'
 
       - name: govulncheck (SARIF for Code Scanning)
         uses: golang/govulncheck-action@v1
         with:
-          go-version-file: go.mod
+          go-version-input: '1.26'
           output-format: sarif
           output-file: govulncheck.sarif
         continue-on-error: true
@@ -80,7 +103,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          go-version: '1.26'
           cache: true
       - name: build-skills (smoke)
         run: go run . build-skills --dist /tmp/dist-smoke
