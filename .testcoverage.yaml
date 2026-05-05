@@ -57,7 +57,10 @@ override:
 #   the queries-package number; once excluded, the meaningful coverage
 #   target is hand-written pagination.go.
 # - generate.go: only holds //go:generate directives, no runtime statements.
+# - main.go: cobra entry point + exit code mapping; tested transitively via
+#   the cmd package's RootWithDeps tests. Not meaningful to instrument.
 exclude:
   paths:
     - internal/github/queries/genqlient\.go$
     - internal/github/queries/generate\.go$
+    - ^main\.go$
