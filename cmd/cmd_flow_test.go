@@ -1,14 +1,14 @@
+// Cobra-rooted flow tests: each [TestCmd_*] case wires a fake GraphQL (and
+// optionally REST) backend via [testDeps], invokes the real cobra root via
+// [runCmd], and asserts on stdout/stderr/err. Shared helpers live in
+// `testhelpers_test.go`. See `docs/design/test-structure.md` for the full
+// rationale and the `Test<Cmd>_<Scenario>` naming convention.
 package cmd_test
 
 import (
-	"bytes"
-	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/ozzy-labs/gh-tasks/cmd"
 	"github.com/ozzy-labs/gh-tasks/internal/config"
@@ -17,161 +17,73 @@ import (
 	"github.com/ozzy-labs/gh-tasks/internal/project"
 )
 
-// recordingREST captures REST calls and replays canned responses keyed by
-// `<METHOD> <path-substring>`. Unmatched calls return a marshalable empty body.
-type recordingREST struct {
-	calls     []restCall
-	responses []restResponse
-}
-
-type restCall struct {
-	method string
-	path   string
-	body   any
-}
-
-type restResponse struct {
-	matchMethod string
-	matchPath   string
-	data        any
-	err         error
-}
-
-func (r *recordingREST) Do(_ context.Context, method, path string, body, out any) error {
-	r.calls = append(r.calls, restCall{method: method, path: path, body: body})
-	for _, resp := range r.responses {
-		if resp.matchMethod != "" && resp.matchMethod != method {
-			continue
-		}
-		if resp.matchPath != "" && !strings.Contains(path, resp.matchPath) {
-			continue
-		}
-		if resp.err != nil {
-			return resp.err
-		}
-		if out == nil || resp.data == nil {
-			return nil
-		}
-		buf, err := json.Marshal(resp.data)
-		if err != nil {
-			return fmt.Errorf("marshal rest fake: %w", err)
-		}
-		return json.Unmarshal(buf, out)
-	}
-	return nil
-}
-
-// newClientsWithREST is a counterpart to newClients that lets a test inject a
-// recordingREST in addition to the GraphQL fake.
-func newClientsWithREST(g *fakeGraphQL, r *recordingREST) *github.Clients {
-	return &github.Clients{Host: "github.com", GraphQL: g, REST: r}
-}
-
-// runCmd is a small helper that bootstraps the cobra root with the supplied
-// deps + args, captures stdout/stderr into the bytes.Buffers wired into
-// d.Stdout / d.Stderr, and returns the resulting err. It also wires
-// SetOut/SetErr on the root command itself, since cmd handlers prefer
-// c.OutOrStdout()/c.ErrOrStderr() over deps.Stdout/deps.Stderr.
-//
-// Flags are parsed entirely by cobra from args; the legacy Deps.Argv field
-// has been retired in favour of authoritative cobra flag handling.
-func runCmd(t *testing.T, d cmd.Deps, args ...string) (stdout, stderr *bytes.Buffer, err error) {
-	t.Helper()
-	stdout = d.Stdout.(*bytes.Buffer)
-	stderr = d.Stderr.(*bytes.Buffer)
-	root := cmd.RootWithDeps(d)
-	root.SetArgs(args)
-	root.SetOut(stdout)
-	root.SetErr(stderr)
-	err = root.Execute()
-	return stdout, stderr, err
-}
-
-// repoIssuesPayload constructs the `repository.issues.nodes` shape consumed by
-// ListRepoIssues across many tests.
-func repoIssuesPayload(nodes ...map[string]any) map[string]any {
-	return map[string]any{
-		"repository": map[string]any{
-			"issues": map[string]any{"nodes": append([]any{}, asAnySlice(nodes)...)},
-		},
-	}
-}
-
-func asAnySlice(in []map[string]any) []any {
-	out := make([]any, len(in))
-	for i, v := range in {
-		out[i] = v
-	}
-	return out
-}
-
-// emptyOrgProject builds a `nil` projectV2 envelope under organization (used
-// to drive the not-found path in scope=org tests).
-func emptyOrgProject() map[string]any {
-	return map[string]any{"organization": map[string]any{"projectV2": nil}}
-}
-
-func orgProject(id string) map[string]any {
-	return map[string]any{"organization": map[string]any{"projectV2": map[string]any{
-		"id": id, "number": 7, "title": "Org Project",
-	}}}
-}
-
-func userProject(id string) map[string]any {
-	return map[string]any{"user": map[string]any{"projectV2": map[string]any{
-		"id": id, "number": 9, "title": "User Project",
-	}}}
-}
-
 // ===== List ================================================================
+
+func TestList_RepoEmpty(t *testing.T) {
+	t.Parallel()
+
+	g := &fakeGraphQL{responses: []fakeResponse{
+		{matchSubstring: "query ListRepoIssues (", data: repoIssuesPayload()},
+	}}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "list")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	if !strings.Contains(stdout.String(), "No open issues") {
+		t.Errorf("missing empty-state message:\n%s", stdout.String())
+	}
+}
+
+func TestList_RepoIssues(t *testing.T) {
+	t.Parallel()
+
+	g := &fakeGraphQL{responses: []fakeResponse{
+		{
+			matchSubstring: "query ListRepoIssues (",
+			data: repoIssuesPayload(
+				map[string]any{
+					"id":        "I_1",
+					"number":    42,
+					"title":     "Fix login",
+					"url":       "https://example.com/i/42",
+					"updatedAt": "2026-05-04T08:00:00Z",
+				},
+			),
+		},
+	}}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "list")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	got := stdout.String()
+	if !strings.Contains(got, "#42") || !strings.Contains(got, "Fix login") {
+		t.Errorf("missing expected output:\n%s", got)
+	}
+}
 
 func TestList_LimitDefault(t *testing.T) {
 	t.Parallel()
 
 	var capturedFirst int
-	g := &fakeGraphQL{}
-	g.responses = []fakeResponse{
-		{
-			matchSubstring: "query ListRepoIssues (",
-			data:           repoIssuesPayload(),
-		},
-	}
-	// Wrap the fake so we can capture the variables.
+	g := &fakeGraphQL{responses: []fakeResponse{
+		{matchSubstring: "query ListRepoIssues (", data: repoIssuesPayload()},
+	}}
 	wrap := &captureGraphQL{inner: g, capture: func(_ string, vars map[string]any) {
 		capturedFirst = intFromVar(vars["first"])
 	}}
-	d := cmd.Deps{
-		Stdout:       new(bytes.Buffer),
-		Stderr:       new(bytes.Buffer),
-		Now:          func() time.Time { return time.Date(2026, 5, 4, 12, 0, 0, 0, time.UTC) },
-		Env:          func(string) string { return "" },
-		HasGitRemote: func() bool { return true },
-		GetRemoteURL: func() (string, bool) { return "git@github.com:ozzy-labs/gh-tasks.git", true },
-		NewClients: func() (*github.Clients, error) {
+	d := testDeps(g, func(d *cmd.Deps) {
+		d.NewClients = func() (*github.Clients, error) {
 			return &github.Clients{Host: "github.com", GraphQL: wrap, REST: fakeREST{}}, nil
-		},
-		LoadConfig: func() (config.AppConfig, error) { return config.AppConfig{}, nil },
-	}
+		}
+	})
 	if _, _, err := runCmd(t, d, "list"); err != nil {
 		t.Fatalf("Execute: %v", err)
 	}
 	if capturedFirst != 30 {
 		t.Errorf("expected default limit 30, got %d", capturedFirst)
 	}
-}
-
-// intFromVar extracts an integer from a variable captured by [captureGraphQL].
-// Genqlient-generated calls pass variables through JSON, so numeric values
-// are unmarshalled to float64; hand-written call sites still pass ints
-// directly. This helper accepts both.
-func intFromVar(v any) int {
-	switch x := v.(type) {
-	case int:
-		return x
-	case float64:
-		return int(x)
-	}
-	return 0
 }
 
 func TestList_LimitExplicit(t *testing.T) {
@@ -322,6 +234,35 @@ func TestToday_RepoEmpty(t *testing.T) {
 	}
 }
 
+// TestToday_FiltersByUTC pins the date-boundary filter contract: only issues
+// whose updatedAt falls on the deps.Now UTC date are emitted.
+func TestToday_FiltersByUTC(t *testing.T) {
+	t.Parallel()
+
+	g := &fakeGraphQL{responses: []fakeResponse{
+		{
+			matchSubstring: "query ListRepoIssues (",
+			data: repoIssuesPayload(
+				map[string]any{"id": "I_old", "number": 1, "title": "Yesterday", "url": "u1", "updatedAt": "2026-05-03T08:00:00Z"},
+				map[string]any{"id": "I_today", "number": 2, "title": "Today", "url": "u2", "updatedAt": "2026-05-04T08:00:00Z"},
+				map[string]any{"id": "I_tomorrow", "number": 3, "title": "Tomorrow", "url": "u3", "updatedAt": "2026-05-05T08:00:00Z"},
+			),
+		},
+	}}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "today")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	got := stdout.String()
+	if !strings.Contains(got, "Today") {
+		t.Errorf("expected Today entry, got:\n%s", got)
+	}
+	if strings.Contains(got, "Yesterday") || strings.Contains(got, "Tomorrow") {
+		t.Errorf("expected only today's entries, got:\n%s", got)
+	}
+}
+
 func TestToday_OrgScope(t *testing.T) {
 	t.Parallel()
 
@@ -386,6 +327,32 @@ func TestToday_UserScopeEmpty(t *testing.T) {
 }
 
 // ===== Standup =============================================================
+
+// TestStandup_RepoStructure pins the markdown skeleton emitted in repo scope:
+// the `# Standup` heading followed by `## Yesterday`, `## Today`, and
+// `## Blockers` sections always render, even with no underlying activity.
+func TestStandup_RepoStructure(t *testing.T) {
+	t.Parallel()
+
+	emptyRepoIssues := map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{}}}}
+	emptyPRs := map[string]any{"repository": map[string]any{"pullRequests": map[string]any{"nodes": []any{}}}}
+	g := &fakeGraphQL{responses: []fakeResponse{
+		{matchSubstring: "query ListClosedIssues (", data: emptyRepoIssues},
+		{matchSubstring: "query ListMergedPRs (", data: emptyPRs},
+		{matchSubstring: "query ListRepoIssues (", data: emptyRepoIssues},
+	}}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "standup")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	got := stdout.String()
+	for _, want := range []string{"# Standup", "## Yesterday", "## Today", "## Blockers"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in:\n%s", want, got)
+		}
+	}
+}
 
 func TestStandup_SinceFlag(t *testing.T) {
 	t.Parallel()
@@ -597,6 +564,35 @@ func TestStandup_OrgScope_DoneSplit_DraftExcludedUnderMine(t *testing.T) {
 }
 
 // ===== Review ==============================================================
+
+// TestReview_RepoMarkdown pins the closed-issues markdown rendering for the
+// default repo scope: the `## Closed Issues` section materialises and lists
+// each closed issue by `#<num>`.
+func TestReview_RepoMarkdown(t *testing.T) {
+	t.Parallel()
+
+	g := &fakeGraphQL{responses: []fakeResponse{
+		{
+			matchSubstring: "query ListClosedIssues (",
+			data: map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{
+				map[string]any{"id": "I_x", "number": 7, "title": "Fix bug", "url": "u", "closedAt": "2026-05-04T09:00:00Z"},
+			}}}},
+		},
+		{
+			matchSubstring: "query ListMergedPRs (",
+			data:           map[string]any{"repository": map[string]any{"pullRequests": map[string]any{"nodes": []any{}}}},
+		},
+	}}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "review", "--period", "weekly")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	got := stdout.String()
+	if !strings.Contains(got, "Closed Issues") || !strings.Contains(got, "#7") {
+		t.Errorf("expected closed issues section, got:\n%s", got)
+	}
+}
 
 func TestReview_PeriodDaily(t *testing.T) {
 	t.Parallel()
@@ -1657,20 +1653,4 @@ func TestProjectsInit_OwnerNotFound(t *testing.T) {
 	if !strings.Contains(stderr.String(), "Could not resolve owner") {
 		t.Errorf("expected ownerNotFound error, got:\n%s", stderr.String())
 	}
-}
-
-// ===== Helpers =============================================================
-
-// captureGraphQL wraps a fakeGraphQL to peek at queries / vars without
-// disturbing the canned-response replay.
-type captureGraphQL struct {
-	inner   *fakeGraphQL
-	capture func(query string, vars map[string]any)
-}
-
-func (c *captureGraphQL) Do(ctx context.Context, query string, vars map[string]any, out any) error {
-	if c.capture != nil {
-		c.capture(query, vars)
-	}
-	return c.inner.Do(ctx, query, vars, out)
 }
