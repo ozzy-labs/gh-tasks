@@ -27,11 +27,11 @@ $ gh tasks add 'foo' --scope=repo --repo=owner/name --lang=fr
 
 ## 実装
 
-`packages/gh-tasks/src/i18n/index.ts` の `resolveLocale(argv, env?, config?)` 関数。`env` / `config` は引数で注入可能でテストは決定論的。`config` は `lib/config.ts` の `loadConfig()` で `~/.config/ozzylabs/gh-tasks.toml` から読み込まれる。
+`internal/i18n/i18n.go` の `ResolveLocale(argv, env, config)` 関数。`env` / `config` は引数で注入可能でテストは決定論的。`config` は `internal/config` の `Load()` 経由で `~/.config/ozzylabs/gh-tasks.toml` から読み込まれる。
 
 ## SSOT 言語と出力言語
 
-`gh-tasks` のメッセージは **英語(en)を SSOT** とする(repo-internal [ADR-0005](../../../adr/0005-i18n-reader-based-ssot.md)、[ADR-0002](../../../adr/0002-i18n-japanese-ssot.md) を Superseded)。実行時の `t(locale, key)` はまず指定 locale を引き、見つからなければ `en` にフォールバックし、両方欠けていればキー文字列そのものを返す(デバッグ用)。フォールバックは非対称で、バックストップは常に `en` テーブルのみ。`en` キーに ja 翻訳が存在しない場合は ja 出力にも英語がそのまま出るため、新規キーは en に書いてから ja に翻訳をペアで追加すること。ハードコードされた非 ASCII 文字列リテラルは禁止で、`scripts/check-no-hardcoded-i18n.mjs`(`pnpm run lint:i18n`、lefthook `pre-commit` hook)が検知して reject する。
+`gh-tasks` のメッセージは **英語(en)を SSOT** とする(repo-internal [ADR-0005](../../../adr/0005-i18n-reader-based-ssot.md)、[ADR-0002](../../../adr/0002-i18n-japanese-ssot.md) を Superseded)。実行時の `t(locale, key)` はまず指定 locale を引き、見つからなければ `en` にフォールバックし、両方欠けていればキー文字列そのものを返す(デバッグ用)。フォールバックは非対称で、バックストップは常に `en` テーブルのみ。`en` キーに ja 翻訳が存在しない場合は ja 出力にも英語がそのまま出るため、新規キーは en に書いてから ja に翻訳をペアで追加すること。ハードコードされた非 ASCII 文字列リテラルは禁止で、`gh tasks check-i18n`(`internal/i18ncheck`、`go/parser` ベース。lefthook `pre-commit` hook と CI で実行)が検知して reject する。
 
 ## 関連
 

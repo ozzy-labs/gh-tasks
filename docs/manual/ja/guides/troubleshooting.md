@@ -56,7 +56,7 @@ GitHub CLI 公式の `gh agent-task` (preview) と本拡張の `gh tasks` でコ
 
 **原因**: GitHub Releases にプラットフォーム対応バイナリが存在しない。
 
-**解決**: `release.yaml` で配信される 5 ターゲット(darwin x86_64 / arm64、linux x86_64 / arm64、windows x86_64)に該当するか確認([repo-internal ADR-0001](../../../adr/0001-use-bun-compile-for-binary.md))。該当しない環境では `git clone` + `bun run` で開発実行可能。
+**解決**: `release.yaml` で配信される 5 ターゲット(darwin x86_64 / arm64、linux x86_64 / arm64、windows x86_64)に該当するか確認([repo-internal ADR-0006](../../../adr/0006-go-and-cobra-migration.md))。該当しない環境では `git clone` + `go build`(または `go run .`)で開発実行可能。
 
 ## 関連
 
