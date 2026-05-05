@@ -31,6 +31,9 @@ pre-commit:
     check-no-hardcoded-i18n-go:
       glob: '{cmd,internal}/**/*.go'
       run: mise exec -- go run . check-i18n
+    check-i18n-catalog-refs:
+      glob: '{cmd,internal}/**/*.go'
+      run: mise exec -- go run . check-i18n --refs
     markdownlint:
       glob: '*.md'
       exclude:

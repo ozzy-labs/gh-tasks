@@ -37,7 +37,7 @@ override:
   - path: ^internal/github$
     threshold: 86
   - path: ^internal/i18ncheck$
-    threshold: 77
+    threshold: 79
   - path: ^internal/i18n$
     threshold: 75
   - path: ^internal/period$

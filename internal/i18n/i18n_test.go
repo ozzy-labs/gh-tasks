@@ -196,6 +196,39 @@ func TestValidate(t *testing.T) {
 	}
 }
 
+func TestKeys(t *testing.T) {
+	t.Parallel()
+
+	en := i18n.Keys(i18n.LocaleEN)
+	ja := i18n.Keys(i18n.LocaleJA)
+
+	if len(en) == 0 {
+		t.Fatal("Keys(en) is empty; embedded en.json failed to load")
+	}
+	if len(ja) == 0 {
+		t.Fatal("Keys(ja) is empty; embedded ja.json failed to load")
+	}
+
+	// Mutating the returned map must not corrupt the catalog. Re-call and
+	// verify length is unchanged.
+	beforeLen := len(en)
+	en["__sentinel__"] = struct{}{}
+	again := i18n.Keys(i18n.LocaleEN)
+	if len(again) != beforeLen {
+		t.Errorf("Keys returned a shared map: mutating the result changed catalog (len before=%d after=%d)",
+			beforeLen, len(again))
+	}
+
+	// Unknown locale must return a non-nil empty map (callers iterate it).
+	out := i18n.Keys(i18n.Locale("zz"))
+	if out == nil {
+		t.Error("Keys(unknown) returned nil; want empty non-nil map")
+	}
+	if len(out) != 0 {
+		t.Errorf("Keys(unknown) len=%d, want 0", len(out))
+	}
+}
+
 func lookupFn(env map[string]string) i18n.EnvLookup {
 	return func(k string) string { return env[k] }
 }

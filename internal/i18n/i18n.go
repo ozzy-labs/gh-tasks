@@ -242,3 +242,20 @@ func lookup(locale Locale, key string) string {
 	}
 	return key
 }
+
+// Keys returns the set of message keys defined in the locale's catalog.
+//
+// Used by the i18ncheck reference scanner to validate that every `r.T("key")`
+// callsite refers to a key defined in en/ja JSON. The returned map is a fresh
+// copy keyed by message key with zero-byte values, so callers can mutate it
+// without affecting the package state.
+//
+// Unknown locales return an empty (non-nil) map.
+func Keys(locale Locale) map[string]struct{} {
+	src := tables[locale]
+	out := make(map[string]struct{}, len(src))
+	for k := range src {
+		out[k] = struct{}{}
+	}
+	return out
+}
