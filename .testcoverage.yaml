@@ -31,9 +31,9 @@ override:
   - path: ^internal/config$
     threshold: 84
   # internal/github/queries: with genqlient.go excluded the meaningful
-  # number is pagination.go; current 33.1%, floor 31 (current - 2).
+  # number is pagination.go; current 74.3%, floor 72 (current - 2).
   - path: ^internal/github/queries$
-    threshold: 31
+    threshold: 72
   - path: ^internal/github$
     threshold: 29
   - path: ^internal/i18ncheck$

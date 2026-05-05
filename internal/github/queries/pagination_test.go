@@ -461,3 +461,350 @@ func TestPaginateProjectV2Fields_AccumulatesVariantsAcrossPages(t *testing.T) {
 		t.Errorf("got[2] expected *ProjectV2FieldNodeProjectV2IterationField, got %T", got[2])
 	}
 }
+
+// =============================================================================
+// Response builders for the 5 untested paginators
+// =============================================================================
+
+// repoIssuesWithLabelsPage builds a Repository envelope for ListRepoIssuesWithLabels.
+func repoIssuesWithLabelsPage(nodes []*queries.RepoIssueWithLabel, hasNext bool, endCursor *string) *queries.ListRepoIssuesWithLabelsRepository {
+	return &queries.ListRepoIssuesWithLabelsRepository{
+		Issues: &queries.ListRepoIssuesWithLabelsRepositoryIssuesIssueConnection{
+			PageInfo: &queries.ListRepoIssuesWithLabelsRepositoryIssuesIssueConnectionPageInfo{
+				HasNextPage: hasNext,
+				EndCursor:   endCursor,
+			},
+			Nodes: nodes,
+		},
+	}
+}
+
+// closedIssuesPage builds a Repository envelope for ListClosedIssues.
+func closedIssuesPage(nodes []*queries.ClosedIssue, hasNext bool, endCursor *string) *queries.ListClosedIssuesRepository {
+	return &queries.ListClosedIssuesRepository{
+		Issues: &queries.ListClosedIssuesRepositoryIssuesIssueConnection{
+			PageInfo: &queries.ListClosedIssuesRepositoryIssuesIssueConnectionPageInfo{
+				HasNextPage: hasNext,
+				EndCursor:   endCursor,
+			},
+			Nodes: nodes,
+		},
+	}
+}
+
+// mergedPRsPage builds a Repository envelope for ListMergedPRs (PullRequest connection).
+func mergedPRsPage(nodes []*queries.MergedPR, hasNext bool, endCursor *string) *queries.ListMergedPRsRepository {
+	return &queries.ListMergedPRsRepository{
+		PullRequests: &queries.ListMergedPRsRepositoryPullRequestsPullRequestConnection{
+			PageInfo: &queries.ListMergedPRsRepositoryPullRequestsPullRequestConnectionPageInfo{
+				HasNextPage: hasNext,
+				EndCursor:   endCursor,
+			},
+			Nodes: nodes,
+		},
+	}
+}
+
+// repoIssuesWithMilestonePage builds a Repository envelope for ListRepoIssuesWithMilestone.
+func repoIssuesWithMilestonePage(nodes []*queries.RepoIssueWithMilestone, hasNext bool, endCursor *string) *queries.ListRepoIssuesWithMilestoneRepository {
+	return &queries.ListRepoIssuesWithMilestoneRepository{
+		Issues: &queries.ListRepoIssuesWithMilestoneRepositoryIssuesIssueConnection{
+			PageInfo: &queries.ListRepoIssuesWithMilestoneRepositoryIssuesIssueConnectionPageInfo{
+				HasNextPage: hasNext,
+				EndCursor:   endCursor,
+			},
+			Nodes: nodes,
+		},
+	}
+}
+
+// milestonesPage builds a Repository envelope for ListMilestones.
+func milestonesPage(nodes []*queries.Milestone, hasNext bool, endCursor *string) *queries.ListMilestonesRepository {
+	return &queries.ListMilestonesRepository{
+		Milestones: &queries.ListMilestonesRepositoryMilestonesMilestoneConnection{
+			PageInfo: &queries.ListMilestonesRepositoryMilestonesMilestoneConnectionPageInfo{
+				HasNextPage: hasNext,
+				EndCursor:   endCursor,
+			},
+			Nodes: nodes,
+		},
+	}
+}
+
+// makeMergedPRs generates `count` synthetic PullRequest nodes numbered from
+// `start` upward. Used by the multi-page cursor test.
+func makeMergedPRs(start, count int) []*queries.MergedPR {
+	out := make([]*queries.MergedPR, count)
+	for i := 0; i < count; i++ {
+		num := start + i
+		out[i] = &queries.MergedPR{Id: fmt.Sprintf("PR_%d", num), Number: num}
+	}
+	return out
+}
+
+// =============================================================================
+// PaginateRepoIssuesWithLabels — single page + ErrRepoNotFound
+// =============================================================================
+
+func TestPaginateRepoIssuesWithLabels_SinglePage(t *testing.T) {
+	t.Parallel()
+	step := scriptStep{
+		op:        "ListRepoIssuesWithLabels",
+		wantSize:  30,
+		wantAfter: nil,
+		respond: func(out any) {
+			r := out.(*queries.ListRepoIssuesWithLabelsResponse)
+			r.Repository = repoIssuesWithLabelsPage([]*queries.RepoIssueWithLabel{
+				{Id: "I_1", Number: 1, Title: "first"},
+				{Id: "I_2", Number: 2, Title: "second"},
+			}, false, nil)
+		},
+	}
+	client := &scriptedClient{t: t, steps: []scriptStep{step}}
+	got, err := queries.PaginateRepoIssuesWithLabels(context.Background(), client, "o", "n", 30)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(got) != 2 || got[0].Id != "I_1" || got[1].Id != "I_2" {
+		t.Errorf("unexpected items: %+v", got)
+	}
+	// Type identity is enforced by the return signature
+	// ([]*queries.RepoIssueWithLabel); a wrong field path or sibling type
+	// alias would fail to compile here.
+}
+
+func TestPaginateRepoIssuesWithLabels_RepoNotFound(t *testing.T) {
+	t.Parallel()
+	steps := []scriptStep{
+		{
+			op: "ListRepoIssuesWithLabels", wantSize: 30,
+			respond: func(out any) {
+				r := out.(*queries.ListRepoIssuesWithLabelsResponse)
+				r.Repository = nil
+			},
+		},
+	}
+	client := &scriptedClient{t: t, steps: steps}
+	_, err := queries.PaginateRepoIssuesWithLabels(context.Background(), client, "o", "n", 30)
+	if !errors.Is(err, queries.ErrRepoNotFound) {
+		t.Errorf("expected ErrRepoNotFound, got %v", err)
+	}
+}
+
+// =============================================================================
+// PaginateClosedIssues — single page + ErrRepoNotFound
+// =============================================================================
+
+func TestPaginateClosedIssues_SinglePage(t *testing.T) {
+	t.Parallel()
+	step := scriptStep{
+		op:        "ListClosedIssues",
+		wantSize:  30,
+		wantAfter: nil,
+		respond: func(out any) {
+			r := out.(*queries.ListClosedIssuesResponse)
+			r.Repository = closedIssuesPage([]*queries.ClosedIssue{
+				{Id: "I_10", Number: 10, Title: "closed-a"},
+				{Id: "I_11", Number: 11, Title: "closed-b"},
+			}, false, nil)
+		},
+	}
+	client := &scriptedClient{t: t, steps: []scriptStep{step}}
+	got, err := queries.PaginateClosedIssues(context.Background(), client, "o", "n", 30)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(got) != 2 || got[0].Number != 10 || got[1].Number != 11 {
+		t.Errorf("unexpected items: %+v", got)
+	}
+}
+
+func TestPaginateClosedIssues_RepoNotFound(t *testing.T) {
+	t.Parallel()
+	steps := []scriptStep{
+		{
+			op: "ListClosedIssues", wantSize: 30,
+			respond: func(out any) {
+				r := out.(*queries.ListClosedIssuesResponse)
+				r.Repository = nil
+			},
+		},
+	}
+	client := &scriptedClient{t: t, steps: steps}
+	_, err := queries.PaginateClosedIssues(context.Background(), client, "o", "n", 30)
+	if !errors.Is(err, queries.ErrRepoNotFound) {
+		t.Errorf("expected ErrRepoNotFound, got %v", err)
+	}
+}
+
+// =============================================================================
+// PaginateMergedPRs — single page + multi-page cursor + ErrRepoNotFound
+// =============================================================================
+
+func TestPaginateMergedPRs_SinglePage(t *testing.T) {
+	t.Parallel()
+	step := scriptStep{
+		op:        "ListMergedPRs",
+		wantSize:  30,
+		wantAfter: nil,
+		respond: func(out any) {
+			r := out.(*queries.ListMergedPRsResponse)
+			r.Repository = mergedPRsPage([]*queries.MergedPR{
+				{Id: "PR_1", Number: 1, Title: "merged-a"},
+				{Id: "PR_2", Number: 2, Title: "merged-b"},
+			}, false, nil)
+		},
+	}
+	client := &scriptedClient{t: t, steps: []scriptStep{step}}
+	got, err := queries.PaginateMergedPRs(context.Background(), client, "o", "n", 30)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(got) != 2 || got[0].Id != "PR_1" || got[1].Id != "PR_2" {
+		t.Errorf("unexpected items: %+v", got)
+	}
+	// PullRequest connection has its own per-node type, pinned by the
+	// paginator's return signature ([]*queries.MergedPR).
+}
+
+func TestPaginateMergedPRs_MultiPage(t *testing.T) {
+	t.Parallel()
+	cur := "PR_C1"
+	steps := []scriptStep{
+		{
+			op: "ListMergedPRs", wantSize: 100, wantAfter: nil,
+			respond: func(out any) {
+				r := out.(*queries.ListMergedPRsResponse)
+				r.Repository = mergedPRsPage(makeMergedPRs(0, 100), true, &cur)
+			},
+		},
+		{
+			op: "ListMergedPRs", wantSize: 50, wantAfter: &cur,
+			respond: func(out any) {
+				r := out.(*queries.ListMergedPRsResponse)
+				r.Repository = mergedPRsPage(makeMergedPRs(100, 50), false, nil)
+			},
+		},
+	}
+	client := &scriptedClient{t: t, steps: steps}
+	got, err := queries.PaginateMergedPRs(context.Background(), client, "o", "n", 150)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(got) != 150 {
+		t.Fatalf("expected 150 items, got %d", len(got))
+	}
+	if got[0].Number != 0 || got[149].Number != 149 {
+		t.Errorf("unexpected page boundary: first=%d last=%d", got[0].Number, got[149].Number)
+	}
+}
+
+func TestPaginateMergedPRs_RepoNotFound(t *testing.T) {
+	t.Parallel()
+	steps := []scriptStep{
+		{
+			op: "ListMergedPRs", wantSize: 30,
+			respond: func(out any) {
+				r := out.(*queries.ListMergedPRsResponse)
+				r.Repository = nil
+			},
+		},
+	}
+	client := &scriptedClient{t: t, steps: steps}
+	_, err := queries.PaginateMergedPRs(context.Background(), client, "o", "n", 30)
+	if !errors.Is(err, queries.ErrRepoNotFound) {
+		t.Errorf("expected ErrRepoNotFound, got %v", err)
+	}
+}
+
+// =============================================================================
+// PaginateRepoIssuesWithMilestone — single page + ErrRepoNotFound
+// =============================================================================
+
+func TestPaginateRepoIssuesWithMilestone_SinglePage(t *testing.T) {
+	t.Parallel()
+	step := scriptStep{
+		op:        "ListRepoIssuesWithMilestone",
+		wantSize:  30,
+		wantAfter: nil,
+		respond: func(out any) {
+			r := out.(*queries.ListRepoIssuesWithMilestoneResponse)
+			r.Repository = repoIssuesWithMilestonePage([]*queries.RepoIssueWithMilestone{
+				{Id: "I_20", Number: 20, Title: "with-milestone-a"},
+				{Id: "I_21", Number: 21, Title: "with-milestone-b"},
+			}, false, nil)
+		},
+	}
+	client := &scriptedClient{t: t, steps: []scriptStep{step}}
+	got, err := queries.PaginateRepoIssuesWithMilestone(context.Background(), client, "o", "n", 30)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(got) != 2 || got[0].Number != 20 || got[1].Number != 21 {
+		t.Errorf("unexpected items: %+v", got)
+	}
+}
+
+func TestPaginateRepoIssuesWithMilestone_RepoNotFound(t *testing.T) {
+	t.Parallel()
+	steps := []scriptStep{
+		{
+			op: "ListRepoIssuesWithMilestone", wantSize: 30,
+			respond: func(out any) {
+				r := out.(*queries.ListRepoIssuesWithMilestoneResponse)
+				r.Repository = nil
+			},
+		},
+	}
+	client := &scriptedClient{t: t, steps: steps}
+	_, err := queries.PaginateRepoIssuesWithMilestone(context.Background(), client, "o", "n", 30)
+	if !errors.Is(err, queries.ErrRepoNotFound) {
+		t.Errorf("expected ErrRepoNotFound, got %v", err)
+	}
+}
+
+// =============================================================================
+// PaginateMilestones — single page + ErrRepoNotFound
+// =============================================================================
+
+func TestPaginateMilestones_SinglePage(t *testing.T) {
+	t.Parallel()
+	step := scriptStep{
+		op:        "ListMilestones",
+		wantSize:  30,
+		wantAfter: nil,
+		respond: func(out any) {
+			r := out.(*queries.ListMilestonesResponse)
+			r.Repository = milestonesPage([]*queries.Milestone{
+				{Id: "M_1", Number: 1, Title: "m1"},
+				{Id: "M_2", Number: 2, Title: "m2"},
+			}, false, nil)
+		},
+	}
+	client := &scriptedClient{t: t, steps: []scriptStep{step}}
+	got, err := queries.PaginateMilestones(context.Background(), client, "o", "n", 30)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(got) != 2 || got[0].Id != "M_1" || got[1].Id != "M_2" {
+		t.Errorf("unexpected items: %+v", got)
+	}
+}
+
+func TestPaginateMilestones_RepoNotFound(t *testing.T) {
+	t.Parallel()
+	steps := []scriptStep{
+		{
+			op: "ListMilestones", wantSize: 30,
+			respond: func(out any) {
+				r := out.(*queries.ListMilestonesResponse)
+				r.Repository = nil
+			},
+		},
+	}
+	client := &scriptedClient{t: t, steps: steps}
+	_, err := queries.PaginateMilestones(context.Background(), client, "o", "n", 30)
+	if !errors.Is(err, queries.ErrRepoNotFound) {
+		t.Errorf("expected ErrRepoNotFound, got %v", err)
+	}
+}
