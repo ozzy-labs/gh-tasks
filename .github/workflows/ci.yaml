@@ -97,6 +97,9 @@ jobs:
       - name: hardcoded i18n check
         run: go run . check-i18n
 
+      - name: i18n catalog reference check
+        run: go run . check-i18n --refs
+
   go-skill-build-smoke:
     runs-on: ubuntu-latest
     steps:
