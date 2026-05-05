@@ -148,10 +148,10 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 		if n.Milestone != nil && n.Milestone.Id == milestoneID {
 			continue
 		}
-		var update queries.UpdateIssueMilestoneResponse
-		if err := clients.GraphQL.Do(ctx, queries.UpdateIssueMilestone, map[string]any{
-			"input": map[string]any{"id": n.Id, "milestoneId": milestoneID},
-		}, &update); err != nil {
+		if _, err := queries.UpdateIssueMilestone(ctx, gqlClient, &queries.UpdateIssueInput{
+			Id:          n.Id,
+			MilestoneId: &milestoneID,
+		}); err != nil {
 			return fmt.Errorf("update issue milestone (issue #%d): %w", n.Number, err)
 		}
 		fmt.Fprintf(out, "  %s: #%d\n", r.T("plan.linked"), n.Number)
@@ -251,15 +251,12 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 			fmt.Fprintf(out, "  %s: %s\n", r.T("plan.iterationAlreadySet.project"), describeItem(item))
 			continue
 		}
-		var update queries.UpdateProjectV2ItemFieldValueResponse
-		if err := clients.GraphQL.Do(ctx, queries.UpdateProjectV2ItemFieldValue, map[string]any{
-			"input": map[string]any{
-				"projectId": pid,
-				"itemId":    item.ID,
-				"fieldId":   itField.ID,
-				"value":     map[string]any{"iterationId": resolved.iteration.ID},
-			},
-		}, &update); err != nil {
+		if _, err := queries.UpdateProjectV2ItemFieldValue(ctx, clients.AsGenqlientClient(), &queries.UpdateProjectV2ItemFieldValueInput{
+			ProjectId: pid,
+			ItemId:    item.ID,
+			FieldId:   itField.ID,
+			Value:     &queries.ProjectV2FieldValue{IterationId: &resolved.iteration.ID},
+		}); err != nil {
 			return fmt.Errorf("update item field value (%s): %w", describeItem(item), err)
 		}
 		fmt.Fprintf(out, "  %s: %s\n", r.T("plan.iterationUpdated.project"), describeItem(item))

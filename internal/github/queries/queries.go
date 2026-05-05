@@ -1,28 +1,30 @@
 // Package queries holds the GraphQL operations and Go response types used
 // by the gh-tasks CLI.
 //
-// Two flavors coexist while the genqlient migration (#229 / #230 / #231)
-// is in flight:
+// Two flavors coexist: most operations are now genqlient-generated typed
+// functions in `genqlient.go` (sourced from `operations.graphql` SSOT +
+// `schema.graphql` GitHub public SDL — see `generate.go`). A small set of
+// hand-written GraphQL strings and Go response types remain in this file
+// for the two read operations whose response shape goes through the
+// `node(id: ID!)` Node interface, which genqlient would expand into a Go
+// interface backed by every Node-implementing type in the schema:
 //
-//   - genqlient-generated typed operations in `genqlient.go`, sourced
-//     from `operations.graphql` (SSOT) + `schema.graphql` (GitHub public
-//     SDL). See `generate.go` for the `go generate` invocation. Read-side
-//     operations were migrated under #230.
-//   - Hand-written mutation operations and response types in this file.
-//     Each block is a 1:1 port of the previous TypeScript counterpart in
-//     packages/gh-tasks/src/lib/queries/. Mutations are tracked for
-//     migration under #231.
+//   - `ListProjectV2Items`
+//   - `ListProjectV2Fields`
+//
+// Migrating these two also requires reshaping the shared
+// `ProjectV2ItemNode` / `ProjectV2FieldValue` domain helpers in
+// `internal/projectitem` and several cmd/*.go consumers; tracked under
+// follow-up #234.
 //
 // New operations should be added to `operations.graphql` and consumed via
 // the genqlient-generated functions.
 package queries
 
-import "encoding/json"
-
 // Login is a thin wrapper around { login: "..." } shared by hand-written
 // shapes. Each genqlient-generated read operation has its own per-
 // operation Login type; this is kept for the still-hand-written
-// `ListProjectV2Items` ProjectV2ItemContent shape (deferred from #230).
+// `ListProjectV2Items` ProjectV2ItemContent shape (deferred under #234).
 type Login struct {
 	Login string `json:"login"`
 }
@@ -33,123 +35,10 @@ type Assignees struct {
 	Nodes []Login `json:"nodes"`
 }
 
-// Issue mutations / types ----------------------------------------------------
-
-// CreateIssue mutates a new Issue under a given repository.
-const CreateIssue = `
-mutation CreateIssue($input: CreateIssueInput!) {
-  createIssue(input: $input) {
-    issue {
-      id
-      number
-      url
-    }
-  }
-}`
-
-// CreateIssueResponse is the response of [CreateIssue].
-type CreateIssueResponse struct {
-	CreateIssue struct {
-		Issue struct {
-			ID     string `json:"id"`
-			Number int    `json:"number"`
-			URL    string `json:"url"`
-		} `json:"issue"`
-	} `json:"createIssue"`
-}
-
-// CloseIssue mutates an Issue to state CLOSED.
-const CloseIssue = `
-mutation CloseIssue($input: CloseIssueInput!) {
-  closeIssue(input: $input) {
-    issue {
-      id
-      number
-      url
-      state
-    }
-  }
-}`
-
-// CloseIssueResponse is the response of [CloseIssue].
-type CloseIssueResponse struct {
-	CloseIssue struct {
-		Issue struct {
-			ID     string `json:"id"`
-			Number int    `json:"number"`
-			URL    string `json:"url"`
-			State  string `json:"state"`
-		} `json:"issue"`
-	} `json:"closeIssue"`
-}
-
-// PR mutations / types -------------------------------------------------------
-
-// UpdatePullRequest mutates a PR's body.
-const UpdatePullRequest = `
-mutation UpdatePullRequest($input: UpdatePullRequestInput!) {
-  updatePullRequest(input: $input) {
-    pullRequest {
-      id
-      number
-      url
-    }
-  }
-}`
-
-// UpdatePullRequestResponse is the response of [UpdatePullRequest].
-type UpdatePullRequestResponse struct {
-	UpdatePullRequest struct {
-		PullRequest struct {
-			ID     string `json:"id"`
-			Number int    `json:"number"`
-			URL    string `json:"url"`
-		} `json:"pullRequest"`
-	} `json:"updatePullRequest"`
-}
-
-// Milestone mutations / REST helpers -----------------------------------------
-
-// UpdateIssueMilestone binds (or clears) a milestone on an Issue.
-const UpdateIssueMilestone = `
-mutation UpdateIssueMilestone($input: UpdateIssueInput!) {
-  updateIssue(input: $input) {
-    issue {
-      id
-      number
-      url
-      milestone {
-        id
-        number
-        title
-      }
-    }
-  }
-}`
-
-// MilestoneRef points to an issue's currently-bound milestone. Retained
-// here as a value type so the [UpdateIssueMilestone] mutation response
-// can embed it without depending on the genqlient-generated milestone
-// shapes (each generated type is operation-scoped).
-type MilestoneRef struct {
-	ID     string `json:"id"`
-	Number int    `json:"number"`
-	Title  string `json:"title"`
-}
-
-// UpdateIssueMilestoneResponse is the response of [UpdateIssueMilestone].
-type UpdateIssueMilestoneResponse struct {
-	UpdateIssue struct {
-		Issue struct {
-			ID        string        `json:"id"`
-			Number    int           `json:"number"`
-			URL       string        `json:"url"`
-			Milestone *MilestoneRef `json:"milestone"`
-		} `json:"issue"`
-	} `json:"updateIssue"`
-}
-
 // CreateMilestoneResult is the REST response of POST /repos/{o}/{r}/milestones.
+// The plan command issues that REST call to create new milestones; the
+// node id is then used as input to the genqlient-generated
+// [UpdateIssueMilestone] mutation.
 type CreateMilestoneResult struct {
 	NodeID string `json:"node_id"`
 	ID     int    `json:"id"`
@@ -157,113 +46,7 @@ type CreateMilestoneResult struct {
 	Title  string `json:"title"`
 }
 
-// Project mutations / types --------------------------------------------------
-
-// AddProjectV2DraftIssue adds a draft item to a Projects v2 board.
-const AddProjectV2DraftIssue = `
-mutation AddProjectV2DraftIssue($input: AddProjectV2DraftIssueInput!) {
-  addProjectV2DraftIssue(input: $input) {
-    projectItem { id }
-  }
-}`
-
-// AddProjectV2DraftIssueResponse is the response of [AddProjectV2DraftIssue].
-type AddProjectV2DraftIssueResponse struct {
-	AddProjectV2DraftIssue struct {
-		ProjectItem struct {
-			ID string `json:"id"`
-		} `json:"projectItem"`
-	} `json:"addProjectV2DraftIssue"`
-}
-
-// AddProjectV2ItemByID adds an existing Issue or PR to a Projects v2 board.
-const AddProjectV2ItemByID = `
-mutation AddProjectV2ItemById($input: AddProjectV2ItemByIdInput!) {
-  addProjectV2ItemById(input: $input) {
-    item { id }
-  }
-}`
-
-// AddProjectV2ItemByIDResponse is the response of [AddProjectV2ItemByID].
-type AddProjectV2ItemByIDResponse struct {
-	AddProjectV2ItemByID struct {
-		Item struct {
-			ID string `json:"id"`
-		} `json:"item"`
-	} `json:"addProjectV2ItemById"`
-}
-
-// UpdateProjectV2ItemFieldValue updates a single field value on a project
-// item. The value shape is constructed by the caller per the target field's
-// dataType.
-const UpdateProjectV2ItemFieldValue = `
-mutation UpdateProjectV2ItemFieldValue($input: UpdateProjectV2ItemFieldValueInput!) {
-  updateProjectV2ItemFieldValue(input: $input) {
-    projectV2Item { id }
-  }
-}`
-
-// UpdateProjectV2ItemFieldValueResponse is the response of
-// [UpdateProjectV2ItemFieldValue].
-type UpdateProjectV2ItemFieldValueResponse struct {
-	UpdateProjectV2ItemFieldValue struct {
-		ProjectV2Item struct {
-			ID string `json:"id"`
-		} `json:"projectV2Item"`
-	} `json:"updateProjectV2ItemFieldValue"`
-}
-
-// CreateProjectV2 creates a Projects v2 board owned by ownerId.
-const CreateProjectV2 = `
-mutation CreateProjectV2($input: CreateProjectV2Input!) {
-  createProjectV2(input: $input) {
-    projectV2 {
-      id
-      number
-      title
-      url
-    }
-  }
-}`
-
-// CreateProjectV2Response is the response of [CreateProjectV2].
-type CreateProjectV2Response struct {
-	CreateProjectV2 struct {
-		ProjectV2 struct {
-			ID     string `json:"id"`
-			Number int    `json:"number"`
-			Title  string `json:"title"`
-			URL    string `json:"url"`
-		} `json:"projectV2"`
-	} `json:"createProjectV2"`
-}
-
-// CreateProjectV2Field adds a custom field to an existing Projects v2 board.
-const CreateProjectV2Field = `
-mutation CreateProjectV2Field($input: CreateProjectV2FieldInput!) {
-  createProjectV2Field(input: $input) {
-    projectV2Field {
-      ... on ProjectV2FieldCommon {
-        id
-        name
-        dataType
-      }
-    }
-  }
-}`
-
-// CreateProjectV2FieldResponse is the response of [CreateProjectV2Field].
-type CreateProjectV2FieldResponse struct {
-	CreateProjectV2Field struct {
-		ProjectV2Field struct {
-			ID       string `json:"id"`
-			Name     string `json:"name"`
-			DataType string `json:"dataType"`
-		} `json:"projectV2Field"`
-	} `json:"createProjectV2Field"`
-}
-
-// ProjectV2 read operations (deferred from #230) ----------------------------
+// ProjectV2 read operations (deferred under #234) ----------------------------
 //
 // These two operations remain hand-written for now. Their response shape
 // flows through the `node(id: ID!)` Node interface, which genqlient
@@ -458,10 +241,15 @@ type ProjectV2FieldRef struct {
 	Name string `json:"name"`
 }
 
-// ProjectV2FieldValue is the union of single-select / iteration / text / date
-// values on a Projects v2 item. The Typename selects which fields are
+// ProjectV2ItemFieldValue is the union of single-select / iteration / text /
+// date values on a Projects v2 item. The Typename selects which fields are
 // populated.
-type ProjectV2FieldValue struct {
+//
+// Note: the name `ProjectV2FieldValue` is reserved for the genqlient-
+// generated *input* type (the schema's `input ProjectV2FieldValue`), so
+// the *response* shape used by [ListProjectV2Items] carries the `Item`
+// infix to disambiguate.
+type ProjectV2ItemFieldValue struct {
 	Typename    string            `json:"__typename"`
 	OptionID    string            `json:"optionId,omitempty"`
 	Name        string            `json:"name,omitempty"`
@@ -480,7 +268,7 @@ type ProjectV2ItemNode struct {
 	UpdatedAt   string                `json:"updatedAt"`
 	Content     *ProjectV2ItemContent `json:"content"`
 	FieldValues struct {
-		Nodes []ProjectV2FieldValue `json:"nodes"`
+		Nodes []ProjectV2ItemFieldValue `json:"nodes"`
 	} `json:"fieldValues"`
 }
 
@@ -491,16 +279,4 @@ type ListProjectV2ItemsResponse struct {
 			Nodes []ProjectV2ItemNode `json:"nodes"`
 		} `json:"items"`
 	} `json:"node"`
-}
-
-// MustMarshal is a helper for callers that need raw JSON pass-through (e.g.
-// nested input payloads passed verbatim to mutations). Panics on a marshal
-// error to keep call sites concise — the inputs constructed in this package
-// are always marshalable.
-func MustMarshal(v any) json.RawMessage {
-	out, err := json.Marshal(v)
-	if err != nil {
-		panic(err)
-	}
-	return out
 }

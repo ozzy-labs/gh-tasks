@@ -68,7 +68,8 @@ func runDoneRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, r
 	if err != nil {
 		return localizedError(c, r, err)
 	}
-	resp, err := queries.GetIssueByNumber(ctx, clients.AsGenqlientClient(), id.Owner, id.Name, num)
+	gqlClient := clients.AsGenqlientClient()
+	resp, err := queries.GetIssueByNumber(ctx, gqlClient, id.Owner, id.Name, num)
 	if err != nil {
 		return fmt.Errorf("get issue: %w", err)
 	}
@@ -80,13 +81,11 @@ func runDoneRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, r
 		fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("done.alreadyClosed"), resp.Repository.Issue.Url)
 		return nil
 	}
-	var closed queries.CloseIssueResponse
-	if err := clients.GraphQL.Do(ctx, queries.CloseIssue, map[string]any{
-		"input": map[string]any{"issueId": resp.Repository.Issue.Id},
-	}, &closed); err != nil {
+	closed, err := queries.CloseIssue(ctx, gqlClient, &queries.CloseIssueInput{IssueId: resp.Repository.Issue.Id})
+	if err != nil {
 		return fmt.Errorf("close issue: %w", err)
 	}
-	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("done.closed"), closed.CloseIssue.Issue.URL)
+	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("done.closed"), closed.CloseIssue.Issue.Url)
 	return nil
 }
 
@@ -156,15 +155,12 @@ func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("done.alreadyDone.project"), itemID)
 		return nil
 	}
-	var update queries.UpdateProjectV2ItemFieldValueResponse
-	if err := clients.GraphQL.Do(ctx, queries.UpdateProjectV2ItemFieldValue, map[string]any{
-		"input": map[string]any{
-			"projectId": pid,
-			"itemId":    itemID,
-			"fieldId":   statusField.ID,
-			"value":     map[string]any{"singleSelectOptionId": doneOption.ID},
-		},
-	}, &update); err != nil {
+	if _, err := queries.UpdateProjectV2ItemFieldValue(ctx, clients.AsGenqlientClient(), &queries.UpdateProjectV2ItemFieldValueInput{
+		ProjectId: pid,
+		ItemId:    itemID,
+		FieldId:   statusField.ID,
+		Value:     &queries.ProjectV2FieldValue{SingleSelectOptionId: &doneOption.ID},
+	}); err != nil {
 		return fmt.Errorf("update item field value: %w", err)
 	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("done.statusUpdated.project"), itemID)
