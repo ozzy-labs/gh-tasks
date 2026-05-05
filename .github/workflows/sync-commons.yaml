@@ -29,10 +29,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout this repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Clone commons
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ozzy-labs/commons
           path: .sync-commons
@@ -56,7 +56,7 @@ jobs:
 
       - name: Create Pull Request
         if: steps.sync.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           branch: chore/sync-commons
           base: main
