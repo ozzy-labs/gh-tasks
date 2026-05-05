@@ -1,12 +1,20 @@
-// Package queries holds the hand-written GraphQL operations and Go response
-// types used by the gh-tasks CLI. Each block is a 1:1 port of the previous
-// TypeScript counterpart in packages/gh-tasks/src/lib/queries/.
+// Package queries holds the GraphQL operations and Go response types used
+// by the gh-tasks CLI.
 //
-// genqlient adoption is tracked separately; the migration plan calls for it
-// (ADR-0006 / 0007), but the schema fetch step is deferred to a follow-up
-// because the sandboxed environment cannot fetch the public schema. Until
-// then, response types are hand-written and kept in sync with the queries
-// below.
+// Two flavors coexist while the genqlient migration (#229 / #230 / #231)
+// is in flight:
+//
+//   - Hand-written operations and response types in this file. Each block
+//     is a 1:1 port of the previous TypeScript counterpart in
+//     packages/gh-tasks/src/lib/queries/.
+//   - genqlient-generated typed operations in `genqlient.go`, sourced
+//     from `operations.graphql` (SSOT) + `schema.graphql` (GitHub public
+//     SDL). See `generate.go` for the `go generate` invocation.
+//
+// New operations should be added to `operations.graphql` and consumed via
+// the genqlient-generated functions. The hand-written entries below are
+// being migrated incrementally; when a hand-written operation has no
+// remaining call sites, remove it from this file.
 package queries
 
 import "encoding/json"
@@ -241,19 +249,9 @@ type GetRepositoryIDResponse struct {
 }
 
 // Viewer queries / types -----------------------------------------------------
-
-// GetViewerLogin resolves the authenticated user's login.
-const GetViewerLogin = `
-query GetViewerLogin {
-  viewer { login }
-}`
-
-// GetViewerLoginResponse is the response of [GetViewerLogin].
-type GetViewerLoginResponse struct {
-	Viewer struct {
-		Login string `json:"login"`
-	} `json:"viewer"`
-}
+//
+// `GetViewerLogin` is now sourced from genqlient (see `operations.graphql`).
+// Hand-written entries below are kept for #230 / #231 migration.
 
 // GetViewerID resolves the viewer's node id (used for `--owner @me`).
 const GetViewerID = `

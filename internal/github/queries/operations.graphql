@@ -1,0 +1,15 @@
+# GraphQL operations consumed by the gh-tasks CLI.
+#
+# This file is the single source of truth for genqlient-generated typed
+# operations. Each operation here is compiled into a Go function in
+# `genqlient.go` (see `genqlient.yaml`). Hand-written counterparts in
+# `queries.go` are being migrated incrementally — see #229 (scaffolding +
+# pilot), #230 (read ops), #231 (mutations).
+
+# Pilot operation. Used by `cmd/standup.go` to resolve the authenticated
+# user's login when filtering to "@me" without an explicit owner.
+query GetViewerLogin {
+  viewer {
+    login
+  }
+}
