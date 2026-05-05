@@ -1,9 +1,6 @@
 # Normalize all text files to LF
 * text=auto eol=lf
 
-# Lock files
-pnpm-lock.yaml linguist-generated=true
-
 # Binary files
 *.png binary
 *.jpg binary

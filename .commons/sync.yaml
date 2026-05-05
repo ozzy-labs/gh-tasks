@@ -13,7 +13,6 @@ pinned:
   - .commitlintrc.yaml
   - .github/ISSUE_TEMPLATE/bug_report.yaml
   - .github/ISSUE_TEMPLATE/feature_request.yaml
-  - biome.json
   - .markdownlint-cli2.yaml
   - .mise.toml
   - lefthook.yaml
