@@ -25,7 +25,7 @@ MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \
 
 See [`skills-sync/README.md`](../../../../skills-sync/README.md) for the full procedure including CI workflow examples.
 
-The skill SSOT lives in `src/skills/{name}/SKILL.md`. Claude Code reads the frontmatter (`name`, `description`, `allowed-tools`) and may auto-trigger the skill when relevant. To invoke explicitly, use slash-command form like `/task-add`.
+The skill SSOT lives in `skills/{name}/SKILL.md`. Claude Code reads the frontmatter (`name`, `description`, `allowed-tools`) and may auto-trigger the skill when relevant. To invoke explicitly, use slash-command form like `/task-add`.
 
 ## Use cases
 
@@ -121,4 +121,4 @@ Skills only call the CLI under the hood, so side-effects are identical. When a s
 
 - [cli.md](../reference/cli.md): all commands / flags
 - [concepts.md](../concepts.md): scope / item / iteration glossary
-- [src/skills/](../../../../src/skills/): skill SSOT
+- [skills/](../../../../skills/): skill SSOT

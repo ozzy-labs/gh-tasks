@@ -156,11 +156,11 @@ esac
 
 ## skill 連携
 
-各コマンドには対応する skill SSOT が `src/skills/{name}/SKILL.md`(ja)+ `SKILL.en.md`(en)に存在する。adapter で 4 エージェント(claude-code / codex-cli / gemini-cli / copilot)向けに `dist/{adapter}/` へ配信される。詳細は repo-internal [ADR-0004](../../../adr/0004-skill-frontmatter-schema.md)。
+各コマンドには対応する skill SSOT が `skills/{name}/SKILL.md`(ja)+ `SKILL.en.md`(en)に存在する。adapter で 4 エージェント(claude-code / codex-cli / gemini-cli / copilot)向けに `dist/{adapter}/` へ配信される。詳細は repo-internal [ADR-0004](../../../adr/0004-skill-frontmatter-schema.md)。
 
 ## 関連
 
 - [scope-detection.md](./scope-detection.md): `--scope` の優先順
 - [locale-detection.md](./locale-detection.md): `--lang` の優先順
 - [projects-v2-setup.md](../guides/projects-v2-setup.md): `org` / `user` scope に必要な Projects v2 field 定義
-- [src/skills/](../../../../src/skills/): 各コマンドに対応する skill SSOT
+- [skills/](../../../../skills/): 各コマンドに対応する skill SSOT

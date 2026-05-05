@@ -8,7 +8,7 @@
 
 ```text
                     ┌─────────────────────────────┐
-                    │   src/skills/{name}/        │ ← skill SSOT (ja)
+                    │   skills/{name}/        │ ← skill SSOT (ja)
                     │     SKILL.md / SKILL.en.md  │
                     └────────────┬────────────────┘
                                  │ gh tasks build-skills (per-adapter transform)
@@ -62,7 +62,7 @@ gh-tasks/
 │   ├── skills/                        # SKILL.md frontmatter parse + Load
 │   └── adapters/                      # 4 agent OutputFile 生成
 ├── packages/templates/                # Projects v2 フィールド定義 YAML
-├── src/skills/{name}/                 # skill SSOT(ja: SKILL.md、en mirror)
+├── skills/{name}/                 # skill SSOT(ja: SKILL.md、en mirror)
 ├── docs/
 │   ├── manual/{en,ja}/                # ユーザーマニュアル(en SSOT、ja mirror)
 │   ├── adr/                           # 意思決定記録(ja 単一)
@@ -111,7 +111,7 @@ gh-tasks/
 | `github/queries` | GraphQL operation 定数 + 応答型 | `GetOrgProjectV2` 等(21 operations) |
 | `i18n` | embed JSON catalog + locale 解決 + `T` | `ResolveLocale`、`T`、`Payload` |
 | `i18ncheck` | go/parser ベースの非 ASCII 検知 | `Scan`、`HasNonASCII`、`Decorative` |
-| `skills` | `src/skills/<name>/SKILL.md` parse + Load | `Load`、`ParseDocument` |
+| `skills` | `skills/<name>/SKILL.md` parse + Load | `Load`、`ParseDocument` |
 | `adapters` | 4 agent OutputFile 生成 | `ClaudeCode` / `CodexCLI` / `GeminiCLI` / `Copilot` |
 
 ### `internal/i18n`
@@ -149,7 +149,7 @@ func (e *ScopeError) Error() string { return e.Key }
 
 詳細は `docs/design/adapter-pipeline.md` を参照。要約:
 
-1. `src/skills/{name}/SKILL.md`(ja SSOT)を `gh tasks build-skills`(`cmd/build_skills.go`)が読み込み
+1. `skills/{name}/SKILL.md`(ja SSOT)を `gh tasks build-skills`(`cmd/build_skills.go`)が読み込み
 2. 4 adapter(claude-code / codex-cli / gemini-cli / copilot、`internal/adapters/`)が `dist/{adapter-id}/` に各エージェント形式で出力
 3. consumer リポは `skills-sync/{adapter}.json` Renovate preset を extend し、`sync-skills.sh` で `dist/` 内容を取り込む
 

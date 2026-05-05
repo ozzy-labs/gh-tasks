@@ -38,7 +38,7 @@ i18n SSOT 原則と `docs/` 構造を以下のとおり再定義する。
 | `docs/adr/` | ja 単一 | ja | 変更なし |
 | `docs/design/` | ja 単一 | ja | 新設 |
 | `AGENTS.md` / `CLAUDE.md` | ja 単一 | ja | 変更なし |
-| `src/skills/*/SKILL.md` | ja SSOT + `SKILL.en.md` mirror | ja | 変更なし |
+| `skills/*/SKILL.md` | ja SSOT + `SKILL.en.md` mirror | ja | 変更なし |
 | `packages/gh-tasks/src/i18n/*.json` | en + ja | **en** | 🔁 ja → en |
 | ハードコード文字列 | 全廃、i18n key 経由必須 | — | 🆕 |
 

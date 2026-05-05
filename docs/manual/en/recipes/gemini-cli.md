@@ -140,4 +140,4 @@ The `SKILL.md` bodies still live under `.agents/skills/` (Codex CLI) and `.claud
 
 - [cli.md](../reference/cli.md): all commands / flags
 - [concepts.md](../concepts.md): scope / item / iteration glossary
-- [src/skills/](../../../../src/skills/): skill SSOT
+- [skills/](../../../../skills/): skill SSOT

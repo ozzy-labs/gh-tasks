@@ -85,7 +85,7 @@ var defaultRequiredFields = []string{
 	"locale",
 }
 
-// Load reads each src/skills/<name>/SKILL.md, validates the frontmatter, and
+// Load reads each skills/<name>/SKILL.md, validates the frontmatter, and
 // returns the parsed Skill list sorted by name.
 func Load(srcDir string, opts LoadOptions) ([]Skill, error) {
 	required := opts.Required
@@ -110,7 +110,7 @@ func Load(srcDir string, opts LoadOptions) ([]Skill, error) {
 		if err != nil {
 			return nil, fmt.Errorf("read %s: %w", path, err)
 		}
-		label := fmt.Sprintf("src/skills/%s/SKILL.md", name)
+		label := fmt.Sprintf("skills/%s/SKILL.md", name)
 		fm, body, err := ParseDocument(string(raw), label)
 		if err != nil {
 			return nil, err

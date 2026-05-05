@@ -25,7 +25,7 @@ MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \
 
 詳細手順 (CI workflow への組み込み含む) は [`skills-sync/README.md`](../../../../skills-sync/README.md) を参照。
 
-skill の SSOT は `src/skills/{name}/SKILL.md`。frontmatter の `name` / `description` / `allowed-tools` を Claude Code が認識し、必要に応じて自律的に起動する(auto-trigger)。手動で呼び出す場合は `/task-add` のようにスラッシュコマンド形式を使う。
+skill の SSOT は `skills/{name}/SKILL.md`。frontmatter の `name` / `description` / `allowed-tools` を Claude Code が認識し、必要に応じて自律的に起動する(auto-trigger)。手動で呼び出す場合は `/task-add` のようにスラッシュコマンド形式を使う。
 
 ## 利用シーン
 
@@ -121,4 +121,4 @@ skill は内部で CLI を呼ぶだけなので、副作用は同じ。失敗し
 
 - [cli.md](../reference/cli.md): 全コマンド / フラグ
 - [concepts.md](../concepts.md): scope / item / iteration の用語
-- [src/skills/](../../../../src/skills/): skill SSOT
+- [skills/](../../../../skills/): skill SSOT
