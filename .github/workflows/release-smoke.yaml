@@ -38,22 +38,37 @@ jobs:
           if [ -n "$INPUT_TAG" ]; then
             tag="$INPUT_TAG"
           else
-            tag=$(gh release view --json tagName --jq .tagName)
+            # `release.yaml` runs on every push to main, but only actually
+            # publishes when release-please decides a version bump is due.
+            # Non-release runs leave the latest-release lookup empty (and on
+            # repos with no release ever, gh release view exits non-zero with
+            # "release not found"), so swallow the error and skip the rest of
+            # the job rather than failing every main-branch CI cycle.
+            tag=$(gh release view --json tagName --jq .tagName 2>/dev/null || true)
+          fi
+          if [ -z "$tag" ]; then
+            echo "No release found; skipping smoke."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "Smoke-testing tag: $tag"
       - name: Install gh-tasks extension at tag
+        if: steps.tag.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh extension install ozzy-labs/gh-tasks --pin "${{ steps.tag.outputs.tag }}"
       - name: Verify version output
+        if: steps.tag.outputs.skip != 'true'
         run: |
           out=$(gh tasks --version)
           echo "$out"
           echo "$out" | grep -E "^gh-tasks version v?[0-9]+\.[0-9]+\.[0-9]+"
       - name: Verify help output
+        if: steps.tag.outputs.skip != 'true'
         run: gh tasks --help | grep -q "Available Commands"
       - name: Verify subcommand help reaches all major commands
+        if: steps.tag.outputs.skip != 'true'
         run: |-
           for cmd in add list today 'done' standup review plan triage link projects; do
             gh tasks "$cmd" --help >/dev/null
