@@ -51,43 +51,6 @@ func TestParse(t *testing.T) {
 	}
 }
 
-func TestParseFlag(t *testing.T) {
-	t.Parallel()
-
-	cases := []struct {
-		argv []string
-		want period.Period
-		ok   bool
-		err  bool
-	}{
-		{[]string{"--period=daily"}, period.Daily, true, false},
-		{[]string{"--period", "weekly"}, period.Weekly, true, false},
-		{[]string{"--period=sprint"}, period.Sprint, true, false},
-		{[]string{"--period=monthly"}, "", false, true},
-		{[]string{"--period"}, "", false, true},
-		{[]string{}, "", false, false},
-		{[]string{"--scope=org"}, "", false, false},
-	}
-	for _, tc := range cases {
-		t.Run(joinArgv(tc.argv), func(t *testing.T) {
-			t.Parallel()
-			got, ok, err := period.ParseFlag(tc.argv)
-			if tc.err {
-				if err == nil {
-					t.Fatalf("want error, got %v ok=%v", got, ok)
-				}
-				return
-			}
-			if err != nil {
-				t.Fatalf("err: %v", err)
-			}
-			if got != tc.want || ok != tc.ok {
-				t.Errorf("got (%v,%v) want (%v,%v)", got, ok, tc.want, tc.ok)
-			}
-		})
-	}
-}
-
 func TestOf_DailyJST(t *testing.T) {
 	t.Parallel()
 	jst := mustLoadLocation(t, "Asia/Tokyo")
@@ -294,16 +257,4 @@ func TestSuggestMilestoneTitle(t *testing.T) {
 			}
 		})
 	}
-}
-
-func joinArgv(argv []string) string {
-	out := "empty"
-	for i, s := range argv {
-		if i == 0 {
-			out = s
-		} else {
-			out += " " + s
-		}
-	}
-	return out
 }

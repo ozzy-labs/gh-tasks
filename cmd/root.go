@@ -24,10 +24,15 @@ func RootWithDeps(deps Deps) *cobra.Command {
 		Version:       Version,
 	}
 
-	root.PersistentFlags().String("scope", "", "scope to operate on (repo|org|user)")
-	root.PersistentFlags().String("locale", "", "locale override (en|ja)")
-	root.PersistentFlags().String("repo", "", "repository (<owner>/<name>) override")
-	root.PersistentFlags().String("project", "", "project (<owner>/<number>) override")
+	// Persistent flags consumed by every subcommand. cobra is the single
+	// authoritative source for these values; commands read them via
+	// cmd.Flags().GetString. Help text is intentionally plain ASCII so
+	// gh tasks check-i18n stays green without needing flag.* keys in the
+	// catalog (i18n-ization of help text is tracked as follow-up work).
+	root.PersistentFlags().StringP("scope", "s", "", "scope to operate on (repo|org|user)")
+	root.PersistentFlags().StringP("repo", "r", "", "repository (<owner>/<name>) override")
+	root.PersistentFlags().StringP("project", "p", "", "project (<owner>/<number>) override")
+	root.PersistentFlags().String("lang", "", "output locale override (en|ja)")
 
 	root.AddCommand(
 		newAddCmd(deps),

@@ -83,7 +83,7 @@ func newProjectsCmd(deps Deps) *cobra.Command {
 		Short:        "Manage Projects v2",
 		SilenceUsage: true,
 		RunE: func(c *cobra.Command, _ []string) error {
-			r, err := deps.Resolve()
+			r, err := deps.Resolve(c)
 			if err != nil {
 				return localizedError(c, r, err)
 			}
@@ -120,7 +120,7 @@ func newProjectsInitTemplatesCmd(deps Deps) *cobra.Command {
 		Use:   "init-templates",
 		Short: "Print the bundled `user` / `org` Project v2 field templates",
 		RunE: func(c *cobra.Command, _ []string) error {
-			r, err := deps.Resolve()
+			r, err := deps.Resolve(c)
 			if err != nil {
 				return localizedError(c, r, err)
 			}
@@ -152,7 +152,7 @@ type fieldInput struct {
 }
 
 func runProjectsInit(ctx context.Context, c *cobra.Command, deps Deps, yamlPath string) error {
-	r, err := deps.Resolve()
+	r, err := deps.Resolve(c)
 	if err != nil {
 		return localizedError(c, r, err)
 	}

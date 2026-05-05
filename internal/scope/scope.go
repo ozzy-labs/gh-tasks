@@ -2,8 +2,6 @@
 package scope
 
 import (
-	"strings"
-
 	"github.com/ozzy-labs/gh-tasks/internal/i18n"
 )
 
@@ -37,8 +35,12 @@ func newError(key string, args ...any) *ScopeError {
 }
 
 // DetectOptions configures Detect.
+//
+// Flag carries the raw string value of the --scope flag as parsed by cobra
+// (empty string means the flag was not supplied). The previous Argv-based
+// scanner was retired in favour of cobra-authoritative flag handling.
 type DetectOptions struct {
-	Argv         []string
+	Flag         string
 	HasGitRemote func() bool
 	DefaultScope Scope
 }
@@ -46,17 +48,13 @@ type DetectOptions struct {
 // Detect resolves the working scope.
 //
 // Order:
-//  1. --scope repo|org|user flag
+//  1. Flag (cobra-parsed --scope value)
 //  2. git remote origin exists → repo
 //  3. config DefaultScope
 //  4. fallback → user
 func Detect(opts DetectOptions) (Scope, error) {
-	s, present, err := ParseFlag(opts.Argv)
-	if err != nil {
-		return "", err
-	}
-	if present {
-		return s, nil
+	if opts.Flag != "" {
+		return assertScope(opts.Flag)
 	}
 	if opts.HasGitRemote != nil && opts.HasGitRemote() {
 		return Repo, nil
@@ -65,40 +63,6 @@ func Detect(opts DetectOptions) (Scope, error) {
 		return opts.DefaultScope, nil
 	}
 	return User, nil
-}
-
-// ParseFlag scans argv for --scope=<value> or --scope <value>.
-//
-// The returned bool reports whether the --scope flag was *present* in argv,
-// independent of whether its value parsed successfully. Always check err
-// first; a non-nil err means the flag was present but malformed (missing
-// value or unknown scope).
-//
-// Result combinations:
-//   - ("", false, nil): flag absent.
-//   - (scope, true, nil): flag present with a valid value.
-//   - ("", true, err): flag present but malformed.
-func ParseFlag(argv []string) (Scope, bool, error) {
-	for i, arg := range argv {
-		if strings.HasPrefix(arg, "--scope=") {
-			s, err := assertScope(strings.TrimPrefix(arg, "--scope="))
-			if err != nil {
-				return "", true, err
-			}
-			return s, true, nil
-		}
-		if arg == "--scope" {
-			if i+1 >= len(argv) {
-				return "", true, newError("error.scope.flagMissingValue")
-			}
-			s, err := assertScope(argv[i+1])
-			if err != nil {
-				return "", true, err
-			}
-			return s, true, nil
-		}
-	}
-	return "", false, nil
 }
 
 func assertScope(v string) (Scope, error) {

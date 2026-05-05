@@ -34,9 +34,7 @@ func TestList_ScopeFlagInvalidExitCode(t *testing.T) {
 	t.Parallel()
 
 	g := &fakeGraphQL{}
-	d := testDeps(g, func(d *cmd.Deps) {
-		d.Argv = []string{"gh-tasks", "list", "--scope=bogus"}
-	})
+	d := testDeps(g)
 	_, _, err := runCmd(t, d, "list", "--scope=bogus")
 	if !errors.Is(err, cmd.ErrSilentArgs) {
 		t.Fatalf("expected ErrSilentArgs (exit 2) for invalid --scope, got %v", err)
@@ -67,7 +65,6 @@ func TestList_ProjectFlagInvalidExitCode(t *testing.T) {
 	g := &fakeGraphQL{}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
-		d.Argv = []string{"gh-tasks", "list", "--scope=org", "--project=bogus"}
 	})
 	_, _, err := runCmd(t, d, "list", "--scope=org", "--project=bogus")
 	if !errors.Is(err, cmd.ErrSilentArgs) {

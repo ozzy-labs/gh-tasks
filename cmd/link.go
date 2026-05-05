@@ -27,7 +27,7 @@ func newLinkCmd(deps Deps) *cobra.Command {
 }
 
 func runLink(ctx context.Context, c *cobra.Command, deps Deps, args []string) error {
-	r, err := deps.Resolve()
+	r, err := deps.Resolve(c)
 	if err != nil {
 		return localizedError(c, r, err)
 	}
@@ -37,7 +37,7 @@ func runLink(ctx context.Context, c *cobra.Command, deps Deps, args []string) er
 		return ErrSilentArgs
 	}
 	sc, err := scope.Detect(scope.DetectOptions{
-		Argv:         deps.Argv,
+		Flag:         flagString(c, "scope"),
 		HasGitRemote: deps.HasGitRemote,
 		DefaultScope: r.Config.DefaultScope,
 	})
@@ -51,7 +51,7 @@ func runLink(ctx context.Context, c *cobra.Command, deps Deps, args []string) er
 }
 
 func runLinkRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, pr, task int) error {
-	id, err := repo.Resolve(repo.ResolveOptions{Argv: deps.Argv, GetRemoteURL: deps.GetRemoteURL})
+	id, err := repo.Resolve(repo.ResolveOptions{Flag: flagString(c, "repo"), GetRemoteURL: deps.GetRemoteURL})
 	if err != nil {
 		return localizedError(c, r, err)
 	}
@@ -88,14 +88,14 @@ func runLinkRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 func runLinkProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, pr, task int) error {
 	pref, err := project.Resolve(project.ResolveOptions{
 		Scope:       sc,
-		Argv:        deps.Argv,
+		Flag:        flagString(c, "project"),
 		OrgProject:  r.Config.OrgProject,
 		UserProject: r.Config.UserProject,
 	})
 	if err != nil {
 		return localizedError(c, r, err)
 	}
-	id, err := repo.Resolve(repo.ResolveOptions{Argv: deps.Argv, GetRemoteURL: deps.GetRemoteURL})
+	id, err := repo.Resolve(repo.ResolveOptions{Flag: flagString(c, "repo"), GetRemoteURL: deps.GetRemoteURL})
 	if err != nil {
 		return localizedError(c, r, err)
 	}

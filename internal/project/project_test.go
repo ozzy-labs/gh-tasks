@@ -36,51 +36,6 @@ func TestParseIdentifier(t *testing.T) {
 	}
 }
 
-func TestParseFlag(t *testing.T) {
-	t.Parallel()
-
-	t.Run("absent", func(t *testing.T) {
-		t.Parallel()
-		_, present, err := project.ParseFlag([]string{"--scope=org"})
-		if err != nil || present {
-			t.Fatalf("got (present=%v, err=%v)", present, err)
-		}
-	})
-
-	t.Run("equals-form", func(t *testing.T) {
-		t.Parallel()
-		ref, present, err := project.ParseFlag([]string{"--project=foo/7"})
-		if err != nil || !present {
-			t.Fatalf("got (present=%v, err=%v)", present, err)
-		}
-		if ref.Owner != "foo" || ref.Number != 7 {
-			t.Errorf("got %v", ref)
-		}
-	})
-
-	t.Run("missing-value-is-present-with-error", func(t *testing.T) {
-		t.Parallel()
-		_, present, err := project.ParseFlag([]string{"--project"})
-		if err == nil {
-			t.Fatalf("want error")
-		}
-		if !present {
-			t.Errorf("present=false on malformed flag; want true (flag was present)")
-		}
-	})
-
-	t.Run("invalid-identifier-is-present-with-error", func(t *testing.T) {
-		t.Parallel()
-		_, present, err := project.ParseFlag([]string{"--project=bad"})
-		if err == nil {
-			t.Fatalf("want error")
-		}
-		if !present {
-			t.Errorf("present=false on malformed flag; want true (flag was present)")
-		}
-	})
-}
-
 func TestResolve(t *testing.T) {
 	t.Parallel()
 
@@ -96,7 +51,7 @@ func TestResolve(t *testing.T) {
 		t.Parallel()
 		got, err := project.Resolve(project.ResolveOptions{
 			Scope:      scope.Org,
-			Argv:       []string{"--project=foo/7"},
+			Flag:       "foo/7",
 			OrgProject: project.Ref{Owner: "config", Number: 9},
 		})
 		if err != nil {
@@ -105,6 +60,17 @@ func TestResolve(t *testing.T) {
 		want := project.Ref{Owner: "foo", Number: 7}
 		if got != want {
 			t.Errorf("got %v want %v", got, want)
+		}
+	})
+
+	t.Run("invalid-flag-errors", func(t *testing.T) {
+		t.Parallel()
+		_, err := project.Resolve(project.ResolveOptions{
+			Scope: scope.Org,
+			Flag:  "bad",
+		})
+		if err == nil {
+			t.Fatalf("want error for malformed flag")
 		}
 	})
 

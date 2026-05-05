@@ -36,7 +36,7 @@ func newPlanCmd(deps Deps) *cobra.Command {
 }
 
 func runPlan(ctx context.Context, c *cobra.Command, deps Deps) error {
-	r, err := deps.Resolve()
+	r, err := deps.Resolve(c)
 	if err != nil {
 		return localizedError(c, r, err)
 	}
@@ -49,7 +49,7 @@ func runPlan(ctx context.Context, c *cobra.Command, deps Deps) error {
 	now := deps.Now()
 	rng := period.Of(p, period.Options{Getenv: deps.Env, Now: now})
 	sc, err := scope.Detect(scope.DetectOptions{
-		Argv:         deps.Argv,
+		Flag:         flagString(c, "scope"),
 		HasGitRemote: deps.HasGitRemote,
 		DefaultScope: r.Config.DefaultScope,
 	})
@@ -63,7 +63,7 @@ func runPlan(ctx context.Context, c *cobra.Command, deps Deps) error {
 }
 
 func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p period.Period, rng period.Range, dryRun bool, now time.Time) error {
-	id, err := repo.Resolve(repo.ResolveOptions{Argv: deps.Argv, GetRemoteURL: deps.GetRemoteURL})
+	id, err := repo.Resolve(repo.ResolveOptions{Flag: flagString(c, "repo"), GetRemoteURL: deps.GetRemoteURL})
 	if err != nil {
 		return localizedError(c, r, err)
 	}
@@ -163,7 +163,7 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, p period.Period, rng period.Range, dryRun bool, now time.Time) error {
 	pref, err := project.Resolve(project.ResolveOptions{
 		Scope:       sc,
-		Argv:        deps.Argv,
+		Flag:        flagString(c, "project"),
 		OrgProject:  r.Config.OrgProject,
 		UserProject: r.Config.UserProject,
 	})
