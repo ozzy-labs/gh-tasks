@@ -69,7 +69,7 @@ gh-tasks/
 │   └── design/                        # 設計ドキュメント(本ディレクトリ、ja 単一)
 ├── dist/{adapter-id}/                 # adapter 出力(.gitignore、build-skills で再生成)
 ├── .claude/skills/ .agents/skills/    # ローカル staged コピー(dogfooding)
-├── skills-sync/                       # consumer 向け Renovate preset
+├── configs/skills-sync/                       # consumer 向け Renovate preset
 ├── go.mod / go.sum / .golangci.yaml / genqlient.yaml
 └── .github/workflows/                 # ci.yaml(go ジョブ含)+ release.yaml(precompile-action)
 ```
@@ -151,7 +151,7 @@ func (e *ScopeError) Error() string { return e.Key }
 
 1. `skills/{name}/SKILL.md`(ja SSOT)を `gh tasks build-skills`(`cmd/build_skills.go`)が読み込み
 2. 4 adapter(claude-code / codex-cli / gemini-cli / copilot、`internal/adapters/`)が `dist/{adapter-id}/` に各エージェント形式で出力
-3. consumer リポは `skills-sync/{adapter}.json` Renovate preset を extend し、`sync-skills.sh` で `dist/` 内容を取り込む
+3. consumer リポは `configs/skills-sync/{adapter}.json` Renovate preset を extend し、`sync-skills.sh` で `dist/` 内容を取り込む
 
 ## テスト構成
 

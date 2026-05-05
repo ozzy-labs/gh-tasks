@@ -23,7 +23,7 @@ MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \
   .
 ```
 
-See [`skills-sync/README.md`](../../../../skills-sync/README.md) for the full procedure including CI workflow examples.
+See [`configs/skills-sync/README.md`](../../../../configs/skills-sync/README.md) for the full procedure including CI workflow examples.
 
 The skill SSOT lives in `skills/{name}/SKILL.md`. Claude Code reads the frontmatter (`name`, `description`, `allowed-tools`) and may auto-trigger the skill when relevant. To invoke explicitly, use slash-command form like `/task-add`.
 

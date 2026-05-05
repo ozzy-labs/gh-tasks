@@ -59,13 +59,13 @@ Skills are distributed for Claude Code, Codex CLI, GitHub Copilot, and Gemini CL
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "github>ozzy-labs/gh-tasks//skills-sync/claude-code",
-    "github>ozzy-labs/gh-tasks//skills-sync/codex-cli"
+    "github>ozzy-labs/gh-tasks//configs/skills-sync/claude-code",
+    "github>ozzy-labs/gh-tasks//configs/skills-sync/codex-cli"
   ]
 }
 ```
 
-See [`skills-sync/README.md`](skills-sync/README.md) for the full list of adapter presets and how `gh_tasks_commit:` is tracked alongside `@ozzylabs/skills`.
+See [`configs/skills-sync/README.md`](configs/skills-sync/README.md) for the full list of adapter presets and how `gh_tasks_commit:` is tracked alongside `@ozzylabs/skills`.
 
 ## Scope coverage
 

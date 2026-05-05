@@ -12,8 +12,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "github>ozzy-labs/gh-tasks//skills-sync/claude-code",
-    "github>ozzy-labs/gh-tasks//skills-sync/codex-cli"
+    "github>ozzy-labs/gh-tasks//configs/skills-sync/claude-code",
+    "github>ozzy-labs/gh-tasks//configs/skills-sync/codex-cli"
   ]
 }
 ```
