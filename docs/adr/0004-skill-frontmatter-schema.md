@@ -39,7 +39,7 @@ locale: ja
 
 ### `SKILL.en.md`(en mirror)のスキーマ
 
-`SKILL.en.md` は SSOT に併設する英訳 reference で、現状は build adapter の対象外(`scripts/build-skills.mjs` は ja SSOT のみを dist へ配信)。手動メンテナンスのため、frontmatter は SSOT を踏襲しつつ次の差分を持つ:
+`SKILL.en.md` は SSOT に併設する英訳 reference で、現状は build adapter の対象外(`gh tasks build-skills`(`cmd/build_skills.go`)は ja SSOT のみを dist へ配信)。手動メンテナンスのため、frontmatter は SSOT を踏襲しつつ次の差分を持つ:
 
 ```yaml
 ---

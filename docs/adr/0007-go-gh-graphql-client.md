@@ -46,7 +46,7 @@ Go CLI の GitHub API アクセスは **`cli/go-gh/v2/pkg/api`** に統一する
 ### Negative / Trade-offs
 
 - `cli/go-gh` の API は安定だが破壊的変更ゼロではない — v2 系を pin、CHANGELOG を Renovate で監視
-- GraphQL クエリの追加には `genqlient generate` の手順が要る — `pnpm` 風のショートカットを `go generate ./...` で提供
+- GraphQL クエリの追加には `genqlient generate` の手順が要る — `go generate ./...` でワンコマンド再生成できるよう `internal/github/queries/generate.go` に `//go:generate` ディレクティブを置く
 - `shurcooL/githubv4` のような構造体ベース DSL ではなく `.graphql` テキストを書く — ただし genqlient によりレスポンス型は完全に推論される
 
 ## Alternatives considered
