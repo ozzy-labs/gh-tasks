@@ -21,12 +21,7 @@ build/
 # Logs
 *.log
 
-# Bun --compile binaries (release binaries are attached to GitHub Releases by
-# CI; dev binary is the host-only `pnpm run build` output. Neither is committed
-# — repo-internal ADR-0001).
-packages/gh-tasks/bin/
-
-# Go build artifacts (Go 移行: ADR-0006)
+# Go build artifacts (ADR-0006)
 /gh-tasks-bin
 /bin/
 *.test

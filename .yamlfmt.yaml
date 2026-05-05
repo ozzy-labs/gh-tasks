@@ -9,5 +9,3 @@ formatter:
   scan_folded_as_literal: true
   drop_merge_tag: true
 gitignore_excludes: true
-exclude:
-  - pnpm-lock.yaml

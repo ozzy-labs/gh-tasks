@@ -4,5 +4,3 @@ scan:
     - secret
   skip-dirs:
     - node_modules
-    - .pnpm-store
-    - .venv
