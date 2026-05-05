@@ -2,8 +2,8 @@
 
 `gh-tasks` のすべての TypeScript / Node.js 実装を Go に置き換える移行計画。CLI 本体だけでなく、build / sync スクリプトまで含む完全移行を対象とする。
 
-- Status: Draft
-- Date: 2026-05-04
+- Status: Completed (Phase 7 カットオーバー完了、2026-05)
+- Date: 2026-05-04(計画策定)/ 2026-05 完了
 - Scope: `packages/gh-tasks/` + `scripts/` + toolchain
 - Owner: ozzy
 

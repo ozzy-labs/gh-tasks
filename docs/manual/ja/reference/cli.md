@@ -124,6 +124,18 @@ gh tasks projects init [<yaml-path> | --template user|org] --title '<project-tit
 
 戻り値: 作成した Project の URL を stdout に出力、exit 0。
 
+### `gh tasks projects init-templates` ✅
+
+バンドル済みの `user` / `org` Project v2 field テンプレートを stdout に出力する。ローカルで baseline をカスタマイズする前に取り出す用途。
+
+```bash
+gh tasks projects init-templates
+```
+
+- 引数 / フラグなし
+- 出力は両テンプレートを単一 stream として出力し、それぞれ `# --template user` / `# --template org` のヘッダ行で区切られる。YAML splitter にパイプするかファイルへリダイレクトして利用する
+- テンプレートはバイナリに同梱されており、`templates/projects-v2/{user,org}.yaml` の内容と同一
+
 ### `gh tasks link <pr> <task>` ✅
 
 PR と Issue / Project アイテムの紐付け。

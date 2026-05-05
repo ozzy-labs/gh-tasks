@@ -21,5 +21,5 @@
 
 ## 設計の根拠
 
-- [docs/adr/](../../adr/) — repo-internal ADR(Bun --compile / i18n / Octokit / skill frontmatter)
+- [docs/adr/](../../adr/) — repo-internal ADR(Go 移行 / i18n / GraphQL は go-gh + genqlient 経由 / skill frontmatter)
 - [docs/design/](../../design/) — repo-internal な living 設計ドキュメント
