@@ -1,12 +1,15 @@
 // Package cmd_test shared fixtures.
 //
 // All cobra-rooted flow tests in this package share a single mock surface:
-// a JSON-driven [fakeGraphQL] keyed by an operation-name + paren substring,
-// and a recording [recordingREST] keyed by `<METHOD> <path-substring>`.
-// This file consolidates those primitives and the [testDeps] / [runCmd]
+// a JSON-driven [testfake.FakeGraphQL] keyed by an operation-name + paren
+// substring, and a recording [recordingREST] keyed by `<METHOD>
+// <path-substring>`. This file consolidates the [testDeps] / [runCmd]
 // boilerplate so individual test files focus on scenarios rather than
-// rebuilding scaffolding. See `docs/design/test-structure.md` for the
-// rationale and naming convention (`Test<Cmd>_<Scenario>`).
+// rebuilding scaffolding. The GraphQL fake itself lives in
+// `internal/testfake` so the same primitive can serve cmd, projectitem, and
+// github tests without three duplicate copies (#284). See
+// `docs/design/test-structure.md` for the rationale and naming convention
+// (`Test<Cmd>_<Scenario>`).
 package cmd_test
 
 import (
@@ -21,51 +24,23 @@ import (
 	"github.com/ozzy-labs/gh-tasks/cmd"
 	"github.com/ozzy-labs/gh-tasks/internal/config"
 	"github.com/ozzy-labs/gh-tasks/internal/github"
+	"github.com/ozzy-labs/gh-tasks/internal/i18n"
+	"github.com/ozzy-labs/gh-tasks/internal/testfake"
 )
 
 // ===== GraphQL fake ========================================================
+//
+// FakeGraphQL / FakeResponse are now exported from internal/testfake so the
+// same fake serves cmd, internal/projectitem, and internal/github test
+// suites (#284 Phase 1). captureGraphQL and ctxAwareGraphQL wrap that shared
+// type to add per-test concerns (variable capture, ctx-aware short-circuit).
 
-// fakeGraphQL implements github.GraphQLClient for tests. Each call is matched
-// against responses keyed by query substring, in registration order. To
-// disambiguate prefix-overlapping operations (e.g. ListRepoIssues vs
-// ListRepoIssuesWithLabels), matchSubstring values use the
-// `query <Name>(` form.
-type fakeGraphQL struct {
-	responses []fakeResponse
-	idx       int
-}
-
-type fakeResponse struct {
-	matchSubstring string
-	data           any
-	err            error
-}
-
-func (f *fakeGraphQL) Do(_ context.Context, query string, _ map[string]any, out any) error {
-	for i := f.idx; i < len(f.responses); i++ {
-		r := f.responses[i]
-		if !strings.Contains(query, r.matchSubstring) {
-			continue
-		}
-		f.idx = i + 1
-		if r.err != nil {
-			return r.err
-		}
-		buf, err := json.Marshal(r.data)
-		if err != nil {
-			return fmt.Errorf("marshal fake response: %w", err)
-		}
-		return json.Unmarshal(buf, out)
-	}
-	return fmt.Errorf("no fake response matched query: %q", query)
-}
-
-// captureGraphQL wraps a fakeGraphQL to peek at queries / vars without
-// disturbing the canned-response replay. Tests that need to assert on
-// outbound variables (e.g. limits, mutation inputs) wrap their inner
-// fakeGraphQL with this and inspect the captured value after Execute.
+// captureGraphQL wraps a testfake.FakeGraphQL to peek at queries / vars
+// without disturbing the canned-response replay. Tests that need to assert
+// on outbound variables (e.g. limits, mutation inputs) wrap their inner
+// fake with this and inspect the captured value after Execute.
 type captureGraphQL struct {
-	inner   *fakeGraphQL
+	inner   *testfake.FakeGraphQL
 	capture func(query string, vars map[string]any)
 }
 
@@ -146,20 +121,20 @@ func (r *recordingREST) Do(_ context.Context, method, path string, body, out any
 
 // newClients builds a github.Clients with the supplied GraphQL fake and the
 // no-op REST client. Tests that don't exercise REST should use this.
-func newClients(g *fakeGraphQL) *github.Clients {
+func newClients(g *testfake.FakeGraphQL) *github.Clients {
 	return &github.Clients{Host: "github.com", GraphQL: g, REST: fakeREST{}}
 }
 
 // newClientsWithREST is a counterpart to newClients that lets a test inject a
 // recordingREST in addition to the GraphQL fake.
-func newClientsWithREST(g *fakeGraphQL, r *recordingREST) *github.Clients {
+func newClientsWithREST(g *testfake.FakeGraphQL, r *recordingREST) *github.Clients {
 	return &github.Clients{Host: "github.com", GraphQL: g, REST: r}
 }
 
 // testDeps returns a baseline cmd.Deps wired to the given GraphQL fake. Opts
 // can override individual fields (HasGitRemote, LoadConfig, NewClients ...)
 // to drive scope=org/user paths or inject a [captureGraphQL] wrapper.
-func testDeps(g *fakeGraphQL, opts ...func(*cmd.Deps)) cmd.Deps {
+func testDeps(g *testfake.FakeGraphQL, opts ...func(*cmd.Deps)) cmd.Deps {
 	d := cmd.Deps{
 		Stdout:       new(bytes.Buffer),
 		Stderr:       new(bytes.Buffer),
@@ -213,15 +188,16 @@ func runCmdWithContext(t *testing.T, ctx context.Context, d cmd.Deps, args ...st
 	return stdout, stderr, err
 }
 
-// ctxAwareGraphQL wraps a fakeGraphQL so that any Do call short-circuits to
-// ctx.Err() when the supplied context is already done. The bare fakeGraphQL
-// ignores ctx (responses are pre-canned), which is fine for happy-path tests
+// ctxAwareGraphQL wraps a testfake.FakeGraphQL so that any Do call
+// short-circuits to ctx.Err() when the supplied context is already done.
+// The bare FakeGraphQL ignores ctx (responses are pre-canned), which is fine
+// for happy-path tests
 // but unsuitable for context-cancel scenarios where the paginator's per-page
 // Do call must observe the cancellation. Tests that need to simulate a
 // Ctrl-C / deadline expiry wrap their fake with this so the cmd layer sees
 // context.Canceled (or DeadlineExceeded) propagate up through the paginator.
 type ctxAwareGraphQL struct {
-	inner *fakeGraphQL
+	inner *testfake.FakeGraphQL
 }
 
 func (c *ctxAwareGraphQL) Do(ctx context.Context, query string, vars map[string]any, out any) error {
@@ -229,6 +205,36 @@ func (c *ctxAwareGraphQL) Do(ctx context.Context, query string, vars map[string]
 		return err
 	}
 	return c.inner.Do(ctx, query, vars, out)
+}
+
+// ===== i18n assertion helpers ==============================================
+
+// assertI18nMessage checks that haystack contains the localized rendering of
+// the given catalog key for the supplied locale. Replaces the older
+// `strings.Contains(stderr, "<hardcoded English>")` pattern: any future
+// catalog wording change automatically flows through to the assertion via
+// i18n.T, so editing en.json doesn't break a test that doesn't care about
+// the exact phrasing — only that the right message reached the user.
+//
+// args is the same flat (key, value) varargs accepted by i18n.T (e.g.
+//
+//	assertI18nMessage(t, stderr.String(), i18n.LocaleEN,
+//	    "error.project.notFound",
+//	    "owner", "octo", "number", 7, "scope", "org")
+//
+// renders the en string with all three placeholders substituted before
+// matching).
+//
+// On failure the helper logs both the rendered expected message and the
+// actual haystack so the test failure surfaces the wording mismatch
+// directly — diagnosing a stale catalog key is a one-line read.
+func assertI18nMessage(t *testing.T, haystack string, loc i18n.Locale, key string, args ...any) {
+	t.Helper()
+	expected := i18n.T(loc, key, args...)
+	if !strings.Contains(haystack, expected) {
+		t.Errorf("haystack does not contain expected i18n message %q (key %q):\n%s",
+			expected, key, haystack)
+	}
 }
 
 // ===== GraphQL payload builders ============================================

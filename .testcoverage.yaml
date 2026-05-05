@@ -60,8 +60,12 @@ override:
 # - generate.go: only holds //go:generate directives, no runtime statements.
 # - main.go: cobra entry point + exit code mapping; tested transitively via
 #   the cmd package's RootWithDeps tests. Not meaningful to instrument.
+# - internal/testfake/: test-only helper package (FakeGraphQL / RecordingGraphQL),
+#   imported only from _test.go files; production binary excludes it via tree
+#   shake. Coverage of fixtures themselves is not a meaningful signal.
 exclude:
   paths:
     - internal/github/queries/genqlient\.go$
     - internal/github/queries/generate\.go$
     - ^main\.go$
+    - ^internal/testfake/

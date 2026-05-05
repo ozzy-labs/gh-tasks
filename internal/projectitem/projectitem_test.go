@@ -2,52 +2,19 @@ package projectitem_test
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/ozzy-labs/gh-tasks/internal/github/queries"
+	"github.com/ozzy-labs/gh-tasks/internal/i18n"
 	"github.com/ozzy-labs/gh-tasks/internal/project"
 	"github.com/ozzy-labs/gh-tasks/internal/projectitem"
 	"github.com/ozzy-labs/gh-tasks/internal/scope"
+	"github.com/ozzy-labs/gh-tasks/internal/testfake"
 )
-
-// fakeGraphQL implements github.GraphQLClient. Each call is matched against
-// responses keyed by query substring, in registration order. Mirrors the
-// helper used in cmd/cmd_test.go.
-type fakeGraphQL struct {
-	responses []fakeResponse
-	idx       int
-}
-
-type fakeResponse struct {
-	matchSubstring string
-	data           any
-	err            error
-}
-
-func (f *fakeGraphQL) Do(_ context.Context, query string, _ map[string]any, out any) error {
-	for i := f.idx; i < len(f.responses); i++ {
-		r := f.responses[i]
-		if !strings.Contains(query, r.matchSubstring) {
-			continue
-		}
-		f.idx = i + 1
-		if r.err != nil {
-			return r.err
-		}
-		buf, err := json.Marshal(r.data)
-		if err != nil {
-			return fmt.Errorf("marshal fake response: %w", err)
-		}
-		return json.Unmarshal(buf, out)
-	}
-	return fmt.Errorf("no fake response matched query: %q", query)
-}
 
 // issueItem builds a minimal ProjectV2ItemNode whose union content is an
 // Issue (number, title, URL). The fieldValues slice is loaded with the
@@ -371,10 +338,10 @@ func TestResolveProjectNodeID(t *testing.T) {
 
 	t.Run("org-success", func(t *testing.T) {
 		t.Parallel()
-		g := &fakeGraphQL{responses: []fakeResponse{
+		g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
 			{
-				matchSubstring: "GetOrgProjectV2",
-				data: map[string]any{
+				MatchSubstring: "GetOrgProjectV2",
+				Data: map[string]any{
 					"organization": map[string]any{
 						"projectV2": map[string]any{"id": "PVT_org", "number": 7, "title": "Roadmap"},
 					},
@@ -383,7 +350,7 @@ func TestResolveProjectNodeID(t *testing.T) {
 		}}
 		id, err := projectitem.ResolveProjectNodeID(context.Background(), g, scope.Org, ref)
 		if err != nil {
-			t.Fatalf("unexpected err: %v", err)
+			t.Fatalf("unexpected Err: %v", err)
 		}
 		if id != "PVT_org" {
 			t.Errorf("got id %q want %q", id, "PVT_org")
@@ -392,10 +359,10 @@ func TestResolveProjectNodeID(t *testing.T) {
 
 	t.Run("user-success", func(t *testing.T) {
 		t.Parallel()
-		g := &fakeGraphQL{responses: []fakeResponse{
+		g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
 			{
-				matchSubstring: "GetUserProjectV2",
-				data: map[string]any{
+				MatchSubstring: "GetUserProjectV2",
+				Data: map[string]any{
 					"user": map[string]any{
 						"projectV2": map[string]any{"id": "PVT_user", "number": 7, "title": "Personal"},
 					},
@@ -404,7 +371,7 @@ func TestResolveProjectNodeID(t *testing.T) {
 		}}
 		id, err := projectitem.ResolveProjectNodeID(context.Background(), g, scope.User, ref)
 		if err != nil {
-			t.Fatalf("unexpected err: %v", err)
+			t.Fatalf("unexpected Err: %v", err)
 		}
 		if id != "PVT_user" {
 			t.Errorf("got id %q want %q", id, "PVT_user")
@@ -413,15 +380,15 @@ func TestResolveProjectNodeID(t *testing.T) {
 
 	t.Run("org-not-found-nil-organization", func(t *testing.T) {
 		t.Parallel()
-		g := &fakeGraphQL{responses: []fakeResponse{
+		g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
 			{
-				matchSubstring: "GetOrgProjectV2",
-				data:           map[string]any{"organization": nil},
+				MatchSubstring: "GetOrgProjectV2",
+				Data:           map[string]any{"organization": nil},
 			},
 		}}
 		id, err := projectitem.ResolveProjectNodeID(context.Background(), g, scope.Org, ref)
 		if err != nil {
-			t.Fatalf("unexpected err: %v", err)
+			t.Fatalf("unexpected Err: %v", err)
 		}
 		if id != "" {
 			t.Errorf("got id %q, want empty when project not found", id)
@@ -430,17 +397,17 @@ func TestResolveProjectNodeID(t *testing.T) {
 
 	t.Run("org-not-found-nil-project", func(t *testing.T) {
 		t.Parallel()
-		g := &fakeGraphQL{responses: []fakeResponse{
+		g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
 			{
-				matchSubstring: "GetOrgProjectV2",
-				data: map[string]any{
+				MatchSubstring: "GetOrgProjectV2",
+				Data: map[string]any{
 					"organization": map[string]any{"projectV2": nil},
 				},
 			},
 		}}
 		id, err := projectitem.ResolveProjectNodeID(context.Background(), g, scope.Org, ref)
 		if err != nil {
-			t.Fatalf("unexpected err: %v", err)
+			t.Fatalf("unexpected Err: %v", err)
 		}
 		if id != "" {
 			t.Errorf("got id %q, want empty when project not found", id)
@@ -449,15 +416,15 @@ func TestResolveProjectNodeID(t *testing.T) {
 
 	t.Run("user-not-found-nil-user", func(t *testing.T) {
 		t.Parallel()
-		g := &fakeGraphQL{responses: []fakeResponse{
+		g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
 			{
-				matchSubstring: "GetUserProjectV2",
-				data:           map[string]any{"user": nil},
+				MatchSubstring: "GetUserProjectV2",
+				Data:           map[string]any{"user": nil},
 			},
 		}}
 		id, err := projectitem.ResolveProjectNodeID(context.Background(), g, scope.User, ref)
 		if err != nil {
-			t.Fatalf("unexpected err: %v", err)
+			t.Fatalf("unexpected Err: %v", err)
 		}
 		if id != "" {
 			t.Errorf("got id %q, want empty when user not found", id)
@@ -466,17 +433,17 @@ func TestResolveProjectNodeID(t *testing.T) {
 
 	t.Run("user-not-found-nil-project", func(t *testing.T) {
 		t.Parallel()
-		g := &fakeGraphQL{responses: []fakeResponse{
+		g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
 			{
-				matchSubstring: "GetUserProjectV2",
-				data: map[string]any{
+				MatchSubstring: "GetUserProjectV2",
+				Data: map[string]any{
 					"user": map[string]any{"projectV2": nil},
 				},
 			},
 		}}
 		id, err := projectitem.ResolveProjectNodeID(context.Background(), g, scope.User, ref)
 		if err != nil {
-			t.Fatalf("unexpected err: %v", err)
+			t.Fatalf("unexpected Err: %v", err)
 		}
 		if id != "" {
 			t.Errorf("got id %q, want empty when project not found", id)
@@ -485,7 +452,7 @@ func TestResolveProjectNodeID(t *testing.T) {
 
 	t.Run("repo-scope-error", func(t *testing.T) {
 		t.Parallel()
-		g := &fakeGraphQL{} // must not be called
+		g := &testfake.FakeGraphQL{} // must not be called
 		id, err := projectitem.ResolveProjectNodeID(context.Background(), g, scope.Repo, ref)
 		if err == nil {
 			t.Fatalf("expected error for repo scope, got id %q", id)
@@ -505,8 +472,8 @@ func TestResolveProjectNodeID(t *testing.T) {
 	t.Run("org-graphql-transport-error", func(t *testing.T) {
 		t.Parallel()
 		boom := errors.New("network down")
-		g := &fakeGraphQL{responses: []fakeResponse{
-			{matchSubstring: "GetOrgProjectV2", err: boom},
+		g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+			{MatchSubstring: "GetOrgProjectV2", Err: boom},
 		}}
 		id, err := projectitem.ResolveProjectNodeID(context.Background(), g, scope.Org, ref)
 		if err == nil {
@@ -525,16 +492,22 @@ func TestResolveProjectNodeID(t *testing.T) {
 		if pe.I18nKey() != "error.projectItem.getOrgProjectFailed" {
 			t.Errorf("got key %q, want %q", pe.I18nKey(), "error.projectItem.getOrgProjectFailed")
 		}
-		if !strings.Contains(err.Error(), "Could not load org project") {
-			t.Errorf("expected localized message in %q", err.Error())
+		// Assert against the rendered catalog string so a future wording
+		// change automatically flows through (#284 Phase 2). The placeholder
+		// values (`acme/7`, the boom message) are what we actually care
+		// about — the surrounding prose is i18n cosmetic.
+		wantMsg := i18n.T(i18n.LocaleEN, "error.projectItem.getOrgProjectFailed",
+			"owner", "acme", "number", 7, "reason", boom.Error())
+		if !strings.Contains(err.Error(), wantMsg) {
+			t.Errorf("expected localized message %q in %q", wantMsg, err.Error())
 		}
 	})
 
 	t.Run("user-graphql-transport-error", func(t *testing.T) {
 		t.Parallel()
 		boom := errors.New("rate limited")
-		g := &fakeGraphQL{responses: []fakeResponse{
-			{matchSubstring: "GetUserProjectV2", err: boom},
+		g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+			{MatchSubstring: "GetUserProjectV2", Err: boom},
 		}}
 		id, err := projectitem.ResolveProjectNodeID(context.Background(), g, scope.User, ref)
 		if err == nil {
@@ -553,8 +526,10 @@ func TestResolveProjectNodeID(t *testing.T) {
 		if pe.I18nKey() != "error.projectItem.getUserProjectFailed" {
 			t.Errorf("got key %q, want %q", pe.I18nKey(), "error.projectItem.getUserProjectFailed")
 		}
-		if !strings.Contains(err.Error(), "Could not load user project") {
-			t.Errorf("expected localized message in %q", err.Error())
+		wantMsg := i18n.T(i18n.LocaleEN, "error.projectItem.getUserProjectFailed",
+			"owner", "acme", "number", 7, "reason", boom.Error())
+		if !strings.Contains(err.Error(), wantMsg) {
+			t.Errorf("expected localized message %q in %q", wantMsg, err.Error())
 		}
 	})
 }
