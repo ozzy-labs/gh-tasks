@@ -177,7 +177,7 @@ func runStandupProject(ctx context.Context, c *cobra.Command, deps Deps, r Resol
 	}
 	if pid == "" {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
-		return ErrSilent
+		return ErrSilentRuntime
 	}
 	var resp queries.ListProjectV2ItemsResponse
 	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Items, map[string]any{
@@ -187,7 +187,7 @@ func runStandupProject(ctx context.Context, c *cobra.Command, deps Deps, r Resol
 	}
 	if resp.Node == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
-		return ErrSilent
+		return ErrSilentRuntime
 	}
 	yesterday := []queries.ProjectV2ItemNode{}
 	today := []queries.ProjectV2ItemNode{}

@@ -135,6 +135,25 @@ gh tasks link <pr> <task> [--scope ...] [--repo ...] [--project ...]
 - `repo` scope: appends `Closes #<task>` to the PR body (idempotent — already-linked PRs are reported)
 - `org` / `user` scope: adds both the PR and the Issue to the same Projects v2 board so they surface together (the underlying Issue ↔ PR relation comes from the `Closes` keyword on the PR body)
 
+## Exit codes
+
+Following the legacy TS implementation, `gh tasks` distinguishes two non-zero exit codes:
+
+- `0` — success
+- `1` — runtime failure: GitHub API error, missing token / auth, repo / project / issue not found in the API response, or other operational failure
+- `2` — argument validation failure: invalid `--scope` / `--project` / `--period` value, malformed config file, missing required positional arg (e.g. `gh tasks add` without `<title>`), or template / yaml input rejected before any API call
+
+Shell scripts can rely on `$?` to branch:
+
+```bash
+gh tasks list --scope=invalid
+case $? in
+  0) echo OK ;;
+  2) echo "fix your flags" ;;
+  *) echo "retry / network issue" ;;
+esac
+```
+
 ## Skill integration
 
 Each command has a corresponding skill SSOT under `src/skills/{name}/SKILL.md` (ja) + `SKILL.en.md` (en). The adapter pipeline emits per-agent outputs to `dist/{adapter}/` for claude-code / codex-cli / gemini-cli / copilot. See repo-internal [ADR-0004](../../../adr/0004-skill-frontmatter-schema.md).

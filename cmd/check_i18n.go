@@ -35,7 +35,7 @@ func runCheckI18n(c *cobra.Command, args []string) error {
 		fmt.Fprintf(c.ErrOrStderr(), "%d hardcoded non-ASCII literal(s) detected.\n", len(hits))
 		fmt.Fprintln(c.ErrOrStderr(),
 			"Move these strings to internal/i18n/{en,ja}.json and retrieve via i18n.T (repo-internal ADR-0005).")
-		return ErrSilent
+		return ErrSilentRuntime
 	}
 	files, err := i18ncheck.FindFiles(roots)
 	if err != nil {

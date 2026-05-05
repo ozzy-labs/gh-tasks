@@ -135,6 +135,25 @@ gh tasks link <pr> <task> [--scope ...] [--repo ...] [--project ...]
 - `repo` scope: PR body に `Closes #<task>` を追記(冪等 — 既にリンク済の場合はそれを報告)
 - `org` / `user` scope: PR と Issue を同じ Projects v2 ボードに追加し、両者を同じビューに並べる(Issue ↔ PR の relation は PR body の `Closes` キーワードから GitHub が導出)
 
+## Exit code
+
+レガシー TS 実装と同じく、`gh tasks` は非ゼロ exit を 2 種類に分けている:
+
+- `0` — 成功
+- `1` — runtime 失敗: GitHub API エラー、token / auth 不在、repo / project / issue が API レスポンスで見つからなかった、その他の実行時失敗
+- `2` — argument validation 失敗: `--scope` / `--project` / `--period` の値が不正、設定ファイルの構文エラー、必須 positional arg の欠落(例: `gh tasks add` に `<title>` なし)、API 呼び出し前に拒否される template / yaml 入力エラー
+
+shell script では `$?` で分岐できる:
+
+```bash
+gh tasks list --scope=invalid
+case $? in
+  0) echo OK ;;
+  2) echo "flag を直してね" ;;
+  *) echo "ネットワーク / API のリトライ余地あり" ;;
+esac
+```
+
 ## skill 連携
 
 各コマンドには対応する skill SSOT が `src/skills/{name}/SKILL.md`(ja)+ `SKILL.en.md`(en)に存在する。adapter で 4 エージェント(claude-code / codex-cli / gemini-cli / copilot)向けに `dist/{adapter}/` へ配信される。詳細は repo-internal [ADR-0004](../../../adr/0004-skill-frontmatter-schema.md)。

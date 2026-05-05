@@ -157,7 +157,7 @@ func runBuildSkills(c *cobra.Command, deps Deps) error {
 // runCheckDiff compares the in-memory output for each adapter against the
 // existing files under <distRoot>/<adapter>/. It does not modify the working
 // tree. If any difference is found it prints "<file>: <reason>" plus a
-// first-line diff to stderr and returns ErrSilent so cobra prints nothing
+// first-line diff to stderr and returns ErrSilentRuntime so cobra prints nothing
 // extra. On success it prints a single OK line to stdout.
 func runCheckDiff(c *cobra.Command, distRoot string, all []adapters.Adapter, loaded []skills.Skill) error {
 	out := c.OutOrStdout()
@@ -235,7 +235,7 @@ func runCheckDiff(c *cobra.Command, distRoot string, all []adapters.Adapter, loa
 
 	if totalDiffs > 0 {
 		fmt.Fprintf(stderr, "FAIL: %d file(s) differ between dist/ and source SSOT; run `gh tasks build-skills` and commit\n", totalDiffs)
-		return ErrSilent
+		return ErrSilentRuntime
 	}
 	fmt.Fprintln(out, "OK: dist/ matches source SSOT")
 	return nil

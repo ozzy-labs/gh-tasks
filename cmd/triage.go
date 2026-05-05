@@ -71,7 +71,7 @@ func runTriageRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 	}
 	if resp.Repository == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
-		return ErrSilent
+		return ErrSilentRuntime
 	}
 	hits := []queries.RepoIssueWithLabelsNode{}
 	for _, n := range resp.Repository.Issues.Nodes {
@@ -113,7 +113,7 @@ func runTriageProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 	}
 	if pid == "" {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
-		return ErrSilent
+		return ErrSilentRuntime
 	}
 	var resp queries.ListProjectV2ItemsResponse
 	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Items, map[string]any{
@@ -123,7 +123,7 @@ func runTriageProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 	}
 	if resp.Node == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
-		return ErrSilent
+		return ErrSilentRuntime
 	}
 	hits := []queries.ProjectV2ItemNode{}
 	for _, item := range resp.Node.Items.Nodes {

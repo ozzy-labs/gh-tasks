@@ -34,7 +34,7 @@ func runLink(ctx context.Context, c *cobra.Command, deps Deps, args []string) er
 	pr, task, ok := parseLinkArgs(args)
 	if !ok {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.link.argsRequired"))
-		return ErrSilent
+		return ErrSilentArgs
 	}
 	sc, err := scope.Detect(scope.DetectOptions{
 		Argv:         deps.Argv,
@@ -67,7 +67,7 @@ func runLinkRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 	}
 	if prResp.Repository == nil || prResp.Repository.PullRequest == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.pullRequest.notFound", "owner", id.Owner, "name", id.Name, "number", pr))
-		return ErrSilent
+		return ErrSilentRuntime
 	}
 	prNode := prResp.Repository.PullRequest
 	if ContainsCloseLink(prNode.Body, task) {
@@ -109,7 +109,7 @@ func runLinkProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	if pid == "" {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
-		return ErrSilent
+		return ErrSilentRuntime
 	}
 	var prResp queries.GetPullRequestByNumberResponse
 	if err := clients.GraphQL.Do(ctx, queries.GetPullRequestByNumber, map[string]any{
@@ -119,7 +119,7 @@ func runLinkProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	if prResp.Repository == nil || prResp.Repository.PullRequest == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.pullRequest.notFound", "owner", id.Owner, "name", id.Name, "number", pr))
-		return ErrSilent
+		return ErrSilentRuntime
 	}
 	var issueResp queries.GetIssueByNumberResponse
 	if err := clients.GraphQL.Do(ctx, queries.GetIssueByNumber, map[string]any{
@@ -129,7 +129,7 @@ func runLinkProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	if issueResp.Repository == nil || issueResp.Repository.Issue == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.issue.notFound", "owner", id.Owner, "name", id.Name, "number", task))
-		return ErrSilent
+		return ErrSilentRuntime
 	}
 	var addResp queries.AddProjectV2ItemByIDResponse
 	if err := clients.GraphQL.Do(ctx, queries.AddProjectV2ItemByID, map[string]any{

@@ -79,7 +79,7 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 	}
 	if issuesResp.Repository == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
-		return ErrSilent
+		return ErrSilentRuntime
 	}
 	inRange := []queries.RepoIssueWithMilestoneNode{}
 	for _, n := range issuesResp.Repository.Issues.Nodes {
@@ -179,7 +179,7 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	if pid == "" {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
-		return ErrSilent
+		return ErrSilentRuntime
 	}
 	var fieldsResp queries.ListProjectV2FieldsResponse
 	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Fields, map[string]any{
@@ -189,18 +189,18 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	if fieldsResp.Node == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
-		return ErrSilent
+		return ErrSilentRuntime
 	}
 	itField := findIterationField(fieldsResp.Node.Fields.Nodes)
 	if itField == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.plan.iterationFieldMissing"))
-		return ErrSilent
+		return ErrSilentRuntime
 	}
 	target := period.SuggestMilestoneTitle(p, period.Options{Getenv: deps.Env, Now: now})
 	resolved := resolveTargetIteration(itField.Configuration.Iterations, target, now)
 	if resolved == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.plan.noIterationsAvailable"))
-		return ErrSilent
+		return ErrSilentRuntime
 	}
 	out := c.OutOrStdout()
 	fmt.Fprintf(out, "%s: %s\n", r.T("plan.proposed.project"), resolved.iteration.Title)

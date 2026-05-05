@@ -86,7 +86,7 @@ func newProjectsCmd(deps Deps) *cobra.Command {
 				return localizedError(c, r, err)
 			}
 			fmt.Fprintln(c.ErrOrStderr(), r.T("error.projects.subcommandRequired"))
-			return ErrSilent
+			return ErrSilentArgs
 		},
 	}
 	c.AddCommand(newProjectsInitCmd(deps), newProjectsInitTemplatesCmd(deps))
@@ -157,30 +157,30 @@ func runProjectsInit(ctx context.Context, c *cobra.Command, deps Deps, yamlPath 
 	title, _ := c.Flags().GetString("title")
 	if title == "" {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.projectsInit.titleRequired"))
-		return ErrSilent
+		return ErrSilentArgs
 	}
 	tpl, _ := c.Flags().GetString("template")
 	owner, _ := c.Flags().GetString("owner")
 	dryRun, _ := c.Flags().GetBool("dry-run")
 	if yamlPath == "" && tpl == "" {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.projectsInit.templateRequired"))
-		return ErrSilent
+		return ErrSilentArgs
 	}
 	if yamlPath != "" && tpl != "" {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.projectsInit.templateConflict"))
-		return ErrSilent
+		return ErrSilentArgs
 	}
 	raw, source, err := loadTemplateRaw(yamlPath, tpl)
 	if err != nil {
 		fmt.Fprintln(c.ErrOrStderr(),
 			r.T("error.projectsInit.yamlRead", "path", source, "reason", err.Error()))
-		return ErrSilent
+		return ErrSilentArgs
 	}
 	parsed, err := parseTemplateBytes(raw)
 	if err != nil {
 		fmt.Fprintln(c.ErrOrStderr(),
 			r.T("error.projectsInit.yamlRead", "path", source, "reason", err.Error()))
-		return ErrSilent
+		return ErrSilentArgs
 	}
 	fields := []fieldInput{}
 	for _, f := range parsed.Fields {
@@ -191,7 +191,7 @@ func runProjectsInit(ctx context.Context, c *cobra.Command, deps Deps, yamlPath 
 		if err != nil {
 			fmt.Fprintln(c.ErrOrStderr(),
 				r.T("error.projectsInit.yamlRead", "path", source, "reason", err.Error()))
-			return ErrSilent
+			return ErrSilentArgs
 		}
 		fields = append(fields, input)
 	}
@@ -224,7 +224,7 @@ func runProjectsInit(ctx context.Context, c *cobra.Command, deps Deps, yamlPath 
 	if ownerID == "" {
 		fmt.Fprintln(c.ErrOrStderr(),
 			r.T("error.projectsInit.ownerNotFound", "owner", owner))
-		return ErrSilent
+		return ErrSilentRuntime
 	}
 
 	var pResp queries.CreateProjectV2Response
