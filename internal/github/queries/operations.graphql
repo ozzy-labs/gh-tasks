@@ -3,8 +3,8 @@
 # This file is the single source of truth for genqlient-generated typed
 # operations. Each operation here is compiled into a Go function in
 # `genqlient.go` (see `genqlient.yaml`). Hand-written counterparts in
-# `queries.go` are being migrated incrementally — see #229 (scaffolding +
-# pilot), #230 (read ops), #231 (mutations).
+# `queries.go` are migrated incrementally — see #229 (scaffolding +
+# pilot), #230 (read ops, this file), #231 (mutations).
 
 # Pilot operation. Used by `cmd/standup.go` to resolve the authenticated
 # user's login when filtering to "@me" without an explicit owner.
@@ -13,3 +13,219 @@ query GetViewerLogin {
     login
   }
 }
+
+# ===== Issue read operations ================================================
+
+# ListRepoIssues lists open Issues under a repository, ordered by recently
+# updated.
+query ListRepoIssues($owner: String!, $name: String!, $first: Int!) {
+  repository(owner: $owner, name: $name) {
+    issues(first: $first, states: OPEN, orderBy: { field: UPDATED_AT, direction: DESC }) {
+      nodes {
+        id
+        number
+        title
+        url
+        updatedAt
+        author {
+          login
+        }
+        assignees(first: 10) {
+          nodes {
+            login
+          }
+        }
+      }
+    }
+  }
+}
+
+# GetIssueByNumber resolves an Issue's node id from owner/name + number.
+query GetIssueByNumber($owner: String!, $name: String!, $number: Int!) {
+  repository(owner: $owner, name: $name) {
+    issue(number: $number) {
+      id
+      number
+      url
+      state
+    }
+  }
+}
+
+# ListRepoIssuesWithLabels lists open Issues with their label set, used for
+# triage filtering.
+query ListRepoIssuesWithLabels($owner: String!, $name: String!, $first: Int!) {
+  repository(owner: $owner, name: $name) {
+    issues(first: $first, states: OPEN, orderBy: { field: UPDATED_AT, direction: DESC }) {
+      nodes {
+        id
+        number
+        title
+        url
+        updatedAt
+        labels(first: 20) {
+          nodes {
+            name
+          }
+        }
+      }
+    }
+  }
+}
+
+# ListClosedIssues lists recently CLOSED Issues; the caller filters by
+# closedAt window.
+query ListClosedIssues($owner: String!, $name: String!, $first: Int!) {
+  repository(owner: $owner, name: $name) {
+    issues(first: $first, states: CLOSED, orderBy: { field: UPDATED_AT, direction: DESC }) {
+      nodes {
+        id
+        number
+        title
+        url
+        closedAt
+        author {
+          login
+        }
+        assignees(first: 10) {
+          nodes {
+            login
+          }
+        }
+      }
+    }
+  }
+}
+
+# ===== Repository read operations ===========================================
+
+# GetRepositoryID resolves a repository's node id.
+query GetRepositoryID($owner: String!, $name: String!) {
+  repository(owner: $owner, name: $name) {
+    id
+  }
+}
+
+# ===== Viewer / owner read operations =======================================
+
+# GetViewerID resolves the viewer's node id (used for `--owner @me`).
+query GetViewerID {
+  viewer {
+    id
+    login
+  }
+}
+
+# GetOwnerID resolves a user/org's node id from a login.
+query GetOwnerID($login: String!) {
+  repositoryOwner(login: $login) {
+    __typename
+    id
+    login
+  }
+}
+
+# ===== Pull request read operations =========================================
+
+# GetPullRequestByNumber resolves a PR's id and current body.
+query GetPullRequestByNumber($owner: String!, $name: String!, $number: Int!) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $number) {
+      id
+      number
+      url
+      body
+    }
+  }
+}
+
+# ListMergedPRs lists recently MERGED PRs; the caller filters by mergedAt.
+query ListMergedPRs($owner: String!, $name: String!, $first: Int!) {
+  repository(owner: $owner, name: $name) {
+    pullRequests(first: $first, states: MERGED, orderBy: { field: UPDATED_AT, direction: DESC }) {
+      nodes {
+        id
+        number
+        title
+        url
+        mergedAt
+        author {
+          login
+        }
+        assignees(first: 10) {
+          nodes {
+            login
+          }
+        }
+      }
+    }
+  }
+}
+
+# ===== Milestone read operations ============================================
+
+# ListRepoIssuesWithMilestone lists open Issues with their milestone binding.
+query ListRepoIssuesWithMilestone($owner: String!, $name: String!, $first: Int!) {
+  repository(owner: $owner, name: $name) {
+    issues(first: $first, states: OPEN, orderBy: { field: UPDATED_AT, direction: DESC }) {
+      nodes {
+        id
+        number
+        title
+        url
+        updatedAt
+        milestone {
+          id
+          number
+          title
+        }
+      }
+    }
+  }
+}
+
+# ListMilestones lists recently updated open milestones.
+query ListMilestones($owner: String!, $name: String!, $first: Int!) {
+  repository(owner: $owner, name: $name) {
+    milestones(first: $first, states: OPEN, orderBy: { field: UPDATED_AT, direction: DESC }) {
+      nodes {
+        id
+        number
+        title
+      }
+    }
+  }
+}
+
+# ===== ProjectV2 read operations ============================================
+
+# GetUserProjectV2 resolves a user-scope Projects v2 node by login + number.
+query GetUserProjectV2($login: String!, $number: Int!) {
+  user(login: $login) {
+    projectV2(number: $number) {
+      id
+      number
+      title
+    }
+  }
+}
+
+# GetOrgProjectV2 resolves an org-scope Projects v2 node by login + number.
+query GetOrgProjectV2($login: String!, $number: Int!) {
+  organization(login: $login) {
+    projectV2(number: $number) {
+      id
+      number
+      title
+    }
+  }
+}
+
+# NOTE: `ListProjectV2Fields` and `ListProjectV2Items` are intentionally
+# left as hand-written GraphQL strings in `queries.go` for now. Their
+# response shape goes through the `node(id: ID!)` Node interface, which
+# genqlient expands into a Go interface backed by every Node-implementing
+# type in the schema (~200 types). Migrating those two operations also
+# requires reshaping the shared `ProjectV2ItemNode` / `ProjectV2FieldValue`
+# domain helpers in `internal/projectitem` and several cmd/*.go files.
+# Tracked as a follow-up to #230 (see PR description).

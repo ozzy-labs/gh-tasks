@@ -126,7 +126,7 @@ func TestList_RepoNotFoundExitCode(t *testing.T) {
 	t.Parallel()
 
 	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query ListRepoIssues(", data: map[string]any{"repository": nil}},
+		{matchSubstring: "query ListRepoIssues (", data: map[string]any{"repository": nil}},
 	}}
 	d := testDeps(g)
 	_, stderr, err := runCmd(t, d, "list")

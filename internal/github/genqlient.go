@@ -25,6 +25,19 @@ func (c *Clients) AsGenqlientClient() gqlclient.Client {
 	return &genqlientAdapter{inner: c.GraphQL}
 }
 
+// AsGenqlientClientFor wraps any [GraphQLClient] (production or fake) into
+// a [gqlclient.Client] that genqlient-generated operations can consume.
+// Used by domain helpers (e.g. internal/projectitem) that already accept
+// a GraphQLClient injected by their caller and need to call generated
+// functions without re-plumbing the [Clients] aggregate down through
+// every signature. A nil-inner adapter still returns a non-nil
+// [gqlclient.Client]; the wrapped MakeRequest reports the nil inner via
+// a normal error rather than panicking, mirroring the behaviour expected
+// by [TestGenqlientAdapter_NilInner].
+func AsGenqlientClientFor(g GraphQLClient) gqlclient.Client {
+	return &genqlientAdapter{inner: g}
+}
+
 // genqlientAdapter implements [gqlclient.Client] on top of the
 // [GraphQLClient] surface. Variables are converted from genqlient's
 // `any` shape to the `map[string]any` shape expected by go-gh; the

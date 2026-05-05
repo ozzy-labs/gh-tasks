@@ -55,18 +55,20 @@ func runTodayRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, 
 	if err != nil {
 		return localizedError(c, r, err)
 	}
-	var resp queries.ListRepoIssuesResponse
-	if err := clients.GraphQL.Do(ctx, queries.ListRepoIssues, map[string]any{
-		"owner": id.Owner, "name": id.Name, "first": todayFetchLimit,
-	}, &resp); err != nil {
+	resp, err := queries.ListRepoIssues(ctx, clients.AsGenqlientClient(), id.Owner, id.Name, todayFetchLimit)
+	if err != nil {
 		return fmt.Errorf("list repo issues: %w", err)
 	}
 	if resp.Repository == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
 	}
-	hits := []queries.RepoIssueNode{}
+	type issueNode = queries.ListRepoIssuesRepositoryIssuesIssueConnectionNodesIssue
+	hits := []*issueNode{}
 	for _, issue := range resp.Repository.Issues.Nodes {
+		if issue == nil {
+			continue
+		}
 		t, err := time.Parse(time.RFC3339, issue.UpdatedAt)
 		if err != nil {
 			continue
@@ -80,7 +82,7 @@ func runTodayRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, 
 		return nil
 	}
 	for _, issue := range hits {
-		fmt.Fprintf(c.OutOrStdout(), "#%d  %s\n  %s\n", issue.Number, issue.Title, issue.URL)
+		fmt.Fprintf(c.OutOrStdout(), "#%d  %s\n  %s\n", issue.Number, issue.Title, issue.Url)
 	}
 	return nil
 }

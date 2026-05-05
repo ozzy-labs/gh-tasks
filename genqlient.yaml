@@ -6,8 +6,15 @@ package: queries
 use_struct_references: true
 optional: pointer
 bindings:
+  # DateTime is bound to string (not time.Time) so generated response
+  # structs round-trip through the same JSON shape as the hand-written
+  # counterparts in queries.go. Existing callers parse RFC3339 strings
+  # at the use site (period range checks, iteration matching, etc.); a
+  # follow-up may swap these to time.Time once consumers are aligned.
   DateTime:
-    type: time.Time
+    type: string
+  Date:
+    type: string
   GitObjectID:
     type: string
   URI:

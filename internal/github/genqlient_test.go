@@ -10,6 +10,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/ozzy-labs/gh-tasks/internal/github"
+	"github.com/ozzy-labs/gh-tasks/internal/github/queries"
 )
 
 // recordingGraphQL captures every Do call so adapter tests can assert on the
@@ -134,6 +135,38 @@ func TestGenqlientAdapter_ErrorPropagates(t *testing.T) {
 	err := adapter.MakeRequest(context.Background(), req, resp)
 	if !errors.Is(err, cause) {
 		t.Fatalf("errors.Is should succeed against the wrapped cause; got %v", err)
+	}
+}
+
+func TestAsGenqlientClientFor_RoundTripsTypedResponse(t *testing.T) {
+	t.Parallel()
+
+	// Smoke test against one of the read operations migrated under #230 to
+	// confirm the adapter + generated bindings decode a wire-shaped payload
+	// into the typed response struct.
+	rec := &recordingGraphQL{
+		resp: map[string]any{
+			"repository": map[string]any{"id": "R_kg2c"},
+		},
+	}
+	adapter := github.AsGenqlientClientFor(rec)
+
+	resp, err := queries.GetRepositoryID(context.Background(), adapter, "ozzy-labs", "gh-tasks")
+	if err != nil {
+		t.Fatalf("GetRepositoryID: %v", err)
+	}
+	if resp == nil || resp.Repository == nil {
+		t.Fatal("expected non-nil repository in response")
+	}
+	if got, want := resp.Repository.Id, "R_kg2c"; got != want {
+		t.Fatalf("Repository.Id = %q, want %q", got, want)
+	}
+	if len(rec.calls) != 1 {
+		t.Fatalf("expected 1 underlying call, got %d", len(rec.calls))
+	}
+	wantVars := map[string]any{"owner": "ozzy-labs", "name": "gh-tasks"}
+	if diff := cmp.Diff(wantVars, rec.calls[0].vars); diff != "" {
+		t.Fatalf("vars mismatch (-want +got):\n%s", diff)
 	}
 }
 

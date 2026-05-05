@@ -70,54 +70,116 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 			viewerLogin = v.Viewer.Login
 		}
 	}
-	var closedResp queries.ListClosedIssuesResponse
-	var prsResp queries.ListMergedPRsResponse
-	var openResp queries.ListRepoIssuesResponse
-	q := map[string]any{"owner": id.Owner, "name": id.Name, "first": standupFetchLimit}
-	if err := clients.GraphQL.Do(ctx, queries.ListClosedIssues, q, &closedResp); err != nil {
+	gqlClient := clients.AsGenqlientClient()
+	closedResp, err := queries.ListClosedIssues(ctx, gqlClient, id.Owner, id.Name, standupFetchLimit)
+	if err != nil {
 		return fmt.Errorf("list closed issues: %w", err)
 	}
-	if err := clients.GraphQL.Do(ctx, queries.ListMergedPRs, q, &prsResp); err != nil {
+	prsResp, err := queries.ListMergedPRs(ctx, gqlClient, id.Owner, id.Name, standupFetchLimit)
+	if err != nil {
 		return fmt.Errorf("list merged PRs: %w", err)
 	}
-	if err := clients.GraphQL.Do(ctx, queries.ListRepoIssues, q, &openResp); err != nil {
+	openResp, err := queries.ListRepoIssues(ctx, gqlClient, id.Owner, id.Name, standupFetchLimit)
+	if err != nil {
 		return fmt.Errorf("list repo issues: %w", err)
 	}
 
-	closed := []queries.ClosedIssueNode{}
+	type closedItem struct {
+		Number int
+		Title  string
+		URL    string
+	}
+	closed := []closedItem{}
 	if closedResp.Repository != nil {
 		for _, n := range closedResp.Repository.Issues.Nodes {
-			if !timeAtOrAfter(n.ClosedAt, since) {
+			closedAt := ""
+			if n.ClosedAt != nil {
+				closedAt = *n.ClosedAt
+			}
+			if !timeAtOrAfter(closedAt, since) {
 				continue
 			}
-			if !matchesViewer(n.Author, n.Assignees.Nodes, viewerLogin) {
+			authorLogin := ""
+			if n.Author != nil && *n.Author != nil {
+				authorLogin = (*n.Author).GetLogin()
+			}
+			var assignees []string
+			if n.Assignees != nil {
+				assignees = make([]string, 0, len(n.Assignees.Nodes))
+				for _, a := range n.Assignees.Nodes {
+					if a != nil {
+						assignees = append(assignees, a.Login)
+					}
+				}
+			}
+			if !matchesViewer(authorLogin, assignees, viewerLogin) {
 				continue
 			}
-			closed = append(closed, n)
+			closed = append(closed, closedItem{Number: n.Number, Title: n.Title, URL: n.Url})
 		}
 	}
-	merged := []queries.MergedPRNode{}
+	type mergedItem struct {
+		Number int
+		Title  string
+		URL    string
+	}
+	merged := []mergedItem{}
 	if prsResp.Repository != nil {
 		for _, n := range prsResp.Repository.PullRequests.Nodes {
-			if !timeAtOrAfter(n.MergedAt, since) {
+			mergedAt := ""
+			if n.MergedAt != nil {
+				mergedAt = *n.MergedAt
+			}
+			if !timeAtOrAfter(mergedAt, since) {
 				continue
 			}
-			if !matchesViewer(n.Author, n.Assignees.Nodes, viewerLogin) {
+			authorLogin := ""
+			if n.Author != nil && *n.Author != nil {
+				authorLogin = (*n.Author).GetLogin()
+			}
+			var assignees []string
+			if n.Assignees != nil {
+				assignees = make([]string, 0, len(n.Assignees.Nodes))
+				for _, a := range n.Assignees.Nodes {
+					if a != nil {
+						assignees = append(assignees, a.Login)
+					}
+				}
+			}
+			if !matchesViewer(authorLogin, assignees, viewerLogin) {
 				continue
 			}
-			merged = append(merged, n)
+			merged = append(merged, mergedItem{Number: n.Number, Title: n.Title, URL: n.Url})
 		}
 	}
-	open := []queries.RepoIssueNode{}
+	type openItem struct {
+		Number int
+		Title  string
+		URL    string
+	}
+	open := []openItem{}
 	if openResp.Repository != nil {
 		for _, n := range openResp.Repository.Issues.Nodes {
 			if !timeAtOrAfter(n.UpdatedAt, since) {
 				continue
 			}
-			if !matchesViewer(n.Author, n.Assignees.Nodes, viewerLogin) {
+			authorLogin := ""
+			if n.Author != nil && *n.Author != nil {
+				authorLogin = (*n.Author).GetLogin()
+			}
+			var assignees []string
+			if n.Assignees != nil {
+				assignees = make([]string, 0, len(n.Assignees.Nodes))
+				for _, a := range n.Assignees.Nodes {
+					if a != nil {
+						assignees = append(assignees, a.Login)
+					}
+				}
+			}
+			if !matchesViewer(authorLogin, assignees, viewerLogin) {
 				continue
 			}
-			open = append(open, n)
+			open = append(open, openItem{Number: n.Number, Title: n.Title, URL: n.Url})
 		}
 	}
 
@@ -256,15 +318,15 @@ func timeAtOrAfter(iso string, threshold time.Time) bool {
 	return t.Equal(threshold) || t.After(threshold)
 }
 
-func matchesViewer(author *queries.Login, assignees []queries.Login, viewer string) bool {
+func matchesViewer(authorLogin string, assigneeLogins []string, viewer string) bool {
 	if viewer == "" {
 		return true
 	}
-	if author != nil && author.Login == viewer {
+	if authorLogin == viewer {
 		return true
 	}
-	for _, a := range assignees {
-		if a.Login == viewer {
+	for _, login := range assigneeLogins {
+		if login == viewer {
 			return true
 		}
 	}

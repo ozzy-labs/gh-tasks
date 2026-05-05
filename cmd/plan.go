@@ -71,18 +71,21 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 	if err != nil {
 		return localizedError(c, r, err)
 	}
-	var issuesResp queries.ListRepoIssuesWithMilestoneResponse
-	if err := clients.GraphQL.Do(ctx, queries.ListRepoIssuesWithMilestone, map[string]any{
-		"owner": id.Owner, "name": id.Name, "first": planFetchLimit,
-	}, &issuesResp); err != nil {
+	gqlClient := clients.AsGenqlientClient()
+	issuesResp, err := queries.ListRepoIssuesWithMilestone(ctx, gqlClient, id.Owner, id.Name, planFetchLimit)
+	if err != nil {
 		return fmt.Errorf("list repo issues with milestone: %w", err)
 	}
 	if issuesResp.Repository == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
 	}
-	inRange := []queries.RepoIssueWithMilestoneNode{}
+	type issueRow = queries.ListRepoIssuesWithMilestoneRepositoryIssuesIssueConnectionNodesIssue
+	inRange := []*issueRow{}
 	for _, n := range issuesResp.Repository.Issues.Nodes {
+		if n == nil {
+			continue
+		}
 		if t, err := time.Parse(time.RFC3339, n.UpdatedAt); err == nil &&
 			(t.Equal(rng.Start) || t.After(rng.Start)) && t.Before(rng.End) {
 			inRange = append(inRange, n)
@@ -109,10 +112,8 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 		return nil
 	}
 
-	var milestonesResp queries.ListMilestonesResponse
-	if err := clients.GraphQL.Do(ctx, queries.ListMilestones, map[string]any{
-		"owner": id.Owner, "name": id.Name, "first": planFetchLimit,
-	}, &milestonesResp); err != nil {
+	milestonesResp, err := queries.ListMilestones(ctx, gqlClient, id.Owner, id.Name, planFetchLimit)
+	if err != nil {
 		return fmt.Errorf("list milestones: %w", err)
 	}
 	var milestoneID string
@@ -120,7 +121,7 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 	if milestonesResp.Repository != nil {
 		for _, m := range milestonesResp.Repository.Milestones.Nodes {
 			if m.Title == title {
-				milestoneID = m.ID
+				milestoneID = m.Id
 				milestoneNumber = m.Number
 				fmt.Fprintf(out, "%s: %s (#%d)\n", r.T("plan.reused"), title, m.Number)
 				break
@@ -140,16 +141,16 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 	}
 
 	for _, n := range inRange {
-		if n.Milestone != nil && n.Milestone.ID != milestoneID {
+		if n.Milestone != nil && n.Milestone.Id != milestoneID {
 			fmt.Fprintf(out, "  %s: #%d → %s\n", r.T("plan.skippedExisting"), n.Number, n.Milestone.Title)
 			continue
 		}
-		if n.Milestone != nil && n.Milestone.ID == milestoneID {
+		if n.Milestone != nil && n.Milestone.Id == milestoneID {
 			continue
 		}
 		var update queries.UpdateIssueMilestoneResponse
 		if err := clients.GraphQL.Do(ctx, queries.UpdateIssueMilestone, map[string]any{
-			"input": map[string]any{"id": n.ID, "milestoneId": milestoneID},
+			"input": map[string]any{"id": n.Id, "milestoneId": milestoneID},
 		}, &update); err != nil {
 			return fmt.Errorf("update issue milestone (issue #%d): %w", n.Number, err)
 		}

@@ -63,28 +63,46 @@ func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 	if err != nil {
 		return localizedError(c, r, err)
 	}
-	q := map[string]any{"owner": id.Owner, "name": id.Name, "first": reviewFetchLimit}
-	var closedResp queries.ListClosedIssuesResponse
-	if err := clients.GraphQL.Do(ctx, queries.ListClosedIssues, q, &closedResp); err != nil {
+	gqlClient := clients.AsGenqlientClient()
+	closedResp, err := queries.ListClosedIssues(ctx, gqlClient, id.Owner, id.Name, reviewFetchLimit)
+	if err != nil {
 		return fmt.Errorf("list closed issues: %w", err)
 	}
-	var prsResp queries.ListMergedPRsResponse
-	if err := clients.GraphQL.Do(ctx, queries.ListMergedPRs, q, &prsResp); err != nil {
+	prsResp, err := queries.ListMergedPRs(ctx, gqlClient, id.Owner, id.Name, reviewFetchLimit)
+	if err != nil {
 		return fmt.Errorf("list merged PRs: %w", err)
 	}
-	closed := []queries.ClosedIssueNode{}
+	type closedItem struct {
+		Number int
+		Title  string
+		URL    string
+	}
+	closed := []closedItem{}
 	if closedResp.Repository != nil {
 		for _, n := range closedResp.Repository.Issues.Nodes {
-			if withinPeriodRange(n.ClosedAt, rng) {
-				closed = append(closed, n)
+			closedAt := ""
+			if n.ClosedAt != nil {
+				closedAt = *n.ClosedAt
+			}
+			if withinPeriodRange(closedAt, rng) {
+				closed = append(closed, closedItem{Number: n.Number, Title: n.Title, URL: n.Url})
 			}
 		}
 	}
-	merged := []queries.MergedPRNode{}
+	type mergedItem struct {
+		Number int
+		Title  string
+		URL    string
+	}
+	merged := []mergedItem{}
 	if prsResp.Repository != nil {
 		for _, n := range prsResp.Repository.PullRequests.Nodes {
-			if withinPeriodRange(n.MergedAt, rng) {
-				merged = append(merged, n)
+			mergedAt := ""
+			if n.MergedAt != nil {
+				mergedAt = *n.MergedAt
+			}
+			if withinPeriodRange(mergedAt, rng) {
+				merged = append(merged, mergedItem{Number: n.Number, Title: n.Title, URL: n.Url})
 			}
 		}
 	}

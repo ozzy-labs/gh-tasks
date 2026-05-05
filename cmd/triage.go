@@ -63,20 +63,23 @@ func runTriageRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 	if err != nil {
 		return localizedError(c, r, err)
 	}
-	var resp queries.ListRepoIssuesWithLabelsResponse
-	if err := clients.GraphQL.Do(ctx, queries.ListRepoIssuesWithLabels, map[string]any{
-		"owner": id.Owner, "name": id.Name, "first": triageFetchLimit,
-	}, &resp); err != nil {
+	resp, err := queries.ListRepoIssuesWithLabels(ctx, clients.AsGenqlientClient(), id.Owner, id.Name, triageFetchLimit)
+	if err != nil {
 		return fmt.Errorf("list repo issues with labels: %w", err)
 	}
 	if resp.Repository == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
 	}
-	hits := []queries.RepoIssueWithLabelsNode{}
+	type triageHit struct {
+		Number int
+		Title  string
+		URL    string
+	}
+	hits := []triageHit{}
 	for _, n := range resp.Repository.Issues.Nodes {
 		if len(n.Labels.Nodes) == 0 {
-			hits = append(hits, n)
+			hits = append(hits, triageHit{Number: n.Number, Title: n.Title, URL: n.Url})
 			if len(hits) >= limit {
 				break
 			}
