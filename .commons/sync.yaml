@@ -11,6 +11,8 @@ skills_adapters:
 pinned:
   - .editorconfig
   - .commitlintrc.yaml
+  - .github/workflows/pr-check.yaml
+  - .github/workflows/sync-commons.yaml
   - .github/ISSUE_TEMPLATE/bug_report.yaml
   - .github/ISSUE_TEMPLATE/feature_request.yaml
   - .markdownlint-cli2.yaml
