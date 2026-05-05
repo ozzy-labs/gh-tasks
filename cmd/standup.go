@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -75,26 +76,29 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		viewerLogin = v.Viewer.Login
 	}
 	gqlClient := clients.AsGenqlientClient()
-	closedResp, err := queries.ListClosedIssues(ctx, gqlClient, id.Owner, id.Name, standupFetchLimit)
+	closedIssues, err := queries.PaginateClosedIssues(ctx, gqlClient, id.Owner, id.Name, standupFetchLimit)
+	if errors.Is(err, queries.ErrRepoNotFound) {
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
+		return ErrSilentRuntime
+	}
 	if err != nil {
 		return fmt.Errorf("list closed issues: %w", err)
 	}
-	prsResp, err := queries.ListMergedPRs(ctx, gqlClient, id.Owner, id.Name, standupFetchLimit)
+	mergedPRs, err := queries.PaginateMergedPRs(ctx, gqlClient, id.Owner, id.Name, standupFetchLimit)
+	if errors.Is(err, queries.ErrRepoNotFound) {
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
+		return ErrSilentRuntime
+	}
 	if err != nil {
 		return fmt.Errorf("list merged PRs: %w", err)
 	}
-	openResp, err := queries.ListRepoIssues(ctx, gqlClient, id.Owner, id.Name, standupFetchLimit)
+	openIssues, err := queries.PaginateRepoIssues(ctx, gqlClient, id.Owner, id.Name, standupFetchLimit)
+	if errors.Is(err, queries.ErrRepoNotFound) {
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
+		return ErrSilentRuntime
+	}
 	if err != nil {
 		return fmt.Errorf("list repo issues: %w", err)
-	}
-	if closedResp.Repository != nil {
-		warnIfTruncated(c, r, kindClosedIssues, len(closedResp.Repository.Issues.Nodes), standupFetchLimit)
-	}
-	if prsResp.Repository != nil {
-		warnIfTruncated(c, r, kindMergedPRs, len(prsResp.Repository.PullRequests.Nodes), standupFetchLimit)
-	}
-	if openResp.Repository != nil {
-		warnIfTruncated(c, r, kindOpenIssues, len(openResp.Repository.Issues.Nodes), standupFetchLimit)
 	}
 
 	type closedItem struct {
@@ -103,36 +107,34 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		URL    string
 	}
 	closed := []closedItem{}
-	if closedResp.Repository != nil {
-		for _, n := range closedResp.Repository.Issues.Nodes {
-			if n == nil {
-				continue
-			}
-			closedAt := ""
-			if n.ClosedAt != nil {
-				closedAt = *n.ClosedAt
-			}
-			if !timeAtOrAfter(closedAt, since) {
-				continue
-			}
-			authorLogin := ""
-			if n.Author != nil && *n.Author != nil {
-				authorLogin = (*n.Author).GetLogin()
-			}
-			var assignees []string
-			if n.Assignees != nil {
-				assignees = make([]string, 0, len(n.Assignees.Nodes))
-				for _, a := range n.Assignees.Nodes {
-					if a != nil {
-						assignees = append(assignees, a.Login)
-					}
+	for _, n := range closedIssues {
+		if n == nil {
+			continue
+		}
+		closedAt := ""
+		if n.ClosedAt != nil {
+			closedAt = *n.ClosedAt
+		}
+		if !timeAtOrAfter(closedAt, since) {
+			continue
+		}
+		authorLogin := ""
+		if n.Author != nil && *n.Author != nil {
+			authorLogin = (*n.Author).GetLogin()
+		}
+		var assignees []string
+		if n.Assignees != nil {
+			assignees = make([]string, 0, len(n.Assignees.Nodes))
+			for _, a := range n.Assignees.Nodes {
+				if a != nil {
+					assignees = append(assignees, a.Login)
 				}
 			}
-			if !matchesViewer(authorLogin, assignees, viewerLogin) {
-				continue
-			}
-			closed = append(closed, closedItem{Number: n.Number, Title: n.Title, URL: n.Url})
 		}
+		if !matchesViewer(authorLogin, assignees, viewerLogin) {
+			continue
+		}
+		closed = append(closed, closedItem{Number: n.Number, Title: n.Title, URL: n.Url})
 	}
 	type mergedItem struct {
 		Number int
@@ -140,36 +142,34 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		URL    string
 	}
 	merged := []mergedItem{}
-	if prsResp.Repository != nil {
-		for _, n := range prsResp.Repository.PullRequests.Nodes {
-			if n == nil {
-				continue
-			}
-			mergedAt := ""
-			if n.MergedAt != nil {
-				mergedAt = *n.MergedAt
-			}
-			if !timeAtOrAfter(mergedAt, since) {
-				continue
-			}
-			authorLogin := ""
-			if n.Author != nil && *n.Author != nil {
-				authorLogin = (*n.Author).GetLogin()
-			}
-			var assignees []string
-			if n.Assignees != nil {
-				assignees = make([]string, 0, len(n.Assignees.Nodes))
-				for _, a := range n.Assignees.Nodes {
-					if a != nil {
-						assignees = append(assignees, a.Login)
-					}
+	for _, n := range mergedPRs {
+		if n == nil {
+			continue
+		}
+		mergedAt := ""
+		if n.MergedAt != nil {
+			mergedAt = *n.MergedAt
+		}
+		if !timeAtOrAfter(mergedAt, since) {
+			continue
+		}
+		authorLogin := ""
+		if n.Author != nil && *n.Author != nil {
+			authorLogin = (*n.Author).GetLogin()
+		}
+		var assignees []string
+		if n.Assignees != nil {
+			assignees = make([]string, 0, len(n.Assignees.Nodes))
+			for _, a := range n.Assignees.Nodes {
+				if a != nil {
+					assignees = append(assignees, a.Login)
 				}
 			}
-			if !matchesViewer(authorLogin, assignees, viewerLogin) {
-				continue
-			}
-			merged = append(merged, mergedItem{Number: n.Number, Title: n.Title, URL: n.Url})
 		}
+		if !matchesViewer(authorLogin, assignees, viewerLogin) {
+			continue
+		}
+		merged = append(merged, mergedItem{Number: n.Number, Title: n.Title, URL: n.Url})
 	}
 	type openItem struct {
 		Number int
@@ -177,32 +177,30 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		URL    string
 	}
 	open := []openItem{}
-	if openResp.Repository != nil {
-		for _, n := range openResp.Repository.Issues.Nodes {
-			if n == nil {
-				continue
-			}
-			if !timeAtOrAfter(n.UpdatedAt, since) {
-				continue
-			}
-			authorLogin := ""
-			if n.Author != nil && *n.Author != nil {
-				authorLogin = (*n.Author).GetLogin()
-			}
-			var assignees []string
-			if n.Assignees != nil {
-				assignees = make([]string, 0, len(n.Assignees.Nodes))
-				for _, a := range n.Assignees.Nodes {
-					if a != nil {
-						assignees = append(assignees, a.Login)
-					}
+	for _, n := range openIssues {
+		if n == nil {
+			continue
+		}
+		if !timeAtOrAfter(n.UpdatedAt, since) {
+			continue
+		}
+		authorLogin := ""
+		if n.Author != nil && *n.Author != nil {
+			authorLogin = (*n.Author).GetLogin()
+		}
+		var assignees []string
+		if n.Assignees != nil {
+			assignees = make([]string, 0, len(n.Assignees.Nodes))
+			for _, a := range n.Assignees.Nodes {
+				if a != nil {
+					assignees = append(assignees, a.Login)
 				}
 			}
-			if !matchesViewer(authorLogin, assignees, viewerLogin) {
-				continue
-			}
-			open = append(open, openItem{Number: n.Number, Title: n.Title, URL: n.Url})
 		}
+		if !matchesViewer(authorLogin, assignees, viewerLogin) {
+			continue
+		}
+		open = append(open, openItem{Number: n.Number, Title: n.Title, URL: n.Url})
 	}
 
 	out := c.OutOrStdout()
@@ -268,16 +266,14 @@ func runStandupProject(ctx context.Context, c *cobra.Command, deps Deps, r Resol
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	resp, err := queries.ListProjectV2Items(ctx, clients.AsGenqlientClient(), pid, standupFetchLimit)
-	if err != nil {
-		return fmt.Errorf("list project items: %w", err)
-	}
-	if !projectitem.HasProjectNode(resp) {
+	items, err := queries.PaginateProjectV2Items(ctx, clients.AsGenqlientClient(), pid, standupFetchLimit)
+	if errors.Is(err, queries.ErrProjectNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	items := projectitem.ItemsFromResponse(resp)
-	warnIfTruncated(c, r, kindProjectItems, len(items), standupFetchLimit)
+	if err != nil {
+		return fmt.Errorf("list project items: %w", err)
+	}
 	yesterday := []*queries.ProjectV2ItemNode{}
 	today := []*queries.ProjectV2ItemNode{}
 	for _, item := range items {

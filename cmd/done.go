@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -112,15 +113,15 @@ func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		return ErrSilentRuntime
 	}
 	gqlClient := clients.AsGenqlientClient()
-	fieldsResp, err := queries.ListProjectV2Fields(ctx, gqlClient, pid, doneFieldsLimit)
-	if err != nil {
-		return fmt.Errorf("list project fields: %w", err)
-	}
-	if !projectitem.HasFieldsNode(fieldsResp) {
+	fieldNodes, err := queries.PaginateProjectV2Fields(ctx, gqlClient, pid, doneFieldsLimit)
+	if errors.Is(err, queries.ErrProjectNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	fields := projectitem.FieldsOf(projectitem.FieldsFromResponse(fieldsResp))
+	if err != nil {
+		return fmt.Errorf("list project fields: %w", err)
+	}
+	fields := projectitem.FieldsOf(fieldNodes)
 	statusField := findStatusField(fields)
 	if statusField == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.done.statusFieldMissing"))
@@ -132,11 +133,14 @@ func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		return ErrSilentRuntime
 	}
 
-	itemsResp, err := queries.ListProjectV2Items(ctx, gqlClient, pid, doneItemsLimit)
+	itemList, err := queries.PaginateProjectV2Items(ctx, gqlClient, pid, doneItemsLimit)
+	if errors.Is(err, queries.ErrProjectNotFound) {
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
+		return ErrSilentRuntime
+	}
 	if err != nil {
 		return fmt.Errorf("list project items: %w", err)
 	}
-	itemList := projectitem.ItemsFromResponse(itemsResp)
 	var target *queries.ProjectV2ItemNode
 	for _, n := range itemList {
 		if n != nil && n.Id == itemID {
@@ -146,9 +150,11 @@ func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	if target == nil {
 		// Distinguish "not found in the page" from "not found in the
-		// project at all": when the response was at the page limit the
-		// caller should know pagination might have hidden the item, since
-		// operations.graphql currently has no pageInfo wiring.
+		// project at all": linear search is bounded by doneItemsLimit
+		// (= 100) per ADR design — items beyond the limit are reported
+		// via searchLimit so the user knows to disambiguate. Resolving
+		// items by id directly via Node(id:) is tracked separately and
+		// out of scope for the cursor-pagination work.
 		if len(itemList) >= doneItemsLimit {
 			fmt.Fprintln(c.ErrOrStderr(), r.T("error.done.searchLimit", "id", itemID, "limit", doneItemsLimit))
 		} else {

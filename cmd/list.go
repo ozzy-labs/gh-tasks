@@ -66,20 +66,19 @@ func runListRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, l
 	if err != nil {
 		return localizedError(c, r, err)
 	}
-	resp, err := queries.ListRepoIssues(ctx, clients.AsGenqlientClient(), id.Owner, id.Name, limit)
-	if err != nil {
-		return fmt.Errorf("list repo issues: %w", err)
-	}
-	if resp.Repository == nil {
+	issues, err := queries.PaginateRepoIssues(ctx, clients.AsGenqlientClient(), id.Owner, id.Name, limit)
+	if errors.Is(err, queries.ErrRepoNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
 	}
-	warnIfTruncated(c, r, kindRepoIssues, len(resp.Repository.Issues.Nodes), limit)
-	if len(resp.Repository.Issues.Nodes) == 0 {
+	if err != nil {
+		return fmt.Errorf("list repo issues: %w", err)
+	}
+	if len(issues) == 0 {
 		fmt.Fprintln(c.OutOrStdout(), r.T("list.empty"))
 		return nil
 	}
-	for _, issue := range resp.Repository.Issues.Nodes {
+	for _, issue := range issues {
 		if issue == nil {
 			continue
 		}
@@ -110,16 +109,14 @@ func runListProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	resp, err := queries.ListProjectV2Items(ctx, clients.AsGenqlientClient(), pid, limit)
-	if err != nil {
-		return fmt.Errorf("list project items: %w", err)
-	}
-	if !projectitem.HasProjectNode(resp) {
+	items, err := queries.PaginateProjectV2Items(ctx, clients.AsGenqlientClient(), pid, limit)
+	if errors.Is(err, queries.ErrProjectNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	items := projectitem.ItemsFromResponse(resp)
-	warnIfTruncated(c, r, kindProjectItems, len(items), limit)
+	if err != nil {
+		return fmt.Errorf("list project items: %w", err)
+	}
 	if len(items) == 0 {
 		fmt.Fprintln(c.OutOrStdout(), r.T("list.empty.project"))
 		return nil

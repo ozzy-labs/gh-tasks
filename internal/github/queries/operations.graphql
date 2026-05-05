@@ -18,9 +18,13 @@ query GetViewerLogin {
 
 # ListRepoIssues lists open Issues under a repository, ordered by recently
 # updated.
-query ListRepoIssues($owner: String!, $name: String!, $first: Int!) {
+query ListRepoIssues($owner: String!, $name: String!, $first: Int!, $after: String) {
   repository(owner: $owner, name: $name) {
-    issues(first: $first, states: OPEN, orderBy: { field: UPDATED_AT, direction: DESC }) {
+    issues(first: $first, after: $after, states: OPEN, orderBy: { field: UPDATED_AT, direction: DESC }) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
       nodes {
         id
         number
@@ -54,9 +58,13 @@ query GetIssueByNumber($owner: String!, $name: String!, $number: Int!) {
 
 # ListRepoIssuesWithLabels lists open Issues with their label set, used for
 # triage filtering.
-query ListRepoIssuesWithLabels($owner: String!, $name: String!, $first: Int!) {
+query ListRepoIssuesWithLabels($owner: String!, $name: String!, $first: Int!, $after: String) {
   repository(owner: $owner, name: $name) {
-    issues(first: $first, states: OPEN, orderBy: { field: UPDATED_AT, direction: DESC }) {
+    issues(first: $first, after: $after, states: OPEN, orderBy: { field: UPDATED_AT, direction: DESC }) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
       nodes {
         id
         number
@@ -75,9 +83,13 @@ query ListRepoIssuesWithLabels($owner: String!, $name: String!, $first: Int!) {
 
 # ListClosedIssues lists recently CLOSED Issues; the caller filters by
 # closedAt window.
-query ListClosedIssues($owner: String!, $name: String!, $first: Int!) {
+query ListClosedIssues($owner: String!, $name: String!, $first: Int!, $after: String) {
   repository(owner: $owner, name: $name) {
-    issues(first: $first, states: CLOSED, orderBy: { field: UPDATED_AT, direction: DESC }) {
+    issues(first: $first, after: $after, states: CLOSED, orderBy: { field: UPDATED_AT, direction: DESC }) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
       nodes {
         id
         number
@@ -140,9 +152,13 @@ query GetPullRequestByNumber($owner: String!, $name: String!, $number: Int!) {
 }
 
 # ListMergedPRs lists recently MERGED PRs; the caller filters by mergedAt.
-query ListMergedPRs($owner: String!, $name: String!, $first: Int!) {
+query ListMergedPRs($owner: String!, $name: String!, $first: Int!, $after: String) {
   repository(owner: $owner, name: $name) {
-    pullRequests(first: $first, states: MERGED, orderBy: { field: UPDATED_AT, direction: DESC }) {
+    pullRequests(first: $first, after: $after, states: MERGED, orderBy: { field: UPDATED_AT, direction: DESC }) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
       nodes {
         id
         number
@@ -165,9 +181,13 @@ query ListMergedPRs($owner: String!, $name: String!, $first: Int!) {
 # ===== Milestone read operations ============================================
 
 # ListRepoIssuesWithMilestone lists open Issues with their milestone binding.
-query ListRepoIssuesWithMilestone($owner: String!, $name: String!, $first: Int!) {
+query ListRepoIssuesWithMilestone($owner: String!, $name: String!, $first: Int!, $after: String) {
   repository(owner: $owner, name: $name) {
-    issues(first: $first, states: OPEN, orderBy: { field: UPDATED_AT, direction: DESC }) {
+    issues(first: $first, after: $after, states: OPEN, orderBy: { field: UPDATED_AT, direction: DESC }) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
       nodes {
         id
         number
@@ -185,9 +205,13 @@ query ListRepoIssuesWithMilestone($owner: String!, $name: String!, $first: Int!)
 }
 
 # ListMilestones lists recently updated open milestones.
-query ListMilestones($owner: String!, $name: String!, $first: Int!) {
+query ListMilestones($owner: String!, $name: String!, $first: Int!, $after: String) {
   repository(owner: $owner, name: $name) {
-    milestones(first: $first, states: OPEN, orderBy: { field: UPDATED_AT, direction: DESC }) {
+    milestones(first: $first, after: $after, states: OPEN, orderBy: { field: UPDATED_AT, direction: DESC }) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
       nodes {
         id
         number
@@ -227,11 +251,15 @@ query GetOrgProjectV2($login: String!, $number: Int!) {
 # to ProjectV2, and @genqlient(typename: ...) directives keep generated Go
 # type names tractable for the cmd/* call sites.
 
-query ListProjectV2Fields($projectId: ID!, $first: Int!) {
+query ListProjectV2Fields($projectId: ID!, $first: Int!, $after: String) {
   # @genqlient(typename: "ProjectV2FieldsNode")
   node(id: $projectId) {
     ... on ProjectV2 {
-      fields(first: $first) {
+      fields(first: $first, after: $after) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
         # @genqlient(typename: "ProjectV2FieldNode")
         nodes {
           __typename
@@ -279,11 +307,15 @@ query ListProjectV2Fields($projectId: ID!, $first: Int!) {
 # enum types differ (IssueState vs PullRequestState); reusing the same
 # selection name would be a GraphQL type conflict.
 
-query ListProjectV2Items($projectId: ID!, $first: Int!) {
+query ListProjectV2Items($projectId: ID!, $first: Int!, $after: String) {
   # @genqlient(typename: "ProjectV2ItemsNode")
   node(id: $projectId) {
     ... on ProjectV2 {
-      items(first: $first) {
+      items(first: $first, after: $after) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
         # @genqlient(typename: "ProjectV2ItemNode")
         nodes {
           id

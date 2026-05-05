@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -63,22 +64,21 @@ func runTriageRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 	if err != nil {
 		return localizedError(c, r, err)
 	}
-	resp, err := queries.ListRepoIssuesWithLabels(ctx, clients.AsGenqlientClient(), id.Owner, id.Name, triageFetchLimit)
-	if err != nil {
-		return fmt.Errorf("list repo issues with labels: %w", err)
-	}
-	if resp.Repository == nil {
+	issues, err := queries.PaginateRepoIssuesWithLabels(ctx, clients.AsGenqlientClient(), id.Owner, id.Name, triageFetchLimit)
+	if errors.Is(err, queries.ErrRepoNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
 	}
-	warnIfTruncated(c, r, kindRepoIssues, len(resp.Repository.Issues.Nodes), triageFetchLimit)
+	if err != nil {
+		return fmt.Errorf("list repo issues with labels: %w", err)
+	}
 	type triageHit struct {
 		Number int
 		Title  string
 		URL    string
 	}
 	hits := []triageHit{}
-	for _, n := range resp.Repository.Issues.Nodes {
+	for _, n := range issues {
 		if n == nil {
 			continue
 		}
@@ -122,16 +122,14 @@ func runTriageProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	resp, err := queries.ListProjectV2Items(ctx, clients.AsGenqlientClient(), pid, triageFetchLimit)
-	if err != nil {
-		return fmt.Errorf("list project items: %w", err)
-	}
-	if !projectitem.HasProjectNode(resp) {
+	items, err := queries.PaginateProjectV2Items(ctx, clients.AsGenqlientClient(), pid, triageFetchLimit)
+	if errors.Is(err, queries.ErrProjectNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	items := projectitem.ItemsFromResponse(resp)
-	warnIfTruncated(c, r, kindProjectItems, len(items), triageFetchLimit)
+	if err != nil {
+		return fmt.Errorf("list project items: %w", err)
+	}
 	hits := []*queries.ProjectV2ItemNode{}
 	for _, item := range items {
 		if item == nil {

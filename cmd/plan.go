@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -72,18 +73,16 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 		return localizedError(c, r, err)
 	}
 	gqlClient := clients.AsGenqlientClient()
-	issuesResp, err := queries.ListRepoIssuesWithMilestone(ctx, gqlClient, id.Owner, id.Name, planFetchLimit)
-	if err != nil {
-		return fmt.Errorf("list repo issues with milestone: %w", err)
-	}
-	if issuesResp.Repository == nil {
+	issues, err := queries.PaginateRepoIssuesWithMilestone(ctx, gqlClient, id.Owner, id.Name, planFetchLimit)
+	if errors.Is(err, queries.ErrRepoNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
 	}
-	warnIfTruncated(c, r, kindRepoIssues, len(issuesResp.Repository.Issues.Nodes), planFetchLimit)
-	type issueRow = queries.ListRepoIssuesWithMilestoneRepositoryIssuesIssueConnectionNodesIssue
-	inRange := []*issueRow{}
-	for _, n := range issuesResp.Repository.Issues.Nodes {
+	if err != nil {
+		return fmt.Errorf("list repo issues with milestone: %w", err)
+	}
+	inRange := []*queries.RepoIssueWithMilestone{}
+	for _, n := range issues {
 		if n == nil {
 			continue
 		}
@@ -113,23 +112,25 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 		return nil
 	}
 
-	milestonesResp, err := queries.ListMilestones(ctx, gqlClient, id.Owner, id.Name, planFetchLimit)
+	milestones, err := queries.PaginateMilestones(ctx, gqlClient, id.Owner, id.Name, planFetchLimit)
+	if errors.Is(err, queries.ErrRepoNotFound) {
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
+		return ErrSilentRuntime
+	}
 	if err != nil {
 		return fmt.Errorf("list milestones: %w", err)
 	}
-	if milestonesResp.Repository != nil {
-		warnIfTruncated(c, r, kindMilestones, len(milestonesResp.Repository.Milestones.Nodes), planFetchLimit)
-	}
 	var milestoneID string
 	var milestoneNumber int
-	if milestonesResp.Repository != nil {
-		for _, m := range milestonesResp.Repository.Milestones.Nodes {
-			if m.Title == title {
-				milestoneID = m.Id
-				milestoneNumber = m.Number
-				fmt.Fprintf(out, "%s: %s (#%d)\n", r.T("plan.reused"), title, m.Number)
-				break
-			}
+	for _, m := range milestones {
+		if m == nil {
+			continue
+		}
+		if m.Title == title {
+			milestoneID = m.Id
+			milestoneNumber = m.Number
+			fmt.Fprintf(out, "%s: %s (#%d)\n", r.T("plan.reused"), title, m.Number)
+			break
 		}
 	}
 	if milestoneID == "" {
@@ -187,15 +188,15 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		return ErrSilentRuntime
 	}
 	gqlClient := clients.AsGenqlientClient()
-	fieldsResp, err := queries.ListProjectV2Fields(ctx, gqlClient, pid, planFieldsFetchLimit)
-	if err != nil {
-		return fmt.Errorf("list project fields: %w", err)
-	}
-	if !projectitem.HasFieldsNode(fieldsResp) {
+	fieldNodes, err := queries.PaginateProjectV2Fields(ctx, gqlClient, pid, planFieldsFetchLimit)
+	if errors.Is(err, queries.ErrProjectNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	fields := projectitem.FieldsOf(projectitem.FieldsFromResponse(fieldsResp))
+	if err != nil {
+		return fmt.Errorf("list project fields: %w", err)
+	}
+	fields := projectitem.FieldsOf(fieldNodes)
 	itField := findIterationField(fields)
 	if itField == nil || itField.Configuration == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.plan.iterationFieldMissing"))
@@ -217,12 +218,14 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		fmt.Fprintf(out, "  %s\n\n", r.T("plan.iterationFallback.project"))
 	}
 
-	itemsResp, err := queries.ListProjectV2Items(ctx, gqlClient, pid, planFetchLimit)
+	allItems, err := queries.PaginateProjectV2Items(ctx, gqlClient, pid, planFetchLimit)
+	if errors.Is(err, queries.ErrProjectNotFound) {
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
+		return ErrSilentRuntime
+	}
 	if err != nil {
 		return fmt.Errorf("list project items: %w", err)
 	}
-	allItems := projectitem.ItemsFromResponse(itemsResp)
-	warnIfTruncated(c, r, kindProjectItems, len(allItems), planFetchLimit)
 	inRange := []*queries.ProjectV2ItemNode{}
 	for _, item := range allItems {
 		if item == nil {
