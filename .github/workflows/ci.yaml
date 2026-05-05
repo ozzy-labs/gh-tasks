@@ -75,12 +75,12 @@ jobs:
       - name: govulncheck (text, fail-fast)
         uses: golang/govulncheck-action@v1
         with:
-          go-version-file: go.mod
+          go-version-input: '1.26.0'
 
       - name: govulncheck (SARIF for Code Scanning)
         uses: golang/govulncheck-action@v1
         with:
-          go-version-file: go.mod
+          go-version-input: '1.26.0'
           output-format: sarif
           output-file: govulncheck.sarif
         continue-on-error: true

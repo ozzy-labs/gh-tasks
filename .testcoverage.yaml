@@ -20,8 +20,9 @@ threshold:
   total: 60
 
 # Per-package overrides. Path patterns are regexes matched against
-# module-relative package paths (e.g. `cmd`, `internal/scope`). First match
-# wins, so list more specific patterns before less specific ones.
+# module-relative package paths (e.g. `cmd`, `internal/scope`). Each pattern
+# is fully anchored (`^...$`) so prefix-sharing pairs like `internal/github`
+# and `internal/github/queries` apply independently — no ordering hazard.
 override:
   - path: ^cmd$
     threshold: 62
