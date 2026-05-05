@@ -43,7 +43,7 @@ internal/               → ドメインロジック
   ├── project/ projectitem/ period/ config/ → ドメイン helpers
   ├── skills/           → SKILL.md frontmatter parse + Load
   ├── adapters/         → 4 エージェント向け OutputFile 生成
-  └── testfake/         → GraphQL/REST テスト用 fake (cmd/internal 共通)
+  └── testfake/         → GraphQL テスト用 fake (cmd/internal 共通、REST は cmd-only)
 skills/             → skill SSOT(SKILL.md = ja、SKILL.en.md = en)
 dist/{adapter}/         → adapter 出力(`gh tasks build-skills` で生成)
 docs/manual/{en,ja}/    → ユーザーマニュアル(en SSOT、ja mirror)
@@ -126,4 +126,4 @@ yamllint . && yamlfmt . && markdownlint-cli2 '**/*.md'   # 共有 lint
 | Gemini CLI | `.gemini/settings.json` + `AGENTS.md.snippet` |
 | GitHub Copilot | `.github/copilot-instructions.md.snippet` |
 
-`AGENTS.md.snippet` / `copilot-instructions.md.snippet` は consumer 側の `AGENTS.md` / `.github/copilot-instructions.md` の marker block (`<!-- begin: @ozzylabs/gh-tasks -->` ～ `<!-- end -->`) に挿入される(idempotent)。
+`AGENTS.md.snippet` / `copilot-instructions.md.snippet` は consumer 側の `AGENTS.md` / `.github/copilot-instructions.md` の marker block (`<!-- begin: @ozzylabs/gh-tasks -->` ～ `<!-- end: @ozzylabs/gh-tasks -->`) に挿入される(idempotent)。

@@ -65,7 +65,7 @@ gh-tasks/
 │   ├── projectitem/ period/ config/   # ドメイン helpers
 │   ├── skills/                        # SKILL.md frontmatter parse + Load
 │   ├── adapters/                      # 4 agent OutputFile 生成
-│   └── testfake/                      # GraphQL/REST テスト用 fake (cmd/internal 共通)
+│   └── testfake/                      # GraphQL テスト用 fake (cmd/internal 共通、REST は cmd-only)
 ├── templates/                # Projects v2 フィールド定義 YAML
 ├── skills/{name}/                 # skill SSOT(ja: SKILL.md、en mirror)
 ├── docs/
@@ -118,7 +118,7 @@ gh-tasks/
 | `i18ncheck` | go/parser ベースの非 ASCII 検知 | `Scan`、`HasNonASCII`、`Decorative` |
 | `skills` | `skills/<name>/SKILL.md` parse + Load | `Load`、`ParseDocument` |
 | `adapters` | 4 agent OutputFile 生成 | `ClaudeCode` / `CodexCLI` / `GeminiCLI` / `Copilot` |
-| `testfake` | `cmd/` および `internal/` 共通の GraphQL / REST フェイク | `GraphQL`、`RecordingREST` |
+| `testfake` | `cmd/` および `internal/` 共通の GraphQL フェイク(REST フェイクは cmd テスト内に閉じる) | `FakeGraphQL`、`RecordingGraphQL` |
 
 ### `internal/i18n`
 
