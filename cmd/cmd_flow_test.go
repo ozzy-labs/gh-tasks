@@ -1952,3 +1952,209 @@ func TestProjectsInit_OwnerNotFound(t *testing.T) {
 		t.Errorf("expected ownerNotFound error, got:\n%s", stderr.String())
 	}
 }
+
+// TestProjectsInit_CreatesNewFields drives the mutation-success half of
+// runProjectsInit end-to-end with a captured GraphQL fake, asserting:
+//   - GetViewerID is consulted for --owner @me
+//   - CreateProjectV2 receives the title + viewer-resolved owner id
+//   - CreateProjectV2Field is invoked once per template entry
+//   - The 3 genqlient subtype payloads (Common / SingleSelect / Iteration)
+//     all flow through projectV2FieldDescriptor without losing name/dataType
+//
+// The user-template ships 2 fields (Status[single_select], Iteration); we
+// canon a CreateProjectV2Field response per call to stage one Common, one
+// SingleSelectField, and (via the second mutation) one IterationField --
+// that combination gives projectV2FieldDescriptor full type-switch coverage.
+func TestProjectsInit_CreatesNewFields(t *testing.T) {
+	t.Parallel()
+
+	mutationInputs := []map[string]any{}
+	inner := &fakeGraphQL{responses: []fakeResponse{
+		{matchSubstring: "query GetViewerID", data: map[string]any{"viewer": map[string]any{
+			"id": "U_viewer", "login": "me",
+		}}},
+		{matchSubstring: "mutation CreateProjectV2 (", data: map[string]any{
+			"createProjectV2": map[string]any{"projectV2": map[string]any{
+				"id": "PVT_new", "number": 1, "title": "My Todo",
+				"url": "https://example.test/p/1",
+			}},
+		}},
+		// PaginateProjectV2Fields runs once after the project is created;
+		// returning an empty connection ensures every template field hits
+		// the create path (no `existingNames` skip).
+		{matchSubstring: "query ListProjectV2Fields (", data: map[string]any{
+			"node": map[string]any{
+				"__typename": "ProjectV2",
+				"fields": map[string]any{
+					"pageInfo": map[string]any{"hasNextPage": false, "endCursor": nil},
+					"nodes":    []any{},
+				},
+			},
+		}},
+		// First field create: Status (SINGLE_SELECT). Stage the response
+		// as a SingleSelectField so the type-switch hits that arm.
+		{matchSubstring: "mutation CreateProjectV2Field (", data: map[string]any{
+			"createProjectV2Field": map[string]any{"projectV2Field": map[string]any{
+				"__typename": "ProjectV2SingleSelectField",
+				"id":         "F_status", "name": "Status", "dataType": "SINGLE_SELECT",
+			}},
+		}},
+		// Second field create: Iteration. Stage as IterationField.
+		{matchSubstring: "mutation CreateProjectV2Field (", data: map[string]any{
+			"createProjectV2Field": map[string]any{"projectV2Field": map[string]any{
+				"__typename": "ProjectV2IterationField",
+				"id":         "F_iter", "name": "Iteration", "dataType": "ITERATION",
+			}},
+		}},
+	}}
+	wrap := &captureGraphQL{inner: inner, capture: func(query string, vars map[string]any) {
+		if strings.Contains(query, "mutation CreateProjectV2 (") ||
+			strings.Contains(query, "mutation CreateProjectV2Field (") {
+			if input, ok := vars["input"].(map[string]any); ok {
+				// Defensive copy so subsequent mutations don't mutate
+				// the captured snapshot through the shared map.
+				snapshot := map[string]any{}
+				for k, v := range input {
+					snapshot[k] = v
+				}
+				snapshot["__op__"] = query
+				mutationInputs = append(mutationInputs, snapshot)
+			}
+		}
+	}}
+	d := testDeps(inner, func(d *cmd.Deps) {
+		d.NewClients = func() (*github.Clients, error) {
+			return &github.Clients{Host: "github.com", GraphQL: wrap, REST: fakeREST{}}, nil
+		}
+	})
+	stdout, _, err := runCmd(t, d, "projects", "init", "--template", "user", "--title", "My Todo")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	got := stdout.String()
+	if !strings.Contains(got, "Project created") || !strings.Contains(got, "https://example.test/p/1") {
+		t.Errorf("expected projectsInit.created with URL, got:\n%s", got)
+	}
+	if !strings.Contains(got, "Status") || !strings.Contains(got, "Iteration") {
+		t.Errorf("expected each created field to surface in stdout, got:\n%s", got)
+	}
+	// CreateProjectV2 + 2x CreateProjectV2Field = 3 capture entries.
+	if len(mutationInputs) != 3 {
+		t.Fatalf("captured %d mutation inputs, want 3: %#v", len(mutationInputs), mutationInputs)
+	}
+	if !strings.Contains(mutationInputs[0]["__op__"].(string), "mutation CreateProjectV2 (") {
+		t.Errorf("first mutation should be CreateProjectV2, got %q", mutationInputs[0]["__op__"])
+	}
+	if mutationInputs[0]["ownerId"] != "U_viewer" {
+		t.Errorf("CreateProjectV2.ownerId = %v, want U_viewer", mutationInputs[0]["ownerId"])
+	}
+	if mutationInputs[0]["title"] != "My Todo" {
+		t.Errorf("CreateProjectV2.title = %v, want My Todo", mutationInputs[0]["title"])
+	}
+	// Field mutations: first is Status (SINGLE_SELECT, with options).
+	if mutationInputs[1]["projectId"] != "PVT_new" || mutationInputs[1]["name"] != "Status" {
+		t.Errorf("Status mutation projectId/name mismatch: %#v", mutationInputs[1])
+	}
+	if mutationInputs[1]["dataType"] != "SINGLE_SELECT" {
+		t.Errorf("Status dataType = %v, want SINGLE_SELECT", mutationInputs[1]["dataType"])
+	}
+	if opts, ok := mutationInputs[1]["singleSelectOptions"].([]any); !ok || len(opts) == 0 {
+		t.Errorf("Status mutation should carry singleSelectOptions, got %#v", mutationInputs[1]["singleSelectOptions"])
+	}
+	// Second: Iteration (no options).
+	if mutationInputs[2]["name"] != "Iteration" || mutationInputs[2]["dataType"] != "ITERATION" {
+		t.Errorf("Iteration mutation = %#v", mutationInputs[2])
+	}
+}
+
+// TestProjectsInit_SkipsExistingFields verifies the existingNames branch:
+// when PaginateProjectV2Fields surfaces a field whose name (case-insensitive)
+// matches one in the template, runProjectsInit emits projectsInit.fieldSkipped
+// and does *not* issue CreateProjectV2Field for that entry.
+func TestProjectsInit_SkipsExistingFields(t *testing.T) {
+	t.Parallel()
+
+	createdFieldNames := []string{}
+	inner := &fakeGraphQL{responses: []fakeResponse{
+		{matchSubstring: "query GetViewerID", data: map[string]any{"viewer": map[string]any{
+			"id": "U_viewer", "login": "me",
+		}}},
+		{matchSubstring: "mutation CreateProjectV2 (", data: map[string]any{
+			"createProjectV2": map[string]any{"projectV2": map[string]any{
+				"id": "PVT_skip", "number": 2, "title": "Reuse",
+				"url": "https://example.test/p/2",
+			}},
+		}},
+		// Pre-populate "status" (lowercase) to exercise the case-insensitive
+		// skip — the template field is "Status".
+		{matchSubstring: "query ListProjectV2Fields (", data: map[string]any{
+			"node": map[string]any{
+				"__typename": "ProjectV2",
+				"fields": map[string]any{
+					"pageInfo": map[string]any{"hasNextPage": false, "endCursor": nil},
+					"nodes": []any{
+						map[string]any{
+							"__typename": "ProjectV2SingleSelectField",
+							"id":         "F_existing_status", "name": "status", "dataType": "SINGLE_SELECT",
+							"options": []any{},
+						},
+					},
+				},
+			},
+		}},
+		// Only Iteration should hit CreateProjectV2Field after the skip.
+		{matchSubstring: "mutation CreateProjectV2Field (", data: map[string]any{
+			"createProjectV2Field": map[string]any{"projectV2Field": map[string]any{
+				"__typename": "ProjectV2IterationField",
+				"id":         "F_iter", "name": "Iteration", "dataType": "ITERATION",
+			}},
+		}},
+	}}
+	wrap := &captureGraphQL{inner: inner, capture: func(query string, vars map[string]any) {
+		if strings.Contains(query, "mutation CreateProjectV2Field (") {
+			if input, ok := vars["input"].(map[string]any); ok {
+				if name, ok := input["name"].(string); ok {
+					createdFieldNames = append(createdFieldNames, name)
+				}
+			}
+		}
+	}}
+	d := testDeps(inner, func(d *cmd.Deps) {
+		d.NewClients = func() (*github.Clients, error) {
+			return &github.Clients{Host: "github.com", GraphQL: wrap, REST: fakeREST{}}, nil
+		}
+	})
+	stdout, _, err := runCmd(t, d, "projects", "init", "--template", "user", "--title", "Reuse")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	got := stdout.String()
+	if !strings.Contains(got, "skipped") || !strings.Contains(got, "Status") {
+		t.Errorf("expected projectsInit.fieldSkipped for Status, got:\n%s", got)
+	}
+	if !strings.Contains(got, "Iteration") {
+		t.Errorf("expected Iteration to still be created, got:\n%s", got)
+	}
+	if len(createdFieldNames) != 1 || createdFieldNames[0] != "Iteration" {
+		t.Errorf("expected exactly one CreateProjectV2Field call for Iteration, saw %v", createdFieldNames)
+	}
+}
+
+// TestProjectsInit_TemplateNotFound exercises the YAML-path-missing branch
+// of loadTemplateRaw via the runProjectsInit error funnel: the user passes
+// a yaml path that doesn't exist, so the command emits
+// `error.projectsInit.yamlRead` and exits with ErrSilent before any
+// GraphQL calls are issued.
+func TestProjectsInit_TemplateNotFound(t *testing.T) {
+	t.Parallel()
+
+	g := &fakeGraphQL{} // any GraphQL call would fall through with "no fake response matched"
+	d := testDeps(g)
+	_, stderr, err := runCmd(t, d, "projects", "init", "--title", "x", "/path/does/not/exist.yaml")
+	if !errors.Is(err, cmd.ErrSilent) {
+		t.Fatalf("expected ErrSilent, got %v", err)
+	}
+	if !strings.Contains(stderr.String(), "Could not read YAML") {
+		t.Errorf("expected yamlRead error, got:\n%s", stderr.String())
+	}
+}
