@@ -114,7 +114,7 @@ Create a Projects v2 board from a YAML template and add the custom fields in one
 gh tasks projects init [<yaml-path> | --template user|org] --title '<project-title>' [--owner <login>|@me] [--dry-run]
 ```
 
-- Positional arg: YAML path (matches `packages/templates/projects-v2/{user,org}.yaml`)
+- Positional arg: YAML path (matches `templates/projects-v2/{user,org}.yaml`)
 - `--template user|org`: use the bundled YAML (mutually exclusive with the positional arg)
 - `--owner <login>`: project owner (user or org login; default `@me`)
 - `--title <string>`: required

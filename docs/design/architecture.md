@@ -61,7 +61,7 @@ gh-tasks/
 │   ├── projectitem/ period/ config/   # ドメイン helpers
 │   ├── skills/                        # SKILL.md frontmatter parse + Load
 │   └── adapters/                      # 4 agent OutputFile 生成
-├── packages/templates/                # Projects v2 フィールド定義 YAML
+├── templates/                # Projects v2 フィールド定義 YAML
 ├── skills/{name}/                 # skill SSOT(ja: SKILL.md、en mirror)
 ├── docs/
 │   ├── manual/{en,ja}/                # ユーザーマニュアル(en SSOT、ja mirror)
