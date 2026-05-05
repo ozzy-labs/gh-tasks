@@ -63,7 +63,7 @@ func runAddRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, ti
 	gqlClient := clients.AsGenqlientClient()
 	idResp, err := queries.GetRepositoryID(ctx, gqlClient, id.Owner, id.Name)
 	if err != nil {
-		return fmt.Errorf("get repository id: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "get repository id", err)
 	}
 	if idResp.Repository == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
@@ -75,7 +75,7 @@ func runAddRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, ti
 	}
 	resp, err := queries.CreateIssue(ctx, gqlClient, input)
 	if err != nil {
-		return fmt.Errorf("create issue: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "create issue", err)
 	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("add.created.repo"), resp.CreateIssue.Issue.Url)
 	return nil
@@ -109,7 +109,7 @@ func runAddProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 	}
 	resp, err := queries.AddProjectV2DraftIssue(ctx, clients.AsGenqlientClient(), input)
 	if err != nil {
-		return fmt.Errorf("add project draft issue: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "add project draft issue", err)
 	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("add.created.project"), resp.AddProjectV2DraftIssue.ProjectItem.Id)
 	return nil

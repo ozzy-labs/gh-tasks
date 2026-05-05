@@ -62,7 +62,7 @@ func runLinkRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 	gqlClient := clients.AsGenqlientClient()
 	prResp, err := queries.GetPullRequestByNumber(ctx, gqlClient, id.Owner, id.Name, pr)
 	if err != nil {
-		return fmt.Errorf("get pull request: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "get pull request", err)
 	}
 	if prResp.Repository == nil || prResp.Repository.PullRequest == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.pullRequest.notFound", "owner", id.Owner, "name", id.Name, "number", pr))
@@ -79,7 +79,7 @@ func runLinkRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 		Body:          &updatedBody,
 	})
 	if err != nil {
-		return fmt.Errorf("update pull request body: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "update pull request body", err)
 	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("link.added"), updated.UpdatePullRequest.PullRequest.Url)
 	return nil
@@ -114,7 +114,7 @@ func runLinkProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	gqlClient := clients.AsGenqlientClient()
 	prResp, err := queries.GetPullRequestByNumber(ctx, gqlClient, id.Owner, id.Name, pr)
 	if err != nil {
-		return fmt.Errorf("get pull request: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "get pull request", err)
 	}
 	if prResp.Repository == nil || prResp.Repository.PullRequest == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.pullRequest.notFound", "owner", id.Owner, "name", id.Name, "number", pr))
@@ -122,7 +122,7 @@ func runLinkProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	issueResp, err := queries.GetIssueByNumber(ctx, gqlClient, id.Owner, id.Name, task)
 	if err != nil {
-		return fmt.Errorf("get issue: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "get issue", err)
 	}
 	if issueResp.Repository == nil || issueResp.Repository.Issue == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.issue.notFound", "owner", id.Owner, "name", id.Name, "number", task))
@@ -132,13 +132,13 @@ func runLinkProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		ProjectId: pid,
 		ContentId: prResp.Repository.PullRequest.Id,
 	}); err != nil {
-		return fmt.Errorf("add PR to project: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "add PR to project", err)
 	}
 	if _, err := queries.AddProjectV2ItemById(ctx, gqlClient, &queries.AddProjectV2ItemByIdInput{
 		ProjectId: pid,
 		ContentId: issueResp.Repository.Issue.Id,
 	}); err != nil {
-		return fmt.Errorf("add issue to project: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "add issue to project", err)
 	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s ↔ %s\n",
 		r.T("link.added.project"),

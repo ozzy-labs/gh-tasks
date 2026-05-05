@@ -79,7 +79,7 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 		return ErrSilentRuntime
 	}
 	if err != nil {
-		return fmt.Errorf("list repo issues with milestone: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "list repo issues with milestone", err)
 	}
 	inRange := []*queries.RepoIssueWithMilestone{}
 	for _, n := range issues {
@@ -118,7 +118,7 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 		return ErrSilentRuntime
 	}
 	if err != nil {
-		return fmt.Errorf("list milestones: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "list milestones", err)
 	}
 	var milestoneID string
 	var milestoneNumber int
@@ -138,7 +138,7 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 		path := fmt.Sprintf("/repos/%s/%s/milestones", id.Owner, id.Name)
 		body := map[string]any{"title": title}
 		if err := clients.REST.Do(ctx, "POST", path, body, &created); err != nil {
-			return fmt.Errorf("create milestone: %w", err)
+			return wrapTransport(c.ErrOrStderr(), r.Locale, "create milestone", err)
 		}
 		milestoneID = created.NodeID
 		milestoneNumber = created.Number
@@ -157,7 +157,7 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 			Id:          n.Id,
 			MilestoneId: &milestoneID,
 		}); err != nil {
-			return fmt.Errorf("update issue milestone (issue #%d): %w", n.Number, err)
+			return wrapTransport(c.ErrOrStderr(), r.Locale, fmt.Sprintf("update issue milestone (issue #%d)", n.Number), err)
 		}
 		fmt.Fprintf(out, "  %s: #%d\n", r.T("plan.linked"), n.Number)
 	}
@@ -194,7 +194,7 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		return ErrSilentRuntime
 	}
 	if err != nil {
-		return fmt.Errorf("list project fields: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "list project fields", err)
 	}
 	fields := projectitem.FieldsOf(fieldNodes)
 	itField := findIterationField(fields)
@@ -224,7 +224,7 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		return ErrSilentRuntime
 	}
 	if err != nil {
-		return fmt.Errorf("list project items: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "list project items", err)
 	}
 	inRange := []*queries.ProjectV2ItemNode{}
 	for _, item := range allItems {
@@ -263,7 +263,7 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 			FieldId:   itField.ID,
 			Value:     &queries.ProjectV2FieldValue{IterationId: &resolved.iteration.ID},
 		}); err != nil {
-			return fmt.Errorf("update item field value (%s): %w", describeItem(item), err)
+			return wrapTransport(c.ErrOrStderr(), r.Locale, fmt.Sprintf("update item field value (%s)", describeItem(item)), err)
 		}
 		fmt.Fprintf(out, "  %s: %s\n", r.T("plan.iterationUpdated.project"), describeItem(item))
 	}

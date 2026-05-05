@@ -62,7 +62,7 @@ func runTodayRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, 
 		return ErrSilentRuntime
 	}
 	if err != nil {
-		return fmt.Errorf("list repo issues: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "list repo issues", err)
 	}
 	hits := []*queries.RepoIssue{}
 	for _, issue := range issues {
@@ -115,7 +115,7 @@ func runTodayProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolve
 		return ErrSilentRuntime
 	}
 	if err != nil {
-		return fmt.Errorf("list project items: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "list project items", err)
 	}
 	hits := []*queries.ProjectV2ItemNode{}
 	for _, item := range items {

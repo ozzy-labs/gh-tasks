@@ -72,7 +72,7 @@ func runDoneRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, r
 	gqlClient := clients.AsGenqlientClient()
 	resp, err := queries.GetIssueByNumber(ctx, gqlClient, id.Owner, id.Name, num)
 	if err != nil {
-		return fmt.Errorf("get issue: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "get issue", err)
 	}
 	if resp.Repository == nil || resp.Repository.Issue == nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.issue.notFound", "owner", id.Owner, "name", id.Name, "number", num))
@@ -84,7 +84,7 @@ func runDoneRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, r
 	}
 	closed, err := queries.CloseIssue(ctx, gqlClient, &queries.CloseIssueInput{IssueId: resp.Repository.Issue.Id})
 	if err != nil {
-		return fmt.Errorf("close issue: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "close issue", err)
 	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("done.closed"), closed.CloseIssue.Issue.Url)
 	return nil
@@ -119,7 +119,7 @@ func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		return ErrSilentRuntime
 	}
 	if err != nil {
-		return fmt.Errorf("list project fields: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "list project fields", err)
 	}
 	fields := projectitem.FieldsOf(fieldNodes)
 	statusField := findStatusField(fields)
@@ -139,7 +139,7 @@ func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		return ErrSilentRuntime
 	}
 	if err != nil {
-		return fmt.Errorf("list project items: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "list project items", err)
 	}
 	var target *queries.ProjectV2ItemNode
 	for _, n := range itemList {
@@ -172,7 +172,7 @@ func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		FieldId:   statusField.ID,
 		Value:     &queries.ProjectV2FieldValue{SingleSelectOptionId: &doneOption.ID},
 	}); err != nil {
-		return fmt.Errorf("update item field value: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "update item field value", err)
 	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("done.statusUpdated.project"), itemID)
 	return nil

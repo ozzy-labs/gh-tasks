@@ -70,7 +70,7 @@ func runTriageRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 		return ErrSilentRuntime
 	}
 	if err != nil {
-		return fmt.Errorf("list repo issues with labels: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "list repo issues with labels", err)
 	}
 	type triageHit struct {
 		Number int
@@ -128,7 +128,7 @@ func runTriageProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 		return ErrSilentRuntime
 	}
 	if err != nil {
-		return fmt.Errorf("list project items: %w", err)
+		return wrapTransport(c.ErrOrStderr(), r.Locale, "list project items", err)
 	}
 	hits := []*queries.ProjectV2ItemNode{}
 	for _, item := range items {
