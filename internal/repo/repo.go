@@ -4,6 +4,7 @@ package repo
 
 import (
 	"context"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -139,8 +140,15 @@ func extractRemotePath(url string) string {
 // defaultGetRemoteURL invokes `git remote get-url origin` bounded by ctx so
 // a stuck or hanging git process cannot block the CLI indefinitely. Callers
 // that already supply ResolveOptions.GetRemoteURL bypass this entirely.
+//
+// The child git invocation is isolated from inherited GIT_* repository-location
+// variables (see [cleanGitEnv]) so the lookup honours the process cwd rather
+// than whatever repo a parent git hook is operating on. Without this isolation
+// a `gh tasks` call invoked from a pre-commit hook would inherit the hook's
+// GIT_DIR and resolve the *hook's* origin instead of the cwd's.
 func defaultGetRemoteURL(ctx context.Context) (string, bool) {
 	cmd := exec.CommandContext(ctx, "git", "remote", "get-url", "origin")
+	cmd.Env = cleanGitEnv(os.Environ())
 	out, err := cmd.Output()
 	if err != nil {
 		return "", false
@@ -150,4 +158,37 @@ func defaultGetRemoteURL(ctx context.Context) (string, bool) {
 		return "", false
 	}
 	return url, true
+}
+
+// cleanGitEnv returns env with GIT_* repository-location variables removed so
+// a child `git` invocation falls back to cwd-based discovery.
+//
+// The list mirrors `chdirToTempOrSkip` in repo_test.go and is sourced from
+// `git help environment`'s "repository locations" section. We remove the
+// entries entirely (rather than setting them to empty strings) because git
+// distinguishes an unset GIT_DIR from an empty one — the latter is treated
+// as a literal empty path and aborts.
+//
+// Other GIT_* variables (GIT_AUTHOR_NAME, GIT_TERMINAL_PROMPT, etc.) are
+// intentionally preserved; only the location-overriding ones are stripped.
+func cleanGitEnv(env []string) []string {
+	drop := map[string]struct{}{
+		"GIT_DIR":              {},
+		"GIT_WORK_TREE":        {},
+		"GIT_COMMON_DIR":       {},
+		"GIT_INDEX_FILE":       {},
+		"GIT_OBJECT_DIRECTORY": {},
+		"GIT_NAMESPACE":        {},
+	}
+	out := make([]string, 0, len(env))
+	for _, kv := range env {
+		eq := strings.IndexByte(kv, '=')
+		if eq > 0 {
+			if _, skip := drop[kv[:eq]]; skip {
+				continue
+			}
+		}
+		out = append(out, kv)
+	}
+	return out
 }
