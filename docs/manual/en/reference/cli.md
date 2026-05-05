@@ -124,6 +124,18 @@ gh tasks projects init [<yaml-path> | --template user|org] --title '<project-tit
 
 Returns: prints the created Project URL to stdout, exits 0.
 
+### `gh tasks projects init-templates` ✅
+
+Print the bundled `user` / `org` Projects v2 field templates to stdout. Useful for copying a baseline before customizing locally.
+
+```bash
+gh tasks projects init-templates
+```
+
+- No arguments / flags
+- Output is a single stdout stream containing both templates, each prefixed by a `# --template user` / `# --template org` header line. Pipe into a YAML splitter or redirect to a file as needed
+- The templates are bundled into the binary and match `templates/projects-v2/{user,org}.yaml`
+
 ### `gh tasks link <pr> <task>` ✅
 
 Link a PR to its tracking Issue / Project item.

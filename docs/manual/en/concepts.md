@@ -38,5 +38,8 @@ The "planning period" unit per scope:
 
 ## Related ADRs
 
-- [docs/adr/0001](../../adr/0001-use-bun-compile-for-binary.md): adopting Bun --compile
-- [docs/adr/0003](../../adr/0003-graphql-via-octokit.md): GraphQL via Octokit
+- [docs/adr/0006](../../adr/0006-go-and-cobra-migration.md): Go + cobra + `cli/gh-extension-precompile@v2` migration (current)
+- [docs/adr/0007](../../adr/0007-go-gh-graphql-client.md): GraphQL via `cli/go-gh/v2` + `Khan/genqlient` (current)
+- [docs/adr/0005](../../adr/0005-i18n-reader-based-ssot.md): reader-based i18n SSOT (current)
+- [docs/adr/0004](../../adr/0004-skill-frontmatter-schema.md): skill frontmatter schema (current)
+- Historical (Superseded): [ADR-0001](../../adr/0001-use-bun-compile-for-binary.md) Bun --compile, [ADR-0003](../../adr/0003-graphql-via-octokit.md) GraphQL via Octokit, [ADR-0002](../../adr/0002-i18n-japanese-ssot.md) ja SSOT

@@ -21,5 +21,5 @@ User manual for `gh-tasks`. This directory is the **SSOT**; `docs/manual/ja/` is
 
 ## Design rationale
 
-- [docs/adr/](../../adr/) — repo-internal ADRs (Bun --compile / i18n / Octokit / skill frontmatter)
+- [docs/adr/](../../adr/) — repo-internal ADRs (Go migration / i18n / GraphQL via go-gh + genqlient / skill frontmatter)
 - [docs/design/](../../design/) — repo-internal living design documents

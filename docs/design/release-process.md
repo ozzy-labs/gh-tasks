@@ -55,12 +55,13 @@ GitHub Release v0.X.Y 完成
 ```json
 {
   "packages": {
-    "packages/gh-tasks": {
-      "release-type": "node",
+    ".": {
+      "release-type": "go",
       "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": false,
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
-      "release-as": "0.1.0",
+      "release-as": "2.0.0-rc.1",
       "changelog-sections": [
         { "type": "feat", "section": "Features" },
         { "type": "fix", "section": "Bug Fixes" },
@@ -73,18 +74,20 @@ GitHub Release v0.X.Y 完成
 
 ポイント:
 
-- `release-type: node` → npm package と認識されるが、本リポは npm publish しない(extension は GitHub Releases のみ)
+- パッケージパスは `.`(リポルート、Go 移行に伴いモノレポ風 `packages/gh-tasks/` は廃止)
+- `release-type: go` → Go モジュールとして認識(GitHub Releases のみ、npm publish しない)
+- `include-component-in-tag: false` → タグは `vX.Y.Z` 形式(コンポーネント prefix なし)
 - `bump-minor-pre-major: true` + `bump-patch-for-minor-pre-major: true` → v1.0.0 未満の段階で `feat:` も minor として扱う
-- `release-as: "0.1.0"` → **暫定 pin**(scaffold 直後の v1.0.0 暴走回避)。v0.1.0 ship 後に Issue #4 で削除
+- `release-as: "2.0.0-rc.1"` → **Go 移行カットオーバー pin**(TS 時代 v0.x との明確な世代分離、v2.0.0 stable 解禁時に削除)
 - `changelog-sections` → `feat` / `fix` / `perf` のみ CHANGELOG に載る。`docs:` / `ci:` / `chore:` 等は除外
 
 ### `.release-please-manifest.json`
 
 ```json
-{ "packages/gh-tasks": "0.0.0" }
+{ ".": "0.1.0" }
 ```
 
-現在の version(release-please が更新)。タグ作成時に release-please が自動 bump する。
+現在の version(release-please が更新)。タグ作成時に release-please が自動 bump する。`release-as` の pin が解除されるまで提案 version は固定。
 
 ### Asset 命名規約
 
@@ -129,9 +132,9 @@ gh tasks --help
 
 ## 暫定 pin の経緯と解除予定
 
-scaffold 直後、release-please が `0.0.0` manifest を一気に v1.0.0 に bump しようとした問題を回避するため、`release-please-config.json` の `packages/gh-tasks` に `"release-as": "0.1.0"` を一時 pin した。
+Go 移行カットオーバー時、TS 時代の v0.x 系列と明確な世代分離をするため `release-as: "2.0.0-rc.1"` を pin している(リポルート `.` パッケージ)。
 
-**v0.1.0 が ship した直後** に解除する必要がある(放置すると release-please が永遠に v0.1.0 提案を続け、`fix:` / `feat:` による bump が反映されない)。Issue #4 で追跡。
+**v2.0.0 stable が ship した直後** に解除する必要がある(放置すると release-please が永遠に同 version 提案を続け、`fix:` / `feat:` による bump が反映されない)。
 
 ## 運用上の注意
 

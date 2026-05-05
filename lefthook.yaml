@@ -14,7 +14,7 @@ pre-commit:
       run: 'echo "❌ .yml files found. Use .yaml extension instead." && exit 1'
     gofumpt:
       glob: '**/*.go'
-      run: mise exec -- gofmt -w {staged_files}
+      run: mise exec -- gofumpt -w {staged_files}
       stage_fixed: true
     golangci-lint:
       glob: '**/*.go'

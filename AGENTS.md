@@ -18,7 +18,7 @@
 - Language / runtime: **Go 1.25** + toolchain go1.26.0(repo-internal ADR-0006)
 - CLI framework: `spf13/cobra`
 - GitHub API: `cli/go-gh/v2` (auth + GraphQL + REST、repo-internal ADR-0007)
-- GraphQL types: hand-written under `internal/github/queries/`(genqlient adoption は follow-up issue)
+- GraphQL types: `internal/github/queries/operations.graphql` を SSOT として `Khan/genqlient` で型自動生成(`go.mod` の `tool` ディレクティブで管理、`internal/github/queries/genqlient.go` が生成物、repo-internal ADR-0007)。REST 用ハンドコード型は `rest_types.go` のみ
 - Binary build / release: `cli/gh-extension-precompile@v2`(SLSA attestations、manifest.yml 自動生成)
 - Linting / formatting: `golangci-lint` v2(`gofumpt` + `goimports` + `gci`)、yamllint + yamlfmt、markdownlint-cli2、shellcheck + shfmt
 - Vulnerability scan: `govulncheck`(text + SARIF を Code Scanning に出力)
@@ -36,7 +36,7 @@ cmd/                    → cobra コマンド定義(add/list/today/done/standup
                          check-i18n は Hidden)
 internal/               → ドメインロジック
   ├── github/           → cli/go-gh ラッパ(GraphQL + REST)
-  │   └── queries/      → ハンドコードされた GraphQL クエリ + 型
+  │   └── queries/      → `operations.graphql`(SSOT)+ genqlient 自動生成型 + REST 用ハンドコード型(`rest_types.go`)
   ├── i18n/             → embed 済 en/ja JSON catalog + ResolveLocale + T
   ├── i18ncheck/        → ハードコード非 ASCII 検知 (gh tasks check-i18n)
   ├── scope/ repo/      → 3-scope (repo/org/user) 抽象 + リポ解決

@@ -8,6 +8,7 @@ lefthook = "2"
 
 # Go quality chain
 golangci-lint = "latest"
+"go:mvdan.cc/gofumpt" = "latest"
 "go:golang.org/x/vuln/cmd/govulncheck" = "latest"
 
 # Linters & formatters (language-agnostic)
