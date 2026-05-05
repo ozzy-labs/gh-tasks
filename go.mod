@@ -5,6 +5,7 @@ go 1.25.0
 toolchain go1.26.0
 
 require (
+	github.com/Khan/genqlient v0.8.1
 	github.com/cli/go-gh/v2 v2.13.0
 	github.com/google/go-cmp v0.7.0
 	github.com/pelletier/go-toml/v2 v2.3.1
@@ -14,7 +15,6 @@ require (
 )
 
 require (
-	github.com/Khan/genqlient v0.8.1 // indirect
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/alexflint/go-arg v1.5.1 // indirect
 	github.com/alexflint/go-scalar v1.2.0 // indirect
@@ -22,6 +22,7 @@ require (
 	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
 	github.com/cli/safeexec v1.0.0 // indirect
 	github.com/cli/shurcooL-graphql v0.0.4 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/henvic/httpretty v0.0.6 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
@@ -32,11 +33,11 @@ require (
 	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/thlib/go-timezone-local v0.0.0-20210907160436-ef149e42d28e // indirect
 	github.com/vektah/gqlparser/v2 v2.5.19 // indirect
-	golang.org/x/mod v0.20.0 // indirect
-	golang.org/x/sync v0.12.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/mod v0.35.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/sys v0.43.0 // indirect
 	golang.org/x/term v0.30.0 // indirect
-	golang.org/x/tools v0.24.0 // indirect
+	golang.org/x/tools v0.44.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 

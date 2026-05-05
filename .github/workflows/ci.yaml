@@ -34,6 +34,15 @@ jobs:
       - name: go vet
         run: go vet ./...
 
+      - name: go generate drift check
+        run: |-
+          go generate ./...
+          if ! git diff --quiet; then
+            echo "::error::go generate produced uncommitted changes" >&2
+            git diff --stat
+            exit 1
+          fi
+
       - name: go test (race + shuffle)
         run: go test -race -shuffle=on ./...
 

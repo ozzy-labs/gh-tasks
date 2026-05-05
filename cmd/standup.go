@@ -62,11 +62,13 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	viewerLogin := ""
 	if mine {
-		var v queries.GetViewerLoginResponse
-		if err := clients.GraphQL.Do(ctx, queries.GetViewerLogin, nil, &v); err != nil {
+		v, err := queries.GetViewerLogin(ctx, clients.AsGenqlientClient())
+		if err != nil {
 			return fmt.Errorf("get viewer login: %w", err)
 		}
-		viewerLogin = v.Viewer.Login
+		if v != nil && v.Viewer != nil {
+			viewerLogin = v.Viewer.Login
+		}
 	}
 	var closedResp queries.ListClosedIssuesResponse
 	var prsResp queries.ListMergedPRsResponse
@@ -165,11 +167,13 @@ func runStandupProject(ctx context.Context, c *cobra.Command, deps Deps, r Resol
 	}
 	viewerLogin := ""
 	if mine {
-		var v queries.GetViewerLoginResponse
-		if err := clients.GraphQL.Do(ctx, queries.GetViewerLogin, nil, &v); err != nil {
+		v, err := queries.GetViewerLogin(ctx, clients.AsGenqlientClient())
+		if err != nil {
 			return fmt.Errorf("get viewer login: %w", err)
 		}
-		viewerLogin = v.Viewer.Login
+		if v != nil && v.Viewer != nil {
+			viewerLogin = v.Viewer.Login
+		}
 	}
 	pid, err := projectitem.ResolveProjectNodeID(ctx, clients.GraphQL, sc, pref)
 	if err != nil {

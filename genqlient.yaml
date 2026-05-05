@@ -1,6 +1,6 @@
 schema: internal/github/queries/schema.graphql
 operations:
-  - internal/github/queries/*.graphql
+  - internal/github/queries/operations.graphql
 generated: internal/github/queries/genqlient.go
 package: queries
 use_struct_references: true
