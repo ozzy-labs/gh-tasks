@@ -28,13 +28,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          # Match the toolchain directive in go.mod. Reading go-version-file
-          # picks up only the `go` directive (1.25.0), which then triggers
-          # toolchain auto-download for `compile` (1.26.0) — that mix breaks
-          # `-coverprofile` instrumentation with "compile version does not
-          # match go tool version" errors. Pinning the installed Go to
-          # 1.26.0 keeps stdlib and toolchain in sync.
-          go-version: '1.26.0'
+          # Match the toolchain directive in go.mod (`toolchain go1.26.0`).
+          # Reading `go-version-file` picks up only the `go` directive
+          # (1.25.0), which then triggers toolchain auto-download for
+          # `compile` (1.26.0) — that mix breaks `-coverprofile`
+          # instrumentation with "compile version does not match go tool
+          # version" errors. Pinning the installed Go to the latest 1.26.x
+          # keeps stdlib and toolchain in sync, and `1.26` (no patch)
+          # auto-picks the newest patch so govulncheck does not flag stdlib
+          # vulnerabilities fixed in subsequent point releases.
+          go-version: '1.26'
           cache: true
 
       - name: go vet
@@ -75,12 +78,12 @@ jobs:
       - name: govulncheck (text, fail-fast)
         uses: golang/govulncheck-action@v1
         with:
-          go-version-input: '1.26.0'
+          go-version-input: '1.26'
 
       - name: govulncheck (SARIF for Code Scanning)
         uses: golang/govulncheck-action@v1
         with:
-          go-version-input: '1.26.0'
+          go-version-input: '1.26'
           output-format: sarif
           output-file: govulncheck.sarif
         continue-on-error: true
@@ -100,7 +103,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.26.0'
+          go-version: '1.26'
           cache: true
       - name: build-skills (smoke)
         run: go run . build-skills --dist /tmp/dist-smoke
