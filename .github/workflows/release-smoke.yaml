@@ -1,9 +1,21 @@
 name: release-smoke
 
+# Validates that the published release artefacts are usable by an end user
+# (gh extension install + version + help). Triggered only after the `release`
+# workflow finishes so the build-binaries / checksums jobs have actually
+# attached the assets — listening to the raw `release: published` event
+# would race the precompile step (release-please-action publishes the
+# release before binaries are uploaded) and reliably fail the first install
+# attempt of every new tag.
 on:
-  release:
-    types: [published]
+  workflow_run:
+    workflows: [release]
+    types: [completed]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to smoke-test (defaults to the latest published release)
+        required: false
 
 permissions:
   contents: read
@@ -11,11 +23,29 @@ permissions:
 jobs:
   smoke:
     runs-on: ubuntu-latest
+    # workflow_run sends `completed` for both success and failure; only run
+    # the smoke when the release workflow itself succeeded. workflow_dispatch
+    # has no upstream conclusion, so always run on manual dispatch.
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     steps:
-      - name: Install gh-tasks extension
+      - name: Resolve target tag
+        id: tag
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh extension install ozzy-labs/gh-tasks
+          GH_REPO: ${{ github.repository }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          if [ -n "$INPUT_TAG" ]; then
+            tag="$INPUT_TAG"
+          else
+            tag=$(gh release view --json tagName --jq .tagName)
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Smoke-testing tag: $tag"
+      - name: Install gh-tasks extension at tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh extension install ozzy-labs/gh-tasks --pin "${{ steps.tag.outputs.tag }}"
       - name: Verify version output
         run: |
           out=$(gh tasks --version)
