@@ -17,8 +17,8 @@
 //     human message. This is what lets `main` exit non-zero via cobra.CheckErr
 //     and what makes the wrap reversible for downstream consumers.
 //
-// All cases use the existing `fakeResponse{err: ...}` channel of the
-// fakeGraphQL fake; the context-cancellation case additionally wraps the
+// All cases use the existing `testfake.FakeResponse{Err: ...}` channel of the
+// testfake.FakeGraphQL fake; the context-cancellation case additionally wraps the
 // fake with `ctxAwareGraphQL` so the paginator's first `Do` observes the
 // cancellation directly.
 package cmd_test
@@ -33,6 +33,7 @@ import (
 	"github.com/ozzy-labs/gh-tasks/internal/config"
 	"github.com/ozzy-labs/gh-tasks/internal/github"
 	"github.com/ozzy-labs/gh-tasks/internal/project"
+	"github.com/ozzy-labs/gh-tasks/internal/testfake"
 )
 
 // ===== Transport error injection ===========================================
@@ -46,8 +47,8 @@ func TestList_RepoGraphQL5xx(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 502 Bad Gateway")
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query ListRepoIssues (", err: transportErr},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query ListRepoIssues (", Err: transportErr},
 	}}
 	d := testDeps(g)
 	_, _, err := runCmd(t, d, "list")
@@ -76,8 +77,8 @@ func TestStandup_RepoNetworkError(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("net: connection refused")
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query ListClosedIssues (", err: transportErr},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query ListClosedIssues (", Err: transportErr},
 	}}
 	d := testDeps(g)
 	_, _, err := runCmd(t, d, "standup")
@@ -102,14 +103,14 @@ func TestDone_RepoUpdateMutationError(t *testing.T) {
 	t.Parallel()
 
 	mutationErr := errors.New("graphql: HTTP 500 Internal Server Error")
-	g := &fakeGraphQL{responses: []fakeResponse{
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
 		{
-			matchSubstring: "query GetIssueByNumber (",
-			data: map[string]any{"repository": map[string]any{"issue": map[string]any{
+			MatchSubstring: "query GetIssueByNumber (",
+			Data: map[string]any{"repository": map[string]any{"issue": map[string]any{
 				"id": "I_open", "number": 7, "url": "u/7", "state": "OPEN",
 			}}},
 		},
-		{matchSubstring: "mutation CloseIssue (", err: mutationErr},
+		{MatchSubstring: "mutation CloseIssue (", Err: mutationErr},
 	}}
 	d := testDeps(g)
 	_, _, err := runCmd(t, d, "done", "7")
@@ -136,8 +137,8 @@ func TestReview_RepoListErrorPropagates(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 503 Service Unavailable")
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query ListClosedIssues (", err: transportErr},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query ListClosedIssues (", Err: transportErr},
 	}}
 	d := testDeps(g)
 	_, _, err := runCmd(t, d, "review", "--period", "weekly")
@@ -164,10 +165,10 @@ func TestPlan_RepoMilestonesError(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 500 Internal Server Error")
-	g := &fakeGraphQL{responses: []fakeResponse{
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
 		{
-			matchSubstring: "query ListRepoIssuesWithMilestone (",
-			data: map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{
+			MatchSubstring: "query ListRepoIssuesWithMilestone (",
+			Data: map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{
 				map[string]any{
 					"id": "I_a", "number": 1, "title": "Task A", "url": "u/1",
 					"updatedAt": "2026-05-04T08:00:00Z",
@@ -175,7 +176,7 @@ func TestPlan_RepoMilestonesError(t *testing.T) {
 				},
 			}}}},
 		},
-		{matchSubstring: "query ListMilestones (", err: transportErr},
+		{MatchSubstring: "query ListMilestones (", Err: transportErr},
 	}}
 	d := testDeps(g)
 	_, _, err := runCmd(t, d, "plan", "--period", "daily")
@@ -201,9 +202,9 @@ func TestPlan_ProjectFieldsError(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 502 Bad Gateway")
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
-		{matchSubstring: "query ListProjectV2Fields (", err: transportErr},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetOrgProjectV2 (", Data: orgProject("PVT_org")},
+		{MatchSubstring: "query ListProjectV2Fields (", Err: transportErr},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
@@ -231,9 +232,9 @@ func TestList_ProjectItemsError(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 504 Gateway Timeout")
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
-		{matchSubstring: "query ListProjectV2Items (", err: transportErr},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetOrgProjectV2 (", Data: orgProject("PVT_org")},
+		{MatchSubstring: "query ListProjectV2Items (", Err: transportErr},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
@@ -262,9 +263,9 @@ func TestStandup_RepoMergedPRsError(t *testing.T) {
 
 	transportErr := errors.New("graphql: HTTP 502 Bad Gateway")
 	emptyRepoIssues := map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{}}}}
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query ListClosedIssues (", data: emptyRepoIssues},
-		{matchSubstring: "query ListMergedPRs (", err: transportErr},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query ListClosedIssues (", Data: emptyRepoIssues},
+		{MatchSubstring: "query ListMergedPRs (", Err: transportErr},
 	}}
 	d := testDeps(g)
 	_, _, err := runCmd(t, d, "standup")
@@ -291,10 +292,10 @@ func TestPlan_RepoCreateMilestoneError(t *testing.T) {
 	rest := &recordingREST{responses: []restResponse{
 		{matchMethod: "POST", matchPath: "/milestones", err: restErr},
 	}}
-	g := &fakeGraphQL{responses: []fakeResponse{
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
 		{
-			matchSubstring: "query ListRepoIssuesWithMilestone (",
-			data: map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{
+			MatchSubstring: "query ListRepoIssuesWithMilestone (",
+			Data: map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{
 				map[string]any{
 					"id": "I_a", "number": 1, "title": "Task A", "url": "u/1",
 					"updatedAt": "2026-05-04T08:00:00Z",
@@ -303,8 +304,8 @@ func TestPlan_RepoCreateMilestoneError(t *testing.T) {
 			}}}},
 		},
 		{
-			matchSubstring: "query ListMilestones (",
-			data:           map[string]any{"repository": map[string]any{"milestones": map[string]any{"nodes": []any{}}}},
+			MatchSubstring: "query ListMilestones (",
+			Data:           map[string]any{"repository": map[string]any{"milestones": map[string]any{"nodes": []any{}}}},
 		},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
@@ -358,11 +359,11 @@ func TestDone_ProjectUpdateFieldValueError(t *testing.T) {
 			}},
 		},
 	}}}}
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
-		{matchSubstring: "query ListProjectV2Fields (", data: fields},
-		{matchSubstring: "query ListProjectV2Items (", data: items},
-		{matchSubstring: "mutation UpdateProjectV2ItemFieldValue (", err: mutationErr},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetUserProjectV2 (", Data: userProject("PVT_user")},
+		{MatchSubstring: "query ListProjectV2Fields (", Data: fields},
+		{MatchSubstring: "query ListProjectV2Items (", Data: items},
+		{MatchSubstring: "mutation UpdateProjectV2ItemFieldValue (", Err: mutationErr},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
@@ -390,8 +391,8 @@ func TestStandup_ProjectMineViewerLoginError(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 401 Unauthorized")
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetViewerLogin", err: transportErr},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetViewerLogin", Err: transportErr},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
@@ -421,10 +422,10 @@ func TestPlan_RepoUpdateIssueMilestoneError(t *testing.T) {
 
 	mutationErr := errors.New("graphql: HTTP 502 Bad Gateway")
 	rest := &recordingREST{}
-	g := &fakeGraphQL{responses: []fakeResponse{
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
 		{
-			matchSubstring: "query ListRepoIssuesWithMilestone (",
-			data: map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{
+			MatchSubstring: "query ListRepoIssuesWithMilestone (",
+			Data: map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{
 				map[string]any{
 					"id": "I_a", "number": 1, "title": "Task A", "url": "u/1",
 					"updatedAt": "2026-05-04T08:00:00Z",
@@ -433,12 +434,12 @@ func TestPlan_RepoUpdateIssueMilestoneError(t *testing.T) {
 			}}}},
 		},
 		{
-			matchSubstring: "query ListMilestones (",
-			data: map[string]any{"repository": map[string]any{"milestones": map[string]any{"nodes": []any{
+			MatchSubstring: "query ListMilestones (",
+			Data: map[string]any{"repository": map[string]any{"milestones": map[string]any{"nodes": []any{
 				map[string]any{"id": "M_1", "number": 5, "title": "Daily 2026-05-04"},
 			}}}},
 		},
-		{matchSubstring: "mutation UpdateIssueMilestone (", err: mutationErr},
+		{MatchSubstring: "mutation UpdateIssueMilestone (", Err: mutationErr},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.NewClients = func() (*github.Clients, error) {
@@ -465,15 +466,15 @@ func TestLink_ProjectGetIssueError(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 502 Bad Gateway")
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetUserProjectV2 (", Data: userProject("PVT_user")},
 		{
-			matchSubstring: "query GetPullRequestByNumber (",
-			data: map[string]any{"repository": map[string]any{"pullRequest": map[string]any{
+			MatchSubstring: "query GetPullRequestByNumber (",
+			Data: map[string]any{"repository": map[string]any{"pullRequest": map[string]any{
 				"id": "PR_1", "number": 10, "url": "u/pr/10", "body": "",
 			}}},
 		},
-		{matchSubstring: "query GetIssueByNumber (", err: transportErr},
+		{MatchSubstring: "query GetIssueByNumber (", Err: transportErr},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.LoadConfig = func() (config.AppConfig, error) {
@@ -500,21 +501,21 @@ func TestLink_ProjectAddItemError(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 500 Internal Server Error")
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetUserProjectV2 (", Data: userProject("PVT_user")},
 		{
-			matchSubstring: "query GetPullRequestByNumber (",
-			data: map[string]any{"repository": map[string]any{"pullRequest": map[string]any{
+			MatchSubstring: "query GetPullRequestByNumber (",
+			Data: map[string]any{"repository": map[string]any{"pullRequest": map[string]any{
 				"id": "PR_1", "number": 10, "url": "u/pr/10", "body": "",
 			}}},
 		},
 		{
-			matchSubstring: "query GetIssueByNumber (",
-			data: map[string]any{"repository": map[string]any{"issue": map[string]any{
+			MatchSubstring: "query GetIssueByNumber (",
+			Data: map[string]any{"repository": map[string]any{"issue": map[string]any{
 				"id": "I_1", "number": 20, "url": "u/i/20", "state": "OPEN",
 			}}},
 		},
-		{matchSubstring: "mutation AddProjectV2ItemById (", err: transportErr},
+		{MatchSubstring: "mutation AddProjectV2ItemById (", Err: transportErr},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.LoadConfig = func() (config.AppConfig, error) {
@@ -541,9 +542,9 @@ func TestDone_ProjectFieldsError(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 502 Bad Gateway")
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
-		{matchSubstring: "query ListProjectV2Fields (", err: transportErr},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetUserProjectV2 (", Data: userProject("PVT_user")},
+		{MatchSubstring: "query ListProjectV2Fields (", Err: transportErr},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
@@ -581,10 +582,10 @@ func TestDone_ProjectItemsError(t *testing.T) {
 			},
 		},
 	}}}}
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
-		{matchSubstring: "query ListProjectV2Fields (", data: fields},
-		{matchSubstring: "query ListProjectV2Items (", err: transportErr},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetUserProjectV2 (", Data: userProject("PVT_user")},
+		{MatchSubstring: "query ListProjectV2Fields (", Data: fields},
+		{MatchSubstring: "query ListProjectV2Items (", Err: transportErr},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
@@ -611,9 +612,9 @@ func TestStandup_ProjectItemsError(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 503 Service Unavailable")
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
-		{matchSubstring: "query ListProjectV2Items (", err: transportErr},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetOrgProjectV2 (", Data: orgProject("PVT_org")},
+		{MatchSubstring: "query ListProjectV2Items (", Err: transportErr},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
@@ -640,12 +641,12 @@ func TestAdd_RepoCreateIssueError(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 500 Internal Server Error")
-	g := &fakeGraphQL{responses: []fakeResponse{
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
 		{
-			matchSubstring: "query GetRepositoryID (",
-			data:           map[string]any{"repository": map[string]any{"id": "R_1"}},
+			MatchSubstring: "query GetRepositoryID (",
+			Data:           map[string]any{"repository": map[string]any{"id": "R_1"}},
 		},
-		{matchSubstring: "mutation CreateIssue (", err: transportErr},
+		{MatchSubstring: "mutation CreateIssue (", Err: transportErr},
 	}}
 	d := testDeps(g)
 	_, _, err := runCmd(t, d, "add", "Title")
@@ -667,9 +668,9 @@ func TestAdd_ProjectDraftIssueError(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 502 Bad Gateway")
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
-		{matchSubstring: "mutation AddProjectV2DraftIssue (", err: transportErr},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetUserProjectV2 (", Data: userProject("PVT_user")},
+		{MatchSubstring: "mutation AddProjectV2DraftIssue (", Err: transportErr},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
@@ -696,9 +697,9 @@ func TestToday_ProjectItemsError(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 502 Bad Gateway")
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
-		{matchSubstring: "query ListProjectV2Items (", err: transportErr},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetUserProjectV2 (", Data: userProject("PVT_user")},
+		{MatchSubstring: "query ListProjectV2Items (", Err: transportErr},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
@@ -725,9 +726,9 @@ func TestTriage_ProjectItemsError(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 503 Service Unavailable")
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetOrgProjectV2 (", data: orgProject("PVT_org")},
-		{matchSubstring: "query ListProjectV2Items (", err: transportErr},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetOrgProjectV2 (", Data: orgProject("PVT_org")},
+		{MatchSubstring: "query ListProjectV2Items (", Err: transportErr},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
@@ -754,9 +755,9 @@ func TestReview_ProjectItemsError(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 504 Gateway Timeout")
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
-		{matchSubstring: "query ListProjectV2Items (", err: transportErr},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetUserProjectV2 (", Data: userProject("PVT_user")},
+		{MatchSubstring: "query ListProjectV2Items (", Err: transportErr},
 	}}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
@@ -783,8 +784,8 @@ func TestLink_RepoGetPullRequestError(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 502 Bad Gateway")
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetPullRequestByNumber (", err: transportErr},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetPullRequestByNumber (", Err: transportErr},
 	}}
 	d := testDeps(g)
 	_, _, err := runCmd(t, d, "link", "10", "20")
@@ -806,14 +807,14 @@ func TestLink_RepoUpdatePullRequestError(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 500 Internal Server Error")
-	g := &fakeGraphQL{responses: []fakeResponse{
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
 		{
-			matchSubstring: "query GetPullRequestByNumber (",
-			data: map[string]any{"repository": map[string]any{"pullRequest": map[string]any{
+			MatchSubstring: "query GetPullRequestByNumber (",
+			Data: map[string]any{"repository": map[string]any{"pullRequest": map[string]any{
 				"id": "PR_1", "number": 10, "url": "u/pr/10", "body": "",
 			}}},
 		},
-		{matchSubstring: "mutation UpdatePullRequest (", err: transportErr},
+		{MatchSubstring: "mutation UpdatePullRequest (", Err: transportErr},
 	}}
 	d := testDeps(g)
 	_, _, err := runCmd(t, d, "link", "10", "20")
@@ -836,8 +837,8 @@ func TestStandup_MineViewerLoginTransportError(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 401 Unauthorized")
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetViewerLogin", err: transportErr},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetViewerLogin", Err: transportErr},
 	}}
 	d := testDeps(g)
 	_, _, err := runCmd(t, d, "standup", "--mine")
@@ -858,8 +859,8 @@ func TestToday_RepoListError(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 503 Service Unavailable")
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query ListRepoIssues (", err: transportErr},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query ListRepoIssues (", Err: transportErr},
 	}}
 	d := testDeps(g)
 	_, _, err := runCmd(t, d, "today")
@@ -881,8 +882,8 @@ func TestTriage_RepoListError(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 502 Bad Gateway")
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query ListRepoIssuesWithLabels (", err: transportErr},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query ListRepoIssuesWithLabels (", Err: transportErr},
 	}}
 	d := testDeps(g)
 	_, _, err := runCmd(t, d, "triage")
@@ -904,8 +905,8 @@ func TestAdd_RepoGetRepositoryIDError(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 500 Internal Server Error")
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetRepositoryID (", err: transportErr},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetRepositoryID (", Err: transportErr},
 	}}
 	d := testDeps(g)
 	_, _, err := runCmd(t, d, "add", "Title")
@@ -927,8 +928,8 @@ func TestDone_RepoGetIssueError(t *testing.T) {
 	t.Parallel()
 
 	transportErr := errors.New("graphql: HTTP 500 Internal Server Error")
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query GetIssueByNumber (", err: transportErr},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetIssueByNumber (", Err: transportErr},
 	}}
 	d := testDeps(g)
 	_, _, err := runCmd(t, d, "done", "7")
@@ -958,8 +959,8 @@ func TestList_RepoContextCanceled(t *testing.T) {
 	// Pre-canned data path so the test is deterministic if the paginator
 	// somehow bypasses ctx — the assertion still fails loudly because the
 	// returned err would be nil.
-	inner := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query ListRepoIssues (", data: repoIssuesPayload()},
+	inner := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query ListRepoIssues (", Data: repoIssuesPayload()},
 	}}
 	wrapped := &ctxAwareGraphQL{inner: inner}
 	d := testDeps(inner, func(d *cmd.Deps) {

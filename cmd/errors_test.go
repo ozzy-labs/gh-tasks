@@ -2,10 +2,11 @@ package cmd_test
 
 import (
 	"errors"
-	"strings"
 	"testing"
 
 	"github.com/ozzy-labs/gh-tasks/cmd"
+	"github.com/ozzy-labs/gh-tasks/internal/i18n"
+	"github.com/ozzy-labs/gh-tasks/internal/testfake"
 )
 
 // TestErrSilentSentinelChain verifies the wrapping invariant: both args and
@@ -33,7 +34,7 @@ func TestErrSilentSentinelChain(t *testing.T) {
 func TestList_ScopeFlagInvalidExitCode(t *testing.T) {
 	t.Parallel()
 
-	g := &fakeGraphQL{}
+	g := &testfake.FakeGraphQL{}
 	d := testDeps(g)
 	_, _, err := runCmd(t, d, "list", "--scope=bogus")
 	if !errors.Is(err, cmd.ErrSilentArgs) {
@@ -49,7 +50,7 @@ func TestList_ScopeFlagInvalidExitCode(t *testing.T) {
 func TestReview_PeriodFlagInvalidExitCode(t *testing.T) {
 	t.Parallel()
 
-	g := &fakeGraphQL{}
+	g := &testfake.FakeGraphQL{}
 	d := testDeps(g)
 	_, _, err := runCmd(t, d, "review", "--period", "yearly")
 	if !errors.Is(err, cmd.ErrSilentArgs) {
@@ -62,7 +63,7 @@ func TestReview_PeriodFlagInvalidExitCode(t *testing.T) {
 func TestList_ProjectFlagInvalidExitCode(t *testing.T) {
 	t.Parallel()
 
-	g := &fakeGraphQL{}
+	g := &testfake.FakeGraphQL{}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return false }
 	})
@@ -78,7 +79,7 @@ func TestList_ProjectFlagInvalidExitCode(t *testing.T) {
 func TestList_RepoNotResolvedExitCode(t *testing.T) {
 	t.Parallel()
 
-	g := &fakeGraphQL{}
+	g := &testfake.FakeGraphQL{}
 	d := testDeps(g, func(d *cmd.Deps) {
 		d.HasGitRemote = func() bool { return true }
 		d.GetRemoteURL = func() (string, bool) { return "", false }
@@ -94,7 +95,7 @@ func TestList_RepoNotResolvedExitCode(t *testing.T) {
 func TestAdd_TitleRequiredExitCode(t *testing.T) {
 	t.Parallel()
 
-	g := &fakeGraphQL{}
+	g := &testfake.FakeGraphQL{}
 	d := testDeps(g)
 	_, _, err := runCmd(t, d, "add", "")
 	if !errors.Is(err, cmd.ErrSilentArgs) {
@@ -107,7 +108,7 @@ func TestAdd_TitleRequiredExitCode(t *testing.T) {
 func TestDone_IDRequiredExitCode(t *testing.T) {
 	t.Parallel()
 
-	g := &fakeGraphQL{}
+	g := &testfake.FakeGraphQL{}
 	d := testDeps(g)
 	_, _, err := runCmd(t, d, "done", "")
 	if !errors.Is(err, cmd.ErrSilentArgs) {
@@ -122,8 +123,8 @@ func TestDone_IDRequiredExitCode(t *testing.T) {
 func TestList_RepoNotFoundExitCode(t *testing.T) {
 	t.Parallel()
 
-	g := &fakeGraphQL{responses: []fakeResponse{
-		{matchSubstring: "query ListRepoIssues (", data: map[string]any{"repository": nil}},
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query ListRepoIssues (", Data: map[string]any{"repository": nil}},
 	}}
 	d := testDeps(g)
 	_, stderr, err := runCmd(t, d, "list")
@@ -133,7 +134,6 @@ func TestList_RepoNotFoundExitCode(t *testing.T) {
 	if errors.Is(err, cmd.ErrSilentArgs) {
 		t.Fatalf("expected NOT-arg classification for repo notFound, got %v", err)
 	}
-	if !strings.Contains(stderr.String(), "not found") {
-		t.Errorf("expected localized notFound message on stderr, got:\n%s", stderr.String())
-	}
+	assertI18nMessage(t, stderr.String(), i18n.LocaleEN,
+		"error.repo.notFound", "owner", "ozzy-labs", "name", "gh-tasks")
 }

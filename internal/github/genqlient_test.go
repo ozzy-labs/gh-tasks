@@ -2,7 +2,6 @@ package github_test
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"testing"
 
@@ -11,36 +10,8 @@ import (
 
 	"github.com/ozzy-labs/gh-tasks/internal/github"
 	"github.com/ozzy-labs/gh-tasks/internal/github/queries"
+	"github.com/ozzy-labs/gh-tasks/internal/testfake"
 )
-
-// recordingGraphQL captures every Do call so adapter tests can assert on the
-// exact (query, variables, out-type) tuple delivered to the underlying
-// transport. Implements [github.GraphQLClient].
-type recordingGraphQL struct {
-	calls []recordedCall
-	resp  any
-	err   error
-}
-
-type recordedCall struct {
-	query string
-	vars  map[string]any
-}
-
-func (r *recordingGraphQL) Do(_ context.Context, query string, vars map[string]any, out any) error {
-	r.calls = append(r.calls, recordedCall{query: query, vars: vars})
-	if r.err != nil {
-		return r.err
-	}
-	if r.resp == nil || out == nil {
-		return nil
-	}
-	buf, err := json.Marshal(r.resp)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(buf, out)
-}
 
 func TestAsGenqlientClient_NilReceiver(t *testing.T) {
 	t.Parallel()
@@ -54,8 +25,8 @@ func TestAsGenqlientClient_NilReceiver(t *testing.T) {
 func TestGenqlientAdapter_NoVariables(t *testing.T) {
 	t.Parallel()
 
-	rec := &recordingGraphQL{
-		resp: map[string]any{"viewer": map[string]any{"login": "alice"}},
+	rec := &testfake.RecordingGraphQL{
+		Resp: map[string]any{"viewer": map[string]any{"login": "alice"}},
 	}
 	clients := &github.Clients{GraphQL: rec}
 	adapter := clients.AsGenqlientClient()
@@ -75,11 +46,11 @@ func TestGenqlientAdapter_NoVariables(t *testing.T) {
 	if err := adapter.MakeRequest(context.Background(), req, resp); err != nil {
 		t.Fatalf("MakeRequest: %v", err)
 	}
-	if len(rec.calls) != 1 {
-		t.Fatalf("expected 1 call, got %d", len(rec.calls))
+	if len(rec.Calls) != 1 {
+		t.Fatalf("expected 1 call, got %d", len(rec.Calls))
 	}
-	if rec.calls[0].vars != nil {
-		t.Fatalf("expected nil vars (no variables), got %#v", rec.calls[0].vars)
+	if rec.Calls[0].Vars != nil {
+		t.Fatalf("expected nil vars (no variables), got %#v", rec.Calls[0].Vars)
 	}
 	if data.Viewer.Login != "alice" {
 		t.Fatalf("Login = %q, want %q", data.Viewer.Login, "alice")
@@ -95,7 +66,7 @@ func TestGenqlientAdapter_StructVariablesRoundTrip(t *testing.T) {
 		First int    `json:"first"`
 	}
 
-	rec := &recordingGraphQL{}
+	rec := &testfake.RecordingGraphQL{}
 	clients := &github.Clients{GraphQL: rec}
 	adapter := clients.AsGenqlientClient()
 
@@ -116,7 +87,7 @@ func TestGenqlientAdapter_StructVariablesRoundTrip(t *testing.T) {
 		"name":  "gh-tasks",
 		"first": float64(50), // json.Unmarshal into map[string]any decodes numbers as float64
 	}
-	if diff := cmp.Diff(want, rec.calls[0].vars); diff != "" {
+	if diff := cmp.Diff(want, rec.Calls[0].Vars); diff != "" {
 		t.Fatalf("vars mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -125,7 +96,7 @@ func TestGenqlientAdapter_ErrorPropagates(t *testing.T) {
 	t.Parallel()
 
 	cause := errors.New("upstream boom")
-	rec := &recordingGraphQL{err: cause}
+	rec := &testfake.RecordingGraphQL{Err: cause}
 	clients := &github.Clients{GraphQL: rec}
 	adapter := clients.AsGenqlientClient()
 
@@ -144,8 +115,8 @@ func TestAsGenqlientClientFor_RoundTripsTypedResponse(t *testing.T) {
 	// Smoke test against one of the read operations migrated under #230 to
 	// confirm the adapter + generated bindings decode a wire-shaped payload
 	// into the typed response struct.
-	rec := &recordingGraphQL{
-		resp: map[string]any{
+	rec := &testfake.RecordingGraphQL{
+		Resp: map[string]any{
 			"repository": map[string]any{"id": "R_kg2c"},
 		},
 	}
@@ -161,11 +132,11 @@ func TestAsGenqlientClientFor_RoundTripsTypedResponse(t *testing.T) {
 	if got, want := resp.Repository.Id, "R_kg2c"; got != want {
 		t.Fatalf("Repository.Id = %q, want %q", got, want)
 	}
-	if len(rec.calls) != 1 {
-		t.Fatalf("expected 1 underlying call, got %d", len(rec.calls))
+	if len(rec.Calls) != 1 {
+		t.Fatalf("expected 1 underlying call, got %d", len(rec.Calls))
 	}
 	wantVars := map[string]any{"owner": "ozzy-labs", "name": "gh-tasks"}
-	if diff := cmp.Diff(wantVars, rec.calls[0].vars); diff != "" {
+	if diff := cmp.Diff(wantVars, rec.Calls[0].Vars); diff != "" {
 		t.Fatalf("vars mismatch (-want +got):\n%s", diff)
 	}
 }
