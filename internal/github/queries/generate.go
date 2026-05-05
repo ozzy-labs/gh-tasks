@@ -11,4 +11,4 @@ package queries
 // to `internal/github/queries/genqlient.go`. The generated file is
 // committed; CI verifies the checked-in output matches the source.
 
-//go:generate go run -mod=mod github.com/Khan/genqlient ../../../genqlient.yaml
+//go:generate go run github.com/Khan/genqlient ../../../genqlient.yaml
