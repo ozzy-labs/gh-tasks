@@ -121,6 +121,9 @@ func PaginateRepoIssues(ctx context.Context, client graphql.Client, owner, name 
 		if resp.Repository == nil {
 			return nil, ErrRepoNotFound
 		}
+		if resp.Repository.Issues == nil {
+			break
+		}
 		all = append(all, resp.Repository.Issues.Nodes...)
 		pi := resp.Repository.Issues.PageInfo
 		if pi == nil || !pi.HasNextPage {
@@ -161,6 +164,9 @@ func PaginateRepoIssuesWithLabels(ctx context.Context, client graphql.Client, ow
 		if resp.Repository == nil {
 			return nil, ErrRepoNotFound
 		}
+		if resp.Repository.Issues == nil {
+			break
+		}
 		all = append(all, resp.Repository.Issues.Nodes...)
 		pi := resp.Repository.Issues.PageInfo
 		if pi == nil || !pi.HasNextPage {
@@ -200,6 +206,9 @@ func PaginateClosedIssues(ctx context.Context, client graphql.Client, owner, nam
 		if resp.Repository == nil {
 			return nil, ErrRepoNotFound
 		}
+		if resp.Repository.Issues == nil {
+			break
+		}
 		all = append(all, resp.Repository.Issues.Nodes...)
 		pi := resp.Repository.Issues.PageInfo
 		if pi == nil || !pi.HasNextPage {
@@ -238,6 +247,9 @@ func PaginateMergedPRs(ctx context.Context, client graphql.Client, owner, name s
 		}
 		if resp.Repository == nil {
 			return nil, ErrRepoNotFound
+		}
+		if resp.Repository.PullRequests == nil {
+			break
 		}
 		all = append(all, resp.Repository.PullRequests.Nodes...)
 		pi := resp.Repository.PullRequests.PageInfo
@@ -279,6 +291,9 @@ func PaginateRepoIssuesWithMilestone(ctx context.Context, client graphql.Client,
 		if resp.Repository == nil {
 			return nil, ErrRepoNotFound
 		}
+		if resp.Repository.Issues == nil {
+			break
+		}
 		all = append(all, resp.Repository.Issues.Nodes...)
 		pi := resp.Repository.Issues.PageInfo
 		if pi == nil || !pi.HasNextPage {
@@ -317,6 +332,9 @@ func PaginateMilestones(ctx context.Context, client graphql.Client, owner, name 
 		}
 		if resp.Repository == nil {
 			return nil, ErrRepoNotFound
+		}
+		if resp.Repository.Milestones == nil {
+			break
 		}
 		all = append(all, resp.Repository.Milestones.Nodes...)
 		pi := resp.Repository.Milestones.PageInfo

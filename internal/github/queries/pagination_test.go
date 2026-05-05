@@ -338,6 +338,31 @@ func TestPaginateRepoIssues_ErrorMidStreamDiscardsAccumulated(t *testing.T) {
 	}
 }
 
+func TestPaginateRepoIssues_NilInnerConnection(t *testing.T) {
+	t.Parallel()
+	// Defensive guard: GitHub may return `repository: {issues: null}` in
+	// rare edge cases (e.g. just-created repo, schema downtime). The
+	// paginator must treat this as "no more pages" and return an empty
+	// slice with nil error rather than panicking on nil-deref.
+	steps := []scriptStep{
+		{
+			op: "ListRepoIssues", wantSize: 30,
+			respond: func(out any) {
+				r := out.(*queries.ListRepoIssuesResponse)
+				r.Repository = &queries.ListRepoIssuesRepository{Issues: nil}
+			},
+		},
+	}
+	client := &scriptedClient{t: t, steps: steps}
+	got, err := queries.PaginateRepoIssues(context.Background(), client, "o", "n", 30)
+	if err != nil {
+		t.Fatalf("expected nil error, got %v", err)
+	}
+	if len(got) != 0 {
+		t.Errorf("expected 0 items, got %d", len(got))
+	}
+}
+
 func TestPaginateRepoIssues_RepoNotFound(t *testing.T) {
 	t.Parallel()
 	steps := []scriptStep{
