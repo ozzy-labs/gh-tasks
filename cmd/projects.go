@@ -228,19 +228,21 @@ func runProjectsInit(ctx context.Context, c *cobra.Command, deps Deps, yamlPath 
 		return ErrSilentRuntime
 	}
 
-	var pResp queries.CreateProjectV2Response
-	if err := clients.GraphQL.Do(ctx, queries.CreateProjectV2, map[string]any{
-		"input": map[string]any{"ownerId": ownerID, "title": title},
-	}, &pResp); err != nil {
+	gqlClient := clients.AsGenqlientClient()
+	pResp, err := queries.CreateProjectV2(ctx, gqlClient, &queries.CreateProjectV2Input{
+		OwnerId: ownerID,
+		Title:   title,
+	})
+	if err != nil {
 		return fmt.Errorf("create project: %w", err)
 	}
 	project := pResp.CreateProjectV2.ProjectV2
 	fmt.Fprintln(c.OutOrStdout(),
-		r.T("projectsInit.created", "url", project.URL))
+		r.T("projectsInit.created", "url", project.Url))
 
 	var existing queries.ListProjectV2FieldsResponse
 	if err := clients.GraphQL.Do(ctx, queries.ListProjectV2Fields, map[string]any{
-		"projectId": project.ID, "first": 100,
+		"projectId": project.Id, "first": 100,
 	}, &existing); err != nil {
 		return fmt.Errorf("list project fields: %w", err)
 	}
@@ -257,26 +259,55 @@ func runProjectsInit(ctx context.Context, c *cobra.Command, deps Deps, yamlPath 
 				r.T("projectsInit.fieldSkipped", "name", f.Name))
 			continue
 		}
-		input := map[string]any{
-			"projectId": project.ID,
-			"name":      f.Name,
-			"dataType":  f.DataType,
+		input := &queries.CreateProjectV2FieldInput{
+			ProjectId: project.Id,
+			Name:      f.Name,
+			DataType:  queries.ProjectV2CustomFieldType(f.DataType),
 		}
 		if len(f.SingleSelectOptions) > 0 {
-			input["singleSelectOptions"] = f.SingleSelectOptions
+			input.SingleSelectOptions = make([]*queries.ProjectV2SingleSelectFieldOptionInput, len(f.SingleSelectOptions))
+			for i, opt := range f.SingleSelectOptions {
+				input.SingleSelectOptions[i] = &queries.ProjectV2SingleSelectFieldOptionInput{
+					Name:        opt["name"],
+					Color:       queries.ProjectV2SingleSelectFieldOptionColor(opt["color"]),
+					Description: opt["description"],
+				}
+			}
 		}
-		var created queries.CreateProjectV2FieldResponse
-		if err := clients.GraphQL.Do(ctx, queries.CreateProjectV2Field, map[string]any{
-			"input": input,
-		}, &created); err != nil {
+		created, err := queries.CreateProjectV2Field(ctx, gqlClient, input)
+		if err != nil {
 			return fmt.Errorf("create project field: %w", err)
 		}
+		name, dataType := projectV2FieldDescriptor(created.CreateProjectV2Field.ProjectV2Field)
 		fmt.Fprintln(c.OutOrStdout(),
 			r.T("projectsInit.fieldCreated",
-				"name", created.CreateProjectV2Field.ProjectV2Field.Name,
-				"dataType", created.CreateProjectV2Field.ProjectV2Field.DataType))
+				"name", name,
+				"dataType", dataType))
 	}
 	return nil
+}
+
+// projectV2FieldDescriptor extracts the (name, dataType) of a newly-created
+// Projects v2 field from the genqlient-generated `ProjectV2FieldConfiguration`
+// interface return shape. The selection set in `operations.graphql` only
+// requests `... on ProjectV2FieldCommon { id name dataType }`, but
+// genqlient still synthesises one wrapper struct per concrete subtype
+// (`ProjectV2Field`, `ProjectV2IterationField`, `ProjectV2SingleSelectField`).
+// All three carry the same `Name` / `DataType` shape, so a simple type
+// switch surfaces the values.
+func projectV2FieldDescriptor(v *queries.CreateProjectV2FieldCreateProjectV2FieldCreateProjectV2FieldPayloadProjectV2FieldProjectV2FieldConfiguration) (string, string) {
+	if v == nil {
+		return "", ""
+	}
+	switch f := (*v).(type) {
+	case *queries.CreateProjectV2FieldCreateProjectV2FieldCreateProjectV2FieldPayloadProjectV2Field:
+		return f.Name, string(f.DataType)
+	case *queries.CreateProjectV2FieldCreateProjectV2FieldCreateProjectV2FieldPayloadProjectV2FieldProjectV2IterationField:
+		return f.Name, string(f.DataType)
+	case *queries.CreateProjectV2FieldCreateProjectV2FieldCreateProjectV2FieldPayloadProjectV2FieldProjectV2SingleSelectField:
+		return f.Name, string(f.DataType)
+	}
+	return "", ""
 }
 
 func loadTemplateRaw(yamlPath, tpl string) ([]byte, string, error) {

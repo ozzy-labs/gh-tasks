@@ -229,3 +229,113 @@ query GetOrgProjectV2($login: String!, $number: Int!) {
 # requires reshaping the shared `ProjectV2ItemNode` / `ProjectV2FieldValue`
 # domain helpers in `internal/projectitem` and several cmd/*.go files.
 # Tracked as a follow-up to #230 (see PR description).
+
+# ===== Issue mutations ======================================================
+
+# CreateIssue mutates a new Issue under a given repository.
+mutation CreateIssue($input: CreateIssueInput!) {
+  createIssue(input: $input) {
+    issue {
+      id
+      number
+      url
+    }
+  }
+}
+
+# CloseIssue mutates an Issue to state CLOSED.
+mutation CloseIssue($input: CloseIssueInput!) {
+  closeIssue(input: $input) {
+    issue {
+      id
+      number
+      url
+      state
+    }
+  }
+}
+
+# UpdateIssueMilestone binds (or clears) a milestone on an Issue.
+mutation UpdateIssueMilestone($input: UpdateIssueInput!) {
+  updateIssue(input: $input) {
+    issue {
+      id
+      number
+      url
+      milestone {
+        id
+        number
+        title
+      }
+    }
+  }
+}
+
+# ===== Pull request mutations ===============================================
+
+# UpdatePullRequest mutates a PR's body.
+mutation UpdatePullRequest($input: UpdatePullRequestInput!) {
+  updatePullRequest(input: $input) {
+    pullRequest {
+      id
+      number
+      url
+    }
+  }
+}
+
+# ===== Project mutations ====================================================
+
+# AddProjectV2DraftIssue adds a draft item to a Projects v2 board.
+mutation AddProjectV2DraftIssue($input: AddProjectV2DraftIssueInput!) {
+  addProjectV2DraftIssue(input: $input) {
+    projectItem {
+      id
+    }
+  }
+}
+
+# AddProjectV2ItemById adds an existing Issue or PR to a Projects v2 board.
+mutation AddProjectV2ItemById($input: AddProjectV2ItemByIdInput!) {
+  addProjectV2ItemById(input: $input) {
+    item {
+      id
+    }
+  }
+}
+
+# UpdateProjectV2ItemFieldValue updates a single field value on a project
+# item. The value shape is constructed by the caller per the target field's
+# dataType.
+mutation UpdateProjectV2ItemFieldValue($input: UpdateProjectV2ItemFieldValueInput!) {
+  updateProjectV2ItemFieldValue(input: $input) {
+    projectV2Item {
+      id
+    }
+  }
+}
+
+# CreateProjectV2 creates a Projects v2 board owned by ownerId.
+mutation CreateProjectV2($input: CreateProjectV2Input!) {
+  createProjectV2(input: $input) {
+    projectV2 {
+      id
+      number
+      title
+      url
+    }
+  }
+}
+
+# CreateProjectV2Field adds a custom field to an existing Projects v2 board.
+mutation CreateProjectV2Field($input: CreateProjectV2FieldInput!) {
+  createProjectV2Field(input: $input) {
+    projectV2Field {
+      ... on ProjectV2FieldCommon {
+        id
+        name
+        dataType
+      }
+    }
+  }
+}

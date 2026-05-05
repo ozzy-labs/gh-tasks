@@ -52,7 +52,7 @@ func ResolveProjectNodeID(ctx context.Context, gql github.GraphQLClient, sc scop
 
 // FindStatus returns the value of the conventionally-named "Status" single
 // select field, or "" when the item has no Status set.
-func FindStatus(values []queries.ProjectV2FieldValue) string {
+func FindStatus(values []queries.ProjectV2ItemFieldValue) string {
 	for _, v := range values {
 		if v.Typename == "ProjectV2ItemFieldSingleSelectValue" &&
 			strings.EqualFold(v.Field.Name, "status") {

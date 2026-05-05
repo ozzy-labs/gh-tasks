@@ -60,7 +60,8 @@ func runAddRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, ti
 	if err != nil {
 		return localizedError(c, r, err)
 	}
-	idResp, err := queries.GetRepositoryID(ctx, clients.AsGenqlientClient(), id.Owner, id.Name)
+	gqlClient := clients.AsGenqlientClient()
+	idResp, err := queries.GetRepositoryID(ctx, gqlClient, id.Owner, id.Name)
 	if err != nil {
 		return fmt.Errorf("get repository id: %w", err)
 	}
@@ -68,15 +69,15 @@ func runAddRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, ti
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
 	}
-	input := map[string]any{"repositoryId": idResp.Repository.Id, "title": title}
+	input := &queries.CreateIssueInput{RepositoryId: idResp.Repository.Id, Title: title}
 	if body != "" {
-		input["body"] = body
+		input.Body = &body
 	}
-	var resp queries.CreateIssueResponse
-	if err := clients.GraphQL.Do(ctx, queries.CreateIssue, map[string]any{"input": input}, &resp); err != nil {
+	resp, err := queries.CreateIssue(ctx, gqlClient, input)
+	if err != nil {
 		return fmt.Errorf("create issue: %w", err)
 	}
-	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("add.created.repo"), resp.CreateIssue.Issue.URL)
+	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("add.created.repo"), resp.CreateIssue.Issue.Url)
 	return nil
 }
 
@@ -102,14 +103,14 @@ func runAddProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	input := map[string]any{"projectId": pid, "title": title}
+	input := &queries.AddProjectV2DraftIssueInput{ProjectId: pid, Title: title}
 	if body != "" {
-		input["body"] = body
+		input.Body = &body
 	}
-	var resp queries.AddProjectV2DraftIssueResponse
-	if err := clients.GraphQL.Do(ctx, queries.AddProjectV2DraftIssue, map[string]any{"input": input}, &resp); err != nil {
+	resp, err := queries.AddProjectV2DraftIssue(ctx, clients.AsGenqlientClient(), input)
+	if err != nil {
 		return fmt.Errorf("add project draft issue: %w", err)
 	}
-	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("add.created.project"), resp.AddProjectV2DraftIssue.ProjectItem.ID)
+	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("add.created.project"), resp.AddProjectV2DraftIssue.ProjectItem.Id)
 	return nil
 }

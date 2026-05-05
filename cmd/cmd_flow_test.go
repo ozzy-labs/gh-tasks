@@ -795,7 +795,7 @@ func TestAdd_RepoCreatesIssue(t *testing.T) {
 			data:           map[string]any{"repository": map[string]any{"id": "R_1"}},
 		},
 		{
-			matchSubstring: "mutation CreateIssue(",
+			matchSubstring: "mutation CreateIssue (",
 			data: map[string]any{"createIssue": map[string]any{"issue": map[string]any{
 				"id": "I_new", "number": 123, "url": "https://github.com/ozzy-labs/gh-tasks/issues/123",
 			}}},
@@ -822,14 +822,14 @@ func TestAdd_RepoBodyFlagPropagates(t *testing.T) {
 	inner := &fakeGraphQL{responses: []fakeResponse{
 		{matchSubstring: "query GetRepositoryID (", data: map[string]any{"repository": map[string]any{"id": "R_1"}}},
 		{
-			matchSubstring: "mutation CreateIssue(",
+			matchSubstring: "mutation CreateIssue (",
 			data: map[string]any{"createIssue": map[string]any{"issue": map[string]any{
 				"id": "I_new", "number": 124, "url": "u/124",
 			}}},
 		},
 	}}
 	wrap := &captureGraphQL{inner: inner, capture: func(query string, vars map[string]any) {
-		if strings.Contains(query, "mutation CreateIssue(") {
+		if strings.Contains(query, "mutation CreateIssue (") {
 			if v, ok := vars["input"].(map[string]any); ok {
 				seenInput = v
 			}
@@ -868,7 +868,7 @@ func TestAdd_ProjectDraftItem(t *testing.T) {
 	g := &fakeGraphQL{responses: []fakeResponse{
 		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
 		{
-			matchSubstring: "mutation AddProjectV2DraftIssue(",
+			matchSubstring: "mutation AddProjectV2DraftIssue (",
 			data:           map[string]any{"addProjectV2DraftIssue": map[string]any{"projectItem": map[string]any{"id": "DI_new"}}},
 		},
 	}}
@@ -920,7 +920,7 @@ func TestDone_RepoCloses(t *testing.T) {
 			}}},
 		},
 		{
-			matchSubstring: "mutation CloseIssue(",
+			matchSubstring: "mutation CloseIssue (",
 			data: map[string]any{"closeIssue": map[string]any{"issue": map[string]any{
 				"id": "I_open", "number": 7, "url": "u/7", "state": "CLOSED",
 			}}},
@@ -990,7 +990,7 @@ func TestDone_ProjectStatusUpdate(t *testing.T) {
 		{matchSubstring: "query ListProjectV2Fields(", data: fields},
 		{matchSubstring: "query ListProjectV2Items(", data: items},
 		{
-			matchSubstring: "mutation UpdateProjectV2ItemFieldValue(",
+			matchSubstring: "mutation UpdateProjectV2ItemFieldValue (",
 			data:           map[string]any{"updateProjectV2ItemFieldValue": map[string]any{"projectV2Item": map[string]any{"id": "ITEM_X"}}},
 		},
 	}}
@@ -1122,14 +1122,14 @@ func TestLink_RepoAppendsClosesLink(t *testing.T) {
 			}}},
 		},
 		{
-			matchSubstring: "mutation UpdatePullRequest(",
+			matchSubstring: "mutation UpdatePullRequest (",
 			data: map[string]any{"updatePullRequest": map[string]any{"pullRequest": map[string]any{
 				"id": "PR_1", "number": 12, "url": "https://github.com/ozzy-labs/gh-tasks/pull/12",
 			}}},
 		},
 	}}
 	wrap := &captureGraphQL{inner: inner, capture: func(query string, vars map[string]any) {
-		if strings.Contains(query, "mutation UpdatePullRequest(") {
+		if strings.Contains(query, "mutation UpdatePullRequest (") {
 			if input, ok := vars["input"].(map[string]any); ok {
 				if b, ok := input["body"].(string); ok {
 					seenBody = b
@@ -1197,16 +1197,16 @@ func TestLink_ProjectDualAdd(t *testing.T) {
 			}}},
 		},
 		{
-			matchSubstring: "mutation AddProjectV2ItemById(",
+			matchSubstring: "mutation AddProjectV2ItemById (",
 			data:           map[string]any{"addProjectV2ItemById": map[string]any{"item": map[string]any{"id": "PI_pr"}}},
 		},
 		{
-			matchSubstring: "mutation AddProjectV2ItemById(",
+			matchSubstring: "mutation AddProjectV2ItemById (",
 			data:           map[string]any{"addProjectV2ItemById": map[string]any{"item": map[string]any{"id": "PI_iss"}}},
 		},
 	}}
 	wrap := &captureGraphQL{inner: inner, capture: func(query string, _ map[string]any) {
-		if strings.Contains(query, "mutation AddProjectV2ItemById(") {
+		if strings.Contains(query, "mutation AddProjectV2ItemById (") {
 			calls++
 		}
 	}}
@@ -1287,7 +1287,7 @@ func TestPlan_RepoReuseExistingMilestone(t *testing.T) {
 			}}}},
 		},
 		{
-			matchSubstring: "mutation UpdateIssueMilestone(",
+			matchSubstring: "mutation UpdateIssueMilestone (",
 			data: map[string]any{"updateIssue": map[string]any{"issue": map[string]any{
 				"id": "I_a", "number": 1, "url": "u/1",
 				"milestone": map[string]any{"id": "M_1", "number": 5, "title": "Daily 2026-05-04"},
@@ -1343,7 +1343,7 @@ func TestPlan_RepoCreateNewMilestone(t *testing.T) {
 			data:           map[string]any{"repository": map[string]any{"milestones": map[string]any{"nodes": []any{}}}},
 		},
 		{
-			matchSubstring: "mutation UpdateIssueMilestone(",
+			matchSubstring: "mutation UpdateIssueMilestone (",
 			data: map[string]any{"updateIssue": map[string]any{"issue": map[string]any{
 				"id": "I_a", "number": 1, "url": "u/1",
 				"milestone": map[string]any{"id": "M_NEW", "number": 12, "title": "Daily 2026-05-04"},
