@@ -16,12 +16,12 @@ Sweep through untriaged Issues / draft items in batch.
 
 ## Steps
 
-1. Fetch the untriaged list via `gh tasks triage --scope <scope> --limit <N>`
+1. Fetch the untriaged list via `gh tasks triage --scope <scope> --limit <N>` (read-only)
 2. For each item, propose:
    - **label**: Conventional-style (`feat` / `fix` / `docs` / etc.)
    - **scope** routing: personal / repo / org
    - **status**: keep / close / merge into another Issue
-3. Apply the decisions through the `gh tasks triage` interactive flow
+3. After user approval, apply the decisions via `gh issue edit` / `gh issue close` etc.
 4. Report remaining count and the next recommended triage cadence
 
 ## Fallback

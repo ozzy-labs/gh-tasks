@@ -21,13 +21,14 @@ release.yaml(workflow_run on push)
   ├─ build-binaries job(`cli/gh-extension-precompile@v2`)
   │    └─ 公式 Action が一括で:
   │         - go build を全 OS / arch で実行
-  │         - 命名規則 gh-tasks_<version>_<os>-<arch>[.exe] を自動生成
+  │         - 命名規則 <goos>-<goarch>[.exe] を自動生成
   │         - manifest.yml(プラットフォーム解決メタデータ)を発行
   │         - generate_attestations: true で SLSA provenance を発行
   │         - すべて gh release upload <tag> ...
   │
   ├─ checksums job(build-binaries 完了後)
-  │    └─ 全 binary の SHA256 を集約 → checksums.txt → gh release upload
+  │    └─ `gh release download --pattern '<family>-*'` で全 platform family を回収
+  │       → `*-*` glob で SHA256 集約 → checksums.txt → gh release upload
   │
   ▼
 GitHub Release v0.X.Y 完成
@@ -57,11 +58,12 @@ GitHub Release v0.X.Y 完成
   "packages": {
     ".": {
       "release-type": "go",
+      "release-as": "0.1.0",
       "changelog-path": "CHANGELOG.md",
       "include-component-in-tag": false,
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
-      "release-as": "2.0.0-rc.1",
+      "extra-files": ["cmd/root.go"],
       "changelog-sections": [
         { "type": "feat", "section": "Features" },
         { "type": "fix", "section": "Bug Fixes" },
@@ -78,7 +80,8 @@ GitHub Release v0.X.Y 完成
 - `release-type: go` → Go モジュールとして認識(GitHub Releases のみ、npm publish しない)
 - `include-component-in-tag: false` → タグは `vX.Y.Z` 形式(コンポーネント prefix なし)
 - `bump-minor-pre-major: true` + `bump-patch-for-minor-pre-major: true` → v1.0.0 未満の段階で `feat:` も minor として扱う
-- `release-as: "2.0.0-rc.1"` → **Go 移行カットオーバー pin**(TS 時代 v0.x との明確な世代分離、v2.0.0 stable 解禁時に削除)
+- `release-as: "0.1.0"` → 初回リリース pin。release-please が初回 PR を `0.1.0` で発行するために置く(Go 移行カットオーバー時に検討された `2.0.0-rc.1` pin は 2026-05-05 に撤回、0.x 系で conventional commits 自動 bump、メジャー bump はユーザー判断)
+- `extra-files: ["cmd/root.go"]` → release-please が `cmd/root.go` の `Version = "0.0.0-dev" // x-release-please-version` 行をタグ作成時に書き換える(`gh tasks --version` の表示と Release tag を同期)
 - `changelog-sections` → `feat` / `fix` / `perf` のみ CHANGELOG に載る。`docs:` / `ci:` / `chore:` 等は除外
 
 ### `.release-please-manifest.json`
@@ -91,21 +94,22 @@ GitHub Release v0.X.Y 完成
 
 ### Asset 命名規約
 
-`cli/gh-extension-precompile@v2` が GitHub CLI extension の正規仕様
-`gh-<extension>_<version>_<os>-<arch>[.exe]` を自動生成する。具体的には:
+`cli/gh-extension-precompile@v2` は `<goos>-<goarch>[.exe]` 形式の asset 名で binary を発行する(v1 までの `gh-<extension>_<version>_<os>-<arch>[.exe]` 形式から変更)。具体的には:
 
 ```text
-gh-tasks_v0.X.Y_linux-amd64
-gh-tasks_v0.X.Y_linux-arm64
-gh-tasks_v0.X.Y_darwin-amd64
-gh-tasks_v0.X.Y_darwin-arm64
-gh-tasks_v0.X.Y_windows-amd64.exe
-gh-tasks_v0.X.Y_windows-arm64.exe
+darwin-amd64
+darwin-arm64
+linux-amd64
+linux-arm64
+windows-amd64.exe
+windows-arm64.exe
 manifest.yml         ← gh extension が読むプラットフォーム解決メタデータ
 checksums.txt        ← 後続 job が aggregated SHA256SUMS を upload
 ```
 
 各 binary に対して GitHub が SLSA build provenance attestation を発行(`gh attestation verify <binary> --owner ozzy-labs` で検証可能)。
+
+`checksums` job は `gh release download --pattern 'darwin-*' --pattern 'linux-*' --pattern 'freebsd-*' --pattern 'windows-*'` で全 platform family を回収し、`shopt -s nullglob` を有効化したうえで `sha256sum -- *-*` を実行する(`*-*` glob で `manifest.yml` / `checksums.txt` 自身は対象外)。
 
 ## ユーザー側の動作
 
@@ -119,7 +123,7 @@ gh extension install ozzy-labs/gh-tasks
 sha256sum -c checksums.txt --ignore-missing
 
 # 3. (任意)attestation 検証
-gh attestation verify gh-tasks-darwin-arm64 --owner ozzy-labs
+gh attestation verify darwin-arm64 --owner ozzy-labs
 
 # 4. 認証(初回)
 gh auth login
@@ -130,19 +134,22 @@ gh tasks --help
 
 詳細は `docs/manual/{en,ja}/guides/installation.md` を参照。
 
-## 暫定 pin の経緯と解除予定
+## release-as の経緯
 
-Go 移行カットオーバー時、TS 時代の v0.x 系列と明確な世代分離をするため `release-as: "2.0.0-rc.1"` を pin している(リポルート `.` パッケージ)。
+| 日付 | 値 | 経緯 |
+| --- | --- | --- |
+| 2026-05-04 (Go 移行 v1) | `2.0.0-rc.1` | TS 時代の v0.x との世代分離を狙って pin |
+| 2026-05-05 | `0.1.0` | rc.1 pin を撤回し、初回リリース版として `0.1.0` に変更。0.x 系で conventional commits の自動 bump を継続する方針に切替 |
 
-**v2.0.0 stable が ship した直後** に解除する必要がある(放置すると release-please が永遠に同 version 提案を続け、`fix:` / `feat:` による bump が反映されない)。
+**初回リリース後の解除**: `release-as: "0.1.0"` は初回 PR が `0.1.0` で発行されるための pin。初回リリース完了後は **削除する必要がある**(放置すると release-please が永遠に同 version 提案を続け、`fix:` / `feat:` による bump が反映されない)。メジャー bump (1.0.0 / 2.0.0) はユーザー判断で別途 `release-as` または手動タグ。
 
 ## 運用上の注意
 
-### Workflows の一時無効化
+### Workflows の一時無効化(過去の運用)
 
-リポの GitHub Actions usage を節約するため、4 workflow すべて(`ci`、`PR Check`、`release`、`Sync commons`)を `gh workflow disable` で `disabled_manually` 状態にできる(2026-05-04 に実施、Issue #85 で再有効化トラッキング)。
+過去にリポの GitHub Actions usage を節約するため、5 workflow すべて(`ci`、`pr-check`、`release`、`release-smoke`(リリース後の `gh extension install` smoke test)、`sync-commons`)を `gh workflow disable` で `disabled_manually` 状態にしていた(2026-05-04 に実施、Issue #85 で再有効化トラッキング)。
 
-無効化中は:
+無効化中の挙動:
 
 - main への push で release.yaml が起動しない → release PR の作成 / 更新が止まる
 - release PR を merge してもタグ / Release / バイナリ生成が起こらない

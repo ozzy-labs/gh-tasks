@@ -37,7 +37,7 @@
 └────────────────────────────────────────────────────────────┘
                                  │ cli/gh-extension-precompile@v2
                                  ▼
-                    gh-tasks_<v>_{os}-{arch}[.exe] + manifest.yml
+                    <goos>-<goarch>[.exe] + manifest.yml
                     (darwin/linux/windows × amd64/arm64、SLSA 付)
 ```
 
@@ -54,13 +54,18 @@ gh-tasks/
 ├── internal/                          # ドメインロジック(import 不可境界)
 │   ├── github/                        # cli/go-gh ラッパ + クエリ
 │   │   ├── github.go                  # GraphQLClient / RESTClient interfaces
-│   │   └── queries/queries.go         # 21 操作 + 応答型(ADR-0007)
+│   │   └── queries/                   # genqlient SSOT + REST 用ハンドコード型
+│   │       ├── operations.graphql     # 25 操作の SSOT(ADR-0007)
+│   │       ├── genqlient.go           # genqlient 自動生成型
+│   │       ├── pagination.go          # GraphQL pagination helper
+│   │       └── rest_types.go          # REST 用ハンドコード型
 │   ├── i18n/                          # embed JSON catalog + Resolve / T
 │   ├── i18ncheck/                     # go/parser ベース i18n lint
 │   ├── scope/ repo/ project/          # ID 解決群
 │   ├── projectitem/ period/ config/   # ドメイン helpers
 │   ├── skills/                        # SKILL.md frontmatter parse + Load
-│   └── adapters/                      # 4 agent OutputFile 生成
+│   ├── adapters/                      # 4 agent OutputFile 生成
+│   └── testfake/                      # GraphQL テスト用 fake (cmd/internal 共通、REST は cmd-only)
 ├── templates/                # Projects v2 フィールド定義 YAML
 ├── skills/{name}/                 # skill SSOT(ja: SKILL.md、en mirror)
 ├── docs/
@@ -108,11 +113,12 @@ gh-tasks/
 | `period` | `daily`/`weekly`/`sprint` の境界計算(IANA tz 対応) | `Of`、`PeriodError` |
 | `github` | go-gh wrapper、interface ベース GraphQL/REST client、token 解決 | `NewClients`、`AuthError` |
 | `projectitem` | Project v2 item 解決 + format helper | `ResolveProjectNodeID`、`FormatItem` |
-| `github/queries` | GraphQL operation 定数 + 応答型 | `GetOrgProjectV2` 等(21 operations) |
+| `github/queries` | GraphQL operation SSOT(`operations.graphql`)+ genqlient 自動生成型 + REST ハンドコード型 | `GetOrgProjectV2` 等(25 operations) |
 | `i18n` | embed JSON catalog + locale 解決 + `T` | `ResolveLocale`、`T`、`Payload` |
 | `i18ncheck` | go/parser ベースの非 ASCII 検知 | `Scan`、`HasNonASCII`、`Decorative` |
 | `skills` | `skills/<name>/SKILL.md` parse + Load | `Load`、`ParseDocument` |
 | `adapters` | 4 agent OutputFile 生成 | `ClaudeCode` / `CodexCLI` / `GeminiCLI` / `Copilot` |
+| `testfake` | `cmd/` および `internal/` 共通の GraphQL フェイク(REST フェイクは cmd テスト内に閉じる) | `FakeGraphQL`、`RecordingGraphQL` |
 
 ### `internal/i18n`
 
@@ -141,7 +147,7 @@ func (e *ScopeError) Error() string { return e.Key }
 
 ### CLI バイナリ
 
-- `cli/gh-extension-precompile@v2`(GitHub 公式 Action)が `go build` を全 OS/arch で実行し、`gh-tasks_<version>_<os>-<arch>[.exe]` 命名規則 + `manifest.yml`(プラットフォーム解決メタデータ)+ SLSA attestations を発行する
+- `cli/gh-extension-precompile@v2`(GitHub 公式 Action)が `go build` を全 OS/arch で実行し、`<goos>-<goarch>[.exe]` 命名規則 + `manifest.yml`(プラットフォーム解決メタデータ)+ SLSA attestations を発行する
 - GitHub Releases に attach、`gh extension install ozzy-labs/gh-tasks` でユーザー側にダウンロード(`manifest.yml` を gh が読んで適切な binary を選択)
 - ローカル開発: `gh extension install . --force` でカレントブランチの `go build` 出力をそのまま使う dogfooding(repo-internal ADR-0006)
 
@@ -157,7 +163,8 @@ func (e *ScopeError) Error() string { return e.Key }
 
 - `*_test.go` は同パッケージ + `_test` パッケージで配置(black-box テスト、`internal/scope/scope_test.go` 等)
 - `go test -race -shuffle=on ./...` を CI 必須(repo-internal ADR-0008)
-- `Deps` 構造体に GraphQL client factory / config loader / time / env / git remote を注入して決定論的に検証(`cmd/cmd_test.go` の `fakeGraphQL` パターン)
+- `Deps` 構造体に GraphQL client factory / config loader / time / env / git remote を注入して決定論的に検証(`cmd/<cmd>_flow_test.go` で `cmd/testhelpers_test.go` の `captureGraphQL` 経由、共通フェイクは `internal/testfake/`)
+- 詳細は [docs/design/test-structure.md](./test-structure.md) を参照
 - diff は `google/go-cmp` を使用、`testify/require` は致命エラーの fail-fast 限定
 
 ## 関連 ADR

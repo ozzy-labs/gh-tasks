@@ -17,12 +17,12 @@ locale: ja
 
 ## 手順
 
-1. `gh tasks triage --scope <scope> --limit <N>` で未トリアージ一覧を取得する
+1. `gh tasks triage --scope <scope> --limit <N>` で未トリアージ一覧を取得する (read-only)
 2. 各項目について以下を判定し、ユーザーに提案する:
    - **label**: Conventional 系(`feat` / `fix` / `docs` / etc.)
    - **scope** 振り分け: 個人項目 / repo / org のどこで管理すべきか
    - **状態**: 残す / close する / 別 Issue にマージする
-3. 判定結果を `gh tasks triage` の interactive モードで反映する
+3. ユーザー承認後、`gh issue edit` / `gh issue close` 等で判定結果を適用する
 4. 残件数と次回 triage の推奨タイミングを報告する
 
 ## 失敗時のフォールバック
