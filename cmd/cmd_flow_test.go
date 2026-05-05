@@ -1131,6 +1131,47 @@ func TestDone_ProjectMissingDoneOption(t *testing.T) {
 	}
 }
 
+func TestDone_ProjectItemNotFound(t *testing.T) {
+	t.Parallel()
+
+	fields := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "fields": map[string]any{"nodes": []any{
+		map[string]any{
+			"__typename": "ProjectV2SingleSelectField", "id": "F_STATUS", "name": "Status", "dataType": "SINGLE_SELECT",
+			"options": []any{
+				map[string]any{"id": "OPT_TODO", "name": "Todo"},
+				map[string]any{"id": "OPT_DONE", "name": "Done"},
+			},
+		},
+	}}}}
+	// Linear search returns a single non-matching item (well under doneItemsLimit=100),
+	// so we expect the `error.projectItem.notFound` branch — not `error.done.searchLimit`.
+	items := map[string]any{"node": map[string]any{"__typename": "ProjectV2", "items": map[string]any{"nodes": []any{
+		map[string]any{
+			"id": "ITEM_OTHER", "updatedAt": "2026-05-04T08:00:00Z",
+			"content":     map[string]any{"__typename": "Issue", "id": "I_yy", "number": 2, "title": "y", "url": "u/y"},
+			"fieldValues": map[string]any{"nodes": []any{}},
+		},
+	}}}}
+	g := &fakeGraphQL{responses: []fakeResponse{
+		{matchSubstring: "query GetUserProjectV2 (", data: userProject("PVT_user")},
+		{matchSubstring: "query ListProjectV2Fields (", data: fields},
+		{matchSubstring: "query ListProjectV2Items (", data: items},
+	}}
+	d := testDeps(g, func(d *cmd.Deps) {
+		d.HasGitRemote = func() bool { return false }
+		d.LoadConfig = func() (config.AppConfig, error) {
+			return config.AppConfig{UserProject: project.Ref{Owner: "ozzy", Number: 9}}, nil
+		}
+	})
+	_, stderr, err := runCmd(t, d, "done", "ITEM_X", "--scope=user")
+	if !errors.Is(err, cmd.ErrSilent) {
+		t.Fatalf("expected ErrSilent, got %v", err)
+	}
+	if !strings.Contains(stderr.String(), "Item not found in project") {
+		t.Errorf("expected projectItem.notFound message, got:\n%s", stderr.String())
+	}
+}
+
 // ===== Link ================================================================
 
 func TestLink_RepoAppendsClosesLink(t *testing.T) {
