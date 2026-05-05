@@ -147,7 +147,7 @@ gh tasks --help
 
 ### Workflows の一時無効化(過去の運用)
 
-過去にリポの GitHub Actions usage を節約するため、5 workflow すべて(`ci`、`pr-check`、`release`、`release-smoke`、`sync-commons`)を `gh workflow disable` で `disabled_manually` 状態にしていた(2026-05-04 に実施、Issue #85 で再有効化トラッキング)。
+過去にリポの GitHub Actions usage を節約するため、5 workflow すべて(`ci`、`pr-check`、`release`、`release-smoke`(リリース後の `gh extension install` smoke test)、`sync-commons`)を `gh workflow disable` で `disabled_manually` 状態にしていた(2026-05-04 に実施、Issue #85 で再有効化トラッキング)。
 
 無効化中の挙動:
 
