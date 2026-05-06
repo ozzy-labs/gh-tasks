@@ -6,7 +6,7 @@
 
 - [concepts.md](./concepts.md) — Explanation: 用語(scope / item / iteration / personal vs team)
 - [guides/](./guides/) — How-to ガイド
-  - [installation.md](./guides/installation.md) — `gh extension install ozzy-labs/gh-tasks` + 初期セットアップ
+  - [installation.md](./guides/installation.md) — `gh extension install ozzy-labs/gh-tasks` / 初期セットアップ / `gh tasks install-skills` ワンショット skill 配置
   - [projects-v2-setup.md](./guides/projects-v2-setup.md) — 個人 / チーム両用途のフィールド定義
   - [troubleshooting.md](./guides/troubleshooting.md) — 認証エラー、`--repo` 解決失敗、`gh agent-task` collision、API rate limit
 - [reference/](./reference/) — Reference
