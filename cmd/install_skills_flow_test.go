@@ -223,18 +223,12 @@ func TestInstallSkills_AgentExplicit_UnknownRejected(t *testing.T) {
 	}
 }
 
-func TestInstallSkills_AgentExplicit_UnregisteredErrors(t *testing.T) {
-	// `copilot` is recognized by ValidateAgent but not yet wired into
-	// PR 4 (lands in PR 5). The cmd should surface a localized
-	// unknown-agent error rather than silently no-op.
-	t.Parallel()
-	target := t.TempDir()
-	d := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
-	_, stderr, err := runCmd(t, d, "install-skills", "--target", target, "--agent", "copilot")
-	if !errors.Is(err, cmd.ErrSilentArgs) {
-		t.Fatalf("expected ErrSilentArgs, got %v (stderr=%s)", err, stderr.String())
-	}
-}
+// TestInstallSkills_AgentExplicit_UnregisteredErrors used to assert the
+// cmd-layer error path for an agent recognized by ValidateAgent but not
+// yet wired into Adapters(). PR 5 closes the adapter matrix (every agent
+// in install.Agents has a registered AdapterImpl), so the failure mode is
+// no longer reachable from the public API. The unknown-agent error path
+// remains covered by TestInstallSkills_AgentExplicit_UnknownRejected.
 
 func TestInstallSkills_EmbedMissing(t *testing.T) {
 	t.Parallel()
@@ -419,6 +413,108 @@ func TestInstallSkills_GeminiCLI_Flow(t *testing.T) {
 	}
 	if !strings.Contains(stdout.String(), ".gemini/settings.json") {
 		t.Errorf("stdout should mention settings.json:\n%s", stdout.String())
+	}
+}
+
+func TestInstallSkills_Copilot_Flow(t *testing.T) {
+	// copilot (PR 5): single Shared marker-block merge into
+	// .github/copilot-instructions.md. Manifest at
+	// .github/.gh-tasks-copilot-manifest.json.
+	t.Parallel()
+	target := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(target, ".github"), 0o750); err != nil {
+		t.Fatal(err)
+	}
+	preExisting := "# Copilot project context\n\nUse tabs for indentation.\n"
+	if err := os.WriteFile(filepath.Join(target, ".github", "copilot-instructions.md"),
+		[]byte(preExisting), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	d := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	stdout, stderr, err := runCmd(t, d, "install-skills", "--target", target, "--agent", "copilot")
+	if err != nil {
+		t.Fatalf("Execute: %v (stderr=%s)", err, stderr.String())
+	}
+
+	body, err := os.ReadFile(filepath.Join(target, ".github", "copilot-instructions.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(body), "Use tabs for indentation.") {
+		t.Errorf("user content lost:\n%s", string(body))
+	}
+	if !strings.Contains(string(body), install.MarkerBeginLine) {
+		t.Errorf("missing marker:\n%s", string(body))
+	}
+	if !strings.Contains(string(body), "alpha") {
+		t.Errorf("skill not in marker block:\n%s", string(body))
+	}
+
+	manifestPath := filepath.Join(target, ".github", ".gh-tasks-copilot-manifest.json")
+	mb, err := os.ReadFile(manifestPath)
+	if err != nil {
+		t.Fatalf("manifest read: %v", err)
+	}
+	var manifest install.Manifest
+	if err := json.Unmarshal(mb, &manifest); err != nil {
+		t.Fatalf("manifest parse: %v", err)
+	}
+	if manifest.Agent != install.AgentCopilot {
+		t.Errorf("manifest agent = %q, want copilot", manifest.Agent)
+	}
+	if len(manifest.Files) != 0 {
+		t.Errorf("manifest.Files = %v, want empty (copilot owns no files)", manifest.Files)
+	}
+	if len(manifest.Shared) != 1 || manifest.Shared[0] != ".github/copilot-instructions.md" {
+		t.Errorf("manifest.Shared = %v, want [.github/copilot-instructions.md]", manifest.Shared)
+	}
+	if !strings.Contains(stdout.String(), "copilot-instructions.md") {
+		t.Errorf("stdout should mention copilot-instructions.md:\n%s", stdout.String())
+	}
+}
+
+func TestInstallSkills_AllAdapters_AutoDetectAll(t *testing.T) {
+	// PR 5: when all four traces exist, auto-detect surfaces all four
+	// agents and the cmd installs everyone in one shot.
+	t.Parallel()
+	target := t.TempDir()
+	mustExist := []string{"CLAUDE.md", "AGENTS.md", ".github/copilot-instructions.md"}
+	for _, p := range mustExist {
+		full := filepath.Join(target, filepath.FromSlash(p))
+		if err := os.MkdirAll(filepath.Dir(full), 0o750); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(full, []byte("seed\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.MkdirAll(filepath.Join(target, ".gemini"), 0o750); err != nil {
+		t.Fatal(err)
+	}
+
+	d := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	stdout, stderr, err := runCmd(t, d, "install-skills", "--target", target)
+	if err != nil {
+		t.Fatalf("Execute: %v (stderr=%s)", err, stderr.String())
+	}
+	for _, agent := range []string{"claude-code", "codex-cli", "gemini-cli", "copilot"} {
+		if !strings.Contains(stdout.String(), agent) {
+			t.Errorf("stdout missing %s adapter section:\n%s", agent, stdout.String())
+		}
+	}
+	// Sanity: each adapter's manifest exists.
+	manifestPaths := []string{
+		".claude/skills/.gh-tasks-manifest.json",
+		".agents/skills/.gh-tasks-manifest.json",
+		".gemini/.gh-tasks-manifest.json",
+		".github/.gh-tasks-copilot-manifest.json",
+	}
+	for _, p := range manifestPaths {
+		full := filepath.Join(target, filepath.FromSlash(p))
+		if _, err := os.Stat(full); err != nil {
+			t.Errorf("expected manifest %s: %v", full, err)
+		}
 	}
 }
 

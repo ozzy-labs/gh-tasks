@@ -60,10 +60,10 @@ func TestDetectClaudeCode(t *testing.T) {
 	}
 }
 
-func TestAutoDetect_PR4Filtering(t *testing.T) {
-	// AutoDetect must only return agents whose adapters are registered
-	// for the current build. PR 4 adds gemini-cli; copilot is still
-	// stubbed out and should not surface even when its trace exists.
+func TestAutoDetect_PR5AllFourAdapters(t *testing.T) {
+	// PR 5 closes the adapter matrix: every agent now both has a Detect
+	// hook and a registered adapter, so AutoDetect should surface all
+	// four when their traces exist.
 	t.Parallel()
 	root := t.TempDir()
 	mustWrite(t, filepath.Join(root, "CLAUDE.md"), "# CLAUDE\n")
@@ -73,7 +73,7 @@ func TestAutoDetect_PR4Filtering(t *testing.T) {
 	mustWrite(t, filepath.Join(root, ".github", "copilot-instructions.md"), "x")
 
 	got := AutoDetect(root)
-	want := []Agent{AgentClaudeCode, AgentCodexCLI, AgentGeminiCLI}
+	want := []Agent{AgentClaudeCode, AgentCodexCLI, AgentGeminiCLI, AgentCopilot}
 	if len(got) != len(want) {
 		t.Fatalf("AutoDetect len = %d, want %d (got %v)", len(got), len(want), got)
 	}
