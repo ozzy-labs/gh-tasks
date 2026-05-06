@@ -11,26 +11,32 @@ Recipes for using `gh-tasks` (CLI + skills) from Gemini CLI.
 
 ## Loading the skills
 
-Gemini CLI reads the file pointed to by `context.fileName` in `.gemini/settings.json` (typically `AGENTS.md`). The `gh-tasks` adapter ships only `AGENTS.md.snippet`, which is merged into the marker block in `AGENTS.md`. Gemini CLI itself does not have a `SKILL.md` auto-load mechanism like Claude Code, so skills are exposed as a list of names + descriptions inside `AGENTS.md`.
+Gemini CLI reads the file pointed to by `context.fileName` in `.gemini/settings.json` (typically `AGENTS.md`). Gemini CLI itself does not have a `SKILL.md` auto-load mechanism like Claude Code, so skills are exposed as a list of names + descriptions inside `AGENTS.md`. The fastest way to wire both up is:
 
 ```bash
-# 1. Build the adapter outputs in gh-tasks
-gh tasks build-skills    # emits dist/gemini-cli/AGENTS.md.snippet
-
-# 2. From the consumer repo root, run commons' sync-skills.sh with MARKER_TAG override
-MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \
-  /path/to/gh-tasks/dist \
-  .
+cd /path/to/your-repo
+gh tasks install-skills            # auto-detects gemini-cli from .gemini/
 ```
 
-The snippet is merged into the marker block in the consumer's `AGENTS.md`. See [`configs/skills-sync/README.md`](../../../../configs/skills-sync/README.md) for details.
+This does two things atomically:
 
-Example `.gemini/settings.json`:
+1. Union-merges `{"context":{"fileName":["AGENTS.md"]}}` into the existing `.gemini/settings.json` — every other key (`model`, `temperature`, ...) and every other entry in `fileName` is preserved verbatim. Empty / missing settings.json is created from scratch.
+2. Merges the gh-tasks marker block into `AGENTS.md`. The same marker is shared with the codex-cli adapter, so installing both does not produce two duplicate blocks.
+
+Common variations:
+
+- `gh tasks install-skills --agent gemini-cli` — explicit selection
+- `gh tasks install-skills --namespace gh-tasks` — rename install
+- `gh tasks install-skills --uninstall` — remove the manifest entries. The AGENTS.md marker is reference-counted (kept if codex-cli still needs it); the AGENTS.md entry is removed from `settings.json`'s `context.fileName` but the file itself is preserved (your `model` / `temperature` survive)
+
+The Renovate auto-sync path is also available — see [`configs/skills-sync/README.md`](../../../../configs/skills-sync/README.md).
+
+Example `.gemini/settings.json` after install:
 
 ```jsonc
 {
   "context": {
-    "fileName": "AGENTS.md"
+    "fileName": ["AGENTS.md"]
   }
 }
 ```
@@ -129,8 +135,7 @@ The `SKILL.md` bodies still live under `.agents/skills/` (Codex CLI) and `.claud
 
 ### `AGENTS.md` snippet stale
 
-- Re-run `MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y /path/to/gh-tasks/dist .` to refresh the marker block (idempotent)
-- The snippet update is idempotent — safe to run repeatedly
+- Re-run `gh tasks install-skills` from the repo root to refresh both the marker block and the settings.json entry (idempotent)
 
 ### Projects v2 fields missing
 

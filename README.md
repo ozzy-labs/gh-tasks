@@ -55,7 +55,29 @@ Default `--scope` resolves in this order: explicit `--scope` flag → current wo
 | `task-standup` | Activity summary for team sharing |
 | `task-link-pr` | Auto-link a PR to its tracking item |
 
-Skills are distributed for Claude Code, Codex CLI, GitHub Copilot, and Gemini CLI via Renovate auto-sync. Pick the adapter sub-presets you need:
+Skills ship for Claude Code, Codex CLI, GitHub Copilot, and Gemini CLI. There are two ways to deploy them:
+
+### One-shot install (recommended)
+
+```bash
+cd /path/to/your-repo
+gh tasks install-skills
+```
+
+The command auto-detects which agents the repo uses (looks for `.claude/`, `AGENTS.md`, `.gemini/`, `.github/copilot-instructions.md`) and writes the right files for each one. Re-running is idempotent — a per-adapter manifest tracks what gh-tasks owns so subsequent runs only update what changed.
+
+Useful flags:
+
+- `--agent claude-code,codex-cli` — install for specific agents instead of auto-detect
+- `--namespace gh-tasks` — rename install to dodge name collisions (`task-add` → `gh-tasks-add`)
+- `--force` — overwrite an untracked existing file (the original is preserved at `<path>.bak`)
+- `--dry-run` — preview the planned actions
+- `--check` — non-zero exit when the on-disk tree is out of sync (CI dogfooding)
+- `--uninstall` — remove every file recorded in the manifest. Shared aggregator files (`AGENTS.md`, `.gemini/settings.json`) are reference-counted across adapters
+
+### Renovate auto-sync (auto-update flow)
+
+When you want skill updates to land via PRs in your existing Renovate flow, extend the adapter sub-presets you need:
 
 ```jsonc
 {
@@ -68,6 +90,8 @@ Skills are distributed for Claude Code, Codex CLI, GitHub Copilot, and Gemini CL
 ```
 
 See [`configs/skills-sync/README.md`](configs/skills-sync/README.md) for the full list of adapter presets and how `gh_tasks_commit:` is tracked alongside `@ozzylabs/skills`.
+
+The two paths are interoperable: both write to the same locations and use the same marker tag, so switching between them does not produce spurious diffs.
 
 ## Scope coverage
 

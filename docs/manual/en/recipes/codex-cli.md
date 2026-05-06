@@ -11,22 +11,21 @@ Recipes for using `gh-tasks` (CLI + skills) from Codex CLI.
 
 ## Loading the skills
 
-Codex CLI starts from `AGENTS.md` and resolves referenced skills from `.agents/skills/{name}/SKILL.md`. The `gh-tasks` adapter ships both:
-
-- `.agents/skills/{name}/SKILL.md` — the skill body (SSOT, as-is)
-- `AGENTS.md.snippet` — a marker block listing the skills, inserted into the consumer's `AGENTS.md`
+Codex CLI starts from `AGENTS.md` and resolves referenced skills from `.agents/skills/{name}/SKILL.md`. The fastest way to set both up is:
 
 ```bash
-# 1. Build the adapter outputs in gh-tasks
-gh tasks build-skills    # generates dist/codex-cli/.agents/skills/{name}/SKILL.md and dist/codex-cli/AGENTS.md.snippet
-
-# 2. From the consumer repo root, run commons' sync-skills.sh with MARKER_TAG override
-MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \
-  /path/to/gh-tasks/dist \
-  .
+cd /path/to/your-repo
+gh tasks install-skills            # auto-detects codex-cli from AGENTS.md or .agents/skills/
 ```
 
-The script copies `.agents/skills/{name}/SKILL.md` and merges the snippet into `AGENTS.md` in one shot. See [`configs/skills-sync/README.md`](../../../../configs/skills-sync/README.md) for details.
+This writes `.agents/skills/{name}/SKILL.md` for every gh-tasks skill, merges a marker block into the existing `AGENTS.md` (preserving every byte outside the markers), and records both in `.agents/skills/.gh-tasks-manifest.json`. Common variations:
+
+- `gh tasks install-skills --agent codex-cli` — explicit selection
+- `gh tasks install-skills --namespace gh-tasks` — rename install for collision-free coexistence with other tools
+- `gh tasks install-skills --force` — overwrite an untracked existing skill (preserves the original at `<path>.bak`)
+- `gh tasks install-skills --uninstall` — remove the per-skill files. The AGENTS.md marker block is reference-counted: if gemini-cli is also installed, the marker stays put because gemini still needs it
+
+If you prefer Renovate PRs over a manual command, see [`configs/skills-sync/README.md`](../../../../configs/skills-sync/README.md). Both paths produce the same on-disk layout, marker tag, and manifest, so switching between them is no-op.
 
 The injected `AGENTS.md` block looks like:
 
@@ -108,7 +107,7 @@ Codex CLI skills work as Markdown procedures — the agent walks the steps. Unli
 
 - Confirm the marker block exists in `AGENTS.md` (`<!-- begin: @ozzylabs/gh-tasks -->`)
 - Confirm `.agents/skills/{name}/SKILL.md` exists
-- Re-run `MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y /path/to/gh-tasks/dist .` (idempotent)
+- Re-run `gh tasks install-skills` from the repo root (idempotent — fixes both the marker block and the per-skill files)
 
 ### `--scope` auto-detection fails
 
@@ -117,7 +116,7 @@ Codex CLI skills work as Markdown procedures — the agent walks the steps. Unli
 
 ### `AGENTS.md` marker block corrupted
 
-- The sync script idempotently rewrites between markers — re-run to recover
+- `gh tasks install-skills` rewrites between markers idempotently — re-run to recover
 - When editing manually, only edit outside the marker block
 
 ### `gh tasks` not found
