@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"path/filepath"
+	"path"
 	"regexp"
 	"sort"
 	"strings"
@@ -121,20 +121,33 @@ var defaultRequiredFields = []string{
 	"locale",
 }
 
-// Load reads each skills/<name>/SKILL.md, validates the frontmatter, and
-// returns the parsed Skill list sorted by name.
+// Load reads each skills/<name>/SKILL.md from the OS filesystem. It is a
+// thin wrapper over [LoadFS] that resolves paths relative to srcDir via
+// [os.DirFS]. New callers should prefer LoadFS so they can pass an
+// embedded fs.FS directly and avoid touching the work tree.
+func Load(srcDir string, opts LoadOptions) ([]Skill, error) {
+	return LoadFS(os.DirFS(srcDir), ".", opts)
+}
+
+// LoadFS reads each <root>/<name>/SKILL.md from fsys, validates the
+// frontmatter, and returns the parsed Skill list sorted by name.
 //
 // SKILL.en.md is also loaded and validated when present. Its absence is a
 // hard error (every skill must ship a mirror); when present, its
 // frontmatter `name` must match SKILL.md's name, and its `locale` must be
 // "en". This catches the most common drift scenarios — copy/paste errors,
 // missed renames, and locale typos — that the adapters previously ignored.
-func Load(srcDir string, opts LoadOptions) ([]Skill, error) {
+//
+// fsys may be any [fs.FS]: an os.DirFS for work-tree reads, an embed.FS
+// for binary-bundled SSOT, or a testing/fstest.MapFS for unit tests. Path
+// joining uses [path.Join] (forward slashes), which matches the embed.FS
+// contract and is also accepted by os.DirFS.
+func LoadFS(fsys fs.FS, root string, opts LoadOptions) ([]Skill, error) {
 	required := opts.Required
 	if len(required) == 0 {
 		required = defaultRequiredFields
 	}
-	entries, err := os.ReadDir(srcDir)
+	entries, err := fs.ReadDir(fsys, root)
 	if err != nil {
 		return nil, fmt.Errorf("read skills dir: %w", err)
 	}
@@ -152,9 +165,9 @@ func Load(srcDir string, opts LoadOptions) ([]Skill, error) {
 	sort.Strings(names)
 	skills := []Skill{}
 	for _, name := range names {
-		skillDir := filepath.Join(srcDir, name)
-		path := filepath.Join(skillDir, "SKILL.md")
-		raw, err := os.ReadFile(path) //nolint:gosec // SSOT path is internal: srcDir is caller-provided and walked above
+		skillDir := path.Join(root, name)
+		skillPath := path.Join(skillDir, "SKILL.md")
+		raw, err := fs.ReadFile(fsys, skillPath)
 		if err != nil {
 			if errors.Is(err, fs.ErrNotExist) {
 				// Tolerate non-skill subdirectories silently rather than
@@ -162,7 +175,7 @@ func Load(srcDir string, opts LoadOptions) ([]Skill, error) {
 				// folder under skills/.
 				continue
 			}
-			return nil, fmt.Errorf("read %s: %w", path, err)
+			return nil, fmt.Errorf("read %s: %w", skillPath, err)
 		}
 		label := fmt.Sprintf("skills/%s/SKILL.md", name)
 		fm, body, err := ParseDocument(string(raw), label)
@@ -184,7 +197,7 @@ func Load(srcDir string, opts LoadOptions) ([]Skill, error) {
 				label, fm["locale"],
 			)
 		}
-		if err := assertEnglishMirror(skillDir, name); err != nil {
+		if err := assertEnglishMirrorFS(fsys, skillDir, name); err != nil {
 			return nil, err
 		}
 		skills = append(skills, Skill{
@@ -200,16 +213,16 @@ func Load(srcDir string, opts LoadOptions) ([]Skill, error) {
 	return skills, nil
 }
 
-// assertEnglishMirror validates that <skillDir>/SKILL.en.md exists and that
-// its frontmatter is internally consistent (name matches the canonical
-// skill name, locale is "en"). Body content is not compared against
-// SKILL.md — translation freshness is the author's responsibility — but
-// these structural checks ensure adapters that ever consume the mirror are
-// not silently emitting stale or mismatched metadata.
-func assertEnglishMirror(skillDir, name string) error {
-	mirrorPath := filepath.Join(skillDir, "SKILL.en.md")
+// assertEnglishMirrorFS validates that <skillDir>/SKILL.en.md exists in
+// fsys and that its frontmatter is internally consistent (name matches
+// the canonical skill name, locale is "en"). Body content is not compared
+// against SKILL.md — translation freshness is the author's responsibility —
+// but these structural checks ensure adapters that ever consume the
+// mirror are not silently emitting stale or mismatched metadata.
+func assertEnglishMirrorFS(fsys fs.FS, skillDir, name string) error {
+	mirrorPath := path.Join(skillDir, "SKILL.en.md")
 	mirrorLabel := fmt.Sprintf("skills/%s/SKILL.en.md", name)
-	mirrorRaw, err := os.ReadFile(mirrorPath) //nolint:gosec // mirrorPath is built under the validated skillDir
+	mirrorRaw, err := fs.ReadFile(fsys, mirrorPath)
 	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			return fmt.Errorf("%s: SKILL.en.md mirror is missing — every skill must ship a SKILL.en.md alongside SKILL.md", mirrorLabel)

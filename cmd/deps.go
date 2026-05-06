@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"io"
+	"io/fs"
 	"os"
 	"os/exec"
 	"strings"
@@ -20,16 +21,23 @@ import (
 // before passing Deps to RootWithDeps. Commands assume non-nil callbacks
 // (Now, Env, HasGitRemote, GetRemoteURL, NewClients, LoadConfig) and will
 // panic on a zero-value Deps.
+//
+// EmbeddedSkills carries the binary-bundled skill SSOT (populated by main).
+// Commands that consume skills offline (install-skills, build-skills) read
+// from it; tests inject a fstest.MapFS to keep the unit tests work-tree
+// independent. May be nil — only commands that opt into embedded reads
+// dereference it.
 type Deps struct {
-	Stdout       io.Writer
-	Stderr       io.Writer
-	Stdin        io.Reader
-	Now          func() time.Time
-	Env          func(string) string
-	HasGitRemote func() bool
-	GetRemoteURL func() (string, bool)
-	NewClients   func() (*github.Clients, error)
-	LoadConfig   func() (config.AppConfig, error)
+	Stdout         io.Writer
+	Stderr         io.Writer
+	Stdin          io.Reader
+	Now            func() time.Time
+	Env            func(string) string
+	HasGitRemote   func() bool
+	GetRemoteURL   func() (string, bool)
+	NewClients     func() (*github.Clients, error)
+	LoadConfig     func() (config.AppConfig, error)
+	EmbeddedSkills fs.FS
 }
 
 // Resolved bundles the runtime-derived values: locale, config, etc.

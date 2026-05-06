@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"testing/fstest"
 
 	"github.com/google/go-cmp/cmp"
 
@@ -370,6 +371,108 @@ func TestParseDocument_NonScalarFrontmatter(t *testing.T) {
 		}
 		if fm["enabled"] != "true" {
 			t.Errorf("enabled=%q, want %q", fm["enabled"], "true")
+		}
+	})
+}
+
+// TestLoadFS_MapFS exercises LoadFS directly with an in-memory fs.FS so
+// the embed-friendly path stays covered without depending on the work
+// tree. The Load() wrapper goes through os.DirFS and is exercised by
+// TestLoadGuards / TestLoadEnglishMirrorGuards above.
+func TestLoadFS_MapFS(t *testing.T) {
+	t.Parallel()
+
+	skillJa := "---\n" +
+		"name: alpha\n" +
+		"description: ja-desc\n" +
+		"description_en: en-desc\n" +
+		"allowed-tools: Bash\n" +
+		"locale: ja\n" +
+		"---\nbody-ja\n"
+	skillEn := "---\n" +
+		"name: alpha\n" +
+		"description: en-desc\n" +
+		"description_en: en-desc\n" +
+		"allowed-tools: Bash\n" +
+		"locale: en\n" +
+		"---\nbody-en\n"
+
+	t.Run("happy-rooted", func(t *testing.T) {
+		t.Parallel()
+		fsys := fstest.MapFS{
+			"skills/alpha/SKILL.md":    &fstest.MapFile{Data: []byte(skillJa)},
+			"skills/alpha/SKILL.en.md": &fstest.MapFile{Data: []byte(skillEn)},
+		}
+		got, err := skills.LoadFS(fsys, "skills", skills.LoadOptions{})
+		if err != nil {
+			t.Fatalf("LoadFS: %v", err)
+		}
+		if len(got) != 1 || got[0].Name != "alpha" {
+			t.Fatalf("got=%+v, want one skill named 'alpha'", got)
+		}
+		if got[0].Body != "body-ja\n" {
+			t.Errorf("body=%q, want %q", got[0].Body, "body-ja\n")
+		}
+		if got[0].DescriptionEN != "en-desc" {
+			t.Errorf("DescriptionEN=%q, want en-desc", got[0].DescriptionEN)
+		}
+	})
+
+	t.Run("hidden-and-underscore-dirs-are-skipped", func(t *testing.T) {
+		t.Parallel()
+		// `.git` / `_archived` directories should be silently ignored so a
+		// stray folder under skills/ does not break the build.
+		fsys := fstest.MapFS{
+			"r/alpha/SKILL.md":     &fstest.MapFile{Data: []byte(skillJa)},
+			"r/alpha/SKILL.en.md":  &fstest.MapFile{Data: []byte(skillEn)},
+			"r/.git/HEAD":          &fstest.MapFile{Data: []byte("ref: refs/heads/x\n")},
+			"r/_archived/SKILL.md": &fstest.MapFile{Data: []byte("nope")},
+		}
+		got, err := skills.LoadFS(fsys, "r", skills.LoadOptions{})
+		if err != nil {
+			t.Fatalf("LoadFS: %v", err)
+		}
+		if len(got) != 1 || got[0].Name != "alpha" {
+			t.Fatalf("got=%+v, want one skill named 'alpha'", got)
+		}
+	})
+
+	t.Run("missing-en-mirror-fails", func(t *testing.T) {
+		t.Parallel()
+		fsys := fstest.MapFS{
+			"r/alpha/SKILL.md": &fstest.MapFile{Data: []byte(skillJa)},
+		}
+		_, err := skills.LoadFS(fsys, "r", skills.LoadOptions{})
+		if err == nil || !strings.Contains(err.Error(), "SKILL.en.md mirror is missing") {
+			t.Fatalf("got err=%v, want missing-mirror error", err)
+		}
+	})
+
+	t.Run("subdir-without-skill-md-tolerated", func(t *testing.T) {
+		t.Parallel()
+		// Mirrors the "stray folder under skills/" production case: subdir
+		// has no SKILL.md, so it is silently skipped (covers the
+		// fs.ErrNotExist branch in LoadFS).
+		fsys := fstest.MapFS{
+			"r/alpha/SKILL.md":    &fstest.MapFile{Data: []byte(skillJa)},
+			"r/alpha/SKILL.en.md": &fstest.MapFile{Data: []byte(skillEn)},
+			"r/empty/notes.md":    &fstest.MapFile{Data: []byte("# notes")},
+		}
+		got, err := skills.LoadFS(fsys, "r", skills.LoadOptions{})
+		if err != nil {
+			t.Fatalf("LoadFS: %v", err)
+		}
+		if len(got) != 1 {
+			t.Fatalf("got %d skills, want 1", len(got))
+		}
+	})
+
+	t.Run("read-error-on-missing-root", func(t *testing.T) {
+		t.Parallel()
+		fsys := fstest.MapFS{}
+		_, err := skills.LoadFS(fsys, "does-not-exist", skills.LoadOptions{})
+		if err == nil || !strings.Contains(err.Error(), "read skills dir") {
+			t.Fatalf("got err=%v, want read skills dir error", err)
 		}
 	})
 }

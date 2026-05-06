@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"errors"
 	"os"
 
@@ -9,8 +10,20 @@ import (
 	"github.com/ozzy-labs/gh-tasks/cmd"
 )
 
+// embeddedSkills bundles the canonical skill SSOT into the released
+// binary. Commands that need to read skills without a working tree
+// (e.g. `gh tasks install-skills`, run from a consumer repo where the
+// gh-tasks source is not present) consume it via Deps.EmbeddedSkills.
+// `all:` includes dot-prefixed entries so any future `.metadata` files
+// under skills/ are not silently dropped.
+//
+//go:embed all:skills
+var embeddedSkills embed.FS
+
 func main() {
-	if err := cmd.Root().Execute(); err != nil {
+	deps := cmd.DefaultDeps()
+	deps.EmbeddedSkills = embeddedSkills
+	if err := cmd.RootWithDeps(deps).Execute(); err != nil {
 		// Match the legacy TS implementation: arg-validation failures
 		// (invalid flags, malformed config, missing required positional
 		// args) exit with code 2; other "silent" runtime failures
