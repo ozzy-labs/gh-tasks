@@ -11,19 +11,22 @@ Recipes for using `gh-tasks` (CLI + skills) from GitHub Copilot.
 
 ## Loading the skills
 
-GitHub Copilot reads `.github/copilot-instructions.md` as its top-level instruction file. The `gh-tasks` adapter ships `.github/copilot-instructions.md.snippet`, which is merged into the marker block in `copilot-instructions.md`. Copilot does not load `SKILL.md` directly, so skills are surfaced as a list of names + descriptions only.
+GitHub Copilot reads `.github/copilot-instructions.md` as its top-level instruction file. Copilot does not load `SKILL.md` directly, so skills are surfaced as a list of names + descriptions inside the marker block. The fastest way to set this up:
 
 ```bash
-# 1. Build the adapter outputs in gh-tasks
-gh tasks build-skills    # emits dist/copilot/.github/copilot-instructions.md.snippet
-
-# 2. From the consumer repo root, run commons' sync-skills.sh with MARKER_TAG override
-MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \
-  /path/to/gh-tasks/dist \
-  .
+cd /path/to/your-repo
+gh tasks install-skills            # auto-detects copilot from .github/copilot-instructions.md
 ```
 
-The snippet is merged into the marker block in the consumer's `.github/copilot-instructions.md`. See [`configs/skills-sync/README.md`](../../../../configs/skills-sync/README.md) for details.
+This merges the gh-tasks marker block into `.github/copilot-instructions.md` (creating the file if missing) and tracks the contribution in `.github/.gh-tasks-copilot-manifest.json`. The marker block is exclusive to gh-tasks; content outside it is preserved verbatim.
+
+Common variations:
+
+- `gh tasks install-skills --agent copilot` — explicit selection
+- `gh tasks install-skills --namespace gh-tasks` — rename install
+- `gh tasks install-skills --uninstall` — strip the marker block; the surrounding consumer content is left intact
+
+The Renovate auto-sync path is also available — see [`configs/skills-sync/README.md`](../../../../configs/skills-sync/README.md).
 
 Either include AGENTS.md by reference from `copilot-instructions.md`, or place the skill marker block alongside AGENTS.md. Snippet shape:
 
@@ -111,7 +114,7 @@ Copilot Coding Agent can run `gh` CLI in its environment, which combines well wi
 
 - Confirm the marker block exists in `.github/copilot-instructions.md`
 - Reopen the repo so Copilot reloads instructions
-- Re-run `MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y /path/to/gh-tasks/dist .` (idempotent)
+- Re-run `gh tasks install-skills` from the repo root (idempotent)
 
 ### `--scope` auto-detection fails
 
@@ -126,8 +129,7 @@ Copilot Coding Agent can run `gh` CLI in its environment, which combines well wi
 
 ### `copilot-instructions.md` snippet corrupted
 
-- Re-run `MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y /path/to/gh-tasks/dist .` (idempotent)
-- The snippet update is idempotent — safe to run repeatedly
+- Re-run `gh tasks install-skills` to rewrite the marker block (idempotent — safe to run repeatedly)
 
 ### Projects v2 fields missing
 

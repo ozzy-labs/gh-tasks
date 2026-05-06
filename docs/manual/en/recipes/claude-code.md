@@ -11,19 +11,22 @@ Recipes for using `gh-tasks` (CLI + skills) from Claude Code.
 
 ## Loading the skills
 
-Claude Code reads skill definitions from `.claude/skills/{name}/SKILL.md`. The `gh-tasks` adapter places `task-add` / `task-plan` / `task-triage` / `task-review` / `task-standup` / `task-link-pr` at the same paths.
+Claude Code reads skill definitions from `.claude/skills/{name}/SKILL.md`. The fastest way to get them in place is the one-shot install:
 
 ```bash
-# 1. Build the adapter outputs in gh-tasks
-gh tasks build-skills    # generates dist/claude-code/.claude/skills/{name}/SKILL.md
-
-# 2. From the consumer repo root, run commons' sync-skills.sh with MARKER_TAG override
-MARKER_TAG=@ozzylabs/gh-tasks bash /path/to/commons/sync-skills.sh -y \
-  /path/to/gh-tasks/dist \
-  .
+cd /path/to/your-repo
+gh tasks install-skills            # auto-detects claude-code from .claude/ or CLAUDE.md
 ```
 
-See [`configs/skills-sync/README.md`](../../../../configs/skills-sync/README.md) for the full procedure including CI workflow examples.
+This writes `.claude/skills/{name}/SKILL.md` for `task-add` / `task-plan` / `task-triage` / `task-review` / `task-standup` / `task-link-pr` and a `.claude/skills/.gh-tasks-manifest.json` so subsequent runs are idempotent. Common variations:
+
+- `gh tasks install-skills --agent claude-code` — explicit selection if auto-detect doesn't see Claude Code
+- `gh tasks install-skills --namespace gh-tasks` — rename install (`/task-add` → `/gh-tasks-add`) to dodge a collision with another tool's skills
+- `gh tasks install-skills --force` — overwrite an untracked existing skill (the original is preserved at `<path>.bak`)
+- `gh tasks install-skills --dry-run` — preview the plan without writing
+- `gh tasks install-skills --uninstall` — remove every file the manifest tracks
+
+If you prefer skill updates to land via Renovate PRs, see [`configs/skills-sync/README.md`](../../../../configs/skills-sync/README.md). Both paths target the same `.claude/skills/` layout and use the same marker tag, so switching between them does not produce spurious diffs.
 
 The skill SSOT lives in `skills/{name}/SKILL.md`. Claude Code reads the frontmatter (`name`, `description`, `allowed-tools`) and may auto-trigger the skill when relevant. To invoke explicitly, use slash-command form like `/task-add`.
 
@@ -98,8 +101,8 @@ Skills only call the CLI under the hood, so side-effects are identical. When a s
 
 ### Skill not recognized
 
-- Confirm `.claude/skills/{name}/SKILL.md` exists
-- Confirm the frontmatter `name` matches the directory name
+- Confirm `.claude/skills/{name}/SKILL.md` exists. If not, run `gh tasks install-skills` from the repo root
+- Confirm the frontmatter `name` matches the directory name (the install command guarantees this; manual edits may diverge)
 - Restart Claude Code (skills are loaded at session start)
 
 ### `--scope` auto-detection fails
