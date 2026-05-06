@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [release-please-config.json](./release-please-config.json) for the automated release flow.
 
+## [0.1.1](https://github.com/ozzy-labs/gh-tasks/compare/v0.1.0...v0.1.1) (2026-05-06)
+
+
+### Bug Fixes
+
+* **ci:** pass --repo to gh release upload in checksums job ([#325](https://github.com/ozzy-labs/gh-tasks/issues/325)) ([570c331](https://github.com/ozzy-labs/gh-tasks/commit/570c33133942b9d96898c46bb23c68ee388a71cc))
+
 ## [0.1.0](https://github.com/ozzy-labs/gh-tasks/compare/v0.1.0...v0.1.0) (2026-05-06)
 
 
