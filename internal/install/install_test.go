@@ -77,3 +77,14 @@ func TestAdapterFor(t *testing.T) {
 		}
 	}
 }
+
+func TestAdapterFor_UnknownReturnsFalse(t *testing.T) {
+	// Calling with an Agent value that isn't registered must return
+	// (nil, false). The cmd layer's resolveAgents already filters via
+	// ValidateAgent, but install.AdapterFor is also called directly in
+	// the uninstall flow and must stay defensive.
+	t.Parallel()
+	if impl, ok := AdapterFor(Agent("not-a-real-agent")); ok || impl != nil {
+		t.Errorf("AdapterFor(unknown) = (%v, %v); want (nil, false)", impl, ok)
+	}
+}

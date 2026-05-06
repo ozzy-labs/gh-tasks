@@ -79,6 +79,27 @@ func TestExecute_BackupTo_OverwritesPriorBackup(t *testing.T) {
 	}
 }
 
+func TestTally_AllActionTypes(t *testing.T) {
+	// Direct unit test for Tally so every ActionType case is exercised
+	// without relying on a flow test to construct a representative mix.
+	t.Parallel()
+	got := Tally([]Action{
+		{Type: ActionCreate},
+		{Type: ActionCreate},
+		{Type: ActionUpdate},
+		{Type: ActionSkip},
+		{Type: ActionSkip},
+		{Type: ActionSkip},
+		{Type: ActionConflict},
+		{Type: ActionRemove},
+		{Type: ActionRemove},
+	})
+	want := Counts{Created: 2, Updated: 1, Skipped: 3, Conflicts: 1, Removed: 2}
+	if got != want {
+		t.Errorf("Tally = %+v, want %+v", got, want)
+	}
+}
+
 func TestExecute_BackupTo_NoFileNoError(t *testing.T) {
 	// If the path BackupTo points to has already vanished (race or
 	// concurrent rm), Execute should still succeed: the new content

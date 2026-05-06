@@ -636,6 +636,78 @@ func TestInstallSkills_Uninstall_DryRun(t *testing.T) {
 	}
 }
 
+func TestInstallSkills_InstallUninstallReinstall_RoundTrip(t *testing.T) {
+	// Install → uninstall → install again on the same target. This
+	// catches a class of subtle bugs where the second install would
+	// mistake a freshly removed path for an "untracked third-party
+	// file" because the manifest got torn down between runs.
+	t.Parallel()
+	target := t.TempDir()
+	if err := os.WriteFile(filepath.Join(target, "CLAUDE.md"), []byte("# CLAUDE\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	d1 := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	if _, _, err := runCmd(t, d1, "install-skills", "--target", target); err != nil {
+		t.Fatalf("first install: %v", err)
+	}
+
+	d2 := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	if _, _, err := runCmd(t, d2, "install-skills", "--target", target, "--uninstall"); err != nil {
+		t.Fatalf("uninstall: %v", err)
+	}
+
+	// Second install should succeed cleanly — every path was just
+	// manifest-cleared, so the new install sees them as fresh creates,
+	// not conflicts.
+	d3 := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	stdout, stderr, err := runCmd(t, d3, "install-skills", "--target", target)
+	if err != nil {
+		t.Fatalf("reinstall: %v (stderr=%s)", err, stderr.String())
+	}
+	if strings.Contains(stdout.String(), "conflict") || strings.Contains(stdout.String(), "衝突") {
+		t.Errorf("reinstall reported a conflict on a freshly uninstalled tree:\n%s", stdout.String())
+	}
+	for _, name := range []string{"alpha", "bravo"} {
+		if _, err := os.Stat(filepath.Join(target, ".claude", "skills", name, "SKILL.md")); err != nil {
+			t.Errorf("reinstall missing %s: %v", name, err)
+		}
+	}
+}
+
+func TestInstallSkills_Uninstall_AgentExplicit_NotInstalled(t *testing.T) {
+	// `--uninstall --agent claude-code` against a target that never had
+	// claude-code installed should be a near no-op: no manifest, so
+	// PlanUninstall walks an empty Files list and the only "Remove"
+	// action is the (already-missing) manifest itself, which is
+	// idempotent.
+	t.Parallel()
+	target := t.TempDir()
+	d := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	stdout, stderr, err := runCmd(t, d, "install-skills", "--target", target,
+		"--uninstall", "--agent", "claude-code")
+	if err != nil {
+		t.Fatalf("uninstall on uninstalled agent: %v (stderr=%s)", err, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "claude-code") {
+		t.Errorf("stdout missing claude-code section:\n%s", stdout.String())
+	}
+}
+
+func TestInstallSkills_Uninstall_AgentExplicit_Unknown(t *testing.T) {
+	t.Parallel()
+	target := t.TempDir()
+	d := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	_, stderr, err := runCmd(t, d, "install-skills", "--target", target,
+		"--uninstall", "--agent", "bogus")
+	if !errors.Is(err, cmd.ErrSilentArgs) {
+		t.Fatalf("expected ErrSilentArgs, got %v", err)
+	}
+	if !strings.Contains(stderr.String(), "bogus") {
+		t.Errorf("stderr should mention offending agent:\n%s", stderr.String())
+	}
+}
+
 func TestInstallSkills_Uninstall_NothingToDo(t *testing.T) {
 	t.Parallel()
 	target := t.TempDir()
