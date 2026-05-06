@@ -117,6 +117,23 @@ func (r *recordingREST) Do(_ context.Context, method, path string, body, out any
 	return nil
 }
 
+// assertNoLeadingOrDoubleSlashInRESTPath fails the test when any recorded REST
+// call uses a path starting with "/" or containing "//". go-gh's restPrefix
+// already supplies the trailing slash, so a leading "/" produces a malformed
+// URL like `https://api.github.com//repos/...` that returns HTTP 404. Callers
+// of github.RESTClient.Do MUST pass paths without a leading "/".
+func assertNoLeadingOrDoubleSlashInRESTPath(t *testing.T, r *recordingREST) {
+	t.Helper()
+	for _, c := range r.calls {
+		if strings.HasPrefix(c.path, "/") {
+			t.Errorf("REST path must not start with %q; got %q (method %s)", "/", c.path, c.method)
+		}
+		if strings.Contains(c.path, "//") {
+			t.Errorf("REST path must not contain %q; got %q (method %s)", "//", c.path, c.method)
+		}
+	}
+}
+
 // ===== Client + Deps factories =============================================
 
 // newClients builds a github.Clients with the supplied GraphQL fake and the

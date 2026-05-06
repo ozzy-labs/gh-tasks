@@ -135,7 +135,7 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 	}
 	if milestoneID == "" {
 		var created queries.CreateMilestoneResult
-		path := fmt.Sprintf("/repos/%s/%s/milestones", id.Owner, id.Name)
+		path := fmt.Sprintf("repos/%s/%s/milestones", id.Owner, id.Name)
 		body := map[string]any{"title": title}
 		if err := clients.REST.Do(ctx, "POST", path, body, &created); err != nil {
 			return wrapTransport(c.ErrOrStderr(), r.Locale, "create milestone", err)

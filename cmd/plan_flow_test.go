@@ -99,6 +99,7 @@ func TestPlan_RepoReuseExistingMilestone(t *testing.T) {
 			t.Errorf("did not expect REST milestone create when reusing, saw call: %+v", c)
 		}
 	}
+	assertNoLeadingOrDoubleSlashInRESTPath(t, rest)
 }
 
 func TestPlan_RepoCreateNewMilestone(t *testing.T) {
@@ -155,6 +156,81 @@ func TestPlan_RepoCreateNewMilestone(t *testing.T) {
 	if !sawCreate {
 		t.Errorf("expected REST POST /milestones; calls=%+v", rest.calls)
 	}
+	assertNoLeadingOrDoubleSlashInRESTPath(t, rest)
+}
+
+// TestPlan_CreateMilestoneRESTPathFormat asserts the exact REST path format
+// emitted by plan when creating a milestone. Regression guard for the
+// `https://api.github.com//repos/...` HTTP 404 bug caused by a leading "/"
+// in the path passed to go-gh's RESTClient (see internal/github/github.go
+// RESTClient docstring).
+func TestPlan_CreateMilestoneRESTPathFormat(t *testing.T) {
+	t.Parallel()
+
+	rest := &recordingREST{responses: []restResponse{
+		{
+			matchMethod: "POST",
+			matchPath:   "milestones",
+			data:        map[string]any{"node_id": "M_NEW", "id": 999, "number": 12, "title": "Daily 2026-05-04"},
+		},
+	}}
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{
+			MatchSubstring: "query ListRepoIssuesWithMilestone (",
+			Data: map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{
+				map[string]any{
+					"id": "I_a", "number": 1, "title": "Task A", "url": "u/1",
+					"updatedAt": "2026-05-04T08:00:00Z",
+					"milestone": nil,
+				},
+			}}}},
+		},
+		{
+			MatchSubstring: "query ListMilestones (",
+			Data:           map[string]any{"repository": map[string]any{"milestones": map[string]any{"nodes": []any{}}}},
+		},
+		{
+			MatchSubstring: "mutation UpdateIssueMilestone (",
+			Data: map[string]any{"updateIssue": map[string]any{"issue": map[string]any{
+				"id": "I_a", "number": 1, "url": "u/1",
+				"milestone": map[string]any{"id": "M_NEW", "number": 12, "title": "Daily 2026-05-04"},
+			}}},
+		},
+	}}
+	d := testDeps(g, func(d *cmd.Deps) {
+		d.NewClients = func() (*github.Clients, error) {
+			return newClientsWithREST(g, rest), nil
+		}
+	})
+	if _, _, err := runCmd(t, d, "plan", "--period", "daily"); err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	var sawCreate bool
+	for _, c := range rest.calls {
+		if c.method != "POST" || !strings.Contains(c.path, "milestones") {
+			continue
+		}
+		sawCreate = true
+		// Exact format: repos/{owner}/{name}/milestones (no leading slash).
+		// testDeps wires a default repo; we check the expected suffix and the
+		// no-leading-slash invariant rather than hard-coding owner/name.
+		if !strings.HasSuffix(c.path, "/milestones") {
+			t.Errorf("REST POST path = %q; want suffix %q", c.path, "/milestones")
+		}
+		if strings.HasPrefix(c.path, "/") {
+			t.Errorf("REST POST path must not start with %q; got %q", "/", c.path)
+		}
+		if strings.Contains(c.path, "//") {
+			t.Errorf("REST POST path must not contain %q; got %q", "//", c.path)
+		}
+		if !strings.HasPrefix(c.path, "repos/") {
+			t.Errorf("REST POST path = %q; want prefix %q", c.path, "repos/")
+		}
+	}
+	if !sawCreate {
+		t.Errorf("expected REST POST .../milestones; calls=%+v", rest.calls)
+	}
+	assertNoLeadingOrDoubleSlashInRESTPath(t, rest)
 }
 
 func TestPlan_ProjectIterationMatched(t *testing.T) {

@@ -79,7 +79,9 @@ type GraphQLClient interface {
 }
 
 // RESTClient is the minimal surface for REST endpoints not covered by
-// GraphQL (e.g. POST /repos/{owner}/{repo}/milestones).
+// GraphQL (e.g. POST repos/{owner}/{repo}/milestones). path MUST NOT start
+// with "/" — go-gh's restPrefix already includes the trailing slash, so a
+// leading "/" yields `https://api.github.com//repos/...` and HTTP 404.
 type RESTClient interface {
 	Do(ctx context.Context, method, path string, body any, out any) error
 }
