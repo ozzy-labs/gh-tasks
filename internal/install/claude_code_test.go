@@ -1,0 +1,171 @@
+package install
+
+import (
+	"os"
+	"path/filepath"
+	"testing"
+
+	"github.com/ozzy-labs/gh-tasks/internal/skills"
+)
+
+func TestClaudeCode_ManifestPath(t *testing.T) {
+	t.Parallel()
+	root := "/tmp/repo"
+	got := ClaudeCodeAdapter{}.ManifestPath(root)
+	want := filepath.Join(root, ".claude", "skills", ".gh-tasks-manifest.json")
+	if got != want {
+		t.Errorf("ManifestPath = %q, want %q", got, want)
+	}
+}
+
+func TestClaudeCode_Plan_AllCreate(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	loaded := []skills.Skill{
+		{Name: "task-add", Raw: "raw-task-add\n"},
+		{Name: "task-plan", Raw: "raw-task-plan\n"},
+	}
+	actions, err := ClaudeCodeAdapter{}.Plan(PlanContext{
+		TargetRoot: root, Skills: loaded,
+	})
+	if err != nil {
+		t.Fatalf("Plan error: %v", err)
+	}
+	if len(actions) != 2 {
+		t.Fatalf("got %d actions, want 2: %+v", len(actions), actions)
+	}
+	for _, a := range actions {
+		if a.Type != ActionCreate {
+			t.Errorf("expected ActionCreate, got %v for %s", a.Type, a.RelPath)
+		}
+	}
+}
+
+func TestClaudeCode_Plan_SkipUpdateConflict(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	skillsRoot := filepath.Join(root, ".claude", "skills")
+	if err := os.MkdirAll(filepath.Join(skillsRoot, "task-skip"), 0o750); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(skillsRoot, "task-update"), 0o750); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(skillsRoot, "task-conflict"), 0o750); err != nil {
+		t.Fatal(err)
+	}
+	// task-skip: tracked + matching content -> Skip
+	mustWrite(t, filepath.Join(skillsRoot, "task-skip", "SKILL.md"), "skip-content")
+	// task-update: tracked + content drift -> Update
+	mustWrite(t, filepath.Join(skillsRoot, "task-update", "SKILL.md"), "old-content")
+	// task-conflict: untracked -> Conflict
+	mustWrite(t, filepath.Join(skillsRoot, "task-conflict", "SKILL.md"), "third-party")
+
+	loaded := []skills.Skill{
+		{Name: "task-skip", Raw: "skip-content"},
+		{Name: "task-update", Raw: "new-content"},
+		{Name: "task-conflict", Raw: "fresh-content"},
+		{Name: "task-new", Raw: "fresh-new"},
+	}
+	prev := Manifest{
+		Agent: AgentClaudeCode,
+		Files: []string{
+			".claude/skills/task-skip/SKILL.md",
+			".claude/skills/task-update/SKILL.md",
+		},
+	}
+	actions, err := ClaudeCodeAdapter{}.Plan(PlanContext{
+		TargetRoot: root, Skills: loaded, Existing: prev,
+	})
+	if err != nil {
+		t.Fatalf("Plan error: %v", err)
+	}
+	if len(actions) != 4 {
+		t.Fatalf("got %d actions, want 4: %+v", len(actions), actions)
+	}
+	byName := map[string]Action{}
+	for _, a := range actions {
+		byName[a.RelPath] = a
+	}
+	want := map[string]ActionType{
+		".claude/skills/task-skip/SKILL.md":     ActionSkip,
+		".claude/skills/task-update/SKILL.md":   ActionUpdate,
+		".claude/skills/task-conflict/SKILL.md": ActionConflict,
+		".claude/skills/task-new/SKILL.md":      ActionCreate,
+	}
+	for rel, wantType := range want {
+		got, ok := byName[rel]
+		if !ok {
+			t.Errorf("missing action for %s", rel)
+			continue
+		}
+		if got.Type != wantType {
+			t.Errorf("%s: got %v, want %v", rel, got.Type, wantType)
+		}
+	}
+}
+
+func TestClaudeCode_Plan_EmptyTarget(t *testing.T) {
+	t.Parallel()
+	_, err := ClaudeCodeAdapter{}.Plan(PlanContext{Skills: nil})
+	if err == nil {
+		t.Errorf("Plan with empty TargetRoot should error")
+	}
+}
+
+func TestExecute_RefusesOnConflict(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	abs := filepath.Join(root, "x.md")
+	actions := []Action{
+		{Type: ActionConflict, Path: abs, RelPath: "x.md"},
+	}
+	if _, err := Execute(actions); err == nil {
+		t.Errorf("Execute with conflict returned nil err, want guard error")
+	}
+	if _, err := os.Stat(abs); err == nil {
+		t.Errorf("Execute wrote conflict path %s anyway", abs)
+	}
+}
+
+func TestExecute_WritesCreate(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	abs := filepath.Join(root, "sub", "y.md")
+	actions := []Action{
+		{Type: ActionCreate, Path: abs, RelPath: "sub/y.md", Content: "hi\n"},
+	}
+	written, err := Execute(actions)
+	if err != nil {
+		t.Fatalf("Execute error: %v", err)
+	}
+	if len(written) != 1 || written[0] != "sub/y.md" {
+		t.Errorf("written = %v, want [sub/y.md]", written)
+	}
+	body, err := os.ReadFile(abs)
+	if err != nil {
+		t.Fatalf("read created: %v", err)
+	}
+	if string(body) != "hi\n" {
+		t.Errorf("content = %q, want %q", string(body), "hi\n")
+	}
+}
+
+func TestTally_Drift(t *testing.T) {
+	t.Parallel()
+	if (Counts{}).HasDrift() {
+		t.Errorf("zero Counts should not be drift")
+	}
+	if (Counts{Skipped: 5}).HasDrift() {
+		t.Errorf("only-skipped should not be drift")
+	}
+	if !(Counts{Created: 1}).HasDrift() {
+		t.Errorf("Created>0 should be drift")
+	}
+	if !(Counts{Updated: 1}).HasDrift() {
+		t.Errorf("Updated>0 should be drift")
+	}
+	if !(Counts{Conflicts: 1}).HasDrift() {
+		t.Errorf("Conflicts>0 should be drift")
+	}
+}
