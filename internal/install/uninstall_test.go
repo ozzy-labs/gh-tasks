@@ -359,3 +359,237 @@ func TestTally_RemovedDrift(t *testing.T) {
 		t.Errorf("Removed>0 should be drift (uninstall changes the workspace)")
 	}
 }
+
+func TestPlanUninstall_EmptyTargetErrorsForAllAdapters(t *testing.T) {
+	// Every adapter must reject an empty TargetRoot rather than silently
+	// returning an empty plan — the cmd layer relies on the validation
+	// to surface a localized message before any file is touched.
+	t.Parallel()
+	cases := []struct {
+		name string
+		impl AdapterImpl
+	}{
+		{"claude-code", ClaudeCodeAdapter{}},
+		{"codex-cli", CodexCLIAdapter{}},
+		{"gemini-cli", GeminiCLIAdapter{}},
+		{"copilot", CopilotAdapter{}},
+	}
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if _, err := c.impl.PlanUninstall(UninstallContext{}); err == nil {
+				t.Errorf("%s.PlanUninstall(empty) returned nil err", c.name)
+			}
+		})
+	}
+}
+
+func TestGeminiCLI_PlanUninstall_SettingsAndAgentsMdMissing(t *testing.T) {
+	// Both shared aggregator files have already been deleted manually
+	// before uninstall runs. PlanUninstall must NOT try to update them
+	// (no actions emitted for those paths) — it should only schedule
+	// the manifest removal.
+	t.Parallel()
+	root := t.TempDir()
+	prev := mkManifest(AgentGeminiCLI, nil,
+		[]string{".gemini/settings.json", "AGENTS.md"})
+	actions, err := GeminiCLIAdapter{}.PlanUninstall(UninstallContext{
+		TargetRoot: root,
+		Existing:   prev,
+		// no Others → marker would be eligible for strip, but file
+		// doesn't exist anyway.
+	})
+	if err != nil {
+		t.Fatalf("PlanUninstall: %v", err)
+	}
+	for _, a := range actions {
+		if a.RelPath == ".gemini/settings.json" || a.RelPath == "AGENTS.md" {
+			t.Errorf("expected no action for missing aggregator %s, got %+v", a.RelPath, a)
+		}
+	}
+	// Manifest removal must still be scheduled.
+	var hasManifest bool
+	for _, a := range actions {
+		if a.RelPath == ".gemini/.gh-tasks-manifest.json" && a.Type == ActionRemove {
+			hasManifest = true
+		}
+	}
+	if !hasManifest {
+		t.Errorf("manifest removal missing from actions: %+v", actions)
+	}
+}
+
+func TestGeminiCLI_PlanUninstall_AgentsMdStripsToEmpty(t *testing.T) {
+	// AGENTS.md contains only the marker block (no surrounding consumer
+	// content). After stripping, the file is empty → ActionRemove for
+	// AGENTS.md (matches the install-side symmetry: install created an
+	// otherwise-empty file, uninstall takes it back).
+	t.Parallel()
+	root := t.TempDir()
+	mustWriteFile(t, filepath.Join(root, "AGENTS.md"),
+		MergeMarkerBlock("", "## gh-tasks Skills\n\n- task-add"))
+
+	prev := mkManifest(AgentGeminiCLI, nil, []string{"AGENTS.md"})
+	actions, err := GeminiCLIAdapter{}.PlanUninstall(UninstallContext{
+		TargetRoot: root,
+		Existing:   prev,
+		Others:     nil,
+	})
+	if err != nil {
+		t.Fatalf("PlanUninstall: %v", err)
+	}
+	var found *Action
+	for i := range actions {
+		if actions[i].RelPath == "AGENTS.md" {
+			found = &actions[i]
+		}
+	}
+	if found == nil || found.Type != ActionRemove {
+		t.Errorf("expected ActionRemove for AGENTS.md, got %+v", found)
+	}
+}
+
+func TestGeminiCLI_PlanUninstall_SettingsAlreadyClean(t *testing.T) {
+	// settings.json exists but AGENTS.md was already absent (user
+	// edited it out manually before uninstall). The strip is a true
+	// no-op (the function returns the bytes unchanged) → no action
+	// emitted for settings.json. Important: the input must already
+	// match what RemoveGeminiSettingsEntry's MarshalIndent would
+	// produce, since the strip path re-marshals.
+	t.Parallel()
+	root := t.TempDir()
+	geminiDir := filepath.Join(root, ".gemini")
+	if err := os.MkdirAll(geminiDir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	// Pre-stripped form: pass a settings.json with no `context.fileName`
+	// at all so RemoveGeminiSettingsEntry's "no change" early-return
+	// path runs (existing returned verbatim).
+	mustWriteFile(t, filepath.Join(geminiDir, "settings.json"),
+		`{"model":"gemini-2.5-pro"}`)
+
+	prev := mkManifest(AgentGeminiCLI, nil, []string{".gemini/settings.json"})
+	actions, err := GeminiCLIAdapter{}.PlanUninstall(UninstallContext{
+		TargetRoot: root, Existing: prev,
+	})
+	if err != nil {
+		t.Fatalf("PlanUninstall: %v", err)
+	}
+	for _, a := range actions {
+		if a.RelPath == ".gemini/settings.json" {
+			t.Errorf("expected no action for already-clean settings, got %+v", a)
+		}
+	}
+}
+
+func TestCopilot_PlanUninstall_FileMissing(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	prev := mkManifest(AgentCopilot, nil, []string{".github/copilot-instructions.md"})
+	actions, err := CopilotAdapter{}.PlanUninstall(UninstallContext{
+		TargetRoot: root, Existing: prev,
+	})
+	if err != nil {
+		t.Fatalf("PlanUninstall: %v", err)
+	}
+	for _, a := range actions {
+		if a.RelPath == ".github/copilot-instructions.md" {
+			t.Errorf("expected no action for missing copilot-instructions.md, got %+v", a)
+		}
+	}
+}
+
+func TestCopilot_PlanUninstall_StripsToEmpty(t *testing.T) {
+	// copilot-instructions.md was created by gh-tasks (no consumer
+	// content outside the marker). After strip → empty → ActionRemove.
+	t.Parallel()
+	root := t.TempDir()
+	githubDir := filepath.Join(root, ".github")
+	if err := os.MkdirAll(githubDir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	mustWriteFile(t, filepath.Join(githubDir, "copilot-instructions.md"),
+		MergeMarkerBlock("", "## gh-tasks Skills\n\n- foo"))
+
+	prev := mkManifest(AgentCopilot, nil, []string{".github/copilot-instructions.md"})
+	actions, err := CopilotAdapter{}.PlanUninstall(UninstallContext{
+		TargetRoot: root, Existing: prev,
+	})
+	if err != nil {
+		t.Fatalf("PlanUninstall: %v", err)
+	}
+	var found *Action
+	for i := range actions {
+		if actions[i].RelPath == ".github/copilot-instructions.md" {
+			found = &actions[i]
+		}
+	}
+	if found == nil || found.Type != ActionRemove {
+		t.Errorf("expected ActionRemove, got %+v", found)
+	}
+}
+
+func TestCodexCLI_PlanUninstall_AgentsMdMarkerAlreadyAbsent(t *testing.T) {
+	// AGENTS.md exists but the marker block was manually removed. The
+	// strip is a no-op (stripped == existing) so no action is emitted
+	// for AGENTS.md — but per-skill files and manifest still go away.
+	t.Parallel()
+	root := t.TempDir()
+	skillDir := filepath.Join(root, ".agents", "skills", "task-add")
+	if err := os.MkdirAll(skillDir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	mustWriteFile(t, filepath.Join(skillDir, "SKILL.md"), "x")
+	mustWriteFile(t, filepath.Join(root, "AGENTS.md"), "# AGENTS\n\nuser-only.\n")
+
+	prev := mkManifest(AgentCodexCLI,
+		[]string{".agents/skills/task-add/SKILL.md"},
+		[]string{"AGENTS.md"},
+	)
+	actions, err := CodexCLIAdapter{}.PlanUninstall(UninstallContext{
+		TargetRoot: root, Existing: prev,
+	})
+	if err != nil {
+		t.Fatalf("PlanUninstall: %v", err)
+	}
+	for _, a := range actions {
+		if a.RelPath == "AGENTS.md" {
+			t.Errorf("expected no AGENTS.md action when marker already absent, got %+v", a)
+		}
+	}
+}
+
+func TestExecute_MixedActions_OrderPreserved(t *testing.T) {
+	// Execute must apply ActionRemove and ActionUpdate in the order the
+	// plan lists them. PR 7's per-adapter PlanUninstall puts owned-file
+	// removals before the manifest removal so that, if any earlier step
+	// fails, the manifest is still on disk for a clean retry. The same
+	// ordering invariant matters for the install path.
+	t.Parallel()
+	root := t.TempDir()
+	first := filepath.Join(root, "a.md")
+	second := filepath.Join(root, "b.md")
+	mustWriteFile(t, first, "old")
+
+	res, err := Execute([]Action{
+		{Type: ActionRemove, Path: first, RelPath: "a.md"},
+		{Type: ActionCreate, Path: second, RelPath: "b.md", Content: "new\n"},
+	})
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	if _, err := os.Stat(first); err == nil {
+		t.Errorf("a.md not removed")
+	}
+	body, err := os.ReadFile(second)
+	if err != nil || string(body) != "new\n" {
+		t.Errorf("b.md not created with expected content: body=%q err=%v", body, err)
+	}
+	if len(res.Removed) != 1 || res.Removed[0] != "a.md" {
+		t.Errorf("Removed = %v, want [a.md]", res.Removed)
+	}
+	if len(res.Files) != 1 || res.Files[0] != "b.md" {
+		t.Errorf("Files = %v, want [b.md]", res.Files)
+	}
+}
