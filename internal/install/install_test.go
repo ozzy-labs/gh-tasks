@@ -47,21 +47,21 @@ func TestActionType_String(t *testing.T) {
 	}
 }
 
-func TestAdapters_PR3_ClaudeCodeAndCodexCli(t *testing.T) {
-	// PR 3 ships claude-code + codex-cli; gemini-cli/copilot land in
-	// PR 4-5. This test pins the current registration set so that future
-	// PRs deliberately update it as adapters come online.
+func TestAdapters_PR4_ThreeAdapters(t *testing.T) {
+	// PR 4 ships claude-code + codex-cli + gemini-cli; copilot lands in
+	// PR 5. This test pins the current registration set so that PR 5
+	// deliberately updates it.
 	t.Parallel()
 	got := Adapters()
-	if len(got) != 2 {
+	if len(got) != 3 {
 		var names []string
 		for _, a := range got {
 			names = append(names, string(a.Agent()))
 		}
-		t.Fatalf("Adapters() = [%s] (len %d); PR 3 expects exactly 2 (claude-code, codex-cli)",
+		t.Fatalf("Adapters() = [%s] (len %d); PR 4 expects exactly 3 (claude-code, codex-cli, gemini-cli)",
 			strings.Join(names, ","), len(got))
 	}
-	wantOrder := []Agent{AgentClaudeCode, AgentCodexCLI}
+	wantOrder := []Agent{AgentClaudeCode, AgentCodexCLI, AgentGeminiCLI}
 	for i, want := range wantOrder {
 		if got[i].Agent() != want {
 			t.Errorf("Adapters()[%d].Agent() = %q, want %q", i, got[i].Agent(), want)
@@ -71,15 +71,13 @@ func TestAdapters_PR3_ClaudeCodeAndCodexCli(t *testing.T) {
 
 func TestAdapterFor(t *testing.T) {
 	t.Parallel()
-	for _, a := range []Agent{AgentClaudeCode, AgentCodexCLI} {
+	for _, a := range []Agent{AgentClaudeCode, AgentCodexCLI, AgentGeminiCLI} {
 		if _, ok := AdapterFor(a); !ok {
-			t.Errorf("AdapterFor(%q) = (_, false); want (impl, true) at PR 3", a)
+			t.Errorf("AdapterFor(%q) = (_, false); want (impl, true) at PR 4", a)
 		}
 	}
-	// gemini-cli / copilot are not yet registered.
-	for _, a := range []Agent{AgentGeminiCLI, AgentCopilot} {
-		if _, ok := AdapterFor(a); ok {
-			t.Errorf("AdapterFor(%q) = (_, true); PR 3 should NOT yet register %q", a, a)
-		}
+	// copilot is not yet registered.
+	if _, ok := AdapterFor(AgentCopilot); ok {
+		t.Errorf("AdapterFor(copilot) = (_, true); PR 4 should NOT yet register copilot")
 	}
 }

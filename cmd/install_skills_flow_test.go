@@ -224,13 +224,13 @@ func TestInstallSkills_AgentExplicit_UnknownRejected(t *testing.T) {
 }
 
 func TestInstallSkills_AgentExplicit_UnregisteredErrors(t *testing.T) {
-	// `gemini-cli` is recognized by ValidateAgent but not yet wired into
-	// PR 3 (lands in PR 4). The cmd should surface a localized
+	// `copilot` is recognized by ValidateAgent but not yet wired into
+	// PR 4 (lands in PR 5). The cmd should surface a localized
 	// unknown-agent error rather than silently no-op.
 	t.Parallel()
 	target := t.TempDir()
 	d := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
-	_, stderr, err := runCmd(t, d, "install-skills", "--target", target, "--agent", "gemini-cli")
+	_, stderr, err := runCmd(t, d, "install-skills", "--target", target, "--agent", "copilot")
 	if !errors.Is(err, cmd.ErrSilentArgs) {
 		t.Fatalf("expected ErrSilentArgs, got %v (stderr=%s)", err, stderr.String())
 	}
@@ -358,6 +358,67 @@ func TestInstallSkills_CodexCLI_Idempotent(t *testing.T) {
 	if string(body1) != string(body2) {
 		t.Errorf("AGENTS.md drifted across runs\nfirst:\n%s\nsecond:\n%s",
 			string(body1), string(body2))
+	}
+}
+
+func TestInstallSkills_GeminiCLI_Flow(t *testing.T) {
+	// gemini-cli (PR 4): writes .gemini/settings.json (union merge) AND
+	// AGENTS.md marker block. Both Shared. The settings.json must
+	// preserve any unrelated keys the user already had.
+	t.Parallel()
+	target := t.TempDir()
+	geminiDir := filepath.Join(target, ".gemini")
+	if err := os.MkdirAll(geminiDir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	preExisting := `{"model":"gemini-2.5-pro","temperature":0.2}`
+	if err := os.WriteFile(filepath.Join(geminiDir, "settings.json"), []byte(preExisting), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	d := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	stdout, stderr, err := runCmd(t, d, "install-skills", "--target", target, "--agent", "gemini-cli")
+	if err != nil {
+		t.Fatalf("Execute: %v (stderr=%s)", err, stderr.String())
+	}
+
+	got, err := os.ReadFile(filepath.Join(geminiDir, "settings.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(got), "gemini-2.5-pro") {
+		t.Errorf("model lost from settings.json:\n%s", string(got))
+	}
+	if !strings.Contains(string(got), "0.2") {
+		t.Errorf("temperature lost from settings.json:\n%s", string(got))
+	}
+	if !strings.Contains(string(got), "AGENTS.md") {
+		t.Errorf("AGENTS.md not added to settings.json:\n%s", string(got))
+	}
+
+	manifestPath := filepath.Join(geminiDir, ".gh-tasks-manifest.json")
+	mb, err := os.ReadFile(manifestPath)
+	if err != nil {
+		t.Fatalf("manifest read: %v", err)
+	}
+	var manifest install.Manifest
+	if err := json.Unmarshal(mb, &manifest); err != nil {
+		t.Fatalf("manifest parse: %v", err)
+	}
+	if manifest.Agent != install.AgentGeminiCLI {
+		t.Errorf("manifest agent = %q, want gemini-cli", manifest.Agent)
+	}
+	wantShared := map[string]bool{".gemini/settings.json": false, "AGENTS.md": false}
+	for _, s := range manifest.Shared {
+		wantShared[s] = true
+	}
+	for k, present := range wantShared {
+		if !present {
+			t.Errorf("manifest.Shared missing %q (got %v)", k, manifest.Shared)
+		}
+	}
+	if !strings.Contains(stdout.String(), ".gemini/settings.json") {
+		t.Errorf("stdout should mention settings.json:\n%s", stdout.String())
 	}
 }
 
