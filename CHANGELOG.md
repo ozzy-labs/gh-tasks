@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [release-please-config.json](./release-please-config.json) for the automated release flow.
 
+## [0.2.0](https://github.com/ozzy-labs/gh-tasks/compare/v0.1.1...v0.2.0) (2026-05-06)
+
+
+### chore
+
+* release-as v0.2.0 ([#341](https://github.com/ozzy-labs/gh-tasks/issues/341)) ([ac4bdfe](https://github.com/ozzy-labs/gh-tasks/commit/ac4bdfec3340adaaf0c533c58febc891bf5d959e))
+
+
+### Features
+
+* **cmd:** --namespace and --force for install-skills ([#335](https://github.com/ozzy-labs/gh-tasks/issues/335)) ([12b5b8c](https://github.com/ozzy-labs/gh-tasks/commit/12b5b8cc1c9632d6cb2d0355ef574d4659cd5d65))
+* **cmd:** add install-skills command + claude-code adapter ([#329](https://github.com/ozzy-labs/gh-tasks/issues/329)) ([45c762c](https://github.com/ozzy-labs/gh-tasks/commit/45c762c35fa69481004e303e40e96905b27097ee))
+* **cmd:** codex-cli adapter for install-skills ([#332](https://github.com/ozzy-labs/gh-tasks/issues/332)) ([36f27f5](https://github.com/ozzy-labs/gh-tasks/commit/36f27f5c2fda47cd9a66be0390e9ca0a6de20690))
+* **cmd:** copilot adapter for install-skills ([#334](https://github.com/ozzy-labs/gh-tasks/issues/334)) ([aaab086](https://github.com/ozzy-labs/gh-tasks/commit/aaab086094c509348b8d049104733f8e993d4621))
+* **cmd:** gemini-cli adapter for install-skills ([#333](https://github.com/ozzy-labs/gh-tasks/issues/333)) ([ad76905](https://github.com/ozzy-labs/gh-tasks/commit/ad7690539f55cfd6d972ec97c365231ace2d4471))
+* **cmd:** uninstall flag for install-skills ([#336](https://github.com/ozzy-labs/gh-tasks/issues/336)) ([47e99fb](https://github.com/ozzy-labs/gh-tasks/commit/47e99fbd219de1526e8113ae04aa3c5352de586f))
+
 ## [0.1.1](https://github.com/ozzy-labs/gh-tasks/compare/v0.1.0...v0.1.1) (2026-05-06)
 
 
