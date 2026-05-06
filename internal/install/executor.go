@@ -1,7 +1,9 @@
 package install
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 )
@@ -73,6 +75,11 @@ func Execute(actions []Action) (ExecuteResult, error) {
 		if a.Type != ActionCreate && a.Type != ActionUpdate {
 			continue
 		}
+		if a.BackupTo != "" {
+			if err := backupExisting(a.Path, a.BackupTo); err != nil {
+				return ExecuteResult{}, err
+			}
+		}
 		if err := writeFile(a.Path, a.Content); err != nil {
 			return ExecuteResult{}, err
 		}
@@ -83,6 +90,31 @@ func Execute(actions []Action) (ExecuteResult, error) {
 		}
 	}
 	return res, nil
+}
+
+// backupExisting renames src to dst (typically <path>.bak), creating the
+// dst's parent directory if it does not already exist. A pre-existing
+// dst is overwritten — repeated `--force` runs keep only the most recent
+// backup, which matches users' typical mental model of `cp -i`-style
+// fallback semantics.
+//
+// A missing src is not an error: the only caller (Execute) guarantees a
+// BackupTo only when the on-disk Plan saw the file, but races (a
+// concurrent rm) shouldn't make the install crash.
+func backupExisting(src, dst string) error {
+	if _, err := os.Stat(src); err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil
+		}
+		return fmt.Errorf("backup stat %s: %w", src, err)
+	}
+	if err := os.MkdirAll(filepath.Dir(dst), 0o750); err != nil {
+		return fmt.Errorf("mkdir backup parent: %w", err)
+	}
+	if err := os.Rename(src, dst); err != nil {
+		return fmt.Errorf("backup rename %s -> %s: %w", src, dst, err)
+	}
+	return nil
 }
 
 // writeFile creates parent directories as needed and writes content at

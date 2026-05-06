@@ -74,6 +74,16 @@ func (a CodexCLIAdapter) Plan(ctx PlanContext) ([]Action, error) {
 					Content: desired,
 				})
 			}
+		case ctx.Force:
+			// PR 6 `--force`: downgrade conflict to update + .bak
+			// backup so the third-party file survives recoverably.
+			out = append(out, Action{
+				Type:     ActionUpdate,
+				Path:     absPath,
+				RelPath:  relSlash,
+				Content:  desired,
+				BackupTo: absPath + ".bak",
+			})
 		default:
 			out = append(out, Action{
 				Type: ActionConflict, Path: absPath, RelPath: relSlash,
