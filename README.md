@@ -73,7 +73,7 @@ Useful flags:
 - `--force` — overwrite an untracked existing file (the original is preserved at `<path>.bak`)
 - `--dry-run` — preview the planned actions
 - `--check` — non-zero exit when the on-disk tree is out of sync (CI dogfooding)
-- `--uninstall` — remove every file recorded in the manifest. Shared aggregator files (`AGENTS.md`, `.gemini/settings.json`) are reference-counted across adapters
+- `--uninstall` — remove every file recorded in the manifest. Shared aggregator files (`AGENTS.md`, `.gemini/settings.json`, `.github/copilot-instructions.md`) are reference-counted across adapters
 
 ### Renovate auto-sync (auto-update flow)
 

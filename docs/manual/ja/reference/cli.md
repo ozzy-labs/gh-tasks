@@ -159,7 +159,7 @@ gh tasks install-skills [--agent <name>[,<name>...]] [--target <path>] \
 
 フラグ:
 
-- `--agent <name>[,<name>...]`: 明示的な agent 指定(`claude-code` / `codex-cli` / `gemini-cli` / `copilot`)。カンマ / 空白区切り。省略時は auto-detect
+- `--agent <name>[,<name>...]`: 明示的な agent 指定(`claude-code` / `codex-cli` / `gemini-cli` / `copilot`)。複数指定はカンマ区切り(`--agent claude-code,codex-cli`)またはフラグ反復(`--agent claude-code --agent codex-cli`)。省略時は auto-detect
 - `--target <path>`: 配置先 (consumer リポルート)。既定は cwd
 - `--namespace <prefix>`: prefix で skill 名を rename(例: `--namespace gh-tasks` で `task-add` → `gh-tasks-add`)。on-disk のディレクトリ名と SKILL.md frontmatter `name:` の両方が書き換わる
 - `--force`: 非管理の既存 skill を上書き。原本は `<path>.bak` に退避
