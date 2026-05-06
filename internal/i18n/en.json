@@ -118,7 +118,7 @@
   "install.dryRun.header": "(--dry-run) Planned actions:",
   "install.dryRun.note": "(--dry-run: no files were written)",
   "install.action.create": "  + {path}",
-  "install.action.update": "  ~ {path} (overwrite — previously installed by gh-tasks)",
+  "install.action.update": "  ~ {path} (overwrite)",
   "install.action.skip": "  = {path} (unchanged)",
   "install.action.conflict": "  ! {path} (conflict — file exists but is not tracked by gh-tasks)",
   "install.summary.installed": "Installed skills for {agent}: {created} created, {updated} updated, {skipped} unchanged",

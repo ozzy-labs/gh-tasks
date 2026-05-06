@@ -41,32 +41,48 @@ func Tally(actions []Action) Counts {
 	return c
 }
 
+// ExecuteResult bundles the relative paths Execute actually wrote, split
+// by ownership. Files = adapter-owned (per-skill SKILL.md and similar);
+// Shared = consumer-owned aggregator files (AGENTS.md,
+// .github/copilot-instructions.md). The split flows directly into the
+// matching Manifest.Files / Manifest.Shared fields and is what PR 7's
+// --uninstall keys off when reference-counting marker blocks across
+// multiple adapters.
+type ExecuteResult struct {
+	Files  []string
+	Shared []string
+}
+
 // Execute applies a planned []Action to disk. It refuses to proceed when
 // any Conflict action is present — the cmd layer checks for conflicts
 // first and surfaces a localized error before calling Execute, but the
 // guard is repeated here so direct callers (tests, future scripting) can
 // not silently overwrite untracked files.
 //
-// On success Execute returns the list of relative paths it actually wrote
-// (Create + Update). The caller composes this with any Shared entries
-// (PR 3+ for AGENTS.md) and persists a fresh Manifest.
-func Execute(actions []Action) ([]string, error) {
+// On success Execute returns the relative paths it actually wrote
+// (Create + Update), split into Files (owned) and Shared (consumer-owned
+// aggregator). Skip and Conflict actions never appear in the result.
+func Execute(actions []Action) (ExecuteResult, error) {
 	for _, a := range actions {
 		if a.Type == ActionConflict {
-			return nil, fmt.Errorf("refusing to execute plan with %d conflict(s); resolve before retrying", Tally(actions).Conflicts)
+			return ExecuteResult{}, fmt.Errorf("refusing to execute plan with %d conflict(s); resolve before retrying", Tally(actions).Conflicts)
 		}
 	}
-	written := []string{}
+	res := ExecuteResult{}
 	for _, a := range actions {
 		if a.Type != ActionCreate && a.Type != ActionUpdate {
 			continue
 		}
 		if err := writeFile(a.Path, a.Content); err != nil {
-			return nil, err
+			return ExecuteResult{}, err
 		}
-		written = append(written, a.RelPath)
+		if a.Shared {
+			res.Shared = append(res.Shared, a.RelPath)
+		} else {
+			res.Files = append(res.Files, a.RelPath)
+		}
 	}
-	return written, nil
+	return res, nil
 }
 
 // writeFile creates parent directories as needed and writes content at

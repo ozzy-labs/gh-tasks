@@ -128,6 +128,27 @@ func TestExecute_RefusesOnConflict(t *testing.T) {
 	}
 }
 
+func TestExecute_SplitsOwnedAndShared(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	owned := filepath.Join(root, "owned.md")
+	shared := filepath.Join(root, "shared.md")
+	actions := []Action{
+		{Type: ActionCreate, Path: owned, RelPath: "owned.md", Content: "o\n"},
+		{Type: ActionCreate, Path: shared, RelPath: "shared.md", Content: "s\n", Shared: true},
+	}
+	res, err := Execute(actions)
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	if len(res.Files) != 1 || res.Files[0] != "owned.md" {
+		t.Errorf("Files = %v, want [owned.md]", res.Files)
+	}
+	if len(res.Shared) != 1 || res.Shared[0] != "shared.md" {
+		t.Errorf("Shared = %v, want [shared.md]", res.Shared)
+	}
+}
+
 func TestExecute_WritesCreate(t *testing.T) {
 	t.Parallel()
 	root := t.TempDir()
@@ -135,12 +156,15 @@ func TestExecute_WritesCreate(t *testing.T) {
 	actions := []Action{
 		{Type: ActionCreate, Path: abs, RelPath: "sub/y.md", Content: "hi\n"},
 	}
-	written, err := Execute(actions)
+	res, err := Execute(actions)
 	if err != nil {
 		t.Fatalf("Execute error: %v", err)
 	}
-	if len(written) != 1 || written[0] != "sub/y.md" {
-		t.Errorf("written = %v, want [sub/y.md]", written)
+	if len(res.Files) != 1 || res.Files[0] != "sub/y.md" {
+		t.Errorf("res.Files = %v, want [sub/y.md]", res.Files)
+	}
+	if len(res.Shared) != 0 {
+		t.Errorf("res.Shared = %v, want empty for owned action", res.Shared)
 	}
 	body, err := os.ReadFile(abs)
 	if err != nil {

@@ -153,21 +153,20 @@ func runInstallSkills(c *cobra.Command, deps Deps) error {
 			return ErrSilentRuntime
 		}
 
-		written, err := install.Execute(actions)
+		res, err := install.Execute(actions)
 		if err != nil {
 			return err
 		}
+		// Preserve previously-tracked entries that we just rewrote (Update
+		// actions) and the entries we Skipped because content matched —
+		// dropping them would let a future run see them as third-party.
 		manifest := install.Manifest{
 			SchemaVersion: install.ManifestSchemaVersion,
 			GHTasksVer:    Version,
 			Agent:         a,
-			Files:         written,
+			Files:         mergeTrackedRelPaths(res.Files, actions, false),
+			Shared:        mergeTrackedRelPaths(res.Shared, actions, true),
 		}
-		// Preserve previously-tracked files that we just rewrote (Update
-		// actions); also keep entries for files we Skipped because the
-		// SSOT and disk content matched. Without this the next run would
-		// see them as third-party.
-		manifest.Files = mergeManifestFiles(written, actions)
 		if err := install.WriteManifest(manifestPath, manifest); err != nil {
 			return err
 		}
@@ -309,14 +308,16 @@ func renderAction(r Resolved, a install.Action) string {
 	return a.RelPath
 }
 
-// mergeManifestFiles produces the Files list that should land in the
-// freshly written manifest. We keep every path the adapter just touched
-// (Create + Update) and every path it judged as already in sync (Skip),
-// because all three classes are gh-tasks-owned. Conflict paths are
-// excluded — Execute would already have errored out before reaching
-// this helper, but the explicit filter keeps the manifest pure if a
-// future caller starts treating Execute's conflict guard as advisory.
-func mergeManifestFiles(written []string, actions []install.Action) []string {
+// mergeTrackedRelPaths produces the Files (when shared=false) or Shared
+// (when shared=true) list that should land in the freshly written
+// manifest. We keep every path the adapter just touched (Create + Update,
+// already enumerated in `written`) and every path it judged as already in
+// sync (ActionSkip with the matching `a.Shared` flag). Conflict paths are
+// excluded by construction — Execute would already have errored out
+// before reaching this helper, but the explicit filter keeps the manifest
+// pure if a future caller starts treating Execute's conflict guard as
+// advisory.
+func mergeTrackedRelPaths(written []string, actions []install.Action, shared bool) []string {
 	out := make([]string, 0, len(actions))
 	seen := map[string]bool{}
 	for _, p := range written {
@@ -326,7 +327,13 @@ func mergeManifestFiles(written []string, actions []install.Action) []string {
 		}
 	}
 	for _, a := range actions {
-		if a.Type == install.ActionSkip && !seen[a.RelPath] {
+		if a.Type != install.ActionSkip {
+			continue
+		}
+		if a.Shared != shared {
+			continue
+		}
+		if !seen[a.RelPath] {
 			out = append(out, a.RelPath)
 			seen[a.RelPath] = true
 		}

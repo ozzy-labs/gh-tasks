@@ -60,9 +60,10 @@ func TestDetectClaudeCode(t *testing.T) {
 	}
 }
 
-func TestAutoDetect_PR2Filtering(t *testing.T) {
+func TestAutoDetect_PR3Filtering(t *testing.T) {
 	// AutoDetect must only return agents whose adapters are registered
-	// for the current build, even if .gemini/ or AGENTS.md exists.
+	// for the current build. PR 3 registers claude-code + codex-cli;
+	// .gemini/ should not surface as an auto-detected agent until PR 4.
 	t.Parallel()
 	root := t.TempDir()
 	mustWrite(t, filepath.Join(root, "CLAUDE.md"), "# CLAUDE\n")
@@ -70,8 +71,8 @@ func TestAutoDetect_PR2Filtering(t *testing.T) {
 	mustMkdir(t, filepath.Join(root, ".gemini"))
 
 	got := AutoDetect(root)
-	if len(got) != 1 || got[0] != AgentClaudeCode {
-		t.Errorf("AutoDetect = %v; PR 2 expects only [claude-code]", got)
+	if len(got) != 2 || got[0] != AgentClaudeCode || got[1] != AgentCodexCLI {
+		t.Errorf("AutoDetect = %v; PR 3 expects [claude-code, codex-cli]", got)
 	}
 }
 
