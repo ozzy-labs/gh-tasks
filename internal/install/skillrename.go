@@ -58,7 +58,12 @@ func RenameSkillContent(raw, newName string) (string, error) {
 	if !frontmatterNameLineRe.MatchString(header) {
 		return "", fmt.Errorf("install/rename: frontmatter has no `name:` key")
 	}
-	newHeader := frontmatterNameLineRe.ReplaceAllString(header, "name: "+newName)
+	// ReplaceAllLiteralString rather than ReplaceAllString: the latter
+	// interprets `$N` sequences in the replacement template, which would
+	// corrupt the rewrite if a caller ever passed a namespace that
+	// happened to contain `$<digit>`. Literal substitution treats every
+	// byte of newName verbatim.
+	newHeader := frontmatterNameLineRe.ReplaceAllLiteralString(header, "name: "+newName)
 	return raw[:headerStart] + newHeader + raw[headerEnd:], nil
 }
 

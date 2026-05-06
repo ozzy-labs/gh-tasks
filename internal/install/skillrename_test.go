@@ -157,3 +157,18 @@ func TestApplyNamespaceToSkills_PropagatesRenameError(t *testing.T) {
 		t.Errorf("expected error for raw without frontmatter")
 	}
 }
+
+func TestRenameSkillContent_NamespaceWithDollarIsLiteral(t *testing.T) {
+	// Defensive test for ReplaceAllLiteralString: a `$1` in the new
+	// name must be written verbatim, not interpreted as a regex
+	// backreference.
+	t.Parallel()
+	raw := "---\nname: task-add\ndescription: x\n---\n\nbody\n"
+	got, err := RenameSkillContent(raw, "ns-$1-add")
+	if err != nil {
+		t.Fatalf("RenameSkillContent: %v", err)
+	}
+	if !strings.Contains(got, "name: ns-$1-add\n") {
+		t.Errorf("$1 sequence collapsed; got:\n%s", got)
+	}
+}
