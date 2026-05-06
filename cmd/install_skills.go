@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -43,6 +44,8 @@ gh-tasks" from "third-party file" without prompting.`,
 	c.Flags().String("target", ".", "target directory (consumer repo root)")
 	c.Flags().Bool("dry-run", false, "show planned actions without writing")
 	c.Flags().Bool("check", false, "exit non-zero if any file would be created or updated (CI dogfooding)")
+	c.Flags().String("namespace", "", "rename skills with this prefix (e.g. --namespace gh-tasks turns task-add into gh-tasks-add)")
+	c.Flags().Bool("force", false, "overwrite untracked existing files (the original is preserved at <path>.bak)")
 	return c
 }
 
@@ -56,6 +59,8 @@ func runInstallSkills(c *cobra.Command, deps Deps) error {
 	dryRun, _ := c.Flags().GetBool("dry-run")
 	check, _ := c.Flags().GetBool("check")
 	agentFlag, _ := c.Flags().GetStringSlice("agent")
+	namespace, _ := c.Flags().GetString("namespace")
+	force, _ := c.Flags().GetBool("force")
 
 	absTarget, err := resolveTarget(target)
 	if err != nil {
@@ -71,6 +76,14 @@ func runInstallSkills(c *cobra.Command, deps Deps) error {
 	if err != nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.install.loadSkills", "reason", err.Error()))
 		return ErrSilentRuntime
+	}
+	if namespace != "" {
+		loaded, err = install.ApplyNamespaceToSkills(namespace, loaded)
+		if err != nil {
+			fmt.Fprintln(c.ErrOrStderr(), r.T("error.install.namespaceRename",
+				"namespace", namespace, "reason", err.Error()))
+			return ErrSilentRuntime
+		}
 	}
 
 	agents, err := resolveAgents(c, r, agentFlag, absTarget)
@@ -116,6 +129,7 @@ func runInstallSkills(c *cobra.Command, deps Deps) error {
 			TargetRoot: absTarget,
 			Skills:     loaded,
 			Existing:   existing,
+			Force:      force,
 		})
 		if err != nil {
 			return err
@@ -146,10 +160,7 @@ func runInstallSkills(c *cobra.Command, deps Deps) error {
 		}
 
 		if counts.Conflicts > 0 {
-			fmt.Fprintln(c.ErrOrStderr(), r.T("error.install.conflict",
-				"agent", string(a),
-				"count", counts.Conflicts,
-			))
+			renderConflictReport(c.ErrOrStderr(), r, a, actions)
 			return ErrSilentRuntime
 		}
 
@@ -164,6 +175,7 @@ func runInstallSkills(c *cobra.Command, deps Deps) error {
 			SchemaVersion: install.ManifestSchemaVersion,
 			GHTasksVer:    Version,
 			Agent:         a,
+			Namespace:     namespace,
 			Files:         mergeTrackedRelPaths(res.Files, actions, false),
 			Shared:        mergeTrackedRelPaths(res.Shared, actions, true),
 		}
@@ -306,6 +318,22 @@ func renderAction(r Resolved, a install.Action) string {
 		return i18n.T(r.Locale, "install.action.conflict", "path", a.RelPath)
 	}
 	return a.RelPath
+}
+
+// renderConflictReport prints the structured conflict block: a header
+// line stating the count + agent, one line per conflicting path, and a
+// trailing resolutions section pointing the user at --namespace and
+// --force. The per-action listing has already been printed by the main
+// loop (renderAction emits "  ! {path} (conflict ...)" for each one),
+// so this function does not repeat it.
+func renderConflictReport(w io.Writer, r Resolved, a install.Agent, actions []install.Action) {
+	count := 0
+	for _, act := range actions {
+		if act.Type == install.ActionConflict {
+			count++
+		}
+	}
+	fmt.Fprintln(w, r.T("error.install.conflict", "agent", string(a), "count", count))
 }
 
 // mergeTrackedRelPaths produces the Files (when shared=false) or Shared

@@ -128,8 +128,9 @@
   "error.install.unknownAgent": "Unknown --agent value: '{value}' (valid: {valid})",
   "error.install.noAgentDetected": "No agent detected under target. Use --agent <name> to specify (valid: {valid})",
   "error.install.targetNotADirectory": "Target path is not a directory: {path}",
-  "error.install.conflict": "{count} skill file(s) conflict with existing untracked files for {agent}. Resolve manually, or rerun with --force / --namespace once those flags are available",
+  "error.install.conflict": "{count} skill file(s) conflict with existing untracked files for {agent}.\n\nResolutions:\n  - rename install with a prefix:    gh tasks install-skills --namespace gh-tasks\n  - overwrite (saves <path>.bak):    gh tasks install-skills --force\n  - inspect each conflict and resolve manually before retrying",
   "error.install.embedNotAvailable": "Embedded skill SSOT is not available in this build",
   "error.install.manifestParseFailed": "Could not parse manifest '{path}': {reason}",
-  "error.install.loadSkills": "Could not load embedded skill SSOT: {reason}"
+  "error.install.loadSkills": "Could not load embedded skill SSOT: {reason}",
+  "error.install.namespaceRename": "Could not apply --namespace '{namespace}': {reason}"
 }

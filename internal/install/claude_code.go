@@ -81,9 +81,22 @@ func (a ClaudeCodeAdapter) Plan(ctx PlanContext) ([]Action, error) {
 					Content: desired,
 				})
 			}
+		case ctx.Force:
+			// PR 6 `--force`: downgrade conflict to update + .bak
+			// backup. Existing (untracked) content is preserved at
+			// <path>.bak so the user can recover the third-party file
+			// after the fact.
+			out = append(out, Action{
+				Type:     ActionUpdate,
+				Path:     absPath,
+				RelPath:  relSlash,
+				Content:  desired,
+				BackupTo: absPath + ".bak",
+			})
 		default:
-			// Existing but untracked — refuse to clobber. PR 6 will add
-			// --force / --namespace to opt out of this guard.
+			// Existing but untracked — refuse to clobber. Resolve via
+			// `--namespace` (rename install) or `--force` (overwrite +
+			// .bak backup).
 			out = append(out, Action{
 				Type: ActionConflict, Path: absPath, RelPath: relSlash,
 			})

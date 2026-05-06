@@ -118,12 +118,19 @@ func (t ActionType) String() string {
 // separately so the eventual --uninstall (PR 7) can reference-count the
 // marker block across codex-cli + gemini-cli without orphaning consumer
 // content.
+//
+// BackupTo, when non-empty, instructs Execute to rename the file at Path
+// to BackupTo before writing Content. PR 6's `--force` flag uses this to
+// downgrade an ActionConflict into a non-destructive ActionUpdate: the
+// untracked third-party file is preserved at <Path>.bak. Empty BackupTo
+// means "no backup" — the normal Create / Update behavior.
 type Action struct {
-	Type    ActionType
-	Path    string
-	RelPath string
-	Content string
-	Shared  bool
+	Type     ActionType
+	Path     string
+	RelPath  string
+	Content  string
+	Shared   bool
+	BackupTo string
 }
 
 // PlanContext bundles the inputs an AdapterImpl needs to produce its
@@ -140,10 +147,19 @@ type PlanContext struct {
 	// TargetRoot is the absolute path of the consumer repository root.
 	TargetRoot string
 	// Skills is the pre-loaded canonical skill list (from skills.LoadFS).
+	// When `--namespace` is in effect the cmd layer rewrites this list
+	// via [ApplyNamespaceToSkills] before calling Plan, so adapters do
+	// not need to know about namespacing themselves.
 	Skills []skills.Skill
 	// Existing is the manifest from a previous install run, or the zero
 	// value when no manifest exists yet.
 	Existing Manifest
+	// Force enables PR 6's `--force` semantics: a target path that exists
+	// but is not tracked by Existing is downgraded from ActionConflict to
+	// ActionUpdate with BackupTo set, preserving the original content at
+	// <path>.bak. Shared (consumer-owned aggregator) actions ignore Force
+	// — they never produce conflicts to begin with.
+	Force bool
 }
 
 // AdapterImpl is the install-side contract every per-agent installer

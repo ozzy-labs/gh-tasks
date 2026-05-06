@@ -474,6 +474,140 @@ func TestInstallSkills_Copilot_Flow(t *testing.T) {
 	}
 }
 
+func TestInstallSkills_Namespace_RewritesPathsAndFrontmatter(t *testing.T) {
+	// PR 6: --namespace should rewrite the on-disk skill directory + the
+	// frontmatter `name:` field so the slash command matches the new
+	// directory name.
+	t.Parallel()
+	target := t.TempDir()
+	if err := os.WriteFile(filepath.Join(target, "CLAUDE.md"), []byte("# CLAUDE\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	d := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+
+	if _, _, err := runCmd(t, d, "install-skills", "--target", target, "--namespace", "gh-tasks"); err != nil {
+		t.Fatalf("install: %v", err)
+	}
+	// Embedded fixture skills are "alpha" and "bravo" — neither carries
+	// the `task-` prefix, so they get prepended: gh-tasks-alpha,
+	// gh-tasks-bravo.
+	for _, name := range []string{"gh-tasks-alpha", "gh-tasks-bravo"} {
+		path := filepath.Join(target, ".claude", "skills", name, "SKILL.md")
+		body, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("expected %s: %v", path, err)
+		}
+		want := "name: " + name + "\n"
+		if !strings.Contains(string(body), want) {
+			t.Errorf("%s frontmatter missing %q:\n%s", path, want, string(body))
+		}
+	}
+	// Original (un-namespaced) directories must NOT exist.
+	for _, name := range []string{"alpha", "bravo"} {
+		path := filepath.Join(target, ".claude", "skills", name, "SKILL.md")
+		if _, err := os.Stat(path); err == nil {
+			t.Errorf("un-namespaced path %s should not exist", path)
+		}
+	}
+	// Manifest records the namespace + the new (renamed) paths.
+	manifestPath := filepath.Join(target, ".claude", "skills", ".gh-tasks-manifest.json")
+	body, err := os.ReadFile(manifestPath)
+	if err != nil {
+		t.Fatalf("manifest read: %v", err)
+	}
+	var got install.Manifest
+	if err := json.Unmarshal(body, &got); err != nil {
+		t.Fatalf("manifest parse: %v", err)
+	}
+	if got.Namespace != "gh-tasks" {
+		t.Errorf("manifest Namespace = %q, want gh-tasks", got.Namespace)
+	}
+	for _, want := range []string{
+		".claude/skills/gh-tasks-alpha/SKILL.md",
+		".claude/skills/gh-tasks-bravo/SKILL.md",
+	} {
+		found := false
+		for _, f := range got.Files {
+			if f == want {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("manifest Files missing %q (got %v)", want, got.Files)
+		}
+	}
+}
+
+func TestInstallSkills_Force_OverwritesAndBackupsThirdParty(t *testing.T) {
+	// PR 6: --force should overwrite an untracked existing skill and
+	// preserve the original at <path>.bak.
+	t.Parallel()
+	target := t.TempDir()
+	if err := os.WriteFile(filepath.Join(target, "CLAUDE.md"), []byte("# CLAUDE\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	skillsDir := filepath.Join(target, ".claude", "skills", "alpha")
+	if err := os.MkdirAll(skillsDir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	original := "third-party hand-written content\n"
+	if err := os.WriteFile(filepath.Join(skillsDir, "SKILL.md"), []byte(original), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	d := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	if _, _, err := runCmd(t, d, "install-skills", "--target", target, "--force"); err != nil {
+		t.Fatalf("install --force: %v", err)
+	}
+
+	// New content overwrote the third-party file.
+	got, err := os.ReadFile(filepath.Join(skillsDir, "SKILL.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(got), "name: alpha") {
+		t.Errorf("post-force file does not look like the embedded SSOT:\n%s", string(got))
+	}
+	// Backup file holds the original.
+	bak, err := os.ReadFile(filepath.Join(skillsDir, "SKILL.md.bak"))
+	if err != nil {
+		t.Fatalf("expected .bak: %v", err)
+	}
+	if string(bak) != original {
+		t.Errorf("backup content = %q, want %q", string(bak), original)
+	}
+}
+
+func TestInstallSkills_Conflict_OutputIncludesResolutions(t *testing.T) {
+	// PR 6 衝突警告強化: the trailing error must mention --namespace and
+	// --force as resolution paths so users immediately see the escape
+	// hatches.
+	t.Parallel()
+	target := t.TempDir()
+	if err := os.WriteFile(filepath.Join(target, "CLAUDE.md"), []byte("# CLAUDE\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	skillsDir := filepath.Join(target, ".claude", "skills", "alpha")
+	if err := os.MkdirAll(skillsDir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(skillsDir, "SKILL.md"), []byte("third-party\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	d := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	_, stderr, err := runCmd(t, d, "install-skills", "--target", target)
+	if !errors.Is(err, cmd.ErrSilent) {
+		t.Fatalf("expected ErrSilent on conflict, got %v", err)
+	}
+	for _, want := range []string{"--namespace", "--force"} {
+		if !strings.Contains(stderr.String(), want) {
+			t.Errorf("conflict message missing %q hint:\n%s", want, stderr.String())
+		}
+	}
+}
+
 func TestInstallSkills_AllAdapters_AutoDetectAll(t *testing.T) {
 	// PR 5: when all four traces exist, auto-detect surfaces all four
 	// agents and the cmd installs everyone in one shot.

@@ -113,6 +113,73 @@ func TestClaudeCode_Plan_EmptyTarget(t *testing.T) {
 	}
 }
 
+func TestClaudeCode_Plan_Force_DowngradesConflictToUpdateWithBackup(t *testing.T) {
+	// PR 6: when --force is set, an untracked existing file becomes an
+	// ActionUpdate carrying BackupTo = <abs>.bak. The cmd layer never
+	// reaches the conflict guard in that case.
+	t.Parallel()
+	root := t.TempDir()
+	skillsDir := filepath.Join(root, ".claude", "skills", "task-add")
+	if err := os.MkdirAll(skillsDir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	mustWrite(t, filepath.Join(skillsDir, "SKILL.md"), "third-party body\n")
+
+	loaded := []skills.Skill{{Name: "task-add", Raw: "fresh body\n"}}
+	actions, err := ClaudeCodeAdapter{}.Plan(PlanContext{
+		TargetRoot: root, Skills: loaded, Force: true,
+	})
+	if err != nil {
+		t.Fatalf("Plan: %v", err)
+	}
+	if len(actions) != 1 {
+		t.Fatalf("got %d actions, want 1: %+v", len(actions), actions)
+	}
+	got := actions[0]
+	if got.Type != ActionUpdate {
+		t.Errorf("Type = %v, want ActionUpdate (force should downgrade conflict)", got.Type)
+	}
+	wantBak := filepath.Join(skillsDir, "SKILL.md") + ".bak"
+	if got.BackupTo != wantBak {
+		t.Errorf("BackupTo = %q, want %q", got.BackupTo, wantBak)
+	}
+}
+
+func TestClaudeCode_Plan_Force_DoesNotAffectTrackedPaths(t *testing.T) {
+	// `--force` is a conflict resolver, not a backup-everything flag.
+	// Tracked files (already in the previous manifest) should still go
+	// through the normal Update path with BackupTo unset — there is no
+	// third-party content to preserve.
+	t.Parallel()
+	root := t.TempDir()
+	skillsDir := filepath.Join(root, ".claude", "skills", "task-add")
+	if err := os.MkdirAll(skillsDir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	mustWrite(t, filepath.Join(skillsDir, "SKILL.md"), "old\n")
+
+	loaded := []skills.Skill{{Name: "task-add", Raw: "new\n"}}
+	prev := Manifest{
+		Agent: AgentClaudeCode,
+		Files: []string{".claude/skills/task-add/SKILL.md"},
+	}
+	actions, err := ClaudeCodeAdapter{}.Plan(PlanContext{
+		TargetRoot: root, Skills: loaded, Existing: prev, Force: true,
+	})
+	if err != nil {
+		t.Fatalf("Plan: %v", err)
+	}
+	if len(actions) != 1 {
+		t.Fatalf("got %d actions, want 1: %+v", len(actions), actions)
+	}
+	if actions[0].Type != ActionUpdate {
+		t.Errorf("Type = %v, want ActionUpdate", actions[0].Type)
+	}
+	if actions[0].BackupTo != "" {
+		t.Errorf("BackupTo = %q, want empty for tracked update", actions[0].BackupTo)
+	}
+}
+
 func TestExecute_RefusesOnConflict(t *testing.T) {
 	t.Parallel()
 	root := t.TempDir()

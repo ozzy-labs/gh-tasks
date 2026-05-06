@@ -128,8 +128,9 @@
   "error.install.unknownAgent": "不正な --agent 値: '{value}' (有効値: {valid})",
   "error.install.noAgentDetected": "対象ディレクトリでエージェントを検出できません。--agent <name> で明示してください (有効値: {valid})",
   "error.install.targetNotADirectory": "対象パスがディレクトリではありません: {path}",
-  "error.install.conflict": "{agent} で {count} 件の skill ファイルが既存ファイル(非管理)と衝突しています。手動で解消するか、--force / --namespace が利用可能になり次第そちらで再実行してください",
+  "error.install.conflict": "{agent} で {count} 件の skill ファイルが既存ファイル(非管理)と衝突しています。\n\n解決策:\n  - prefix を付けて再インストール: gh tasks install-skills --namespace gh-tasks\n  - 既存を <path>.bak に退避し上書き: gh tasks install-skills --force\n  - 各衝突を確認し、手動で解消してから再実行",
   "error.install.embedNotAvailable": "本ビルドには embedded skill SSOT が含まれていません",
   "error.install.manifestParseFailed": "manifest の解析に失敗しました '{path}': {reason}",
-  "error.install.loadSkills": "embedded skill SSOT のロードに失敗しました: {reason}"
+  "error.install.loadSkills": "embedded skill SSOT のロードに失敗しました: {reason}",
+  "error.install.namespaceRename": "--namespace '{namespace}' の適用に失敗しました: {reason}"
 }
