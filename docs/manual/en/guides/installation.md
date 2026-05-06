@@ -49,6 +49,29 @@ To use `org` / `user` scope, define the required Project v2 fields. See [project
 
 For `repo` scope only, no extra setup — GitHub Issues / Milestones are used directly.
 
+## Skills (one-shot deploy)
+
+`gh tasks install-skills` writes the gh-tasks skill bundle (`task-add` / `task-plan` / `task-triage` / `task-review` / `task-standup` / `task-link-pr`) into the consumer repository in a single step. Run it from the repository root after `gh extension install ozzy-labs/gh-tasks` finishes.
+
+```bash
+cd /path/to/your-repo
+gh tasks install-skills            # auto-detects which agents the repo uses
+```
+
+Auto-detection looks for filesystem traces (`.claude/`, `AGENTS.md`, `.gemini/`, `.github/copilot-instructions.md`) and writes the right files for each. Re-runs are idempotent — a per-adapter manifest tracks gh-tasks-owned paths so subsequent runs only touch what changed.
+
+Common variations:
+
+- `gh tasks install-skills --agent claude-code,codex-cli` — explicit agent selection
+- `gh tasks install-skills --namespace gh-tasks` — rename install (`/task-add` → `/gh-tasks-add`) to dodge name collisions with another tool's skills
+- `gh tasks install-skills --force` — overwrite an untracked existing skill (the original is preserved at `<path>.bak`)
+- `gh tasks install-skills --dry-run` — preview the planned actions
+- `gh tasks install-skills --uninstall` — remove every file the manifest tracks. Shared aggregator files are reference-counted across adapters
+
+The Renovate auto-sync path (`configs/skills-sync/<adapter>` presets) is also available — see [`configs/skills-sync/README.md`](../../../../configs/skills-sync/README.md). Both paths target the same on-disk layout and marker tag, so switching between them is no-op.
+
+Per-agent recipes: [recipes/claude-code.md](../recipes/claude-code.md), [recipes/codex-cli.md](../recipes/codex-cli.md), [recipes/gemini-cli.md](../recipes/gemini-cli.md), [recipes/copilot.md](../recipes/copilot.md).
+
 ## Smoke test
 
 ```bash
@@ -60,3 +83,4 @@ gh tasks add 'first task' --scope=repo --repo=<owner>/<name>
 
 - [scope-detection.md](../reference/scope-detection.md)
 - [troubleshooting.md](./troubleshooting.md)
+- [reference/cli.md#gh-tasks-install-skills](../reference/cli.md) — full `install-skills` flag reference

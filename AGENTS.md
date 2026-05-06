@@ -117,13 +117,18 @@ yamllint . && yamlfmt . && markdownlint-cli2 '**/*.md'   # 共有 lint
 
 ## Adapter Files
 
-`gh tasks build-skills` が `dist/{adapter}/` 配下に出力するファイル(consumer リポへ sync される):
+skill の consumer リポへの配信経路は 2 つあり、どちらも同じ on-disk layout と marker tag を target にする(相互運用可能):
 
-| Agent | Adapter Output |
-| ----- | -------------- |
-| Claude Code | `.claude/skills/<name>/SKILL.md` |
-| Codex CLI | `.agents/skills/<name>/SKILL.md` + `AGENTS.md.snippet` |
-| Gemini CLI | `.gemini/settings.json` + `AGENTS.md.snippet` |
-| GitHub Copilot | `.github/copilot-instructions.md.snippet` |
+1. **`gh tasks install-skills`(ワンショット、推奨)** — embed 済 SSOT から直接 consumer リポへ書き込み、adapter ごとの manifest で provenance を記録。auto-detect / `--namespace` rename / `--force` 上書き(`<path>.bak` 退避) / `--uninstall`(reference count 付き)に対応。`internal/install/` 実装、cmd は `cmd/install_skills.go`
+2. **`gh tasks build-skills` → `dist/{adapter}/` → Renovate sync** — `cmd/build_skills.go`(Hidden)で `dist/` を再生成し、consumer リポは `configs/skills-sync/<adapter>` Renovate preset を extends して PR 経由で取り込む。auto-update 派向け
 
-`AGENTS.md.snippet` / `copilot-instructions.md.snippet` は consumer 側の `AGENTS.md` / `.github/copilot-instructions.md` の marker block (`<!-- begin: @ozzylabs/gh-tasks -->` ～ `<!-- end: @ozzylabs/gh-tasks -->`) に挿入される(idempotent)。
+両経路で共通の配置先:
+
+| Agent | Owned files | Shared files |
+| ----- | -------------- | -------------- |
+| Claude Code | `.claude/skills/<name>/SKILL.md` | (なし) |
+| Codex CLI | `.agents/skills/<name>/SKILL.md` | `AGENTS.md`(marker block) |
+| Gemini CLI | (なし) | `.gemini/settings.json`(union merge) / `AGENTS.md`(marker block) |
+| GitHub Copilot | (なし) | `.github/copilot-instructions.md`(marker block) |
+
+Shared (consumer-owned aggregator) ファイルは marker block (`<!-- begin: @ozzylabs/gh-tasks -->` ～ `<!-- end: @ozzylabs/gh-tasks -->`) または特定の JSON キーのみ gh-tasks 所有で、それ以外のコンテンツは byte-for-byte 保護される(idempotent)。AGENTS.md は codex-cli と gemini-cli が共有する単一 marker block で、`--uninstall` は他 adapter の manifest を見て reference count する。

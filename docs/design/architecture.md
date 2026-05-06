@@ -8,19 +8,26 @@
 
 ```text
                     ┌─────────────────────────────┐
-                    │   skills/{name}/        │ ← skill SSOT (ja)
+                    │   skills/{name}/            │ ← skill SSOT (ja, embedded)
                     │     SKILL.md / SKILL.en.md  │
                     └────────────┬────────────────┘
-                                 │ gh tasks build-skills (per-adapter transform)
-                                 ▼
-                    ┌─────────────────────────────┐
-                    │   dist/{adapter-id}/        │ ← 4 adapter 出力
-                    │   .claude/skills/(staged)   │
-                    │   .agents/skills/(staged)   │
-                    └────────────┬────────────────┘
-                                 │ skills-sync (Renovate preset + sync-skills.sh)
-                                 ▼
-                    consumer リポ(.claude/skills 等)
+                                 │
+                  ┌──────────────┴──────────────┐
+                  │                             │
+   gh tasks install-skills          gh tasks build-skills
+   (internal/install/)              (cmd/build_skills.go, Hidden)
+                  │                             │
+                  │                             ▼
+                  │              ┌─────────────────────────────┐
+                  │              │   dist/{adapter-id}/        │ ← 4 adapter 出力
+                  │              │   .claude/skills/(staged)   │
+                  │              │   .agents/skills/(staged)   │
+                  │              └────────────┬────────────────┘
+                  │                           │ Renovate preset
+                  │                           │ (configs/skills-sync/)
+                  ▼                           ▼
+              consumer リポ(.claude/skills 等、ワンショット直書き)
+              consumer リポ(.claude/skills 等、PR 経由で取り込み)
 
 ┌────────────────────────────────────────────────────────────┐
 │  main.go (リポルート)                                        │ ← CLI 本体
@@ -154,11 +161,12 @@ func (e *ScopeError) Error() string { return e.Key }
 
 ### skill bundle
 
-詳細は `docs/design/adapter-pipeline.md` を参照。要約:
+skill は `//go:embed all:skills` でバイナリ同梱(repo-internal Issue #327 PR 1)。consumer リポへの配信は **2 経路**(両者は同じ on-disk layout と marker tag を target にして相互運用可能):
 
-1. `skills/{name}/SKILL.md`(ja SSOT)を `gh tasks build-skills`(`cmd/build_skills.go`)が読み込み
-2. 4 adapter(claude-code / codex-cli / gemini-cli / copilot、`internal/adapters/`)が `dist/{adapter-id}/` に各エージェント形式で出力
-3. consumer リポは `configs/skills-sync/{adapter}.json` Renovate preset を extend し、`sync-skills.sh` で `dist/` 内容を取り込む
+1. **`gh tasks install-skills`(ワンショット、推奨)** — `internal/install/` 実装 / cmd は `cmd/install_skills.go`。embed 済 SSOT から 4 adapter(claude-code / codex-cli / gemini-cli / copilot)それぞれの `Plan` を実行し、`Execute` で consumer リポへ直接書き込む。adapter ごとの manifest(`.claude/skills/.gh-tasks-manifest.json` 等)で provenance を追跡。auto-detect / `--namespace` / `--force` / `--uninstall`(reference count 付き)に対応
+2. **`gh tasks build-skills` → `dist/` → Renovate sync(自動更新派向け)** — `cmd/build_skills.go`(Hidden)で 4 adapter(`internal/adapters/`)を `dist/{adapter-id}/` に出力し、consumer リポは `configs/skills-sync/{adapter}.json` Renovate preset を extends し、commons の `sync-skills.sh` で `dist/` 内容を取り込む
+
+詳細は `docs/design/adapter-pipeline.md` を参照。
 
 ## テスト構成
 

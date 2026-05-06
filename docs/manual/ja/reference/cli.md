@@ -147,6 +147,41 @@ gh tasks link <pr> <task> [--scope ...] [--repo ...] [--project ...]
 - `repo` scope: PR body に `Closes #<task>` を追記(冪等 — 既にリンク済の場合はそれを報告)
 - `org` / `user` scope: PR と Issue を同じ Projects v2 ボードに追加し、両者を同じビューに並べる(Issue ↔ PR の relation は PR body の `Closes` キーワードから GitHub が導出)
 
+### `gh tasks install-skills` ✅
+
+gh-tasks の skill bundle を consumer リポへ配置する。リポ内のエージェント痕跡(`.claude/` / `AGENTS.md` / `.gemini/` / `.github/copilot-instructions.md`)を auto-detect し、各 adapter の所定パスにファイルを書き出す。adapter ごとの manifest で provenance を追跡するため、再実行は冪等。
+
+```bash
+gh tasks install-skills [--agent <name>[,<name>...]] [--target <path>] \
+                        [--namespace <prefix>] [--force] \
+                        [--dry-run] [--check] [--uninstall]
+```
+
+フラグ:
+
+- `--agent <name>[,<name>...]`: 明示的な agent 指定(`claude-code` / `codex-cli` / `gemini-cli` / `copilot`)。カンマ / 空白区切り。省略時は auto-detect
+- `--target <path>`: 配置先 (consumer リポルート)。既定は cwd
+- `--namespace <prefix>`: prefix で skill 名を rename(例: `--namespace gh-tasks` で `task-add` → `gh-tasks-add`)。on-disk のディレクトリ名と SKILL.md frontmatter `name:` の両方が書き換わる
+- `--force`: 非管理の既存 skill を上書き。原本は `<path>.bak` に退避
+- `--dry-run`: 書き込まずに実行予定のみ表示
+- `--check`: on-disk が embedded SSOT と乖離していれば非ゼロ終了(CI dogfooding 用)
+- `--uninstall`: manifest 記載のファイルを削除。共有集約ファイル(`AGENTS.md` / `.gemini/settings.json` / `.github/copilot-instructions.md`)は adapter 間で reference count されるため、partial uninstall でも他 adapter が必要としているファイルは保持される
+
+adapter 別の振る舞い:
+
+| Agent | 所有ファイル | 共有ファイル | Manifest |
+| --- | --- | --- | --- |
+| `claude-code` | `.claude/skills/<name>/SKILL.md` | (なし) | `.claude/skills/.gh-tasks-manifest.json` |
+| `codex-cli` | `.agents/skills/<name>/SKILL.md` | `AGENTS.md` (marker block) | `.agents/skills/.gh-tasks-manifest.json` |
+| `gemini-cli` | (なし) | `.gemini/settings.json` (union merge) / `AGENTS.md` (marker block) | `.gemini/.gh-tasks-manifest.json` |
+| `copilot` | (なし) | `.github/copilot-instructions.md` (marker block) | `.github/.gh-tasks-copilot-manifest.json` |
+
+衝突処理: 既存の非管理ファイルが配置先にあると `ActionConflict` を発生させ、デフォルトでは上書きを拒否して `--namespace` / `--force` を解決策として表示する。共有集約ファイルは衝突を発生させない — gh-tasks が所有するのは marker block(`<!-- begin: @ozzylabs/gh-tasks --> ... <!-- end: ... -->`)または特定の JSON キーのみ。
+
+戻り値: 実行予定のアクションと adapter ごとのサマリ(`{created} 件新規 / {updated} 件更新 / {skipped} 件変更なし`)を stdout に出力。成功時は exit 0、衝突 / エラー / `--check` drift 時は非ゼロ。
+
+Renovate auto-sync 経路(`configs/skills-sync/<adapter>` preset)も同じ on-disk layout と marker tag を target にしているため、両経路は相互運用可能。最短 UX は `install-skills`、自動更新派は Renovate を選択する。
+
 ## Exit code
 
 `gh tasks` は非ゼロ exit を 2 種類に分けている:

@@ -6,7 +6,7 @@ User manual for `gh-tasks`. This directory is the **SSOT**; `docs/manual/ja/` is
 
 - [concepts.md](./concepts.md) — Explanation: terminology (scope / item / iteration / personal vs team)
 - [guides/](./guides/) — How-to guides
-  - [installation.md](./guides/installation.md) — `gh extension install ozzy-labs/gh-tasks` and initial setup
+  - [installation.md](./guides/installation.md) — `gh extension install ozzy-labs/gh-tasks`, initial setup, and `gh tasks install-skills` one-shot skill deploy
   - [projects-v2-setup.md](./guides/projects-v2-setup.md) — Field definitions for personal and team use
   - [troubleshooting.md](./guides/troubleshooting.md) — Auth errors, `--repo` resolution, `gh agent-task` clash, API rate limit
 - [reference/](./reference/) — Reference

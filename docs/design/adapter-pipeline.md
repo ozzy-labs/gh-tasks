@@ -1,48 +1,61 @@
 # Adapter Pipeline
 
-`skills/{name}/SKILL.md`(SSOT)から 4 エージェント向けの skill 配布物(`dist/{adapter-id}/`)を生成し、ローカル staged コピー(`.claude/skills/`、`.agents/skills/`)を再生成する `gh tasks build-skills`(`cmd/build_skills.go`)の処理連鎖を記述する。
+`skills/{name}/SKILL.md`(SSOT)から 4 エージェント向けの skill 配布物を生成し、consumer リポへ配信するパイプライン。配信経路は **2 系統** あり、両者は同じ on-disk layout と marker tag を target にして相互運用可能。
 
 ## 目的
 
-- skill SSOT は **1 ファイル**(`skills/{name}/SKILL.md`、ja)に集約
+- skill SSOT は **1 ファイル**(`skills/{name}/SKILL.md`、ja)+ `SKILL.en.md` mirror に集約。`//go:embed all:skills` でバイナリ同梱(repo-internal Issue #327 PR 1)
 - Claude Code / Codex CLI / Gemini CLI / GitHub Copilot の **4 エージェント**は読み込み形式が異なるため、SSOT を adapter で各形式に変換
-- consumer リポへの配信は **Renovate preset + commons の `sync-skills.sh`** が担当(本リポは生成のみ)
+- consumer リポへの配信経路:
+  1. **`gh tasks install-skills`(ワンショット、推奨)** — `internal/install/` 実装で embed 済 SSOT から consumer リポへ直書き。adapter ごとの manifest で provenance 追跡、`--namespace` / `--force` / `--uninstall`(reference count)に対応
+  2. **`gh tasks build-skills` → `dist/` → Renovate sync(自動更新派向け)** — `cmd/build_skills.go`(Hidden)で `dist/{adapter-id}/` に出力し、consumer リポは Renovate preset + commons の `sync-skills.sh` で取り込む。ローカル staged copy(`.claude/skills/` / `.agents/skills/`)も同時に再生成して repo 内 dogfooding
 
 ## 全体フロー
 
 ```text
-skills/{name}/
+skills/{name}/                          ← embed (//go:embed all:skills)
   ├─ SKILL.md       (ja SSOT、frontmatter + body)
   └─ SKILL.en.md    (en mirror、現状 build には未消費)
         │
-        ▼
-gh tasks build-skills (cmd/build_skills.go: runBuildSkills)
-  ├─ skills.Load(src, ...)         ← skills/ 直下のディレクトリ列挙 + SKILL.md parse + frontmatter 検証(ADR-0004)
-  ├─ adapters.All()                ← 4 adapter (ClaudeCode / CodexCLI / GeminiCLI / Copilot) を取得
-  ├─ adapter.Generate(loaded)      ← 各 adapter で OutputFile を生成 → dist/{id}/ に書き出し
-  └─ defaultLocalStages + copyDir  ← dist/ 内の skill body を .claude/.agents/ にコピー
-        │
-        ▼
-dist/
-  ├─ claude-code/     ← .claude/skills/{name}/SKILL.md
-  ├─ codex-cli/       ← .agents/skills/{name}/SKILL.md + AGENTS.md.snippet
-  ├─ gemini-cli/      ← .gemini/settings.json + AGENTS.md.snippet
-  └─ copilot/         ← .github/copilot-instructions.md.snippet
-        │
-        ▼
-.claude/skills/{name}/  ← Claude Code dogfood(本リポを開いた Claude Code が参照)
-.agents/skills/{name}/  ← Codex CLI dogfood
-        │
-        ▼ (consumer 側)
-configs/skills-sync/{adapter}.json (Renovate preset) で gh_tasks_commit を bump
-        │
-        ▼
-sync-skills.sh(commons、MARKER_TAG=@ozzylabs/gh-tasks 上書き)
-        │
-        ▼
-consumer リポの .claude/skills/、AGENTS.md(marker block)、
-.github/copilot-instructions.md(marker block)等
+        ├─────────────────────────────────────────────────────┐
+        │                                                     │
+   gh tasks install-skills                          gh tasks build-skills
+   (cmd/install_skills.go,                          (cmd/build_skills.go,
+    internal/install/)                               Hidden, --check-diff 付き)
+        │                                                     │
+        │ (consumer リポへ直書き、                              │ (本リポ内で再生成)
+        │  adapter ごとの manifest で                          │
+        │  provenance 追跡)                                   │
+        │                                                     ▼
+        │                                            dist/{adapter-id}/
+        │                                              ├─ claude-code/
+        │                                              ├─ codex-cli/
+        │                                              ├─ gemini-cli/
+        │                                              └─ copilot/
+        │                                                     │
+        │                                                     ├─ (リポ内 dogfood)
+        │                                                     │   .claude/skills/
+        │                                                     │   .agents/skills/
+        │                                                     │
+        │                                                     ▼
+        │                                  configs/skills-sync/{adapter}.json
+        │                                  (Renovate preset、gh_tasks_commit を bump)
+        │                                                     │
+        │                                                     ▼
+        │                                  sync-skills.sh(commons、
+        │                                  MARKER_TAG=@ozzylabs/gh-tasks 上書き)
+        │                                                     │
+        ▼                                                     ▼
+consumer リポ:
+  .claude/skills/{name}/SKILL.md         (claude-code: owned)
+  .agents/skills/{name}/SKILL.md         (codex-cli: owned)
+  AGENTS.md                              (codex-cli + gemini-cli 共有 marker block)
+  .gemini/settings.json                  (gemini-cli: union merge)
+  .github/copilot-instructions.md        (copilot: marker block)
+  + per-adapter manifest                 (install-skills 経路のみ)
 ```
+
+両経路は同じ marker tag (`@ozzylabs/gh-tasks`) を使うため、ある時点で install-skills を使い、別の時点で Renovate に切り替えても spurious な diff は発生しない。
 
 ## SKILL.md スキーマ(ADR-0004)
 

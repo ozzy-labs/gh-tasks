@@ -147,6 +147,41 @@ gh tasks link <pr> <task> [--scope ...] [--repo ...] [--project ...]
 - `repo` scope: appends `Closes #<task>` to the PR body (idempotent — already-linked PRs are reported)
 - `org` / `user` scope: adds both the PR and the Issue to the same Projects v2 board so they surface together (the underlying Issue ↔ PR relation comes from the `Closes` keyword on the PR body)
 
+### `gh tasks install-skills` ✅
+
+Install the canonical gh-tasks skill bundle into a consumer repository. Auto-detects which agents the repo uses (`.claude/`, `AGENTS.md`, `.gemini/`, `.github/copilot-instructions.md`) and writes the right files for each, recording provenance in a per-adapter manifest so subsequent runs are idempotent.
+
+```bash
+gh tasks install-skills [--agent <name>[,<name>...]] [--target <path>] \
+                        [--namespace <prefix>] [--force] \
+                        [--dry-run] [--check] [--uninstall]
+```
+
+Flags:
+
+- `--agent <name>[,<name>...]`: explicit agent selection (`claude-code` / `codex-cli` / `gemini-cli` / `copilot`). Comma- or space-separated. Omit for auto-detect
+- `--target <path>`: target directory (consumer repo root). Defaults to the current working directory
+- `--namespace <prefix>`: rename install with a prefix (e.g. `--namespace gh-tasks` turns `task-add` into `gh-tasks-add`). Both the on-disk skill directory and the SKILL.md frontmatter `name:` are rewritten
+- `--force`: overwrite an untracked existing skill file. The original is preserved at `<path>.bak` so users can recover
+- `--dry-run`: preview the planned actions without writing
+- `--check`: exit non-zero if the on-disk tree is out of sync with the embedded SSOT (CI dogfooding)
+- `--uninstall`: remove every file the per-adapter manifest tracks. Shared aggregator files (`AGENTS.md`, `.gemini/settings.json`, `.github/copilot-instructions.md`) are reference-counted across adapters, so partial uninstalls preserve files that another installed adapter still needs
+
+Per-adapter behaviour:
+
+| Agent | Owned files | Shared files | Manifest |
+| --- | --- | --- | --- |
+| `claude-code` | `.claude/skills/<name>/SKILL.md` | (none) | `.claude/skills/.gh-tasks-manifest.json` |
+| `codex-cli` | `.agents/skills/<name>/SKILL.md` | `AGENTS.md` (marker block) | `.agents/skills/.gh-tasks-manifest.json` |
+| `gemini-cli` | (none) | `.gemini/settings.json` (union merge), `AGENTS.md` (marker block) | `.gemini/.gh-tasks-manifest.json` |
+| `copilot` | (none) | `.github/copilot-instructions.md` (marker block) | `.github/.gh-tasks-copilot-manifest.json` |
+
+Conflict handling: an existing untracked file at a target path produces an `ActionConflict`. The default refuses to overwrite and prints both `--namespace` and `--force` as resolution paths. Shared aggregator files never produce conflicts — gh-tasks owns only the marker block (`<!-- begin: @ozzylabs/gh-tasks --> ... <!-- end: ... -->`) or specific JSON keys, never the file as a whole.
+
+Returns: prints planned actions and a per-adapter summary (`{created} created, {updated} updated, {skipped} unchanged`) to stdout. Exits 0 on success, non-zero on conflict / error / `--check` drift.
+
+The Renovate auto-sync path (`configs/skills-sync/<adapter>` presets) targets the same on-disk layout and marker tag, so the two paths are interoperable. Pick `install-skills` for one-shot setup, Renovate for auto-update PRs.
+
 ## Exit codes
 
 `gh tasks` distinguishes two non-zero exit codes:

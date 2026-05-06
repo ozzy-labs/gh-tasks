@@ -49,6 +49,29 @@ user_project = "ozzy-3/2"
 
 `repo` scope のみ使う場合、追加セットアップは不要(GitHub Issues / Milestones がそのまま使われる)。
 
+## skill 配置(ワンショット)
+
+`gh tasks install-skills` で gh-tasks の skill bundle(`task-add` / `task-plan` / `task-triage` / `task-review` / `task-standup` / `task-link-pr`)を consumer リポへ 1 ステップで配置する。`gh extension install ozzy-labs/gh-tasks` の完了後、リポルートで実行する。
+
+```bash
+cd /path/to/your-repo
+gh tasks install-skills            # リポ内のエージェント痕跡から auto-detect
+```
+
+auto-detect は filesystem traces(`.claude/` / `AGENTS.md` / `.gemini/` / `.github/copilot-instructions.md`)を確認し、各 adapter の所定パスにファイルを書き出す。再実行は冪等で、adapter ごとの manifest が gh-tasks 所有のパスを記録するため次回以降は差分のみ更新される。
+
+主なバリエーション:
+
+- `gh tasks install-skills --agent claude-code,codex-cli` — agent を明示指定
+- `gh tasks install-skills --namespace gh-tasks` — prefix で衝突回避(`/task-add` → `/gh-tasks-add`)
+- `gh tasks install-skills --force` — 非管理の既存 skill を上書き(原本は `<path>.bak` に退避)
+- `gh tasks install-skills --dry-run` — 実行予定のアクションのみ表示
+- `gh tasks install-skills --uninstall` — manifest 記載のファイルを削除。共有集約ファイルは adapter 間で reference count される
+
+Renovate auto-sync 経路(`configs/skills-sync/<adapter>` preset)も併存可能 — 詳細は [`configs/skills-sync/README.md`](../../../../configs/skills-sync/README.md)。両経路は同じ on-disk layout と marker tag を target にしているため相互運用可能。
+
+エージェント別 recipe: [recipes/claude-code.md](../recipes/claude-code.md) / [recipes/codex-cli.md](../recipes/codex-cli.md) / [recipes/gemini-cli.md](../recipes/gemini-cli.md) / [recipes/copilot.md](../recipes/copilot.md)。
+
 ## 動作確認
 
 ```bash
@@ -60,3 +83,4 @@ gh tasks add 'first task' --scope=repo --repo=<owner>/<name>
 
 - [scope-detection.md](../reference/scope-detection.md)
 - [troubleshooting.md](./troubleshooting.md)
+- [reference/cli.md#gh-tasks-install-skills](../reference/cli.md) — `install-skills` 全フラグの reference
