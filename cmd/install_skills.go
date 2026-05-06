@@ -341,10 +341,8 @@ func renderAction(r Resolved, a install.Action) string {
 func runUninstallSkills(c *cobra.Command, r Resolved, absTarget string, agentFlag []string, dryRun bool) error {
 	out := c.OutOrStdout()
 	manifests := map[install.Agent]install.Manifest{}
-	manifestPaths := map[install.Agent]string{}
 	for _, impl := range install.Adapters() {
 		mp := impl.ManifestPath(absTarget)
-		manifestPaths[impl.Agent()] = mp
 		m, err := install.ReadManifest(mp)
 		if err != nil {
 			fmt.Fprintln(c.ErrOrStderr(), r.T("error.install.manifestParseFailed",
