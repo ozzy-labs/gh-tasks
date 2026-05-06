@@ -74,7 +74,11 @@ jobs:
         run: |
           shopt -s nullglob
           sha256sum -- *-* > checksums.txt
+      # `--repo` is required because this job has no checkout; `gh` would
+      # otherwise fall back to `git` and fail with `not a git repository`.
       - name: Upload checksums to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ needs.release-please.outputs.tag_name }} checksums.txt
+        run: |-
+          gh release upload ${{ needs.release-please.outputs.tag_name }} checksums.txt \
+            --repo ${{ github.repository }}
