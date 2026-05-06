@@ -81,3 +81,52 @@ func (CopilotAdapter) Plan(ctx PlanContext) ([]Action, error) {
 		}}, nil
 	}
 }
+
+// PlanUninstall strips the gh-tasks marker block from
+// `.github/copilot-instructions.md` and removes the per-adapter
+// manifest. No ref-counting is needed: the marker block in this file
+// is exclusively gh-tasks territory.
+func (CopilotAdapter) PlanUninstall(ctx UninstallContext) ([]Action, error) {
+	if ctx.TargetRoot == "" {
+		return nil, fmt.Errorf("install/copilot: PlanUninstall TargetRoot empty")
+	}
+	out := make([]Action, 0, 2)
+
+	if hasSharedEntry(ctx.Existing, copilotInstructionsRel) {
+		abs := filepath.Join(ctx.TargetRoot, filepath.FromSlash(copilotInstructionsRel))
+		existing, exists, err := readIfExists(abs)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			stripped := RemoveMarkerBlock(existing)
+			switch stripped {
+			case existing:
+				// Marker already absent: skip.
+			case "":
+				out = append(out, Action{
+					Type:    ActionRemove,
+					Path:    abs,
+					RelPath: copilotInstructionsRel,
+					Shared:  true,
+				})
+			default:
+				out = append(out, Action{
+					Type:    ActionUpdate,
+					Path:    abs,
+					RelPath: copilotInstructionsRel,
+					Content: stripped,
+					Shared:  true,
+				})
+			}
+		}
+	}
+
+	mfRel := copilotManifestSubdir + "/" + copilotManifestName
+	out = append(out, Action{
+		Type:    ActionRemove,
+		Path:    filepath.Join(ctx.TargetRoot, filepath.FromSlash(mfRel)),
+		RelPath: mfRel,
+	})
+	return out, nil
+}

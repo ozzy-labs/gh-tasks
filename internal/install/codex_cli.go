@@ -130,3 +130,61 @@ func (a CodexCLIAdapter) Plan(ctx PlanContext) ([]Action, error) {
 
 	return out, nil
 }
+
+// PlanUninstall removes every owned per-skill SKILL.md plus the manifest,
+// and excises the AGENTS.md marker block iff no still-installed adapter
+// (gemini-cli today; future adapters that share the marker block) still
+// needs it. AGENTS.md is preserved when the marker block is the only
+// gh-tasks contribution and other consumer content remains.
+func (a CodexCLIAdapter) PlanUninstall(ctx UninstallContext) ([]Action, error) {
+	if ctx.TargetRoot == "" {
+		return nil, fmt.Errorf("install/codex-cli: PlanUninstall TargetRoot empty")
+	}
+	out := make([]Action, 0, len(ctx.Existing.Files)+2)
+	for _, rel := range ctx.Existing.Files {
+		out = append(out, Action{
+			Type:    ActionRemove,
+			Path:    filepath.Join(ctx.TargetRoot, filepath.FromSlash(rel)),
+			RelPath: rel,
+		})
+	}
+
+	if hasSharedEntry(ctx.Existing, codexAgentsMdRel) &&
+		!isSharedRelReferencedByOthers(ctx.Others, codexAgentsMdRel) {
+		agentsAbs := filepath.Join(ctx.TargetRoot, codexAgentsMdRel)
+		existing, exists, err := readIfExists(agentsAbs)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			stripped := RemoveMarkerBlock(existing)
+			switch stripped {
+			case existing:
+				// Marker already absent (manual edit): nothing to do.
+			case "":
+				out = append(out, Action{
+					Type:    ActionRemove,
+					Path:    agentsAbs,
+					RelPath: codexAgentsMdRel,
+					Shared:  true,
+				})
+			default:
+				out = append(out, Action{
+					Type:    ActionUpdate,
+					Path:    agentsAbs,
+					RelPath: codexAgentsMdRel,
+					Content: stripped,
+					Shared:  true,
+				})
+			}
+		}
+	}
+
+	mfRel := codexSkillsSubdir + "/" + codexManifestName
+	out = append(out, Action{
+		Type:    ActionRemove,
+		Path:    filepath.Join(ctx.TargetRoot, filepath.FromSlash(mfRel)),
+		RelPath: mfRel,
+	})
+	return out, nil
+}

@@ -105,6 +105,31 @@ func (a ClaudeCodeAdapter) Plan(ctx PlanContext) ([]Action, error) {
 	return out, nil
 }
 
+// PlanUninstall returns ActionRemove entries for every Files entry the
+// previous install recorded plus a final ActionRemove for the manifest
+// itself. claude-code has no Shared aggregator file, so the Others
+// map and ref-counting logic are not consulted here.
+func (a ClaudeCodeAdapter) PlanUninstall(ctx UninstallContext) ([]Action, error) {
+	if ctx.TargetRoot == "" {
+		return nil, fmt.Errorf("install/claude-code: PlanUninstall TargetRoot empty")
+	}
+	out := make([]Action, 0, len(ctx.Existing.Files)+1)
+	for _, rel := range ctx.Existing.Files {
+		out = append(out, Action{
+			Type:    ActionRemove,
+			Path:    filepath.Join(ctx.TargetRoot, filepath.FromSlash(rel)),
+			RelPath: rel,
+		})
+	}
+	mfRel := claudeCodeSkillsSubdir + "/" + claudeCodeManifestName
+	out = append(out, Action{
+		Type:    ActionRemove,
+		Path:    filepath.Join(ctx.TargetRoot, filepath.FromSlash(mfRel)),
+		RelPath: mfRel,
+	})
+	return out, nil
+}
+
 // readIfExists returns (content, exists, error). A missing file yields
 // ("", false, nil); any other error is reported.
 func readIfExists(path string) (string, bool, error) {

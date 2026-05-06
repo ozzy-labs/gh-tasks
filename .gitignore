@@ -23,6 +23,9 @@ build/
 
 # Go build artifacts (ADR-0006)
 /gh-tasks-bin
+# `gh extension install .` smoke-builds at <repo>/gh-tasks. Released binaries
+# ship from cli/gh-extension-precompile, never from a tracked artifact.
+/gh-tasks
 /bin/
 *.test
 *.out

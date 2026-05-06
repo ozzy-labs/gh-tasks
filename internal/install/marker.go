@@ -78,6 +78,51 @@ func HasMarkerBlock(s string) bool {
 	return beginIdx >= 0 && endIdx > beginIdx
 }
 
+// RemoveMarkerBlock returns the new content for a consumer-owned file
+// after stripping the gh-tasks marker block (begin, body, end) along
+// with the surrounding blank-line padding that [MergeMarkerBlock]
+// inserted. Content outside the markers is preserved verbatim.
+//
+// Behavior:
+//
+//   - When existing has a begin/end pair, the marker block is excised
+//     and any newline runs adjacent to the deleted region are
+//     normalized so the user does not end up with a double blank line.
+//   - When existing has no markers, the input is returned unchanged.
+//     This makes RemoveMarkerBlock idempotent under repeated calls and
+//     under interleaved calls with [MergeMarkerBlock].
+//
+// The result is content-pure: feeding `RemoveMarkerBlock(merged)` back
+// where `merged := MergeMarkerBlock(orig, body)` returns the
+// pre-merge value (modulo any trailing whitespace MergeMarkerBlock
+// trimmed during its append path).
+func RemoveMarkerBlock(existing string) string {
+	beginIdx := strings.Index(existing, MarkerBeginLine)
+	endIdx := strings.Index(existing, MarkerEndLine)
+	if beginIdx < 0 || endIdx < beginIdx {
+		return existing
+	}
+	before := existing[:beginIdx]
+	afterStart := endIdx + len(MarkerEndLine)
+	after := existing[afterStart:]
+
+	// Trim adjacent newlines on both sides so the rejoin produces a
+	// single separator newline (or none, when one side is empty).
+	before = strings.TrimRight(before, "\n")
+	after = strings.TrimLeft(after, "\n")
+
+	switch {
+	case before == "" && after == "":
+		return ""
+	case before == "":
+		return after
+	case after == "":
+		return before + "\n"
+	default:
+		return before + "\n\n" + after
+	}
+}
+
 // wrapMarker wraps body with the begin/end markers, padding with one
 // blank line on each side so re-running the formatter on the result is a
 // no-op. Trailing newline ensures the block ends cleanly when appended

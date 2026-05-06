@@ -474,6 +474,182 @@ func TestInstallSkills_Copilot_Flow(t *testing.T) {
 	}
 }
 
+func TestInstallSkills_Uninstall_RemovesOwnedFilesAndManifest(t *testing.T) {
+	// Round-trip: install claude-code, then uninstall — every file plus
+	// the manifest should be gone.
+	t.Parallel()
+	target := t.TempDir()
+	if err := os.WriteFile(filepath.Join(target, "CLAUDE.md"), []byte("# CLAUDE\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	d1 := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	if _, _, err := runCmd(t, d1, "install-skills", "--target", target); err != nil {
+		t.Fatalf("install: %v", err)
+	}
+	for _, name := range []string{"alpha", "bravo"} {
+		if _, err := os.Stat(filepath.Join(target, ".claude", "skills", name, "SKILL.md")); err != nil {
+			t.Fatalf("setup install missing %s: %v", name, err)
+		}
+	}
+
+	d2 := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	stdout, stderr, err := runCmd(t, d2, "install-skills", "--target", target, "--uninstall")
+	if err != nil {
+		t.Fatalf("uninstall: %v (stderr=%s)", err, stderr.String())
+	}
+	for _, name := range []string{"alpha", "bravo"} {
+		if _, err := os.Stat(filepath.Join(target, ".claude", "skills", name, "SKILL.md")); err == nil {
+			t.Errorf("uninstall left %s behind", name)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(target, ".claude", "skills", ".gh-tasks-manifest.json")); err == nil {
+		t.Errorf("uninstall left manifest behind")
+	}
+	if !strings.Contains(stdout.String(), "claude-code") {
+		t.Errorf("stdout missing claude-code section:\n%s", stdout.String())
+	}
+}
+
+func TestInstallSkills_Uninstall_AgentsMdReferenceCount(t *testing.T) {
+	// Install codex-cli and gemini-cli (both share AGENTS.md), then
+	// uninstall codex-cli only. AGENTS.md must keep the marker block
+	// because gemini-cli still references it.
+	t.Parallel()
+	target := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(target, ".gemini"), 0o750); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(target, "AGENTS.md"), []byte("# Project AGENTS\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	d1 := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	if _, _, err := runCmd(t, d1, "install-skills", "--target", target,
+		"--agent", "codex-cli,gemini-cli"); err != nil {
+		t.Fatalf("install: %v", err)
+	}
+
+	// Sanity: AGENTS.md got the marker block.
+	body, err := os.ReadFile(filepath.Join(target, "AGENTS.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(body), install.MarkerBeginLine) {
+		t.Fatalf("setup AGENTS.md missing marker:\n%s", string(body))
+	}
+
+	d2 := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	if _, _, err := runCmd(t, d2, "install-skills", "--target", target,
+		"--uninstall", "--agent", "codex-cli"); err != nil {
+		t.Fatalf("uninstall codex-cli: %v", err)
+	}
+
+	body, err = os.ReadFile(filepath.Join(target, "AGENTS.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(body), install.MarkerBeginLine) {
+		t.Errorf("AGENTS.md marker prematurely removed (gemini-cli still references it):\n%s", string(body))
+	}
+	// Codex's owned skill files + manifest are gone.
+	if _, err := os.Stat(filepath.Join(target, ".agents", "skills", "alpha", "SKILL.md")); err == nil {
+		t.Errorf("codex skill alpha not removed")
+	}
+	if _, err := os.Stat(filepath.Join(target, ".agents", "skills", ".gh-tasks-manifest.json")); err == nil {
+		t.Errorf("codex manifest not removed")
+	}
+	// Gemini manifest still present.
+	if _, err := os.Stat(filepath.Join(target, ".gemini", ".gh-tasks-manifest.json")); err != nil {
+		t.Errorf("gemini manifest unexpectedly removed: %v", err)
+	}
+
+	// Now uninstall gemini-cli too: AGENTS.md marker should be removed.
+	d3 := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	if _, _, err := runCmd(t, d3, "install-skills", "--target", target,
+		"--uninstall", "--agent", "gemini-cli"); err != nil {
+		t.Fatalf("uninstall gemini-cli: %v", err)
+	}
+	body, err = os.ReadFile(filepath.Join(target, "AGENTS.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(body), install.MarkerBeginLine) {
+		t.Errorf("AGENTS.md marker survived final uninstall:\n%s", string(body))
+	}
+	if !strings.Contains(string(body), "Project AGENTS") {
+		t.Errorf("user content lost from AGENTS.md:\n%s", string(body))
+	}
+}
+
+func TestInstallSkills_Uninstall_AllAdaptersInOneRun(t *testing.T) {
+	// Uninstalling codex + gemini in one invocation must remove the
+	// AGENTS.md marker block — the ref-count helper has to exclude
+	// "agents I am also tearing down right now" from Others.
+	t.Parallel()
+	target := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(target, ".gemini"), 0o750); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(target, "AGENTS.md"), []byte("# AGENTS\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	d1 := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	if _, _, err := runCmd(t, d1, "install-skills", "--target", target,
+		"--agent", "codex-cli,gemini-cli"); err != nil {
+		t.Fatalf("install: %v", err)
+	}
+
+	d2 := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	if _, _, err := runCmd(t, d2, "install-skills", "--target", target, "--uninstall"); err != nil {
+		t.Fatalf("uninstall: %v", err)
+	}
+	body, err := os.ReadFile(filepath.Join(target, "AGENTS.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(body), install.MarkerBeginLine) {
+		t.Errorf("expected marker block stripped after simultaneous uninstall:\n%s", string(body))
+	}
+}
+
+func TestInstallSkills_Uninstall_DryRun(t *testing.T) {
+	t.Parallel()
+	target := t.TempDir()
+	if err := os.WriteFile(filepath.Join(target, "CLAUDE.md"), []byte("# CLAUDE\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	d1 := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	if _, _, err := runCmd(t, d1, "install-skills", "--target", target); err != nil {
+		t.Fatalf("install: %v", err)
+	}
+	d2 := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	stdout, _, err := runCmd(t, d2, "install-skills", "--target", target, "--uninstall", "--dry-run")
+	if err != nil {
+		t.Fatalf("uninstall --dry-run: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(target, ".claude", "skills", "alpha", "SKILL.md")); err != nil {
+		t.Errorf("dry-run removed file: %v", err)
+	}
+	if !strings.Contains(stdout.String(), "alpha") {
+		t.Errorf("dry-run output missing planned removal:\n%s", stdout.String())
+	}
+}
+
+func TestInstallSkills_Uninstall_NothingToDo(t *testing.T) {
+	t.Parallel()
+	target := t.TempDir()
+	d := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	_, stderr, err := runCmd(t, d, "install-skills", "--target", target, "--uninstall")
+	if !errors.Is(err, cmd.ErrSilent) {
+		t.Fatalf("expected ErrSilent for nothing-to-uninstall, got %v", err)
+	}
+	if !strings.Contains(stderr.String(), "uninstall") &&
+		!strings.Contains(stderr.String(), "アンインストール") {
+		t.Errorf("missing nothing-to-do hint:\n%s", stderr.String())
+	}
+}
+
 func TestInstallSkills_Namespace_RewritesPathsAndFrontmatter(t *testing.T) {
 	// PR 6: --namespace should rewrite the on-disk skill directory + the
 	// frontmatter `name:` field so the slash command matches the new

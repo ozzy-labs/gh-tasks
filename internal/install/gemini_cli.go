@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"strings"
 )
 
 // GeminiCLIAdapter installs the Gemini CLI integration: a union-merged
@@ -129,6 +130,84 @@ func (GeminiCLIAdapter) Plan(ctx PlanContext) ([]Action, error) {
 	return out, nil
 }
 
+// PlanUninstall removes the gh-tasks contribution from
+// `.gemini/settings.json` (deleting only the "AGENTS.md" entry, never
+// the file as a whole), excises the AGENTS.md marker block iff
+// codex-cli no longer references it, and removes the manifest. The
+// settings.json file is always preserved on disk because users may
+// store unrelated keys (model, temperature, ...) we have no business
+// deleting.
+func (a GeminiCLIAdapter) PlanUninstall(ctx UninstallContext) ([]Action, error) {
+	if ctx.TargetRoot == "" {
+		return nil, fmt.Errorf("install/gemini-cli: PlanUninstall TargetRoot empty")
+	}
+	out := make([]Action, 0, 3)
+
+	// settings.json — always patch (no ref-count needed; only gemini-cli
+	// writes the AGENTS.md entry into this file).
+	if hasSharedEntry(ctx.Existing, geminiSettingsRel) {
+		settingsAbs := filepath.Join(ctx.TargetRoot, filepath.FromSlash(geminiSettingsRel))
+		existing, exists, err := readIfExists(settingsAbs)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			stripped, err := RemoveGeminiSettingsEntry([]byte(existing))
+			if err != nil {
+				return nil, err
+			}
+			if string(stripped) != existing {
+				out = append(out, Action{
+					Type:    ActionUpdate,
+					Path:    settingsAbs,
+					RelPath: geminiSettingsRel,
+					Content: string(stripped),
+					Shared:  true,
+				})
+			}
+		}
+	}
+
+	if hasSharedEntry(ctx.Existing, geminiAgentsMdRel) &&
+		!isSharedRelReferencedByOthers(ctx.Others, geminiAgentsMdRel) {
+		agentsAbs := filepath.Join(ctx.TargetRoot, geminiAgentsMdRel)
+		existing, exists, err := readIfExists(agentsAbs)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			stripped := RemoveMarkerBlock(existing)
+			switch stripped {
+			case existing:
+				// Marker already absent: skip.
+			case "":
+				out = append(out, Action{
+					Type:    ActionRemove,
+					Path:    agentsAbs,
+					RelPath: geminiAgentsMdRel,
+					Shared:  true,
+				})
+			default:
+				out = append(out, Action{
+					Type:    ActionUpdate,
+					Path:    agentsAbs,
+					RelPath: geminiAgentsMdRel,
+					Content: stripped,
+					Shared:  true,
+				})
+			}
+		}
+	}
+
+	mfRel := geminiManifestSubdir + "/" + geminiManifestName
+	out = append(out, Action{
+		Type:    ActionRemove,
+		Path:    filepath.Join(ctx.TargetRoot, filepath.FromSlash(mfRel)),
+		RelPath: mfRel,
+	})
+	return out, nil
+}
+
 // MergeGeminiSettings returns the new bytes for `.gemini/settings.json`
 // after ensuring `context.fileName` contains "AGENTS.md". Every other
 // key — both top-level (model, temperature, ...) and under `context`
@@ -197,6 +276,67 @@ func MergeGeminiSettings(existing []byte) ([]byte, error) {
 func marshalSettings(settings, contextMap map[string]any, fileList []any) ([]byte, error) {
 	contextMap["fileName"] = fileList
 	body, err := json.MarshalIndent(settings, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("marshal settings.json: %w", err)
+	}
+	return append(body, '\n'), nil
+}
+
+// RemoveGeminiSettingsEntry returns the settings.json bytes after
+// removing "AGENTS.md" from `context.fileName`. The file is preserved:
+// every other key under `context` and every other top-level key (model,
+// temperature, ...) survives untouched. When removing our entry leaves
+// fileName empty, the key is dropped; if `context` itself has no
+// remaining keys, it is dropped too — but the document is never deleted
+// outright, since users may store unrelated settings in the same file.
+//
+// An empty / whitespace-only input is returned as-is. A malformed JSON
+// document yields an error so the cmd layer can surface a localized
+// message rather than silently writing garbage.
+func RemoveGeminiSettingsEntry(existing []byte) ([]byte, error) {
+	if len(strings.TrimSpace(string(existing))) == 0 {
+		return existing, nil
+	}
+	var doc map[string]any
+	if err := json.Unmarshal(existing, &doc); err != nil {
+		return nil, fmt.Errorf("parse settings.json: %w", err)
+	}
+	contextRaw, ok := doc["context"]
+	if !ok {
+		return existing, nil
+	}
+	contextMap, ok := contextRaw.(map[string]any)
+	if !ok {
+		// Non-object context: leave the user's data alone.
+		return existing, nil
+	}
+
+	switch v := contextMap["fileName"].(type) {
+	case []any:
+		filtered := make([]any, 0, len(v))
+		for _, f := range v {
+			if s, ok := f.(string); ok && s == geminiContextEntry {
+				continue
+			}
+			filtered = append(filtered, f)
+		}
+		if len(filtered) == 0 {
+			delete(contextMap, "fileName")
+		} else {
+			contextMap["fileName"] = filtered
+		}
+	case string:
+		if v == geminiContextEntry {
+			delete(contextMap, "fileName")
+		}
+	default:
+		// nil or unexpected type — nothing to remove.
+	}
+	if len(contextMap) == 0 {
+		delete(doc, "context")
+	}
+
+	body, err := json.MarshalIndent(doc, "", "  ")
 	if err != nil {
 		return nil, fmt.Errorf("marshal settings.json: %w", err)
 	}
