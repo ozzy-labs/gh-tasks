@@ -73,7 +73,7 @@ gh tasks install-skills
 - `--force` — 非管理の既存ファイルを `<path>.bak` に退避して上書き
 - `--dry-run` — 実行予定のアクションのみ表示
 - `--check` — on-disk が SSOT と乖離していれば非ゼロ終了(CI dogfooding 用)
-- `--uninstall` — manifest 記載のファイルを削除。共有集約ファイル(`AGENTS.md` / `.gemini/settings.json`)は adapter 間で reference count される
+- `--uninstall` — manifest 記載のファイルを削除。共有集約ファイル(`AGENTS.md` / `.gemini/settings.json` / `.github/copilot-instructions.md`)は adapter 間で reference count される
 
 ### Renovate auto-sync(自動更新派向け)
 

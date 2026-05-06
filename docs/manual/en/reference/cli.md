@@ -159,7 +159,7 @@ gh tasks install-skills [--agent <name>[,<name>...]] [--target <path>] \
 
 Flags:
 
-- `--agent <name>[,<name>...]`: explicit agent selection (`claude-code` / `codex-cli` / `gemini-cli` / `copilot`). Comma- or space-separated. Omit for auto-detect
+- `--agent <name>[,<name>...]`: explicit agent selection (`claude-code` / `codex-cli` / `gemini-cli` / `copilot`). Pass multiple agents as a comma-separated value (`--agent claude-code,codex-cli`) or by repeating the flag (`--agent claude-code --agent codex-cli`). Omit for auto-detect
 - `--target <path>`: target directory (consumer repo root). Defaults to the current working directory
 - `--namespace <prefix>`: rename install with a prefix (e.g. `--namespace gh-tasks` turns `task-add` into `gh-tasks-add`). Both the on-disk skill directory and the SKILL.md frontmatter `name:` are rewritten
 - `--force`: overwrite an untracked existing skill file. The original is preserved at `<path>.bak` so users can recover
