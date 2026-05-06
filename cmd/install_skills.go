@@ -46,6 +46,7 @@ gh-tasks" from "third-party file" without prompting.`,
 	c.Flags().Bool("check", false, "exit non-zero if any file would be created or updated (CI dogfooding)")
 	c.Flags().String("namespace", "", "rename skills with this prefix (e.g. --namespace gh-tasks turns task-add into gh-tasks-add)")
 	c.Flags().Bool("force", false, "overwrite untracked existing files (the original is preserved at <path>.bak)")
+	c.Flags().Bool("uninstall", false, "remove every file recorded in the per-adapter manifest (reference-counted for shared aggregator files)")
 	return c
 }
 
@@ -61,11 +62,16 @@ func runInstallSkills(c *cobra.Command, deps Deps) error {
 	agentFlag, _ := c.Flags().GetStringSlice("agent")
 	namespace, _ := c.Flags().GetString("namespace")
 	force, _ := c.Flags().GetBool("force")
+	uninstall, _ := c.Flags().GetBool("uninstall")
 
 	absTarget, err := resolveTarget(target)
 	if err != nil {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.install.targetNotADirectory", "path", target))
 		return ErrSilentArgs
+	}
+
+	if uninstall {
+		return runUninstallSkills(c, r, absTarget, agentFlag, dryRun)
 	}
 
 	if deps.EmbeddedSkills == nil {
@@ -316,8 +322,159 @@ func renderAction(r Resolved, a install.Action) string {
 		return i18n.T(r.Locale, "install.action.skip", "path", a.RelPath)
 	case install.ActionConflict:
 		return i18n.T(r.Locale, "install.action.conflict", "path", a.RelPath)
+	case install.ActionRemove:
+		return i18n.T(r.Locale, "install.action.remove", "path", a.RelPath)
 	}
 	return a.RelPath
+}
+
+// runUninstallSkills implements `gh tasks install-skills --uninstall`.
+// It reads every adapter's manifest up front so each adapter's
+// PlanUninstall sees a coherent ref-count view (agents the same
+// invocation is also uninstalling are excluded from Others before the
+// helper runs). When --agent is omitted the function picks every
+// adapter that currently has a manifest on disk: that matches the
+// install-side semantics (auto-detect from filesystem traces) but uses
+// gh-tasks's own bookkeeping rather than guessing from `.claude/` etc,
+// since after a partial install only the manifest reliably says "we
+// installed this here".
+func runUninstallSkills(c *cobra.Command, r Resolved, absTarget string, agentFlag []string, dryRun bool) error {
+	out := c.OutOrStdout()
+	manifests := map[install.Agent]install.Manifest{}
+	for _, impl := range install.Adapters() {
+		mp := impl.ManifestPath(absTarget)
+		m, err := install.ReadManifest(mp)
+		if err != nil {
+			fmt.Fprintln(c.ErrOrStderr(), r.T("error.install.manifestParseFailed",
+				"path", mp, "reason", err.Error()))
+			return ErrSilentRuntime
+		}
+		if !m.IsZero() {
+			manifests[impl.Agent()] = m
+		}
+	}
+
+	agents, err := resolveUninstallAgents(c, r, agentFlag, manifests)
+	if err != nil {
+		return err
+	}
+
+	scheduled := map[install.Agent]bool{}
+	for _, a := range agents {
+		scheduled[a] = true
+	}
+
+	fmt.Fprintln(out, r.T("install.uninstall.heading", "target", absTarget))
+	if len(agentFlag) == 0 {
+		fmt.Fprintln(out, r.T("install.detect.auto", "agents", joinAgents(agents)))
+	} else {
+		fmt.Fprintln(out, r.T("install.detect.specified", "agents", joinAgents(agents)))
+	}
+	if dryRun {
+		fmt.Fprintln(out, r.T("install.dryRun.header"))
+	}
+
+	for _, a := range agents {
+		impl, ok := install.AdapterFor(a)
+		if !ok {
+			fmt.Fprintln(c.ErrOrStderr(), r.T("error.install.unknownAgent",
+				"value", string(a),
+				"valid", joinAgents(registeredAgents()),
+			))
+			return ErrSilentArgs
+		}
+		others := map[install.Agent]install.Manifest{}
+		for ag, m := range manifests {
+			if ag == a {
+				continue
+			}
+			if scheduled[ag] {
+				continue
+			}
+			others[ag] = m
+		}
+		actions, err := impl.PlanUninstall(install.UninstallContext{
+			TargetRoot: absTarget,
+			Existing:   manifests[a],
+			Others:     others,
+		})
+		if err != nil {
+			return err
+		}
+
+		fmt.Fprintf(out, "\n%s:\n", a)
+		for _, act := range actions {
+			fmt.Fprintln(out, renderAction(r, act))
+		}
+
+		if dryRun {
+			continue
+		}
+		res, err := install.Execute(actions)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintln(out, r.T("install.uninstall.summary",
+			"agent", string(a),
+			"removed", len(res.Removed),
+			"updated", len(res.Files)+len(res.Shared),
+		))
+	}
+
+	if dryRun {
+		fmt.Fprintln(out, r.T("install.dryRun.note"))
+	}
+	return nil
+}
+
+// resolveUninstallAgents picks the agents to uninstall. The semantics
+// differ from resolveAgents (the install path) on auto-detect: install
+// looks at filesystem traces (`.claude/`, `AGENTS.md`, ...), but
+// uninstall looks at which adapters have a manifest on disk — that is
+// the only reliable record of "we installed this here." Explicit
+// `--agent` is honored verbatim, validated against install.Agents.
+func resolveUninstallAgents(c *cobra.Command, r Resolved, agentFlag []string, manifests map[install.Agent]install.Manifest) ([]install.Agent, error) {
+	if len(agentFlag) == 0 {
+		out := []install.Agent{}
+		for _, impl := range install.Adapters() {
+			if _, ok := manifests[impl.Agent()]; ok {
+				out = append(out, impl.Agent())
+			}
+		}
+		if len(out) == 0 {
+			fmt.Fprintln(c.ErrOrStderr(), r.T("install.uninstall.nothingToDo"))
+			return nil, ErrSilentRuntime
+		}
+		return out, nil
+	}
+	out := []install.Agent{}
+	seen := map[install.Agent]bool{}
+	for _, raw := range agentFlag {
+		for _, part := range strings.Split(raw, ",") {
+			part = strings.TrimSpace(part)
+			if part == "" {
+				continue
+			}
+			a, ok := install.ValidateAgent(part)
+			if !ok {
+				fmt.Fprintln(c.ErrOrStderr(), r.T("error.install.unknownAgent",
+					"value", part,
+					"valid", joinAgents(install.Agents),
+				))
+				return nil, ErrSilentArgs
+			}
+			if seen[a] {
+				continue
+			}
+			seen[a] = true
+			out = append(out, a)
+		}
+	}
+	if len(out) == 0 {
+		fmt.Fprintln(c.ErrOrStderr(), r.T("install.uninstall.nothingToDo"))
+		return nil, ErrSilentRuntime
+	}
+	return out, nil
 }
 
 // renderConflictReport prints the structured conflict block: a header

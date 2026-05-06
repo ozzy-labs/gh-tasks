@@ -82,6 +82,11 @@ const (
 	// NOT in the previous manifest. The executor refuses to overwrite this
 	// in default mode; PR 6 introduces --force / --namespace to resolve.
 	ActionConflict
+	// ActionRemove deletes the file at Path. PR 7 (--uninstall) emits this
+	// for every manifest-tracked file the user wants gone, including the
+	// per-adapter manifest itself. A missing target is treated as success
+	// (idempotent), matching the spirit of `rm -f`.
+	ActionRemove
 )
 
 // String renders an ActionType for debug output. The user-facing rendering
@@ -96,6 +101,8 @@ func (t ActionType) String() string {
 		return "skip"
 	case ActionConflict:
 		return "conflict"
+	case ActionRemove:
+		return "remove"
 	}
 	return "unknown"
 }
@@ -162,6 +169,29 @@ type PlanContext struct {
 	Force bool
 }
 
+// UninstallContext bundles the inputs an AdapterImpl needs to plan a
+// `--uninstall` run. The cmd layer reads every adapter's manifest up
+// front so the per-adapter ref-count for shared files (AGENTS.md) sees
+// a coherent view: agents the user is also uninstalling are excluded
+// from Others, while agents that remain installed contribute their
+// Shared list and prevent the shared file from being torn down.
+type UninstallContext struct {
+	// TargetRoot is the absolute path of the consumer repository root.
+	TargetRoot string
+	// Existing is the manifest of the adapter that is being uninstalled.
+	// PlanUninstall walks Existing.Files for owned removals and consults
+	// Existing.Shared to decide which aggregator files to consider.
+	Existing Manifest
+	// Others holds manifests of every other still-installed adapter,
+	// keyed by Agent. Adapters whose uninstall is also scheduled in the
+	// same run are intentionally absent from this map so each adapter's
+	// ref-count check sees the post-uninstall state — otherwise running
+	// `--uninstall` against codex-cli + gemini-cli simultaneously would
+	// orphan the AGENTS.md marker block (each would see the other still
+	// referencing it).
+	Others map[Agent]Manifest
+}
+
 // AdapterImpl is the install-side contract every per-agent installer
 // implements. The methods are pure: Plan reads SkillsFS + the target
 // filesystem and returns a deterministic []Action that Execute then writes.
@@ -174,10 +204,18 @@ type AdapterImpl interface {
 	Agent() Agent
 	Detect(targetRoot string) bool
 	Plan(ctx PlanContext) ([]Action, error)
+	// PlanUninstall returns the actions necessary to roll back a
+	// previous install of this adapter, given the manifest that
+	// previous run wrote (Existing) and the current state of the other
+	// adapters' manifests (Others). The same Execute path applies the
+	// resulting actions, so PlanUninstall + Execute is byte-symmetric
+	// to Plan + Execute as long as no third party has touched the
+	// tracked paths in between.
+	PlanUninstall(ctx UninstallContext) ([]Action, error)
 	// ManifestPath returns the absolute path where the adapter's manifest
 	// file is written, given a target root. Each adapter owns its manifest
-	// independently so an uninstall (PR 7) of one agent does not orphan
-	// state for another.
+	// independently so an uninstall of one agent does not orphan state
+	// for another.
 	ManifestPath(targetRoot string) string
 }
 
