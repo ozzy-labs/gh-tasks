@@ -108,11 +108,22 @@ func (t ActionType) String() string {
 // messages and in the manifest, so output is portable across OSes. Content
 // holds the bytes to write for ActionCreate / ActionUpdate; it is empty for
 // ActionSkip and ActionConflict.
+//
+// Shared marks the action as targeting a consumer-owned aggregator file
+// (AGENTS.md, .github/copilot-instructions.md) where gh-tasks contributes
+// only an idempotent marker block rather than owning the entire file.
+// Shared actions never produce ActionConflict — the marker block is the
+// adapter's exclusive zone, while content outside the markers is
+// preserved untouched. Manifest accounting tracks Shared and Files
+// separately so the eventual --uninstall (PR 7) can reference-count the
+// marker block across codex-cli + gemini-cli without orphaning consumer
+// content.
 type Action struct {
 	Type    ActionType
 	Path    string
 	RelPath string
 	Content string
+	Shared  bool
 }
 
 // PlanContext bundles the inputs an AdapterImpl needs to produce its
@@ -155,11 +166,12 @@ type AdapterImpl interface {
 }
 
 // Adapters returns every install adapter currently registered with this
-// build of gh-tasks. PR 2 returns ClaudeCodeAdapter only; PR 3 / 4 / 5
-// extend the slice with codex / gemini / copilot in turn.
+// build of gh-tasks. PR 3 ships claude-code + codex-cli; gemini-cli /
+// copilot land in PR 4 / 5.
 func Adapters() []AdapterImpl {
 	return []AdapterImpl{
 		ClaudeCodeAdapter{},
+		CodexCLIAdapter{},
 	}
 }
 

@@ -47,32 +47,39 @@ func TestActionType_String(t *testing.T) {
 	}
 }
 
-func TestAdapters_PR2_OnlyClaudeCode(t *testing.T) {
-	// PR 2 ships claude-code only; codex/gemini/copilot are landed in
-	// PR 3-5. This test pins that contract so we notice when the
-	// follow-up PRs add registrations (the test will need updating).
+func TestAdapters_PR3_ClaudeCodeAndCodexCli(t *testing.T) {
+	// PR 3 ships claude-code + codex-cli; gemini-cli/copilot land in
+	// PR 4-5. This test pins the current registration set so that future
+	// PRs deliberately update it as adapters come online.
 	t.Parallel()
 	got := Adapters()
-	if len(got) != 1 {
+	if len(got) != 2 {
 		var names []string
 		for _, a := range got {
 			names = append(names, string(a.Agent()))
 		}
-		t.Fatalf("Adapters() = [%s] (len %d); PR 2 expects exactly 1 (claude-code)",
+		t.Fatalf("Adapters() = [%s] (len %d); PR 3 expects exactly 2 (claude-code, codex-cli)",
 			strings.Join(names, ","), len(got))
 	}
-	if got[0].Agent() != AgentClaudeCode {
-		t.Errorf("Adapters()[0].Agent() = %q, want %q", got[0].Agent(), AgentClaudeCode)
+	wantOrder := []Agent{AgentClaudeCode, AgentCodexCLI}
+	for i, want := range wantOrder {
+		if got[i].Agent() != want {
+			t.Errorf("Adapters()[%d].Agent() = %q, want %q", i, got[i].Agent(), want)
+		}
 	}
 }
 
 func TestAdapterFor(t *testing.T) {
 	t.Parallel()
-	if _, ok := AdapterFor(AgentClaudeCode); !ok {
-		t.Errorf("AdapterFor(claude-code) = (_, false); want (impl, true)")
+	for _, a := range []Agent{AgentClaudeCode, AgentCodexCLI} {
+		if _, ok := AdapterFor(a); !ok {
+			t.Errorf("AdapterFor(%q) = (_, false); want (impl, true) at PR 3", a)
+		}
 	}
-	// codex-cli is not yet registered in PR 2.
-	if _, ok := AdapterFor(AgentCodexCLI); ok {
-		t.Errorf("AdapterFor(codex-cli) = (_, true); PR 2 should NOT yet register codex-cli")
+	// gemini-cli / copilot are not yet registered.
+	for _, a := range []Agent{AgentGeminiCLI, AgentCopilot} {
+		if _, ok := AdapterFor(a); ok {
+			t.Errorf("AdapterFor(%q) = (_, true); PR 3 should NOT yet register %q", a, a)
+		}
 	}
 }

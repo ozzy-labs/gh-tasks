@@ -224,13 +224,13 @@ func TestInstallSkills_AgentExplicit_UnknownRejected(t *testing.T) {
 }
 
 func TestInstallSkills_AgentExplicit_UnregisteredErrors(t *testing.T) {
-	// `codex-cli` is recognized by ValidateAgent but not yet wired into
-	// PR 2. The cmd should surface a localized unknown-agent error rather
-	// than silently no-op.
+	// `gemini-cli` is recognized by ValidateAgent but not yet wired into
+	// PR 3 (lands in PR 4). The cmd should surface a localized
+	// unknown-agent error rather than silently no-op.
 	t.Parallel()
 	target := t.TempDir()
 	d := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
-	_, stderr, err := runCmd(t, d, "install-skills", "--target", target, "--agent", "codex-cli")
+	_, stderr, err := runCmd(t, d, "install-skills", "--target", target, "--agent", "gemini-cli")
 	if !errors.Is(err, cmd.ErrSilentArgs) {
 		t.Fatalf("expected ErrSilentArgs, got %v (stderr=%s)", err, stderr.String())
 	}
@@ -267,6 +267,97 @@ func TestInstallSkills_TargetNotADir(t *testing.T) {
 	if !strings.Contains(stderr.String(), "directory") &&
 		!strings.Contains(stderr.String(), "ディレクトリ") {
 		t.Errorf("expected target-not-a-directory hint, got: %s", stderr.String())
+	}
+}
+
+func TestInstallSkills_CodexCLI_Flow(t *testing.T) {
+	// codex-cli (PR 3): writes .agents/skills/<name>/SKILL.md AND merges
+	// a marker block into AGENTS.md. The manifest tracks both Files and
+	// Shared.
+	t.Parallel()
+	target := t.TempDir()
+	// Pre-existing AGENTS.md with user content.
+	if err := os.WriteFile(filepath.Join(target, "AGENTS.md"),
+		[]byte("# Project AGENTS\n\nUser preamble.\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	d := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	stdout, stderr, err := runCmd(t, d, "install-skills", "--target", target, "--agent", "codex-cli")
+	if err != nil {
+		t.Fatalf("Execute: %v (stderr=%s)", err, stderr.String())
+	}
+	for _, name := range []string{"alpha", "bravo"} {
+		path := filepath.Join(target, ".agents", "skills", name, "SKILL.md")
+		if _, err := os.Stat(path); err != nil {
+			t.Errorf("expected %s to exist: %v", path, err)
+		}
+	}
+	// AGENTS.md must retain user content AND have our marker block.
+	body, err := os.ReadFile(filepath.Join(target, "AGENTS.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(body), "User preamble.") {
+		t.Errorf("user content lost from AGENTS.md:\n%s", string(body))
+	}
+	if !strings.Contains(string(body), install.MarkerBeginLine) {
+		t.Errorf("AGENTS.md missing marker block:\n%s", string(body))
+	}
+	if !strings.Contains(string(body), "alpha") {
+		t.Errorf("AGENTS.md marker block missing skill alpha:\n%s", string(body))
+	}
+
+	manifestPath := filepath.Join(target, ".agents", "skills", ".gh-tasks-manifest.json")
+	mb, err := os.ReadFile(manifestPath)
+	if err != nil {
+		t.Fatalf("manifest read: %v", err)
+	}
+	var got install.Manifest
+	if err := json.Unmarshal(mb, &got); err != nil {
+		t.Fatalf("manifest parse: %v", err)
+	}
+	if got.Agent != install.AgentCodexCLI {
+		t.Errorf("manifest agent = %q, want codex-cli", got.Agent)
+	}
+	if len(got.Files) != 2 {
+		t.Errorf("manifest Files = %v, want 2 entries", got.Files)
+	}
+	if len(got.Shared) != 1 || got.Shared[0] != "AGENTS.md" {
+		t.Errorf("manifest Shared = %v, want [AGENTS.md]", got.Shared)
+	}
+	if !strings.Contains(stdout.String(), "AGENTS.md") {
+		t.Errorf("stdout should mention AGENTS.md:\n%s", stdout.String())
+	}
+}
+
+func TestInstallSkills_CodexCLI_Idempotent(t *testing.T) {
+	// Two consecutive installs should yield identical AGENTS.md and a
+	// stable manifest.
+	t.Parallel()
+	target := t.TempDir()
+	if err := os.WriteFile(filepath.Join(target, "AGENTS.md"), []byte("# x\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	d1 := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	if _, _, err := runCmd(t, d1, "install-skills", "--target", target, "--agent", "codex-cli"); err != nil {
+		t.Fatalf("first install: %v", err)
+	}
+	body1, err := os.ReadFile(filepath.Join(target, "AGENTS.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	d2 := testDeps(nil, func(d *cmd.Deps) { d.EmbeddedSkills = embeddedFixture() })
+	if _, _, err := runCmd(t, d2, "install-skills", "--target", target, "--agent", "codex-cli"); err != nil {
+		t.Fatalf("second install: %v", err)
+	}
+	body2, err := os.ReadFile(filepath.Join(target, "AGENTS.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(body1) != string(body2) {
+		t.Errorf("AGENTS.md drifted across runs\nfirst:\n%s\nsecond:\n%s",
+			string(body1), string(body2))
 	}
 }
 

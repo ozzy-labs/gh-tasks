@@ -118,7 +118,7 @@
   "install.dryRun.header": "(--dry-run) 実行予定のアクション:",
   "install.dryRun.note": "(--dry-run: ファイルへの書き込みは行いません)",
   "install.action.create": "  + {path}",
-  "install.action.update": "  ~ {path} (上書き — gh-tasks による前回インストール)",
+  "install.action.update": "  ~ {path} (上書き)",
   "install.action.skip": "  = {path} (変更なし)",
   "install.action.conflict": "  ! {path} (衝突 — gh-tasks 管理外のファイルが存在)",
   "install.summary.installed": "{agent} の skill をインストールしました: {created} 件新規 / {updated} 件更新 / {skipped} 件変更なし",
