@@ -168,6 +168,65 @@ release-please-action は実行のたびに以下を判定して PR を再生成
 - release-please が tag + Release + manifest 更新を実施
 - build-binaries / checksums が release_created == true で起動
 
+### リリース前検証 (dev mode smoke)
+
+release PR を merge する **前** に、ローカル `gh extension install .` (dev mode) による smoke test を実施する。**v0.1.0 を含むすべてのリリース前に毎回実行する** (2026-05-06 ユーザー判断、スキップしない方針)。
+
+#### なぜ必要か
+
+リリース後の `release-smoke.yaml` は本物 artifact (precompile binary + manifest.yml + attestation + checksums) を全 platform で smoke するが、**tag 作成後にしか走らない**。リリース前に `gh tasks <cmd>` の起動経路 (gh の subcommand discovery + sub-process exec + 引数 pass-through) を確認できる手段は、ローカル dev mode のみ。
+
+#### 標準手順
+
+```bash
+# 1. リポルートで extension 名と一致するバイナリ名で build (gh-tasks 必須)
+go build -o gh-tasks .
+
+# 2. dev mode install (~/.local/share/gh/extensions/gh-tasks/ に symlink)
+gh extension install .
+gh extension list                  # gh-tasks が dev mode で list される
+
+# 3. 主要 read-only コマンドで smoke
+gh tasks --version                 # 0.0.0-dev (release-please 未走行のため)
+gh tasks --help
+gh tasks list
+gh tasks today
+gh tasks standup --mine
+gh tasks build-skills --check-diff # 副作用なし (cmd/build_skills.go: runCheckDiff)
+
+# 4. 片付け
+gh extension remove gh-tasks
+rm ./gh-tasks
+```
+
+ソース変更後は `go build -o gh-tasks .` を再実行するだけで反映される (symlink 経由)。
+
+#### dev mode で確認できること / できないこと
+
+| 観点 | dev mode | release-smoke (post-tag, 自動) |
+| --- | --- | --- |
+| `gh tasks <cmd>` の subcommand 解決経路 | ✅ | ✅ |
+| 実 GitHub API レスポンスに対する動作 | ✅ | △ (--help のみ) |
+| adapter pipeline 出力 (`build-skills --check-diff`) | ✅ | ❌ |
+| 本物 precompile binary の起動 | ❌ (ローカル `go build`) | ✅ |
+| Cross-compile (darwin/linux/windows × amd64/arm64) の完全性 | ❌ | ✅ |
+| SLSA build provenance attestation | ❌ | ✅ (`gh attestation verify`) |
+| checksums.txt 整合性 | ❌ | ✅ (`sha256sum -c`) |
+| 6 platform tier-1 binary の attach 完全性 | ❌ | ✅ |
+
+両者は重複ではなく**役割分担**。dev mode = 経路検証、release-smoke = 配布物検証。
+
+#### スキップしない方針
+
+通常 (`feat:` / `fix:` のみ) のリリースでも省略しない。理由:
+
+- 一貫した手順で検証することの安心感
+- dev mode 経路自体が壊れた場合の早期検知 (次回以降の手元再現にも同じ手順を使うため定期的に通したい)
+- 毎回手元で触ることによる UX 確認
+- コスト約 5 分は許容範囲
+
+> 「変更パターン別ゲートでスキップ可」のような最小コスト案は、ユーザーが明示的に申し出るまで採用しない。
+
 ## Trade-offs と代替案
 
 | 観点 | 採用 | 代替 |
