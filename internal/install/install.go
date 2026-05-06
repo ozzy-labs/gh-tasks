@@ -166,13 +166,14 @@ type AdapterImpl interface {
 }
 
 // Adapters returns every install adapter currently registered with this
-// build of gh-tasks. PR 4 ships claude-code + codex-cli + gemini-cli;
-// copilot lands in PR 5.
+// build of gh-tasks. PR 5 closes the matrix: all four agents are now
+// supported (claude-code / codex-cli / gemini-cli / copilot).
 func Adapters() []AdapterImpl {
 	return []AdapterImpl{
 		ClaudeCodeAdapter{},
 		CodexCLIAdapter{},
 		GeminiCLIAdapter{},
+		CopilotAdapter{},
 	}
 }
 
