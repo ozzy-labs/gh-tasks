@@ -67,6 +67,35 @@ assertion は基本的に substring 比較 (`strings.Contains`)。i18n キーの
    - cmd テスト固有: `cmd/testhelpers_test.go`(2 箇所以上で使われる場合のみ抽出)
    - cmd / internal 双方で使う共通 GraphQL フェイク: `internal/testfake/` に追加(現状は GraphQL のみ。REST が複数パッケージで必要になったら同様に移管する)
 
+## カバレッジ表記の読み方（重要）
+
+`go test ./...` の raw 出力でカバレッジ % を見るとき、特に `internal/github/queries` の **4.4%** という極端に低い数字に騙されないこと。実態は CI ゲートが見る通りで健全。
+
+3 つの数字の関係:
+
+| 数値 | 何を測っているか | どこで見える |
+| --- | --- | --- |
+| `4.4%` | パッケージ raw（`genqlient.go` の auto-gen 1600+ getter 込み） | `go test ./internal/github/queries/` の出力 |
+| `~80%` | パッケージ実質（`exclude.paths` 適用後、hand-coded のみ） | `.testcoverage.yaml` ゲート判定値 |
+| `86%` 前後 | プロジェクト total（`exclude.paths` 適用後） | `go-test-coverage --config .testcoverage.yaml` の "Total test coverage" |
+
+`internal/github/queries` package には:
+
+- `genqlient.go` — `Khan/genqlient` が `operations.graphql` から自動生成。型ごとに `GetX() X { return v.X }` 形式の getter を 1600 個以上含む。実コードからほとんど呼ばれず分母を大きく押し下げる
+- `pagination.go` — hand-coded GraphQL pagination loop
+- `input_constructors.go` — hand-coded null serialization workaround（[`genqlient-quirks.md`](./genqlient-quirks.md)）
+- `rest_types.go` — REST 応答型宣言のみ、関数なし
+
+`.testcoverage.yaml` の `exclude.paths` で `genqlient.go` と `generate.go` が除外される。CI ゲート (`go-test-coverage --config .testcoverage.yaml`) はこの除外後の数字で閾値判定するため、**raw 4.4% は CI を通過しない原因にはならない**（実質 ~80% で `^internal/github/queries$` の閾値を超えている）。
+
+PR レビューでカバレッジを評価するときは:
+
+1. **CI artifact `coverage-profile`** をダウンロードしてローカルで `go-test-coverage --config .testcoverage.yaml` を実行
+2. 出力末尾の `Total test coverage: NN.N% (M/N)` を確認（こちらが除外後の honest な数字）
+3. raw `go test` の per-package % は無視してよい
+
+`genqlient.go` のような auto-gen ファイルを coverage 集計から除外する設計判断の経緯は [ADR-0008](../adr/0008-go-test-and-quality-chain.md) と `.testcoverage.yaml` のコメントを参照。
+
 ## 関連ドキュメント
 
 - repo-internal ADR-0008: `go test -race -shuffle=on` を CI 必須化
