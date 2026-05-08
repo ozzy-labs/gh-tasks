@@ -21,11 +21,24 @@ func DetectClaudeCode(targetRoot string) bool {
 	return isFile(filepath.Join(targetRoot, "CLAUDE.md"))
 }
 
-// DetectCodexCLI is wired in PR 3. Kept here as a stub so PR 2's
-// auto-detect logic can ignore it without a missing-symbol churn when PR 3
-// lands.
+// DetectCodexCLI returns true when targetRoot looks like a Codex CLI
+// consumer repo. Heuristics (any one is enough):
+//
+//   - `.codex/` directory (Codex CLI's project-local config — the parallel
+//     of `.claude/` for Claude Code and `.gemini/` for Gemini CLI)
+//   - `.agents/` directory (the staging dir gh-tasks owns under codex-cli;
+//     either pre-existing convention or left from a prior install)
+//   - `AGENTS.md` (project-level instructions Codex CLI reads)
+//
+// The previous heuristic required `.agents/skills/` specifically, which
+// only exists after `gh tasks install-skills` has run — chicken-and-egg
+// for first install. The `.agents/` dir alone is now enough, matching the
+// `.claude/` / `.gemini/` pattern used by the sibling detectors.
 func DetectCodexCLI(targetRoot string) bool {
-	if isDir(filepath.Join(targetRoot, ".agents", "skills")) {
+	if isDir(filepath.Join(targetRoot, ".codex")) {
+		return true
+	}
+	if isDir(filepath.Join(targetRoot, ".agents")) {
 		return true
 	}
 	return isFile(filepath.Join(targetRoot, "AGENTS.md"))

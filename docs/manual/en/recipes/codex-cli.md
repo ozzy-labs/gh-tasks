@@ -15,7 +15,7 @@ Codex CLI starts from `AGENTS.md` and resolves referenced skills from `.agents/s
 
 ```bash
 cd /path/to/your-repo
-gh tasks install-skills            # auto-detects codex-cli from AGENTS.md or .agents/skills/
+gh tasks install-skills            # auto-detects codex-cli from .codex/, .agents/, or AGENTS.md
 ```
 
 This writes `.agents/skills/{name}/SKILL.md` for every gh-tasks skill, merges a marker block into the existing `AGENTS.md` (preserving every byte outside the markers), and records both in `.agents/skills/.gh-tasks-manifest.json`. Common variations:
