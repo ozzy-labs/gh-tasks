@@ -153,10 +153,9 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 		if n.Milestone != nil && n.Milestone.Id == milestoneID {
 			continue
 		}
-		if _, err := queries.UpdateIssueMilestone(ctx, gqlClient, &queries.UpdateIssueInput{
-			Id:          n.Id,
-			MilestoneId: &milestoneID,
-		}); err != nil {
+		updateInput := queries.NewUpdateIssueInput(n.Id)
+		updateInput.MilestoneId = &milestoneID
+		if _, err := queries.UpdateIssueMilestone(ctx, gqlClient, updateInput); err != nil {
 			return wrapTransport(c.ErrOrStderr(), r.Locale, fmt.Sprintf("update issue milestone (issue #%d)", n.Number), err)
 		}
 		fmt.Fprintf(out, "  %s: #%d\n", r.T("plan.linked"), n.Number)

@@ -1,0 +1,99 @@
+name: e2e
+
+# End-to-End tests against real GitHub. Manual trigger only.
+#
+# Required repository secret:
+#   E2E_GH_TOKEN  PAT (or GitHub App installation token) with `repo` and
+#                 `project` scopes, scoped to ozzy-labs (the org Project at
+#                 ozzy-labs/3 and the user Project at ozzy-3/5 are written
+#                 to during E2E runs). The default GITHUB_TOKEN does not
+#                 have project: write, which is why a separate secret is
+#                 needed.
+#
+# This workflow is intentionally NOT triggered on push / pull_request to
+# avoid (a) racing the release-smoke flow on shared resources and (b)
+# burning GitHub API rate limit on every PR. See docs/design/e2e-test-plan.md
+# §11 for the release-time vs CI-time policy.
+on:
+  workflow_dispatch:
+    inputs:
+      flow:
+        description: "Which flows to run (all|smoke|TestE2E_FlowA|...)"
+        default: smoke
+        type: string
+
+# Serialize concurrent runs: shared GitHub Projects (ozzy-labs/3, ozzy-3/5)
+# are mutated, so two parallel jobs would race on Issue / draft item state.
+# cancel-in-progress=false keeps the active run going and queues the new one
+# instead of dropping it.
+concurrency:
+  group: e2e
+  cancel-in-progress: false
+
+# Authentication uses the E2E_GH_TOKEN PAT secret (project scope), not the
+# default GITHUB_TOKEN, so the workflow only needs `contents: read` for the
+# repo checkout itself.
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151 # v4.0.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git identity (E2E creates draft PRs)
+        run: |-
+          git config --global user.email "e2e-bot@gh-tasks.local"
+          git config --global user.name "gh-tasks E2E bot"
+
+      - name: Authenticate gh CLI with E2E PAT
+        env:
+          E2E_GH_TOKEN: ${{ secrets.E2E_GH_TOKEN }}
+        run: |-
+          if [ -z "$E2E_GH_TOKEN" ]; then
+            msg="E2E_GH_TOKEN secret is missing."
+            msg="$msg Create a PAT with 'repo' + 'project' scopes"
+            msg="$msg (scoped to ozzy-labs) and add it as repo secret E2E_GH_TOKEN."
+            echo "::error::$msg" >&2
+            exit 1
+          fi
+          # gh auth login --with-token reads the token from stdin and overrides
+          # the GITHUB_TOKEN provided by the runner so subsequent gh commands
+          # have project scope.
+          printf '%s' "$E2E_GH_TOKEN" | gh auth login --with-token
+          gh auth status
+
+      - name: Run E2E
+        # FLOW is passed via env (not interpolated into the run script) to
+        # prevent shell injection from workflow_dispatch input. See
+        # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions
+        env:
+          FLOW: ${{ inputs.flow }}
+          GH_TOKEN: ${{ secrets.E2E_GH_TOKEN }}
+        run: |-
+          case "$FLOW" in
+            all)
+              mise run e2e
+              ;;
+            smoke)
+              mise run e2e:smoke
+              ;;
+            *)
+              mise run e2e:run -- "$FLOW"
+              ;;
+          esac
+
+      - name: Upload E2E logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: e2e-logs
+          path: e2e/testdata/_output/
+          if-no-files-found: ignore
+          retention-days: 7
