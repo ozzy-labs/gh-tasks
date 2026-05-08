@@ -15,7 +15,7 @@ Codex CLI は `AGENTS.md` を起点として、参照される skill 本体を `
 
 ```bash
 cd /path/to/your-repo
-gh tasks install-skills            # AGENTS.md または .agents/skills/ から codex-cli を auto-detect
+gh tasks install-skills            # .codex/ / .agents/ / AGENTS.md から codex-cli を auto-detect
 ```
 
 これで以下が一括実行される:

@@ -19,8 +19,8 @@ type CodexCLIAdapter struct{}
 func (CodexCLIAdapter) Agent() Agent { return AgentCodexCLI }
 
 // Detect returns true when the target tree shows traces of Codex CLI
-// (or a generic AGENTS.md-style multi-agent project): an existing
-// `AGENTS.md` file or a `.agents/skills/` directory.
+// (or a generic AGENTS.md-style multi-agent project): a `.codex/` config
+// directory, a `.agents/` directory, or an `AGENTS.md` file.
 func (CodexCLIAdapter) Detect(targetRoot string) bool {
 	return DetectCodexCLI(targetRoot)
 }
