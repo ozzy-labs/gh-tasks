@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [release-please-config.json](./release-please-config.json) for the automated release flow.
 
+## [0.2.2](https://github.com/ozzy-labs/gh-tasks/compare/v0.2.1...v0.2.2) (2026-05-08)
+
+
+### Bug Fixes
+
+* **install:** seed AGENTS.md with H1 scaffold on first create ([#348](https://github.com/ozzy-labs/gh-tasks/issues/348)) ([46ee36e](https://github.com/ozzy-labs/gh-tasks/commit/46ee36ee0d4f4f71b572b77bbc0f34a119547351))
+* **skills:** use absolute URL for projects-v2-setup link in task-plan ([#346](https://github.com/ozzy-labs/gh-tasks/issues/346)) ([b7ba301](https://github.com/ozzy-labs/gh-tasks/commit/b7ba301541f26197bb54fa4b43781a0e349c0c08))
+
 ## [0.2.1](https://github.com/ozzy-labs/gh-tasks/compare/v0.2.0...v0.2.1) (2026-05-08)
 
 
