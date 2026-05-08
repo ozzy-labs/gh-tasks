@@ -115,10 +115,24 @@ jobs:
           shopt -s nullglob
           cd "$tmp"
           count=0
+          # `gh attestation verify` calls https://api.github.com/.../attestations
+          # per binary; a single TCP timeout (140.82.x i/o timeout, observed
+          # 2026-05-08 on v0.2.1 smoke) fails the whole run. Retry up to 3
+          # times per binary with linear backoff before giving up.
           for f in *; do
             [ -f "$f" ] || continue
             echo "verifying attestation for $f"
-            gh attestation verify "$f" --repo "${{ github.repository }}"
+            attempt=1
+            until gh attestation verify "$f" --repo "${{ github.repository }}"; do
+              if [ "$attempt" -ge 3 ]; then
+                echo "::error::attestation verify failed for $f after 3 attempts"
+                exit 1
+              fi
+              sleep_for=$((attempt * 5))
+              echo "attempt $attempt failed for $f; retrying in ${sleep_for}s..."
+              sleep "$sleep_for"
+              attempt=$((attempt + 1))
+            done
             count=$((count + 1))
           done
           if [ "$count" -eq 0 ]; then
