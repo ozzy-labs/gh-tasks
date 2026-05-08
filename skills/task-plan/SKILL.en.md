@@ -25,5 +25,5 @@ Build a daily / weekly / iteration plan and commit the chosen items into the rig
 ## Fallback
 
 - Too many plan candidates: ask the user for a narrowing condition (label / assignee)
-- Iteration field undefined: surface the setup steps from `docs/manual/en/guides/projects-v2-setup.md`
+- Iteration field undefined: surface the setup steps from <https://github.com/ozzy-labs/gh-tasks/blob/main/docs/manual/en/guides/projects-v2-setup.md>
 - Issue already bound to another Milestone: the CLI skips and reports it; rerun with `--dry-run` if needed
