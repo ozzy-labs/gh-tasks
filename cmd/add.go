@@ -69,7 +69,7 @@ func runAddRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, ti
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
 	}
-	input := &queries.CreateIssueInput{RepositoryId: idResp.Repository.Id, Title: title}
+	input := queries.NewCreateIssueInput(idResp.Repository.Id, title)
 	if body != "" {
 		input.Body = &body
 	}
@@ -103,7 +103,7 @@ func runAddProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	input := &queries.AddProjectV2DraftIssueInput{ProjectId: pid, Title: title}
+	input := queries.NewAddProjectV2DraftIssueInput(pid, title)
 	if body != "" {
 		input.Body = &body
 	}

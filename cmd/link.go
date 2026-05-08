@@ -74,10 +74,9 @@ func runLinkRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 		return nil
 	}
 	updatedBody := AppendCloseLink(prNode.Body, task)
-	updated, err := queries.UpdatePullRequest(ctx, gqlClient, &queries.UpdatePullRequestInput{
-		PullRequestId: prNode.Id,
-		Body:          &updatedBody,
-	})
+	updateInput := queries.NewUpdatePullRequestInput(prNode.Id)
+	updateInput.Body = &updatedBody
+	updated, err := queries.UpdatePullRequest(ctx, gqlClient, updateInput)
 	if err != nil {
 		return wrapTransport(c.ErrOrStderr(), r.Locale, "update pull request body", err)
 	}
