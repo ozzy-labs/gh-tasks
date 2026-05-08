@@ -100,7 +100,15 @@ func (a CodexCLIAdapter) Plan(ctx PlanContext) ([]Action, error) {
 	if err != nil {
 		return nil, err
 	}
-	desiredAgents := MergeMarkerBlock(existingAgents, body)
+	// On first create, seed the file with a minimal consumer-owned
+	// scaffold so it does not open with our `##` heading. The scaffold
+	// is written exactly once and lives outside the marker block — it
+	// is not re-examined on subsequent runs.
+	basis := existingAgents
+	if !exists {
+		basis = AgentsMdScaffold
+	}
+	desiredAgents := MergeMarkerBlock(basis, body)
 
 	switch {
 	case !exists:

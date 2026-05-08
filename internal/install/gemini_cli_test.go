@@ -165,6 +165,40 @@ func TestGeminiCLI_Plan_FreshTarget(t *testing.T) {
 		if a.Type != ActionCreate {
 			t.Errorf("expected ActionCreate for %s, got %v", a.RelPath, a.Type)
 		}
+		if a.RelPath == "AGENTS.md" && !strings.HasPrefix(a.Content, AgentsMdScaffold) {
+			t.Errorf("AGENTS.md must begin with scaffold on fresh create:\n%s", a.Content)
+		}
+	}
+}
+
+func TestGeminiCLI_Plan_AgentsMd_IdempotentAfterFreshInstall(t *testing.T) {
+	// After a fresh install the on-disk AGENTS.md is scaffold + marker
+	// block. Re-running Plan must produce ActionSkip.
+	t.Parallel()
+	root := t.TempDir()
+	geminiDir := filepath.Join(root, ".gemini")
+	if err := os.MkdirAll(geminiDir, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	merged, err := MergeGeminiSettings(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	mustWriteFile(t, filepath.Join(geminiDir, "settings.json"), string(merged))
+
+	loaded := []skills.Skill{{Name: "task-add", Raw: "raw\n", Description: "追加"}}
+	body := RenderAgentsSnippet(loaded, "ja")
+	mustWriteFile(t, filepath.Join(root, "AGENTS.md"),
+		MergeMarkerBlock(AgentsMdScaffold, body))
+
+	actions, err := GeminiCLIAdapter{}.Plan(PlanContext{TargetRoot: root, Skills: loaded})
+	if err != nil {
+		t.Fatalf("Plan: %v", err)
+	}
+	for _, a := range actions {
+		if a.RelPath == "AGENTS.md" && a.Type != ActionSkip {
+			t.Errorf("AGENTS.md type = %v, want ActionSkip", a.Type)
+		}
 	}
 }
 
