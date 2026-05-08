@@ -13,6 +13,18 @@ import (
 // block in the consumer's AGENTS.md.
 const AgentsSnippetHeading = "## gh-tasks Skills"
 
+// AgentsMdScaffold is the minimal consumer-owned preamble we lay down
+// when AGENTS.md does not yet exist, so a freshly-created file does not
+// open with our `## gh-tasks Skills` heading and has a proper H1 plus a
+// hint for the project to record its own agent instructions.
+//
+// The scaffold lives strictly outside the gh-tasks marker block; once
+// written it is never re-examined by install-skills (subsequent runs
+// only rewrite the marker block, leaving every byte outside it intact).
+// Uninstall similarly only excises the marker block — the scaffold,
+// being consumer-owned, remains for the project to extend or delete.
+const AgentsMdScaffold = "# AGENTS.md\n\n<!-- Add project-level agent instructions here. -->\n"
+
 // RenderAgentsSnippet returns the body (no marker delimiters) of the
 // gh-tasks skills block as it should appear inside AGENTS.md. locale
 // selects which description field to render per skill; values other than

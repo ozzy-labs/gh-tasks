@@ -420,11 +420,45 @@ func TestGeminiCLI_PlanUninstall_SettingsAndAgentsMdMissing(t *testing.T) {
 	}
 }
 
+func TestGeminiCLI_PlanUninstall_AgentsMdPreservesScaffold(t *testing.T) {
+	// Post-scaffold install: AGENTS.md = scaffold + marker block. The
+	// scaffold is consumer-owned, so uninstall must strip the marker
+	// block but leave the scaffold behind (ActionUpdate, not Remove).
+	t.Parallel()
+	root := t.TempDir()
+	merged := MergeMarkerBlock(AgentsMdScaffold, "## gh-tasks Skills\n\n- task-add")
+	mustWriteFile(t, filepath.Join(root, "AGENTS.md"), merged)
+
+	prev := mkManifest(AgentGeminiCLI, nil, []string{"AGENTS.md"})
+	actions, err := GeminiCLIAdapter{}.PlanUninstall(UninstallContext{
+		TargetRoot: root,
+		Existing:   prev,
+		Others:     nil,
+	})
+	if err != nil {
+		t.Fatalf("PlanUninstall: %v", err)
+	}
+	var found *Action
+	for i := range actions {
+		if actions[i].RelPath == "AGENTS.md" {
+			found = &actions[i]
+		}
+	}
+	if found == nil || found.Type != ActionUpdate {
+		t.Fatalf("expected ActionUpdate for AGENTS.md, got %+v", found)
+	}
+	if !strings.Contains(found.Content, "# AGENTS.md") {
+		t.Errorf("scaffold H1 missing from stripped content:\n%s", found.Content)
+	}
+	if strings.Contains(found.Content, MarkerBeginLine) {
+		t.Errorf("marker block not stripped:\n%s", found.Content)
+	}
+}
+
 func TestGeminiCLI_PlanUninstall_AgentsMdStripsToEmpty(t *testing.T) {
-	// AGENTS.md contains only the marker block (no surrounding consumer
-	// content). After stripping, the file is empty → ActionRemove for
-	// AGENTS.md (matches the install-side symmetry: install created an
-	// otherwise-empty file, uninstall takes it back).
+	// Legacy / hand-edited case: AGENTS.md contains only the marker
+	// block (e.g. user manually deleted the scaffold, or installed
+	// with a pre-scaffold gh-tasks version). Strip → empty → Remove.
 	t.Parallel()
 	root := t.TempDir()
 	mustWriteFile(t, filepath.Join(root, "AGENTS.md"),

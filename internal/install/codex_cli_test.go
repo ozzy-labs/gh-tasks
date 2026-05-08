@@ -52,11 +52,50 @@ func TestCodexCLI_Plan_FreshTarget(t *testing.T) {
 				!strings.Contains(a.Content, MarkerEndLine) {
 				t.Errorf("AGENTS.md content lacks markers:\n%s", a.Content)
 			}
+			// Fresh-create path must lay down the consumer-owned
+			// scaffold so the file opens with an H1 instead of our
+			// `## gh-tasks Skills` heading.
+			if !strings.HasPrefix(a.Content, AgentsMdScaffold) {
+				t.Errorf("AGENTS.md content does not begin with scaffold:\n%s", a.Content)
+			}
+			if strings.HasPrefix(a.Content, AgentsSnippetHeading) {
+				t.Errorf("AGENTS.md must not open with %q", AgentsSnippetHeading)
+			}
 		}
 	}
 	if sharedSeen != 1 {
 		t.Errorf("expected exactly 1 Shared action, got %d", sharedSeen)
 	}
+}
+
+func TestCodexCLI_Plan_AgentsMd_IdempotentAfterFreshInstall(t *testing.T) {
+	// Re-running install after a fresh create must not rewrite the
+	// scaffold or the marker block: the persisted file is already what
+	// MergeMarkerBlock(scaffold, body) produces.
+	t.Parallel()
+	root := t.TempDir()
+	loaded := []skills.Skill{
+		{Name: "task-add", Raw: "raw\n", Description: "追加"},
+	}
+	body := RenderAgentsSnippet(loaded, "ja")
+	merged := MergeMarkerBlock(AgentsMdScaffold, body)
+	mustWriteFile(t, filepath.Join(root, "AGENTS.md"), merged)
+
+	actions, err := CodexCLIAdapter{}.Plan(PlanContext{
+		TargetRoot: root, Skills: loaded,
+	})
+	if err != nil {
+		t.Fatalf("Plan: %v", err)
+	}
+	for _, a := range actions {
+		if a.RelPath == "AGENTS.md" {
+			if a.Type != ActionSkip {
+				t.Errorf("AGENTS.md type = %v, want ActionSkip", a.Type)
+			}
+			return
+		}
+	}
+	t.Fatal("AGENTS.md action missing")
 }
 
 func TestCodexCLI_Plan_AgentsMd_PreservesUserContent(t *testing.T) {

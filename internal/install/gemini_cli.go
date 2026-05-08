@@ -100,7 +100,14 @@ func (GeminiCLIAdapter) Plan(ctx PlanContext) ([]Action, error) {
 	if err != nil {
 		return nil, err
 	}
-	desiredAgents := MergeMarkerBlock(existingAgents, body)
+	// On first create, seed the file with a minimal consumer-owned
+	// scaffold so it does not open with our `##` heading. Mirrors the
+	// codex-cli adapter — both share the same AGENTS.md target.
+	basis := existingAgents
+	if !agentsExists {
+		basis = AgentsMdScaffold
+	}
+	desiredAgents := MergeMarkerBlock(basis, body)
 	switch {
 	case !agentsExists:
 		out = append(out, Action{
