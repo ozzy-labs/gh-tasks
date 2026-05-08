@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [release-please-config.json](./release-please-config.json) for the automated release flow.
 
+## [0.2.3](https://github.com/ozzy-labs/gh-tasks/compare/v0.2.2...v0.2.3) (2026-05-08)
+
+
+### Features
+
+* add E2E test architecture v2 + fix Projects v2 mutation null serialization ([#361](https://github.com/ozzy-labs/gh-tasks/issues/361)) ([407293b](https://github.com/ozzy-labs/gh-tasks/commit/407293b5c76fcd0413de04d321976594e6c5436c))
+
 ## [0.2.2](https://github.com/ozzy-labs/gh-tasks/compare/v0.2.1...v0.2.2) (2026-05-08)
 
 
