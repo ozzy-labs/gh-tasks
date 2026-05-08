@@ -43,6 +43,18 @@ assertion は基本的に substring 比較 (`strings.Contains`)。i18n キーの
 
 `<Cmd>` は cobra cmd 名を CamelCase 化したもの。`<Scenario>` は `RepoEmpty`, `OrgScope`, `MineFiltersAndAnnotates` のように **挙動の主語 + 形容** を短く書く。
 
+## mock テストの限界（重要）
+
+`internal/testfake.FakeGraphQL` および cmd 側の flow テストは、GraphQL リクエストの **クエリ名 substring** でマッチして固定 JSON を返す。**送信側 input の JSON 形状は一切検証していない**。これが意味するのは:
+
+- input struct を `genqlient` が生成する型のままで送ると `null` が出るような fields があっても、flow テストは PASS する
+- 例: `addProjectV2DraftIssue.assigneeIds` は genqlient で `[]string`（`omitempty` 無し）。nil で送ると JSON `"assigneeIds": null` だが、GitHub はこれを拒否する。flow テストは PASS、実機で初めて失敗
+- 同型のバグ class（[`docs/design/genqlient-quirks.md`](./genqlient-quirks.md) の「パターン 1 / 2」）は **flow テストで検出不能**
+
+→ **mutation を増やすときは、必ず Layer 1 の wire format pin test を `internal/github/queries/wire_<op>_test.go` に追加する** こと（[ADR-0009](../adr/0009-wire-format-and-e2e-strategy.md)）。flow テストが通ったことだけを根拠に「動いている」と判断しない。
+
+新規 mutation 追加時のチェックリストは [`genqlient-quirks.md`](./genqlient-quirks.md) を参照。
+
 ## 新規テストを追加するとき
 
 1. cobra root を経由する flow テスト → `cmd/<cmd>_flow_test.go` に追加(対象 cmd のファイルがまだ無い場合は新規作成)
@@ -58,4 +70,7 @@ assertion は基本的に substring 比較 (`strings.Contains`)。i18n キーの
 ## 関連ドキュメント
 
 - repo-internal ADR-0008: `go test -race -shuffle=on` を CI 必須化
+- repo-internal ADR-0009: GraphQL wire format テストと E2E 戦略
 - `docs/design/architecture.md`: cobra コマンド / Deps インジェクション全体像
+- `docs/design/genqlient-quirks.md`: genqlient の null 直列化罠と対症療法
+- `docs/design/e2e-test-plan.md`: E2E テスト戦略（Layer 1-7）

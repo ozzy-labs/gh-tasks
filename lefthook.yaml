@@ -34,6 +34,12 @@ pre-commit:
     check-i18n-catalog-refs:
       glob: '{cmd,internal}/**/*.go'
       run: mise exec -- go run . check-i18n --refs
+    audit-mutations:
+      # Detect new genqlient input types that are missing the null-
+      # serialization workaround (constructors / MarshalJSON). See
+      # docs/design/genqlient-quirks.md and ADR-0009.
+      glob: 'internal/github/queries/genqlient.go'
+      run: scripts/audit-mutations.sh --check
     markdownlint:
       glob: '*.md'
       exclude:

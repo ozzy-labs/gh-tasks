@@ -34,6 +34,10 @@
 - `/task-standup` — 直近活動のスタンドアップ用サマリを生成する。`gh tasks standup [--mine]` を呼び出してチーム / 個人の動きを共有可能な形に整形する。
 - `/task-link-pr` — PR を Issue / Project 項目と紐付ける。`gh tasks link <pr> <task>` を呼び出し、repo scope は PR body に `Closes #N` を追記、org/user scope は PR と Issue を同じ Project v2 に bind する。
 
+リポ専用 skill (本リポでのみ動く、配信対象外):
+
+- `/e2e` — gh-tasks の E2E テストを実 GitHub API に対して実行する。`mise run e2e` 系を呼び出す orchestrator。リリース前 / 大改変後の網羅検証用。詳細は `docs/design/e2e-test-plan.md`。
+
 ## Skills の共通ルール
 
 - スキル完了時のネクストアクション提案には `AskUserQuestion` を使用する（テキスト出力で選択肢を列挙しない）

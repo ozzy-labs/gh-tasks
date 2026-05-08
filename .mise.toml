@@ -1,6 +1,6 @@
 [tools]
 # Runtime
-node = "24"            # used by markdownlint-cli2 (npm:) and commitlint (npx)
+node = "24" # used by markdownlint-cli2 (npm:) and commitlint (npx)
 go = "1.25"
 
 # Git hooks & commit conventions
@@ -19,3 +19,24 @@ shfmt = "3"
 yamlfmt = "0.21"
 actionlint = "1"
 gitleaks = "8"
+"github:tamasfe/taplo" = "0.10.0"
+
+[tasks.e2e]
+description = "Run all gh-tasks E2E tests against real GitHub (writes [E2E]-prefixed resources to ozzy-labs/3, ozzy-3/5)"
+run = "go test -tags=e2e -v -count=1 -timeout=20m ./e2e/..."
+
+[tasks."e2e:smoke"]
+description = "Run gh-tasks E2E Flow 0 smoke (TestE2E_Smoke*, ~30s, minimal GitHub writes)"
+run = "go test -tags=e2e -v -count=1 -timeout=5m -run TestE2E_Smoke ./e2e/..."
+
+[tasks."e2e:isolation"]
+description = "Run gh-tasks E2E Flow 1 per-command isolation smoke (TestE2E_<Cmd>Smoke_<Scope>, ~10min)"
+run = "go test -tags=e2e -v -count=1 -timeout=15m -run 'TestE2E_(Add|Done|List|Today|Standup|Review|Plan|Triage|Link|Projects)' ./e2e/..."
+
+[tasks."e2e:run"]
+# mise appends `--` args to the end of `run` (positional args inside the
+# script are NOT bound). Putting `-run` last lets the user pattern become
+# its argument: `mise run e2e:run -- TestE2E_FlowA`
+# → `go test ... ./e2e/... -run TestE2E_FlowA`
+description = "Run a specific E2E test pattern. Usage: mise run e2e:run -- TestE2E_FlowA (arg required)"
+run = "go test -tags=e2e -v -count=1 -timeout=20m ./e2e/... -run"
