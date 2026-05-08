@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [release-please-config.json](./release-please-config.json) for the automated release flow.
 
+## [0.2.1](https://github.com/ozzy-labs/gh-tasks/compare/v0.2.0...v0.2.1) (2026-05-08)
+
+
+### Bug Fixes
+
+* **install:** broaden codex-cli auto-detect heuristic ([#343](https://github.com/ozzy-labs/gh-tasks/issues/343)) ([0aacc80](https://github.com/ozzy-labs/gh-tasks/commit/0aacc80d4c4911f2d084b8d84c7f16f673f8deff))
+
 ## [0.2.0](https://github.com/ozzy-labs/gh-tasks/compare/v0.1.1...v0.2.0) (2026-05-06)
 
 
