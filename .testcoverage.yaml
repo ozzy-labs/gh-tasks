@@ -30,10 +30,13 @@ override:
     threshold: 93
   - path: ^internal/config$
     threshold: 84
-  # internal/github/queries: with genqlient.go excluded the meaningful
-  # number is pagination.go; current 74.3%, floor 72 (current - 2).
+  # internal/github/queries: with genqlient.go excluded, the meaningful
+  # number covers pagination.go + input_constructors.go (the latter
+  # added in #361 with 18 wire format pin tests). Current 79.8%, floor
+  # 78 (current - 1.8). See docs/design/test-structure.md "カバレッジ
+  # 表記の読み方" for why the raw `go test` per-package % shows ~4%.
   - path: ^internal/github/queries$
-    threshold: 72
+    threshold: 78
   - path: ^internal/github$
     threshold: 86
   - path: ^internal/i18ncheck$
