@@ -91,6 +91,16 @@ This makes `jq` expressions like `.[].milestone.title // "none"` and `.labels[]`
 
 See [`docs/design/json-output.md`](../../../design/json-output.md) for the full design rationale.
 
+### Maintaining this reference
+
+The catalogs above are owned by `cmd/jsonpath.go` (`itemJSONFields`, `activityJSONFields`, `linkJSONFields`, `projectInitJSONFields`). The hidden `gh tasks check-json-schema` command renders every catalog as a markdown table in canonical order so the field tables on this page can be diff-checked against the in-source catalog without copy-pasting:
+
+```bash
+go run . check-json-schema
+```
+
+Add new catalogs to `jsonSchemaCatalogs()` in `cmd/check_json_schema.go` so they show up here.
+
 ## Examples
 
 ### Pipe to jq

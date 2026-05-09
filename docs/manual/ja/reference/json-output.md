@@ -91,6 +91,16 @@ mutation 系経路(`done`、`link`、`plan --write`、`projects init` の mutati
 
 詳細は [`docs/design/json-output.md`](../../../design/json-output.md) を参照。
 
+### この reference の保守
+
+カタログ本体は `cmd/jsonpath.go`(`itemJSONFields` / `activityJSONFields` / `linkJSONFields` / `projectInitJSONFields`)が SSOT。Hidden コマンド `gh tasks check-json-schema` で全カタログを markdown table として出力できるので、本ページの field 表との diff 比較で同期確認できる(コピペ不要):
+
+```bash
+go run . check-json-schema
+```
+
+新規カタログを追加した場合は `cmd/check_json_schema.go` の `jsonSchemaCatalogs()` にも追加する。
+
 ## 利用例
 
 ### jq に流す

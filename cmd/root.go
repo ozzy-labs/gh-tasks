@@ -50,6 +50,7 @@ func RootWithDeps(deps Deps) *cobra.Command {
 		newProjectsCmd(deps),
 		newBuildSkillsCmd(deps),
 		newCheckI18nCmd(deps),
+		newCheckJSONSchemaCmd(deps),
 		newInstallSkillsCmd(deps),
 	)
 
