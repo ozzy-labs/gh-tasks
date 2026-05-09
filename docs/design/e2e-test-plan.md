@@ -209,8 +209,12 @@ Flow A〜H lifecycle (連鎖)                      ~20 min    major / minor rele
 | `TestE2E_SmokeReadOnly` | `gh tasks list -p ozzy-labs/3` / `-p ozzy-3/5` で 2 Project が読み取れること | 読み取りのみ |
 | `TestE2E_SmokeI18nGraphQL` | GraphQL に到達した後の locale 化エラーを `--lang en` / `--lang ja` で diff 検証 | 読み取りのみ |
 | `TestE2E_SmokeWriteRoundtrip_{Org,User}` | `add` で `[E2E] smoke ...` draft を作成 → 即 `done` で Status=Done | draft item 1 件 (Status=Done で残す) |
+| `TestE2E_SmokeJSONReadOnly` | `list --json id,title,type,state` を 2 Project で実行し、stdout が JSON 配列 + 全 row に指定 field 存在を assert(`--lang ja` でも英語フィールド名であること = ロケール非依存契約) | 読み取りのみ |
+| `TestE2E_SmokeJSONJq` | `list --json id --jq '.[0].id'` で gojq 内蔵 path を確認(quoted string か `null`) | 読み取りのみ |
+| `TestE2E_SmokeJSONWriteRoundtrip` | `add ... --json id --jq '.[0].id'` → `done <id> --json id,state` の README idiom が end-to-end で動くこと | draft item 1 件 (Status=Done で残す) |
+| `TestE2E_SmokePaginate` | `list --paginate --json id --jq 'length'` が 0 以上の整数を返すこと(全件取得 path の導通) | 読み取りのみ |
 
-**狙い**: 全 mutation を最低 1 回 roundtrip させ、wire format バグ（[`genqlient-quirks.md`](./genqlient-quirks.md)）を実機経路で検出する。テストパイプライン本体（mise / skill / GHA）の導通も同時に確認。Layer 1 の wire format pin test と相補的（Layer 1 は CI 常時、Flow 0 は release 直前の保険）。
+**狙い**: 全 mutation を最低 1 回 roundtrip させ、wire format バグ（[`genqlient-quirks.md`](./genqlient-quirks.md)）を実機経路で検出する。テストパイプライン本体（mise / skill / GHA）の導通も同時に確認。Layer 1 の wire format pin test と相補的（Layer 1 は CI 常時、Flow 0 は release 直前の保険）。後半 4 件は Phase 1-3 で導入した `--json` / `--jq` / `--paginate`(ADR-0010)の wire-level 動作を release 前に押さえる。
 
 **repo scope の write smoke** は別扱い: 共有リポ `ozzy-labs/gh-tasks` に Issue を作るのは履歴汚染になるため、Flow 0 では割愛し Flow 1 (`TestE2E_AddSmoke_Repo`) で `--repo` flag による別リポ指定または明示的な `[E2E]` ラベル運用に委ねる。
 
