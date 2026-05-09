@@ -292,9 +292,10 @@ PR 1 以降、各コマンドの `*_flow_test.go` に下記 3 系統を追加す
 
 ### CI gate
 
-`docs/design/json-output.md` の安定性ポリシーを CI で部分的に守る:
+`docs/design/json-output.md` の安定性ポリシーを CI で守る:
 
-- (Phase 2 で着手、Phase 3 で完成予定)スキーマ snapshot test: 各コマンドの `--json <all-fields>` 出力構造を golden file と比較し、不意の field 削除 / rename を検知。Phase 2 では Hidden コマンド `gh tasks check-json-schema` を提供して catalog を markdown table 化(手動 diff 用)。CI / pre-commit drift gate と markdown marker 経由の自動上書きは Phase 3 候補
+- **schema drift gate (Phase 3 完了、#386)**: `cmd/check_json_schema.go` が catalog SSOT (`cmd/jsonpath.go` の `itemJSONFields` / `activityJSONFields` / `linkJSONFields` / `projectInitJSONFields`) を `<!-- begin: jsonout-catalog NAME -->` マーカー間に書き込む `--update` モードと、drift で exit 非 0 する `--check` モードを提供。pre-commit(lefthook)と CI(`go` job)が `--check` を呼び、`mise run check-json-schema` / `mise run check-json-schema:update` が contributor 向けの操作 alias。新規 catalog を追加するときは `jsonSchemaCatalogs()` に登録 + manual に空 marker を追加 + `--update` 実行という 4-step が `docs/manual/{en,ja}/reference/json-output.md` の「Maintaining this reference」セクションに pin されている
+- (将来)各コマンドの `--json <all-fields>` 出力構造を golden file と比較する snapshot test も検討余地ありだが、catalog ベースの drift gate で field 削除 / rename はカバーできているので優先度は低い
 
 ## 関連
 
