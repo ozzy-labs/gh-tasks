@@ -512,3 +512,139 @@ func TestList_LangFlagOverridesEnvAndConfig(t *testing.T) {
 		t.Errorf("--lang ja must win over LANG=en + config Locale=en; got:\n%s", stdout.String())
 	}
 }
+
+// ===== --json / --jq path (#367 PR 1) =====================================
+
+// TestList_JSONFieldsRepo asserts that --json restricts output to the
+// requested fields and emits a JSON array shaped per the Phase 1 contract
+// (id, number, title, type, updatedAt, url). Existing repo-issue payload
+// builders are reused; assertions go through assertJSONFieldEquals to pin
+// the exact value rather than substring-matching the raw stdout.
+func TestList_JSONFieldsRepo(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{
+			MatchSubstring: "query ListRepoIssues (",
+			Data: repoIssuesPayload(
+				map[string]any{
+					"id":        "I_1",
+					"number":    42,
+					"title":     "Fix login",
+					"url":       "https://example.com/i/42",
+					"updatedAt": "2026-05-04T08:00:00Z",
+				},
+			),
+		},
+	}}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "list", "--json", "id,number,title,type")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	assertJSONLength(t, stdout.String(), 1)
+	assertJSONFieldEquals(t, stdout.String(), 0, "id", "I_1")
+	assertJSONFieldEquals(t, stdout.String(), 0, "number", 42)
+	assertJSONFieldEquals(t, stdout.String(), 0, "title", "Fix login")
+	assertJSONFieldEquals(t, stdout.String(), 0, "type", "ISSUE")
+	// fields not requested must not appear (otherwise the contract leaks
+	// the full DTO and breaks payload-minimization).
+	rows := parseJSONArray(t, stdout.String())
+	for _, k := range []string{"url", "updatedAt"} {
+		if _, present := rows[0][k]; present {
+			t.Errorf("rows[0] should not include unrequested field %q; got: %v", k, rows[0])
+		}
+	}
+}
+
+// TestList_JSONEmptyArgListsFields pins the gh-style discoverability
+// behaviour: `--json` with no value writes the catalog to stderr, exits
+// with ErrSilentArgs, and leaves stdout empty (so a piped consumer sees
+// nothing rather than a partial JSON).
+func TestList_JSONEmptyArgListsFields(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{}}
+	d := testDeps(g)
+	stdout, stderr, err := runCmd(t, d, "list", "--json", "")
+	if !errors.Is(err, cmd.ErrSilent) {
+		t.Fatalf("expected ErrSilent (catalog listing), got %v", err)
+	}
+	if stdout.Len() != 0 {
+		t.Errorf("stdout must be empty when listing fields, got: %s", stdout.String())
+	}
+	for _, want := range []string{"id", "number", "title", "type", "updatedAt", "url"} {
+		if !strings.Contains(stderr.String(), want) {
+			t.Errorf("stderr must list %q in catalog, got:\n%s", want, stderr.String())
+		}
+	}
+}
+
+// TestList_JSONUnknownField pins the error path when the user passes an
+// invalid field name: the command fails with ErrSilentArgs, prints the
+// unknown-field error + the catalog to stderr, and emits no stdout.
+func TestList_JSONUnknownField(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query ListRepoIssues (", Data: repoIssuesPayload()},
+	}}
+	d := testDeps(g)
+	stdout, stderr, err := runCmd(t, d, "list", "--json", "id,bogus,title")
+	if !errors.Is(err, cmd.ErrSilent) {
+		t.Fatalf("expected ErrSilent for unknown field, got %v", err)
+	}
+	if stdout.Len() != 0 {
+		t.Errorf("stdout must be empty on validation failure, got: %s", stdout.String())
+	}
+	if !strings.Contains(stderr.String(), "bogus") {
+		t.Errorf("stderr must name the unknown field, got:\n%s", stderr.String())
+	}
+}
+
+// TestList_JQFiltersOutput pins the gojq integration: --jq applies an
+// expression to the array and writes only the matching values to stdout.
+// `.[].id` is the canonical "extract one field per row" jq idiom.
+func TestList_JQFiltersOutput(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{
+			MatchSubstring: "query ListRepoIssues (",
+			Data: repoIssuesPayload(
+				map[string]any{"id": "I_a", "number": 1, "title": "a", "url": "u/1", "updatedAt": "2026-05-04T08:00:00Z"},
+				map[string]any{"id": "I_b", "number": 2, "title": "b", "url": "u/2", "updatedAt": "2026-05-04T09:00:00Z"},
+			),
+		},
+	}}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "list", "--json", "id", "--jq", ".[].id")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	got := stdout.String()
+	if !strings.Contains(got, `"I_a"`) || !strings.Contains(got, `"I_b"`) {
+		t.Errorf("expected both ids in jq output, got:\n%s", got)
+	}
+	// No JSON array wrapper / object — gojq emits one value per line.
+	if strings.HasPrefix(strings.TrimSpace(got), "[") {
+		t.Errorf("jq output should be unwrapped values, got array: %s", got)
+	}
+}
+
+// TestList_JQWithoutJSON pins the rule that --jq requires --json. Mixing
+// text mode with a jq expression is rejected at flag-validation time.
+func TestList_JQWithoutJSON(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{}}
+	d := testDeps(g)
+	stdout, stderr, err := runCmd(t, d, "list", "--jq", ".[].id")
+	if !errors.Is(err, cmd.ErrSilent) {
+		t.Fatalf("expected ErrSilent for --jq without --json, got %v", err)
+	}
+	if stdout.Len() != 0 {
+		t.Errorf("stdout must be empty when rejecting flag combo, got: %s", stdout.String())
+	}
+	assertI18nMessage(t, stderr.String(), i18n.LocaleEN, "error.json.jqWithoutJson")
+}

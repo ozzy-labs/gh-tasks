@@ -291,3 +291,45 @@ func userProject(id string) map[string]any {
 		"id": id, "number": 9, "title": "User Project",
 	}}}
 }
+
+// ===== JSON output helpers (#367 PR 1) ====================================
+
+// parseJSONArray decodes stdout as a JSON array of objects. Tests use this
+// to assert on the structured `--json` output without re-implementing the
+// parse boilerplate. Fails the test on parse error so callers can chain
+// item-level assertions safely.
+func parseJSONArray(t *testing.T, stdout string) []map[string]any {
+	t.Helper()
+	var rows []map[string]any
+	if err := json.Unmarshal([]byte(stdout), &rows); err != nil {
+		t.Fatalf("stdout is not a JSON array: %v\nstdout=%s", err, stdout)
+	}
+	return rows
+}
+
+// assertJSONFieldEquals indexes into a JSON-array stdout and asserts that
+// the named field on the given row matches `want`. Comparison goes through
+// json.Marshal on both sides so int / float64 quirks (Go's default JSON
+// number type is float64 for any) compare structurally rather than by Go
+// type. Use this for stable, single-line assertions in flow tests.
+func assertJSONFieldEquals(t *testing.T, stdout string, idx int, field string, want any) {
+	t.Helper()
+	rows := parseJSONArray(t, stdout)
+	if idx >= len(rows) {
+		t.Fatalf("row index %d out of range (len=%d), stdout=%s", idx, len(rows), stdout)
+	}
+	gotJSON, _ := json.Marshal(rows[idx][field])
+	wantJSON, _ := json.Marshal(want)
+	if string(gotJSON) != string(wantJSON) {
+		t.Errorf("rows[%d].%s = %s; want %s", idx, field, gotJSON, wantJSON)
+	}
+}
+
+// assertJSONLength asserts the JSON-array stdout has the expected length.
+func assertJSONLength(t *testing.T, stdout string, want int) {
+	t.Helper()
+	rows := parseJSONArray(t, stdout)
+	if len(rows) != want {
+		t.Errorf("len(rows) = %d; want %d, stdout=%s", len(rows), want, stdout)
+	}
+}

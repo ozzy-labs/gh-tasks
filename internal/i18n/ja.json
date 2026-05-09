@@ -136,5 +136,6 @@
   "error.install.embedNotAvailable": "本ビルドには embedded skill SSOT が含まれていません",
   "error.install.manifestParseFailed": "manifest の解析に失敗しました '{path}': {reason}",
   "error.install.loadSkills": "embedded skill SSOT のロードに失敗しました: {reason}",
-  "error.install.namespaceRename": "--namespace '{namespace}' の適用に失敗しました: {reason}"
+  "error.install.namespaceRename": "--namespace '{namespace}' の適用に失敗しました: {reason}",
+  "error.json.jqWithoutJson": "--jq には --json が必要です。`--json` に 1 つ以上のフィールドを指定してください(値なしで実行すると利用可能フィールドを表示します)。"
 }
