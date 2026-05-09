@@ -17,19 +17,25 @@ import (
 )
 
 func newLinkCmd(deps Deps) *cobra.Command {
-	return &cobra.Command{
+	c := &cobra.Command{
 		Use:   "link <pr> <task>",
 		Short: "Link a PR with an Issue / Project item",
 		RunE: func(c *cobra.Command, args []string) error {
 			return runLink(c.Context(), c, deps, args)
 		},
 	}
+	addJSONFlags(c)
+	return c
 }
 
 func runLink(ctx context.Context, c *cobra.Command, deps Deps, args []string) error {
 	r, err := deps.Resolve(c)
 	if err != nil {
 		return localizedError(c, r, err)
+	}
+	jsonReq, jsonOn, err := resolveJSONRequest(c, r, linkJSONFields)
+	if err != nil {
+		return err
 	}
 	pr, task, ok := parseLinkArgs(args)
 	if !ok {
@@ -45,12 +51,12 @@ func runLink(ctx context.Context, c *cobra.Command, deps Deps, args []string) er
 		return localizedError(c, r, err)
 	}
 	if sc == scope.Repo {
-		return runLinkRepo(ctx, c, deps, r, pr, task)
+		return runLinkRepo(ctx, c, deps, r, pr, task, jsonOn, jsonReq)
 	}
-	return runLinkProject(ctx, c, deps, r, sc, pr, task)
+	return runLinkProject(ctx, c, deps, r, sc, pr, task, jsonOn, jsonReq)
 }
 
-func runLinkRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, pr, task int) error {
+func runLinkRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, pr, task int, jsonOn bool, jsonReq jsonRequest) error {
 	id, err := repo.Resolve(repo.ResolveOptions{Flag: flagString(c, "repo"), GetRemoteURL: deps.GetRemoteURL})
 	if err != nil {
 		return localizedError(c, r, err)
@@ -70,6 +76,14 @@ func runLinkRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 	}
 	prNode := prResp.Repository.PullRequest
 	if ContainsCloseLink(prNode.Body, task) {
+		if jsonOn {
+			return renderJSONItems(c, r, []map[string]any{{
+				"id": prNode.Id, "number": prNode.Number, "state": "OPEN",
+				"title": nil, "type": "PULL_REQUEST", "updatedAt": nil, "url": prNode.Url,
+				"linkType": "closesAdded",
+				"linkedTo": nil,
+			}}, jsonReq, linkJSONFields)
+		}
 		fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("link.alreadyLinked"), prNode.Url)
 		return nil
 	}
@@ -80,11 +94,20 @@ func runLinkRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 	if err != nil {
 		return wrapTransport(c.ErrOrStderr(), r.Locale, "update pull request body", err)
 	}
+	if jsonOn {
+		return renderJSONItems(c, r, []map[string]any{{
+			"id": updated.UpdatePullRequest.PullRequest.Id, "number": prNode.Number,
+			"state": "OPEN", "title": nil, "type": "PULL_REQUEST",
+			"updatedAt": nil, "url": updated.UpdatePullRequest.PullRequest.Url,
+			"linkType": "closesAdded",
+			"linkedTo": map[string]any{"number": task, "type": "ISSUE"},
+		}}, jsonReq, linkJSONFields)
+	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("link.added"), updated.UpdatePullRequest.PullRequest.Url)
 	return nil
 }
 
-func runLinkProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, pr, task int) error {
+func runLinkProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, pr, task int, jsonOn bool, jsonReq jsonRequest) error {
 	pref, err := project.Resolve(project.ResolveOptions{
 		Scope:       sc,
 		Flag:        flagString(c, "project"),
@@ -138,6 +161,20 @@ func runLinkProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		ContentId: issueResp.Repository.Issue.Id,
 	}); err != nil {
 		return wrapTransport(c.ErrOrStderr(), r.Locale, "add issue to project", err)
+	}
+	if jsonOn {
+		return renderJSONItems(c, r, []map[string]any{{
+			"id": prResp.Repository.PullRequest.Id, "number": prResp.Repository.PullRequest.Number,
+			"state": "OPEN", "title": nil, "type": "PULL_REQUEST",
+			"updatedAt": nil, "url": prResp.Repository.PullRequest.Url,
+			"linkType": "projectBind",
+			"linkedTo": map[string]any{
+				"id":     issueResp.Repository.Issue.Id,
+				"number": issueResp.Repository.Issue.Number,
+				"type":   "ISSUE",
+				"url":    issueResp.Repository.Issue.Url,
+			},
+		}}, jsonReq, linkJSONFields)
 	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s ↔ %s\n",
 		r.T("link.added.project"),

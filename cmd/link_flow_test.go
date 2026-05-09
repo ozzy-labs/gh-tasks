@@ -137,3 +137,44 @@ func TestLink_ProjectDualAdd(t *testing.T) {
 		t.Errorf("expected link.added.project prefix, got:\n%s", stdout.String())
 	}
 }
+
+// TestLink_JSONRepoCloses pins the --json output for the repo path: a
+// single-element JSON array carrying the PR row plus linkType=
+// "closesAdded" and a linkedTo object with the target Issue number.
+func TestLink_JSONRepoCloses(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{
+			MatchSubstring: "query GetPullRequestByNumber (",
+			Data: map[string]any{"repository": map[string]any{"pullRequest": map[string]any{
+				"id": "PR_1", "number": 12, "url": "https://github.com/ozzy-labs/gh-tasks/pull/12", "body": "Initial",
+			}}},
+		},
+		{
+			MatchSubstring: "mutation UpdatePullRequest (",
+			Data: map[string]any{"updatePullRequest": map[string]any{"pullRequest": map[string]any{
+				"id": "PR_1", "number": 12, "url": "https://github.com/ozzy-labs/gh-tasks/pull/12",
+			}}},
+		},
+	}}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "link", "12", "42", "--json", "id,number,type,linkType,linkedTo")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	assertJSONLength(t, stdout.String(), 1)
+	assertJSONFieldEquals(t, stdout.String(), 0, "id", "PR_1")
+	assertJSONFieldEquals(t, stdout.String(), 0, "number", 12)
+	assertJSONFieldEquals(t, stdout.String(), 0, "type", "PULL_REQUEST")
+	assertJSONFieldEquals(t, stdout.String(), 0, "linkType", "closesAdded")
+	// linkedTo is an object — verify the nested number field.
+	rows := parseJSONArray(t, stdout.String())
+	linkedTo, _ := rows[0]["linkedTo"].(map[string]any)
+	if linkedTo == nil {
+		t.Fatalf("expected linkedTo object, got: %v", rows[0]["linkedTo"])
+	}
+	if got, _ := linkedTo["number"].(float64); int(got) != 42 {
+		t.Errorf("linkedTo.number = %v; want 42", linkedTo["number"])
+	}
+}
