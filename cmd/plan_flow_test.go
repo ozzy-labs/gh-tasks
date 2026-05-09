@@ -653,18 +653,62 @@ func TestPlan_JSONPreviewRepo(t *testing.T) {
 	assertJSONFieldEquals(t, stdout.String(), 0, "type", "ISSUE")
 }
 
-// TestPlan_JSONWithWriteRejected pins the Phase 1 carve-out: combining
-// --json with --write returns ErrSilentArgs and emits the localized
-// guidance. Phase 2 (#367 follow-up) will lift this restriction once
-// mutation results have a stable JSON shape.
-func TestPlan_JSONWithWriteRejected(t *testing.T) {
+// TestPlan_JSONWriteRepoBound pins the --write + --json contract for
+// repo scope: after the milestone is created and issues are bound, the
+// stdout JSON array carries the bound items (id / number / title /
+// type / url / state / updatedAt). Text output continues to flow to
+// stdout *before* the JSON, but the assertion targets the JSON tail
+// (parseJSONArray locates the array boundary).
+func TestPlan_JSONWriteRepoBound(t *testing.T) {
 	t.Parallel()
 
-	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{}}
-	d := testDeps(g)
-	_, stderr, err := runCmd(t, d, "plan", "--period", "daily", "--json", "id", "--write")
-	if !errors.Is(err, cmd.ErrSilent) {
-		t.Fatalf("expected ErrSilent for --json + --write, got %v", err)
+	rest := &recordingREST{responses: []restResponse{
+		{
+			matchMethod: "POST",
+			matchPath:   "/milestones",
+			data:        map[string]any{"node_id": "M_NEW", "id": 999, "number": 12, "title": "Daily 2026-05-04"},
+		},
+	}}
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{
+			MatchSubstring: "query ListRepoIssuesWithMilestone (",
+			Data: map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{
+				map[string]any{
+					"id": "I_a", "number": 1, "title": "Bound", "url": "u/1",
+					"updatedAt": "2026-05-04T08:00:00Z",
+					"milestone": nil,
+				},
+			}}}},
+		},
+		{
+			MatchSubstring: "query ListMilestones (",
+			Data:           map[string]any{"repository": map[string]any{"milestones": map[string]any{"nodes": []any{}}}},
+		},
+		{
+			MatchSubstring: "mutation UpdateIssueMilestone (",
+			Data: map[string]any{"updateIssue": map[string]any{"issue": map[string]any{
+				"id": "I_a", "number": 1, "url": "u/1",
+				"milestone": map[string]any{"id": "M_NEW", "number": 12, "title": "Daily 2026-05-04"},
+			}}},
+		},
+	}}
+	d := testDeps(g, func(d *cmd.Deps) {
+		d.NewClients = func() (*github.Clients, error) {
+			return newClientsWithREST(g, rest), nil
+		}
+	})
+	stdout, _, err := runCmd(t, d, "plan", "--period", "daily", "--write", "--json", "id,number,title,type,state")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
 	}
-	assertI18nMessage(t, stderr.String(), i18n.LocaleEN, "error.json.writeNotSupported")
+	// stdout has the text milestone progress lines AND the JSON array
+	// at the end. Use a substring locator (jsonArrayTail) so the test
+	// stays robust to future text-line additions.
+	jsonOnly := jsonArrayTail(stdout.String())
+	assertJSONLength(t, jsonOnly, 1)
+	assertJSONFieldEquals(t, jsonOnly, 0, "id", "I_a")
+	assertJSONFieldEquals(t, jsonOnly, 0, "number", 1)
+	assertJSONFieldEquals(t, jsonOnly, 0, "title", "Bound")
+	assertJSONFieldEquals(t, jsonOnly, 0, "type", "ISSUE")
+	assertJSONFieldEquals(t, jsonOnly, 0, "state", "OPEN")
 }

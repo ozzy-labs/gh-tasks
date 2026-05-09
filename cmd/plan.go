@@ -48,10 +48,6 @@ func runPlan(ctx context.Context, c *cobra.Command, deps Deps) error {
 	}
 	pflag, _ := c.Flags().GetString("period")
 	write, _ := c.Flags().GetBool("write")
-	if jsonOn && write {
-		fmt.Fprintln(c.ErrOrStderr(), r.T("error.json.writeNotSupported"))
-		return ErrSilentArgs
-	}
 	p, err := period.Parse(pflag)
 	if err != nil {
 		return localizedError(c, r, err)
@@ -100,10 +96,10 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 			inRange = append(inRange, n)
 		}
 	}
-	if jsonOn {
-		// preview-only contract: --json + --write was rejected upfront,
-		// so we always reach this branch with write == false. Emit the
-		// candidate list as a flat JSON array using the shared catalog.
+	if jsonOn && !write {
+		// preview-only path: emit the candidate list as a flat JSON
+		// array. write-mode JSON falls through to the bind loop below
+		// and emits the bound items at the end.
 		rows := make([]map[string]any, 0, len(inRange))
 		for _, n := range inRange {
 			rows = append(rows, map[string]any{
@@ -167,12 +163,14 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 		fmt.Fprintf(out, "%s: %s (#%d)\n", r.T("plan.created"), title, created.Number)
 	}
 
+	bound := []*queries.RepoIssueWithMilestone{}
 	for _, n := range inRange {
 		if n.Milestone != nil && n.Milestone.Id != milestoneID {
 			fmt.Fprintf(out, "  %s: #%d → %s\n", r.T("plan.skippedExisting"), n.Number, n.Milestone.Title)
 			continue
 		}
 		if n.Milestone != nil && n.Milestone.Id == milestoneID {
+			bound = append(bound, n)
 			continue
 		}
 		updateInput := queries.NewUpdateIssueInput(n.Id)
@@ -180,9 +178,20 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 		if _, err := queries.UpdateIssueMilestone(ctx, gqlClient, updateInput); err != nil {
 			return wrapTransport(c.ErrOrStderr(), r.Locale, fmt.Sprintf("update issue milestone (issue #%d)", n.Number), err)
 		}
+		bound = append(bound, n)
 		fmt.Fprintf(out, "  %s: #%d\n", r.T("plan.linked"), n.Number)
 	}
 	fmt.Fprintf(out, "\nhttps://github.com/%s/%s/milestone/%d\n", id.Owner, id.Name, milestoneNumber)
+	if jsonOn {
+		rows := make([]map[string]any, 0, len(bound))
+		for _, n := range bound {
+			rows = append(rows, map[string]any{
+				"id": n.Id, "number": n.Number, "state": "OPEN",
+				"title": n.Title, "type": "ISSUE", "updatedAt": n.UpdatedAt, "url": n.Url,
+			})
+		}
+		return renderJSONItems(c, r, rows, jsonReq, itemJSONFields)
+	}
 	return nil
 }
 
@@ -257,8 +266,8 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 			inRange = append(inRange, item)
 		}
 	}
-	if jsonOn {
-		// preview-only contract (see runPlanRepo for rationale).
+	if jsonOn && !write {
+		// preview-only path (see runPlanRepo for rationale).
 		return renderJSONItems(c, r, projectItemRowsToJSON(inRange), jsonReq, itemJSONFields)
 	}
 	if len(inRange) == 0 {
@@ -277,9 +286,11 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		fmt.Fprintln(out, r.T("plan.previewNote.project"))
 		return nil
 	}
+	bound := []*queries.ProjectV2ItemNode{}
 	for _, item := range inRange {
 		if isAlreadyOnIteration(item, itField.ID, resolved.iteration.ID) {
 			fmt.Fprintf(out, "  %s: %s\n", r.T("plan.iterationAlreadySet.project"), describeItem(item))
+			bound = append(bound, item)
 			continue
 		}
 		if _, err := queries.UpdateProjectV2ItemFieldValue(ctx, gqlClient, &queries.UpdateProjectV2ItemFieldValueInput{
@@ -291,6 +302,10 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 			return wrapTransport(c.ErrOrStderr(), r.Locale, fmt.Sprintf("update item field value (%s)", describeItem(item)), err)
 		}
 		fmt.Fprintf(out, "  %s: %s\n", r.T("plan.iterationUpdated.project"), describeItem(item))
+		bound = append(bound, item)
+	}
+	if jsonOn {
+		return renderJSONItems(c, r, projectItemRowsToJSON(bound), jsonReq, itemJSONFields)
 	}
 	return nil
 }

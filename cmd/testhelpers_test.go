@@ -333,3 +333,17 @@ func assertJSONLength(t *testing.T, stdout string, want int) {
 		t.Errorf("len(rows) = %d; want %d, stdout=%s", len(rows), want, stdout)
 	}
 }
+
+// jsonArrayTail extracts the trailing `[...]` JSON array from a stdout
+// stream that mixes text-mode progress lines with a final JSON payload.
+// Used by `plan --write --json` tests where the human-readable mutation
+// progress is preserved alongside the structured tail. Returns the
+// original stdout when no `[` is found so the caller's assertions still
+// fail informatively.
+func jsonArrayTail(stdout string) string {
+	idx := strings.LastIndex(stdout, "[")
+	if idx < 0 {
+		return stdout
+	}
+	return stdout[idx:]
+}
