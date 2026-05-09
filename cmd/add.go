@@ -89,8 +89,8 @@ func runAddRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, ti
 		// need the timestamp can re-fetch via gh tasks list --json.
 		return renderJSONItems(c, r, []map[string]any{{
 			"id": resp.CreateIssue.Issue.Id, "number": resp.CreateIssue.Issue.Number,
-			"state": "OPEN", "title": title, "type": "ISSUE",
-			"updatedAt": nil, "url": resp.CreateIssue.Issue.Url,
+			"state": "OPEN", "title": resp.CreateIssue.Issue.Title, "type": "ISSUE",
+			"updatedAt": resp.CreateIssue.Issue.UpdatedAt, "url": resp.CreateIssue.Issue.Url,
 		}}, jsonReq, itemJSONFields)
 	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("add.created.repo"), resp.CreateIssue.Issue.Url)
@@ -134,7 +134,7 @@ func runAddProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 		return renderJSONItems(c, r, []map[string]any{{
 			"id": resp.AddProjectV2DraftIssue.ProjectItem.Id, "number": 0,
 			"state": "", "title": title, "type": "DRAFT_ISSUE",
-			"updatedAt": nil, "url": "",
+			"updatedAt": resp.AddProjectV2DraftIssue.ProjectItem.UpdatedAt, "url": "",
 		}}, jsonReq, itemJSONFields)
 	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("add.created.project"), resp.AddProjectV2DraftIssue.ProjectItem.Id)

@@ -80,7 +80,7 @@ func runLinkRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 		if jsonOn {
 			return renderJSONItems(c, r, []map[string]any{{
 				"id": prNode.Id, "number": prNode.Number, "state": "OPEN",
-				"title": nil, "type": "PULL_REQUEST", "updatedAt": nil, "url": prNode.Url,
+				"title": prNode.Title, "type": "PULL_REQUEST", "updatedAt": prNode.UpdatedAt, "url": prNode.Url,
 				"linkType": "closesAdded",
 				"linkedTo": nil,
 			}}, jsonReq, linkJSONFields)
@@ -98,8 +98,8 @@ func runLinkRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 	if jsonOn {
 		return renderJSONItems(c, r, []map[string]any{{
 			"id": updated.UpdatePullRequest.PullRequest.Id, "number": prNode.Number,
-			"state": "OPEN", "title": nil, "type": "PULL_REQUEST",
-			"updatedAt": nil, "url": updated.UpdatePullRequest.PullRequest.Url,
+			"state": "OPEN", "title": updated.UpdatePullRequest.PullRequest.Title, "type": "PULL_REQUEST",
+			"updatedAt": updated.UpdatePullRequest.PullRequest.UpdatedAt, "url": updated.UpdatePullRequest.PullRequest.Url,
 			"linkType": "closesAdded",
 			"linkedTo": map[string]any{"number": task, "type": "ISSUE"},
 		}}, jsonReq, linkJSONFields)
@@ -166,12 +166,13 @@ func runLinkProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	if jsonOn {
 		return renderJSONItems(c, r, []map[string]any{{
 			"id": prResp.Repository.PullRequest.Id, "number": prResp.Repository.PullRequest.Number,
-			"state": "OPEN", "title": nil, "type": "PULL_REQUEST",
-			"updatedAt": nil, "url": prResp.Repository.PullRequest.Url,
+			"state": "OPEN", "title": prResp.Repository.PullRequest.Title, "type": "PULL_REQUEST",
+			"updatedAt": prResp.Repository.PullRequest.UpdatedAt, "url": prResp.Repository.PullRequest.Url,
 			"linkType": "projectBind",
 			"linkedTo": map[string]any{
 				"id":     issueResp.Repository.Issue.Id,
 				"number": issueResp.Repository.Issue.Number,
+				"title":  issueResp.Repository.Issue.Title,
 				"type":   "ISSUE",
 				"url":    issueResp.Repository.Issue.Url,
 			},

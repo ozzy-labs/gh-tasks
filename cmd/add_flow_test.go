@@ -165,10 +165,9 @@ func TestAdd_RepoMissingRepository(t *testing.T) {
 
 // TestAdd_JSONRepoCreated pins the --json output for the repo path: a
 // single-element JSON array carrying the created Issue's id / number /
-// title / type / url. updatedAt is null because the CreateIssue mutation
-// response does not return that field — selected fields always appear
-// per the contract, so null is the explicit signal here rather than a
-// missing key.
+// title / type / updatedAt / url. After PR 7 of #376 the CreateIssue
+// mutation now returns updatedAt, so the contract carries a real RFC
+// 3339 timestamp instead of null.
 func TestAdd_JSONRepoCreated(t *testing.T) {
 	t.Parallel()
 
@@ -180,7 +179,9 @@ func TestAdd_JSONRepoCreated(t *testing.T) {
 		{
 			MatchSubstring: "mutation CreateIssue (",
 			Data: map[string]any{"createIssue": map[string]any{"issue": map[string]any{
-				"id": "I_new", "number": 123, "url": "https://github.com/ozzy-labs/gh-tasks/issues/123",
+				"id": "I_new", "number": 123, "title": "Fix login",
+				"url":       "https://github.com/ozzy-labs/gh-tasks/issues/123",
+				"updatedAt": "2026-05-04T08:00:00Z",
 			}}},
 		},
 	}}
@@ -194,7 +195,7 @@ func TestAdd_JSONRepoCreated(t *testing.T) {
 	assertJSONFieldEquals(t, stdout.String(), 0, "number", 123)
 	assertJSONFieldEquals(t, stdout.String(), 0, "title", "Fix login")
 	assertJSONFieldEquals(t, stdout.String(), 0, "type", "ISSUE")
-	assertJSONFieldEquals(t, stdout.String(), 0, "updatedAt", nil)
+	assertJSONFieldEquals(t, stdout.String(), 0, "updatedAt", "2026-05-04T08:00:00Z")
 	assertJSONFieldEquals(t, stdout.String(), 0, "url", "https://github.com/ozzy-labs/gh-tasks/issues/123")
 }
 
