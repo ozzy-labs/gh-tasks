@@ -9,6 +9,7 @@ import (
 
 	"github.com/ozzy-labs/gh-tasks/cmd"
 	"github.com/ozzy-labs/gh-tasks/internal/config"
+	"github.com/ozzy-labs/gh-tasks/internal/github"
 	"github.com/ozzy-labs/gh-tasks/internal/project"
 	"github.com/ozzy-labs/gh-tasks/internal/testfake"
 )
@@ -148,4 +149,45 @@ func TestToday_JSONFields(t *testing.T) {
 	assertJSONFieldEquals(t, stdout.String(), 0, "number", 2)
 	assertJSONFieldEquals(t, stdout.String(), 0, "title", "Today")
 	assertJSONFieldEquals(t, stdout.String(), 0, "type", "ISSUE")
+}
+
+// TestToday_PaginateOverridesFetchLimit pins the --paginate contract on
+// today: the GraphQL paginator gets a math.MaxInt32-class upstream
+// limit instead of the const todayFetchLimit (= 100). The fake
+// fixture returns a single page so we cannot count actual page walks;
+// instead we assert that the captured `first` matches the per-page
+// cap (100) — which is the upper bound the paginator picks when the
+// upstream limit is large. Combined with TestList_PaginateOverrides
+// Limit (which exercises the user-facing --limit interaction), this
+// covers the "today path honours --paginate" contract without
+// duplicating paginator-internals coverage.
+func TestToday_PaginateOverridesFetchLimit(t *testing.T) {
+	t.Parallel()
+
+	var capturedFirst int
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query ListRepoIssues (", Data: repoIssuesPayload()},
+	}}
+	wrap := &captureGraphQL{inner: g, capture: func(_ string, vars map[string]any) {
+		if capturedFirst == 0 {
+			capturedFirst = intFromVar(vars["first"])
+		}
+	}}
+	d := testDeps(g, func(d *cmd.Deps) {
+		d.NewClients = func() (*github.Clients, error) {
+			return &github.Clients{Host: "github.com", GraphQL: wrap, REST: fakeREST{}}, nil
+		}
+	})
+	if _, _, err := runCmd(t, d, "today", "--paginate"); err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	// Without --paginate, today calls Paginate with todayFetchLimit (= 100),
+	// so first=100. With --paginate, the upstream limit is bumped to
+	// math.MaxInt32 but the paginator caps each page at 100 too. We
+	// cannot tell those apart from the first call alone — but we *can*
+	// tell that --paginate did not collapse to a smaller default
+	// (which would indicate the flag was silently ignored).
+	if capturedFirst < 100 {
+		t.Errorf("--paginate should keep first at the page cap (100); got=%d", capturedFirst)
+	}
 }

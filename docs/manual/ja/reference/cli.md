@@ -13,7 +13,7 @@
 
 ### 構造化出力
 
-read 系コマンド(`list` / `today` / `triage` / `plan` preview / `standup` / `review`)と `add` は `--json [fields]` / `--jq <query>` で機械可読な出力に切り替えられる。フィールドカタログ・契約・利用例は [json-output.md](./json-output.md) を参照。
+全コマンド(read 系と mutation 系: `add` / `done` / `link` / `plan --write` / `projects init` / `init-templates`)が `--json [fields]` / `--jq <query>` で機械可読な出力に切り替えられる。`--json` は tab 補完対応、`--paginate` で read 系コマンド(`list` / `today` / `triage` / `standup` / `review`)の全件取得も可能。フィールドカタログ・契約・利用例は [json-output.md](./json-output.md) を参照。
 
 ## コマンド
 
