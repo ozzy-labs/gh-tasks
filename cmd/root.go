@@ -8,7 +8,7 @@ import (
 // on each release via the x-release-please-version annotation below; the value
 // committed in main between releases is the prior tag (i.e. matches what `gh
 // extension install` would have fetched at that point).
-var Version = "0.3.0" // x-release-please-version
+var Version = "0.4.0" // x-release-please-version
 
 // Root constructs the gh-tasks cobra root command using DefaultDeps.
 func Root() *cobra.Command {
