@@ -20,3 +20,5 @@
 | 0006 | [Go 1.25 + cobra + `cli/gh-extension-precompile@v2` への完全移行](./0006-go-and-cobra-migration.md) | Accepted |
 | 0007 | [GitHub API は `cli/go-gh/v2` 経由で叩く](./0007-go-gh-graphql-client.md) | Accepted |
 | 0008 | [Go テスト・品質チェーン: `testing` + `go-cmp` + `golangci-lint v2` + `govulncheck`](./0008-go-test-and-quality-chain.md) | Accepted |
+| 0009 | [GraphQL wire format テストと E2E 戦略](./0009-wire-format-and-e2e-strategy.md) | Accepted |
+| 0010 | [`--json [fields]` / `--jq <query>` を全コマンドの構造化出力契約として採用](./0010-json-output-contract.md) | Accepted |
