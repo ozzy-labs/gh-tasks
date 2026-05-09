@@ -29,6 +29,7 @@ func newTriageCmd(deps Deps) *cobra.Command {
 		},
 	}
 	c.Flags().Int("limit", triageDefaultLimit, "max number of untriaged items to show")
+	addJSONFlags(c)
 	return c
 }
 
@@ -36,6 +37,10 @@ func runTriage(ctx context.Context, c *cobra.Command, deps Deps) error {
 	r, err := deps.Resolve(c)
 	if err != nil {
 		return localizedError(c, r, err)
+	}
+	jsonReq, jsonOn, err := resolveJSONRequest(c, r, itemJSONFields)
+	if err != nil {
+		return err
 	}
 	sc, err := scope.Detect(scope.DetectOptions{
 		Flag:         flagString(c, "scope"),
@@ -50,12 +55,12 @@ func runTriage(ctx context.Context, c *cobra.Command, deps Deps) error {
 		limit = triageDefaultLimit
 	}
 	if sc == scope.Repo {
-		return runTriageRepo(ctx, c, deps, r, limit)
+		return runTriageRepo(ctx, c, deps, r, limit, jsonOn, jsonReq)
 	}
-	return runTriageProject(ctx, c, deps, r, sc, limit)
+	return runTriageProject(ctx, c, deps, r, sc, limit, jsonOn, jsonReq)
 }
 
-func runTriageRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, limit int) error {
+func runTriageRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, limit int, jsonOn bool, jsonReq jsonRequest) error {
 	id, err := repo.Resolve(repo.ResolveOptions{Flag: flagString(c, "repo"), GetRemoteURL: deps.GetRemoteURL})
 	if err != nil {
 		return localizedError(c, r, err)
@@ -78,16 +83,28 @@ func runTriageRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 		URL    string
 	}
 	hits := []triageHit{}
+	hitsRaw := []*queries.RepoIssueWithLabel{}
 	for _, n := range issues {
 		if n == nil {
 			continue
 		}
 		if len(n.Labels.Nodes) == 0 {
 			hits = append(hits, triageHit{Number: n.Number, Title: n.Title, URL: n.Url})
+			hitsRaw = append(hitsRaw, n)
 			if len(hits) >= limit {
 				break
 			}
 		}
+	}
+	if jsonOn {
+		rows := make([]map[string]any, 0, len(hitsRaw))
+		for _, n := range hitsRaw {
+			rows = append(rows, map[string]any{
+				"id": n.Id, "number": n.Number, "title": n.Title,
+				"type": "ISSUE", "updatedAt": n.UpdatedAt, "url": n.Url,
+			})
+		}
+		return renderJSONItems(c, r, rows, jsonReq, itemJSONFields)
 	}
 	if len(hits) == 0 {
 		fmt.Fprintln(c.OutOrStdout(), r.T("triage.empty"))
@@ -100,7 +117,7 @@ func runTriageRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 	return nil
 }
 
-func runTriageProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, limit int) error {
+func runTriageProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, limit int, jsonOn bool, jsonReq jsonRequest) error {
 	pref, err := project.Resolve(project.ResolveOptions{
 		Scope:       sc,
 		Flag:        flagString(c, "project"),
@@ -141,6 +158,9 @@ func runTriageProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 				break
 			}
 		}
+	}
+	if jsonOn {
+		return renderJSONItems(c, r, projectItemRowsToJSON(hits), jsonReq, itemJSONFields)
 	}
 	if len(hits) == 0 {
 		fmt.Fprintln(c.OutOrStdout(), r.T("triage.empty.project"))

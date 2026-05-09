@@ -100,3 +100,35 @@ func TestTriage_ProjectStatusTriageFilter(t *testing.T) {
 		t.Errorf("non-triage item leaked: %s", got)
 	}
 }
+
+// TestTriage_JSONFields pins that --json on `triage` returns only the
+// unlabelled / triage-status hits with the shared 6-field DTO. Already-
+// triaged items must be filtered out before the DTO is constructed.
+func TestTriage_JSONFields(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{
+			MatchSubstring: "query ListRepoIssuesWithLabels (",
+			Data: map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{
+				map[string]any{
+					"id": "I_u", "number": 1, "title": "Untriaged", "url": "u/1", "updatedAt": "2026-05-04T08:00:00Z",
+					"labels": map[string]any{"nodes": []any{}},
+				},
+				map[string]any{
+					"id": "I_l", "number": 2, "title": "Triaged", "url": "u/2", "updatedAt": "2026-05-04T08:00:00Z",
+					"labels": map[string]any{"nodes": []any{map[string]any{"name": "bug"}}},
+				},
+			}}}},
+		},
+	}}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "triage", "--json", "id,number,title,type")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	assertJSONLength(t, stdout.String(), 1)
+	assertJSONFieldEquals(t, stdout.String(), 0, "id", "I_u")
+	assertJSONFieldEquals(t, stdout.String(), 0, "title", "Untriaged")
+	assertJSONFieldEquals(t, stdout.String(), 0, "type", "ISSUE")
+}

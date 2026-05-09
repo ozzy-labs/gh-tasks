@@ -137,5 +137,6 @@
   "error.install.manifestParseFailed": "Could not parse manifest '{path}': {reason}",
   "error.install.loadSkills": "Could not load embedded skill SSOT: {reason}",
   "error.install.namespaceRename": "Could not apply --namespace '{namespace}': {reason}",
-  "error.json.jqWithoutJson": "--jq requires --json. Pass --json with one or more fields (run --json with no value to list available fields)."
+  "error.json.jqWithoutJson": "--jq requires --json. Pass --json with one or more fields (run --json with no value to list available fields).",
+  "error.json.writeNotSupported": "--json output for --write is not supported in this version. Run without --write to preview as JSON, or omit --json to apply the changes."
 }
