@@ -112,17 +112,29 @@ func newProjectsInitCmd(deps Deps) *cobra.Command {
 	c.Flags().String("owner", "@me", "owner login (or @me for the viewer)")
 	c.Flags().String("title", "", "Project v2 title (required)")
 	c.Flags().Bool("dry-run", false, "print the planned creation without mutating GitHub")
+	addJSONFlags(c)
 	return c
 }
 
 func newProjectsInitTemplatesCmd(deps Deps) *cobra.Command {
-	return &cobra.Command{
+	c := &cobra.Command{
 		Use:   "init-templates",
 		Short: "Print the bundled `user` / `org` Project v2 field templates",
 		RunE: func(c *cobra.Command, _ []string) error {
 			r, err := deps.Resolve(c)
 			if err != nil {
 				return localizedError(c, r, err)
+			}
+			jsonReq, jsonOn, err := resolveJSONRequest(c, r, projectInitJSONFields)
+			if err != nil {
+				return err
+			}
+			if jsonOn {
+				rows := []map[string]any{
+					projectTemplateJSONRow("user", bundledUserTemplate),
+					projectTemplateJSONRow("org", bundledOrgTemplate),
+				}
+				return renderJSONItems(c, r, rows, jsonReq, projectInitJSONFields)
 			}
 			out := c.OutOrStdout()
 			fmt.Fprintln(out, "# --template user")
@@ -133,6 +145,42 @@ func newProjectsInitTemplatesCmd(deps Deps) *cobra.Command {
 			return nil
 		},
 	}
+	addJSONFlags(c)
+	return c
+}
+
+// projectTemplateJSONRow shapes a bundled YAML template into the
+// projectInitJSONFields catalog row. `id` / `number` / `url` / `owner`
+// are blank/zero because no project has been created yet.
+func projectTemplateJSONRow(templateName, raw string) map[string]any {
+	parsed, _ := parseTemplateBytes([]byte(raw))
+	return map[string]any{
+		"id":       "",
+		"number":   0,
+		"title":    "",
+		"url":      "",
+		"owner":    "",
+		"template": templateName,
+		"fields":   templateFieldsJSON(parsed.Fields),
+	}
+}
+
+// templateFieldsJSON converts parsed template fields into JSON-friendly
+// objects. `options` is omitted (null) for fields without options.
+func templateFieldsJSON(fields []templateField) []map[string]any {
+	out := make([]map[string]any, 0, len(fields))
+	for _, f := range fields {
+		row := map[string]any{
+			"name":     f.Name,
+			"dataType": f.Type,
+			"options":  nil,
+		}
+		if len(f.Options) > 0 {
+			row["options"] = append([]string{}, f.Options...)
+		}
+		out = append(out, row)
+	}
+	return out
 }
 
 type templateField struct {
@@ -155,6 +203,10 @@ func runProjectsInit(ctx context.Context, c *cobra.Command, deps Deps, yamlPath 
 	r, err := deps.Resolve(c)
 	if err != nil {
 		return localizedError(c, r, err)
+	}
+	jsonReq, jsonOn, err := resolveJSONRequest(c, r, projectInitJSONFields)
+	if err != nil {
+		return err
 	}
 	title, _ := c.Flags().GetString("title")
 	if title == "" {
@@ -199,6 +251,17 @@ func runProjectsInit(ctx context.Context, c *cobra.Command, deps Deps, yamlPath 
 	}
 
 	if dryRun {
+		if jsonOn {
+			return renderJSONItems(c, r, []map[string]any{{
+				"id":       "",
+				"number":   0,
+				"title":    title,
+				"url":      "",
+				"owner":    owner,
+				"template": tpl,
+				"fields":   fieldInputsJSON(fields),
+			}}, jsonReq, projectInitJSONFields)
+		}
 		fmt.Fprintln(c.OutOrStdout(),
 			r.T("projectsInit.dryRunHeader", "title", title, "owner", owner))
 		for _, f := range fields {
@@ -254,6 +317,7 @@ func runProjectsInit(ctx context.Context, c *cobra.Command, deps Deps, yamlPath 
 		existingNames[strings.ToLower(f.Name)] = true
 	}
 
+	createdFields := []map[string]any{}
 	for _, f := range fields {
 		if existingNames[strings.ToLower(f.Name)] {
 			fmt.Fprintln(c.OutOrStdout(),
@@ -284,8 +348,48 @@ func runProjectsInit(ctx context.Context, c *cobra.Command, deps Deps, yamlPath 
 			r.T("projectsInit.fieldCreated",
 				"name", name,
 				"dataType", dataType))
+		createdFields = append(createdFields, fieldInputJSONRow(f))
+	}
+	if jsonOn {
+		return renderJSONItems(c, r, []map[string]any{{
+			"id":       project.Id,
+			"number":   project.Number,
+			"title":    title,
+			"url":      project.Url,
+			"owner":    owner,
+			"template": tpl,
+			"fields":   createdFields,
+		}}, jsonReq, projectInitJSONFields)
 	}
 	return nil
+}
+
+// fieldInputsJSON / fieldInputJSONRow lift fieldInput slices into the
+// JSON-friendly object shape exposed via projectInitJSONFields. Used by
+// the dry-run path (planned set) and the post-creation path (actually-
+// created set, minus skipped duplicates).
+func fieldInputsJSON(fields []fieldInput) []map[string]any {
+	out := make([]map[string]any, 0, len(fields))
+	for _, f := range fields {
+		out = append(out, fieldInputJSONRow(f))
+	}
+	return out
+}
+
+func fieldInputJSONRow(f fieldInput) map[string]any {
+	row := map[string]any{
+		"name":     f.Name,
+		"dataType": f.DataType,
+		"options":  nil,
+	}
+	if len(f.SingleSelectOptions) > 0 {
+		names := make([]string, len(f.SingleSelectOptions))
+		for i, o := range f.SingleSelectOptions {
+			names[i] = o["name"]
+		}
+		row["options"] = names
+	}
+	return row
 }
 
 // projectV2FieldDescriptor extracts the (name, dataType) of a newly-created

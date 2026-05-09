@@ -39,6 +39,19 @@ var linkJSONFields = append(append(jsonout.FieldList{}, itemJSONFields...),
 	jsonout.Field{Name: "linkedTo", Description: "Target task that the PR was linked to. Object `{id, number, type, url}` or null when the link was already in place"},
 )
 
+// projectInitJSONFields is the catalog for `projects init` and
+// `projects init-templates`. Each row describes a Project v2 (created
+// or template) plus its field definitions.
+var projectInitJSONFields = jsonout.FieldList{
+	{Name: "id", Description: "GraphQL global ID of the created Project v2 (empty for --dry-run / init-templates)"},
+	{Name: "number", Description: "Project v2 number (0 for --dry-run / init-templates)"},
+	{Name: "title", Description: "Project title"},
+	{Name: "url", Description: "Project URL on github.com (empty for --dry-run / init-templates)"},
+	{Name: "owner", Description: "Owner login (`@me` resolved to the actual viewer login at runtime; empty for init-templates)"},
+	{Name: "template", Description: "Template name (`user` / `org`) or empty when a custom yaml path was used"},
+	{Name: "fields", Description: "Array of `{name, dataType, options?}` for the configured field set"},
+}
+
 // jsonRequest carries the resolved --json / --jq flag values from the
 // shared resolver to per-scope handlers.
 type jsonRequest struct {
