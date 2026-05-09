@@ -267,6 +267,11 @@ func TestPlan_ProjectIterationMatched(t *testing.T) {
 	if !strings.Contains(got, "Matched an existing iteration") {
 		t.Errorf("expected plan.iterationMatched.project, got:\n%s", got)
 	}
+	// items は空配列なので runPlanProject は `len(inRange) == 0` 分岐を通り、
+	// preview default のため plan.previewNote.project が `--write` 案内を含む。
+	if !strings.Contains(got, "--write") {
+		t.Errorf("expected preview note pointing at --write, got:\n%s", got)
+	}
 }
 
 func TestPlan_ProjectIterationFallback(t *testing.T) {
@@ -304,6 +309,10 @@ func TestPlan_ProjectIterationFallback(t *testing.T) {
 	if !strings.Contains(stdout.String(), want) && !strings.Contains(stderr.String(), want) {
 		t.Errorf("expected fallback note %q in stdout/stderr, stdout=%s\nstderr=%s",
 			want, stdout.String(), stderr.String())
+	}
+	// preview default のため `--write` 案内が出る。
+	if !strings.Contains(stdout.String(), "--write") {
+		t.Errorf("expected preview note pointing at --write, got:\n%s", stdout.String())
 	}
 }
 
@@ -559,4 +568,56 @@ func TestPlan_ProjectNoIterationsAvailable(t *testing.T) {
 	}
 	assertI18nMessage(t, stderr.String(), i18n.LocaleEN,
 		"error.plan.noIterationsAvailable")
+}
+
+// TestPlan_RepoPreviewEmpty pins the empty-candidates branch in
+// `runPlanRepo`: when ListRepoIssuesWithMilestone returns no in-range
+// nodes, the command must surface `plan.empty` and the preview note
+// (with `--write` guidance), then return without ever calling the
+// milestones list / mutation paths. Regression guard for the
+// `len(inRange) == 0` branch that was previously uncovered.
+func TestPlan_RepoPreviewEmpty(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{
+			MatchSubstring: "query ListRepoIssuesWithMilestone (",
+			Data:           map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{}}}},
+		},
+	}}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "plan", "--period", "daily")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	got := stdout.String()
+	if !strings.Contains(got, "No candidates in this range") {
+		t.Errorf("expected plan.empty, got:\n%s", got)
+	}
+	if !strings.Contains(got, "--write") {
+		t.Errorf("expected preview note pointing at --write, got:\n%s", got)
+	}
+}
+
+// TestPlan_DryRunFlagRemoved pins the BREAKING removal of `--dry-run`
+// from `gh tasks plan` (#319 / PR #365). The flag is gone; passing it
+// must surface cobra's `unknown flag` error so existing scripts fail
+// loudly instead of silently mutating GitHub. This test fixes the new
+// contract — if a future change re-introduces `--dry-run` (e.g. as an
+// alias for the safe path), this guard alerts the author to update
+// migration docs accordingly.
+func TestPlan_DryRunFlagRemoved(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{}}
+	d := testDeps(g)
+	_, _, err := runCmd(t, d, "plan", "--period", "daily", "--dry-run")
+	if err == nil {
+		t.Fatal("expected error for removed --dry-run flag, got nil")
+	}
+	// cobra (root.go) sets SilenceErrors: true so the unknown-flag error
+	// is returned via err rather than written to stderr.
+	if !strings.Contains(err.Error(), "unknown flag") {
+		t.Errorf("expected cobra `unknown flag` error, got: %v", err)
+	}
 }
