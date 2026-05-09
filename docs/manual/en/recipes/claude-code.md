@@ -40,7 +40,7 @@ At the start of the week:
 /task-plan --period weekly --scope user
 ```
 
-The skill first runs `gh tasks plan` with `--dry-run`, presents candidates, then commits when you confirm. Omitting `--scope` falls back to git remote inference.
+The skill first runs `gh tasks plan` (preview by default), presents candidates, then re-runs with `--write` once you confirm. Omitting `--scope` falls back to git remote inference.
 
 ### 2. Inbox triage
 

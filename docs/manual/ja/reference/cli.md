@@ -52,7 +52,7 @@ gh tasks today [--scope ...] [--repo ...] [--project ...]
 日次 / 週次 / sprint 計画。
 
 ```bash
-gh tasks plan [--period daily|weekly|sprint] [--scope ...] [--repo ...] [--project ...] [--dry-run]
+gh tasks plan [--period daily|weekly|sprint] [--scope ...] [--repo ...] [--project ...] [--write]
 ```
 
 - `repo` scope: 期間に対応する Milestone を作成 / 再利用し、`updatedAt` が期間内の open Issue を bind
@@ -61,7 +61,7 @@ gh tasks plan [--period daily|weekly|sprint] [--scope ...] [--repo ...] [--proje
   2. today を含む iteration
   3. 開始日が直近未来の iteration
   4. 上記いずれもなければ最後に利用可能な iteration
-- `--dry-run`: 候補表示のみで mutation は行わない
+- **デフォルトは preview**: `--write` を付けない場合、提案された Milestone / Iteration と候補一覧を表示するだけで GitHub は変更されない。確定後に `--write` を付けて適用する
 - 期間境界は IANA タイムゾーン(`TZ` env → システム tz → UTC フォールバック)のローカル 0 時に揃える。`daily` は 1 日、`weekly` は月曜開始 7 日、`sprint` は今日始まり 14 日
 - `--period` のデフォルトは `weekly`
 

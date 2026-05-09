@@ -14,17 +14,17 @@ locale: ja
 
 - **--period** (任意): `daily` / `weekly` / `sprint` のいずれか。省略時は `weekly`
 - **--scope** (任意): `repo` / `org` / `user`。省略時は git remote から推定
-- **--dry-run** (任意): Milestone 作成・bind を行わず候補一覧のみ表示
+- **--write** (任意): 変更を適用する。指定しない場合は候補表示のみで、Milestone 作成 / Iteration 更新は行わない
 
 ## 手順
 
 1. 直近の未完了 / open Issue / draft を取得して要約する
-2. ユーザーと優先順位を確認する(必要なら `--dry-run` で候補を確認)
-3. `gh tasks plan [--period ...] [--scope ...]` で確定する(repo scope は Milestone を作成 / 再利用して期間内の Issue を bind、org/user scope は Project v2 Iteration を更新)
+2. `gh tasks plan [--period ...] [--scope ...]`(デフォルトは preview)で候補を提示し、ユーザーと優先順位を確認する
+3. 確定したら `--write` を付けて再実行し、変更を適用する(repo scope は Milestone を作成 / 再利用して期間内の Issue を bind、org/user scope は Project v2 Iteration を更新)
 4. 確定した計画一覧をユーザーに提示する
 
 ## 失敗時のフォールバック
 
 - 計画候補が多すぎる: 対象を絞る条件(label / assignee 等)をユーザーに確認
 - Iteration field が未定義: <https://github.com/ozzy-labs/gh-tasks/blob/main/docs/manual/ja/guides/projects-v2-setup.md> の手順を提示
-- 既に別 Milestone に紐付いた Issue: CLI 側で skip され通知されるので、必要に応じて `--dry-run` で事前確認
+- 既に別 Milestone に紐付いた Issue: CLI 側で skip され通知される。再度内容を見直したい場合は `--write` を外して preview を確認

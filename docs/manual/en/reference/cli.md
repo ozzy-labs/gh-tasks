@@ -52,7 +52,7 @@ gh tasks today [--scope ...] [--repo ...] [--project ...]
 Plan a daily / weekly / sprint cycle.
 
 ```bash
-gh tasks plan [--period daily|weekly|sprint] [--scope ...] [--repo ...] [--project ...] [--dry-run]
+gh tasks plan [--period daily|weekly|sprint] [--scope ...] [--repo ...] [--project ...] [--write]
 ```
 
 - `repo` scope: finds-or-creates a Milestone for the period and binds open Issues whose `updatedAt` falls in the period
@@ -61,7 +61,7 @@ gh tasks plan [--period daily|weekly|sprint] [--scope ...] [--repo ...] [--proje
   2. iteration containing today
   3. iteration starting in the nearest future
   4. otherwise the last available iteration
-- `--dry-run`: preview without mutating
+- **Default is preview**: without `--write` the command prints the proposed milestone / iteration and the candidate list, then exits without mutating GitHub. Pass `--write` to apply the changes
 - Period boundaries are anchored at local midnight in the resolved IANA timezone (`TZ` env → system tz → UTC fallback). `daily` is 1 day, `weekly` is 7 days from Monday, `sprint` is 14 days from today
 - `--period` defaults to `weekly`
 

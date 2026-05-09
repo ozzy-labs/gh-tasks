@@ -17,7 +17,7 @@ import (
 	"github.com/ozzy-labs/gh-tasks/internal/testfake"
 )
 
-func TestPlan_RepoDryRunDaily(t *testing.T) {
+func TestPlan_RepoPreviewDaily(t *testing.T) {
 	t.Parallel()
 
 	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
@@ -33,7 +33,7 @@ func TestPlan_RepoDryRunDaily(t *testing.T) {
 		},
 	}}
 	d := testDeps(g)
-	stdout, _, err := runCmd(t, d, "plan", "--period", "daily", "--dry-run")
+	stdout, _, err := runCmd(t, d, "plan", "--period", "daily")
 	if err != nil {
 		t.Fatalf("Execute: %v", err)
 	}
@@ -44,8 +44,8 @@ func TestPlan_RepoDryRunDaily(t *testing.T) {
 	if !strings.Contains(got, "Daily 2026-05-04") {
 		t.Errorf("expected daily milestone title, got:\n%s", got)
 	}
-	if !strings.Contains(got, "--dry-run") {
-		t.Errorf("expected dry-run note, got:\n%s", got)
+	if !strings.Contains(got, "--write") {
+		t.Errorf("expected preview note pointing at --write, got:\n%s", got)
 	}
 }
 
@@ -83,7 +83,7 @@ func TestPlan_RepoReuseExistingMilestone(t *testing.T) {
 			return newClientsWithREST(g, rest), nil
 		}
 	})
-	stdout, _, err := runCmd(t, d, "plan", "--period", "daily")
+	stdout, _, err := runCmd(t, d, "plan", "--period", "daily", "--write")
 	if err != nil {
 		t.Fatalf("Execute: %v", err)
 	}
@@ -140,7 +140,7 @@ func TestPlan_RepoCreateNewMilestone(t *testing.T) {
 			return newClientsWithREST(g, rest), nil
 		}
 	})
-	stdout, _, err := runCmd(t, d, "plan", "--period", "daily")
+	stdout, _, err := runCmd(t, d, "plan", "--period", "daily", "--write")
 	if err != nil {
 		t.Fatalf("Execute: %v", err)
 	}
@@ -202,7 +202,7 @@ func TestPlan_CreateMilestoneRESTPathFormat(t *testing.T) {
 			return newClientsWithREST(g, rest), nil
 		}
 	})
-	if _, _, err := runCmd(t, d, "plan", "--period", "daily"); err != nil {
+	if _, _, err := runCmd(t, d, "plan", "--period", "daily", "--write"); err != nil {
 		t.Fatalf("Execute: %v", err)
 	}
 	var sawCreate bool
@@ -259,7 +259,7 @@ func TestPlan_ProjectIterationMatched(t *testing.T) {
 			return config.AppConfig{OrgProject: project.Ref{Owner: "octo", Number: 7}}, nil
 		}
 	})
-	stdout, _, err := runCmd(t, d, "plan", "--scope=org", "--period", "daily", "--dry-run")
+	stdout, _, err := runCmd(t, d, "plan", "--scope=org", "--period", "daily")
 	if err != nil {
 		t.Fatalf("Execute: %v", err)
 	}
@@ -296,7 +296,7 @@ func TestPlan_ProjectIterationFallback(t *testing.T) {
 			return config.AppConfig{OrgProject: project.Ref{Owner: "octo", Number: 7}}, nil
 		}
 	})
-	stdout, stderr, err := runCmd(t, d, "plan", "--scope=org", "--period=daily", "--dry-run")
+	stdout, stderr, err := runCmd(t, d, "plan", "--scope=org", "--period=daily")
 	if err != nil {
 		t.Fatalf("Execute: %v", err)
 	}
@@ -308,7 +308,7 @@ func TestPlan_ProjectIterationFallback(t *testing.T) {
 }
 
 // TestPlan_ProjectIterationUpdated covers the write half of `runPlanProject`
-// without --dry-run: when an in-range item is *not* already on the target
+// with --write: when an in-range item is *not* already on the target
 // iteration, the command issues an UpdateProjectV2ItemFieldValue mutation
 // and prints `plan.iterationUpdated.project`. The test wires a
 // captureGraphQL around the fake to assert the mutation input shape (project
@@ -367,7 +367,7 @@ func TestPlan_ProjectIterationUpdated(t *testing.T) {
 			return &github.Clients{Host: "github.com", GraphQL: wrap, REST: fakeREST{}}, nil
 		}
 	})
-	stdout, _, err := runCmd(t, d, "plan", "--scope=org", "--period", "daily")
+	stdout, _, err := runCmd(t, d, "plan", "--scope=org", "--period", "daily", "--write")
 	if err != nil {
 		t.Fatalf("Execute: %v", err)
 	}
@@ -447,7 +447,7 @@ func TestPlan_ProjectAlreadyOnIteration(t *testing.T) {
 			return config.AppConfig{OrgProject: project.Ref{Owner: "octo", Number: 7}}, nil
 		}
 	})
-	stdout, _, err := runCmd(t, d, "plan", "--scope=org", "--period", "daily")
+	stdout, _, err := runCmd(t, d, "plan", "--scope=org", "--period", "daily", "--write")
 	if err != nil {
 		t.Fatalf("Execute: %v", err)
 	}

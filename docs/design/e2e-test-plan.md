@@ -168,7 +168,7 @@ func iterationFieldOf(t *testing.T, owner string, num int) (fieldID string, spri
 | `list [--limit N]` | ✅ | ✅ | ✅ | `--limit 1` / `--limit 100` / 0 件 / closed 含むか |
 | `today` | ✅ | ✅ | ✅ | 当日該当ゼロ / Iteration の current 切替境界 |
 | `done <id>` | ✅ | ✅ | ✅ | 既に done / 未存在 ID / `--scope` mismatch / 他人作成 |
-| `plan --period {daily,weekly,sprint}` | ✅ Milestone | ✅ Iteration | ✅ Iteration | `--dry-run` の差分を golden で pin / `sprint` × `repo` の組合せ拒否 |
+| `plan --period {daily,weekly,sprint}` | ✅ Milestone | ✅ Iteration | ✅ Iteration | preview(default)の差分を golden で pin / `--write` 経路は Flow A/B でカバー / `sprint` × `repo` の組合せ拒否 |
 | `triage [--limit]` | ✅ | ✅ | ✅ | 全件トリアージ済 / `--limit` 上限 |
 | `standup [--mine] [--since]` | ✅ | ✅ | ✅ | `--since` ISO-8601 / 未来日 / `--mine` フィルタ |
 | `review --period {daily,weekly,sprint}` | ✅ closed Issue + merged PR | ✅ Project 完了 | ✅ Project 完了 | 期間境界 / 0 件 |
@@ -223,7 +223,7 @@ Flow A〜H lifecycle (連鎖)                      ~20 min    major / minor rele
 | `TestE2E_AddSmoke_{Repo,Org,User}` | `add` | 最小 add → 即 cleanup |
 | `TestE2E_DoneSmoke_{Org,User}` | `done` | 事前に作った draft の Status 更新（repo は Flow A に集約） |
 | `TestE2E_LinkSmoke_{Repo,Org,User}` | `link` | ephemeral PR + Issue を作って link |
-| `TestE2E_PlanSmoke_{Repo,Org,User}` | `plan` | `--dry-run` で副作用なし、`--period weekly` |
+| `TestE2E_PlanSmoke_{Repo,Org,User}` | `plan` | preview(default、`--write` を渡さず副作用なし)、`--period weekly` |
 | `TestE2E_TriageSmoke_{Repo,Org,User}` | `triage` | read 中心 |
 | `TestE2E_StandupSmoke_{Repo,Org,User}` | `standup` | read 中心 |
 | `TestE2E_ReviewSmoke_{Repo,Org,User}` | `review` | read 中心 |
@@ -241,8 +241,8 @@ Flow A〜H lifecycle (連鎖)                      ~20 min    major / minor rele
 2. `list` で表示確認
 3. `triage` 一覧に登場
 4. `today` に登場
-5. `plan --period weekly --dry-run` → Milestone 提案を golden 比較
-6. `plan --period weekly` → Milestone 作成 + Issue bind
+5. `plan --period weekly`(preview) → Milestone 提案を golden 比較
+6. `plan --period weekly --write` → Milestone 作成 + Issue bind
 7. テスト用 PR を `gh pr create --draft` で作成（`feat/e2e-stub` ブランチ、空 commit）
 8. `link <pr> <issue>` → PR body に `Closes #N` が追記される
 9. `link` 再実行で **idempotent**（重複追記しない）を確認
@@ -258,8 +258,8 @@ Flow A〜H lifecycle (連鎖)                      ~20 min    major / minor rele
 1. `add -s <scope> "[E2E] flow B item"`
 2. `list -s <scope>` 確認
 3. `triage -s <scope>` 確認
-4. `plan -s <scope> --period sprint --dry-run` → Sprint 1 への提案を golden
-5. `plan -s <scope> --period sprint` → Iteration field に bind されたか GraphQL で再 fetch して assert
+4. `plan -s <scope> --period sprint`(preview) → Sprint 1 への提案を golden
+5. `plan -s <scope> --period sprint --write` → Iteration field に bind されたか GraphQL で再 fetch して assert
 6. ダミー PR と `link -s <scope> <pr> <draft-id>` で同 Project bind を確認
 7. `done -s <scope> <id>` で Status=Done
 8. `review -s <scope> --period sprint` で完了集計
