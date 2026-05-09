@@ -143,8 +143,8 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		closed = append(closed, closedItem{Number: n.Number, Title: n.Title, URL: n.Url})
 		if jsonOn {
 			jsonRows = append(jsonRows, withCategory(map[string]any{
-				"id": n.Id, "number": n.Number, "title": n.Title,
-				"type": "ISSUE", "updatedAt": closedAt, "url": n.Url,
+				"id": n.Id, "number": n.Number, "state": "CLOSED",
+				"title": n.Title, "type": "ISSUE", "updatedAt": closedAt, "url": n.Url,
 			}, "closed"))
 		}
 	}
@@ -184,8 +184,8 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		merged = append(merged, mergedItem{Number: n.Number, Title: n.Title, URL: n.Url})
 		if jsonOn {
 			jsonRows = append(jsonRows, withCategory(map[string]any{
-				"id": n.Id, "number": n.Number, "title": n.Title,
-				"type": "PULL_REQUEST", "updatedAt": mergedAt, "url": n.Url,
+				"id": n.Id, "number": n.Number, "state": "MERGED",
+				"title": n.Title, "type": "PULL_REQUEST", "updatedAt": mergedAt, "url": n.Url,
 			}, "merged"))
 		}
 	}
@@ -221,8 +221,8 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		open = append(open, openItem{Number: n.Number, Title: n.Title, URL: n.Url})
 		if jsonOn {
 			jsonRows = append(jsonRows, withCategory(map[string]any{
-				"id": n.Id, "number": n.Number, "title": n.Title,
-				"type": "ISSUE", "updatedAt": n.UpdatedAt, "url": n.Url,
+				"id": n.Id, "number": n.Number, "state": "OPEN",
+				"title": n.Title, "type": "ISSUE", "updatedAt": n.UpdatedAt, "url": n.Url,
 			}, "in-progress"))
 		}
 	}

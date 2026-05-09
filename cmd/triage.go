@@ -100,8 +100,8 @@ func runTriageRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 		rows := make([]map[string]any, 0, len(hitsRaw))
 		for _, n := range hitsRaw {
 			rows = append(rows, map[string]any{
-				"id": n.Id, "number": n.Number, "title": n.Title,
-				"type": "ISSUE", "updatedAt": n.UpdatedAt, "url": n.Url,
+				"id": n.Id, "number": n.Number, "state": "OPEN",
+				"title": n.Title, "type": "ISSUE", "updatedAt": n.UpdatedAt, "url": n.Url,
 			})
 		}
 		return renderJSONItems(c, r, rows, jsonReq, itemJSONFields)

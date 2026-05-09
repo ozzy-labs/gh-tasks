@@ -298,3 +298,37 @@ func TestDone_ProjectSearchLimitHint(t *testing.T) {
 	assertI18nMessage(t, stderr.String(), i18n.LocaleEN,
 		"error.done.searchLimit", "id", "ITEM_MISSING", "limit", 100)
 }
+
+// TestDone_JSONRepoClosed pins the --json output for the repo path: a
+// single-element JSON array carrying id / number / state ("CLOSED") /
+// type / url. Title is null because GetIssueByNumber does not return
+// title (operations.graphql gap; tracked as PR 7 of #376).
+func TestDone_JSONRepoClosed(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{
+			MatchSubstring: "query GetIssueByNumber (",
+			Data: map[string]any{"repository": map[string]any{"issue": map[string]any{
+				"id": "I_open", "number": 7, "url": "u/7", "state": "OPEN",
+			}}},
+		},
+		{
+			MatchSubstring: "mutation CloseIssue (",
+			Data: map[string]any{"closeIssue": map[string]any{"issue": map[string]any{
+				"id": "I_open", "number": 7, "url": "u/7", "state": "CLOSED",
+			}}},
+		},
+	}}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "done", "7", "--json", "id,number,state,type,url,title")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	assertJSONLength(t, stdout.String(), 1)
+	assertJSONFieldEquals(t, stdout.String(), 0, "id", "I_open")
+	assertJSONFieldEquals(t, stdout.String(), 0, "number", 7)
+	assertJSONFieldEquals(t, stdout.String(), 0, "state", "CLOSED")
+	assertJSONFieldEquals(t, stdout.String(), 0, "type", "ISSUE")
+	assertJSONFieldEquals(t, stdout.String(), 0, "title", nil)
+}
