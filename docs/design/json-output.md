@@ -299,7 +299,8 @@ PR 1 以降、各コマンドの `*_flow_test.go` に下記 3 系統を追加す
 
 ## 関連
 
-- 元 issue: [#367 feat(cli): unified --json / --jq output across read commands](https://github.com/ozzy-labs/gh-tasks/issues/367)
+- 採用 ADR: [ADR-0010](../adr/0010-json-output-contract.md) — 本 design doc が記述する選択(`--json [fields]` + `--jq`、flat array 統一、stable contract、drift gate 等)を repo-internal な意思決定として pin
+- Phase tracking: [#367](https://github.com/ozzy-labs/gh-tasks/issues/367)(Phase 1)、[#376](https://github.com/ozzy-labs/gh-tasks/issues/376)(Phase 2)、[#386](https://github.com/ozzy-labs/gh-tasks/issues/386)(Phase 3)
 - 参考実装: [`gh issue list --json`](https://cli.github.com/manual/gh_issue_list)
 - 業界標準ガイド: [Command Line Interface Guidelines (clig.dev)](https://clig.dev/)
-- 内部依存(予定): [`itchyny/gojq`](https://github.com/itchyny/gojq) — Pure Go の jq 実装、gh 本体採用
+- 内部依存: [`itchyny/gojq`](https://github.com/itchyny/gojq) — Pure Go の jq 実装、gh 本体採用
