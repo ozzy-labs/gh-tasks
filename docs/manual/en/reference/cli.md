@@ -11,6 +11,10 @@ All `gh tasks` commands and flags.
 - `--help`, `-h`: show help
 - `--version`, `-v`: show version
 
+### Structured output
+
+The read-only commands (`list`, `today`, `triage`, `plan` preview, `standup`, `review`) and `add` accept `--json [fields]` and `--jq <query>` to emit machine-readable output for scripts and agents. See [json-output.md](./json-output.md) for the field catalog, contract, and examples.
+
 ## Commands
 
 ### `gh tasks add <title>` ✅

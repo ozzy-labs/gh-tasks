@@ -162,3 +162,71 @@ func TestAdd_RepoMissingRepository(t *testing.T) {
 	assertI18nMessage(t, stderr.String(), i18n.LocaleEN,
 		"error.repo.notFound", "owner", "ozzy-labs", "name", "gh-tasks")
 }
+
+// TestAdd_JSONRepoCreated pins the --json output for the repo path: a
+// single-element JSON array carrying the created Issue's id / number /
+// title / type / url. updatedAt is null because the CreateIssue mutation
+// response does not return that field — selected fields always appear
+// per the contract, so null is the explicit signal here rather than a
+// missing key.
+func TestAdd_JSONRepoCreated(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{
+			MatchSubstring: "query GetRepositoryID (",
+			Data:           map[string]any{"repository": map[string]any{"id": "R_1"}},
+		},
+		{
+			MatchSubstring: "mutation CreateIssue (",
+			Data: map[string]any{"createIssue": map[string]any{"issue": map[string]any{
+				"id": "I_new", "number": 123, "url": "https://github.com/ozzy-labs/gh-tasks/issues/123",
+			}}},
+		},
+	}}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "add", "Fix login", "--json", "id,number,title,type,updatedAt,url")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	assertJSONLength(t, stdout.String(), 1)
+	assertJSONFieldEquals(t, stdout.String(), 0, "id", "I_new")
+	assertJSONFieldEquals(t, stdout.String(), 0, "number", 123)
+	assertJSONFieldEquals(t, stdout.String(), 0, "title", "Fix login")
+	assertJSONFieldEquals(t, stdout.String(), 0, "type", "ISSUE")
+	assertJSONFieldEquals(t, stdout.String(), 0, "updatedAt", nil)
+	assertJSONFieldEquals(t, stdout.String(), 0, "url", "https://github.com/ozzy-labs/gh-tasks/issues/123")
+}
+
+// TestAdd_JSONProjectDraft pins the --json output for the project draft
+// path: type is "DRAFT_ISSUE", number is 0, url is "" (zero values
+// rather than null because the JSON marshal of int / string defaults to
+// those types).
+func TestAdd_JSONProjectDraft(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetOrgProjectV2 (", Data: orgProject("PVT_org")},
+		{
+			MatchSubstring: "mutation AddProjectV2DraftIssue (",
+			Data: map[string]any{"addProjectV2DraftIssue": map[string]any{
+				"projectItem": map[string]any{"id": "DI_org"},
+			}},
+		},
+	}}
+	d := testDeps(g, func(d *cmd.Deps) {
+		d.HasGitRemote = func() bool { return false }
+		d.LoadConfig = func() (config.AppConfig, error) {
+			return config.AppConfig{OrgProject: project.Ref{Owner: "octo", Number: 7}}, nil
+		}
+	})
+	stdout, _, err := runCmd(t, d, "add", "Org idea", "--scope=org", "--json", "id,type,number,url")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	assertJSONLength(t, stdout.String(), 1)
+	assertJSONFieldEquals(t, stdout.String(), 0, "id", "DI_org")
+	assertJSONFieldEquals(t, stdout.String(), 0, "type", "DRAFT_ISSUE")
+	assertJSONFieldEquals(t, stdout.String(), 0, "number", 0)
+	assertJSONFieldEquals(t, stdout.String(), 0, "url", "")
+}
