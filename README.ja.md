@@ -33,7 +33,7 @@ gh alias set task tasks
 | `gh tasks add <title>` | Issue / Project draft item の追加(`--scope repo\|org\|user`、`--repo <name>`、`--project <id>`) |
 | `gh tasks list` | 一覧表示(`--scope` でスコープ切替、`--limit <N>` 既定 30) |
 | `gh tasks today` | 今日の予定 / 期日のタスクを表示 |
-| `gh tasks plan [--period daily\|weekly\|sprint] [--dry-run]` | 週次 / イテレーション計画(repo は Milestone、org/user は Iteration) |
+| `gh tasks plan [--period daily\|weekly\|sprint] [--write]` | 週次 / イテレーション計画(repo は Milestone、org/user は Iteration)。デフォルトは preview、`--write` で適用 |
 | `gh tasks triage [--limit <N>]` | 未トリアージ Issue / draft の整理(既定 20) |
 | `gh tasks done <id>` | 完了化(repo: Issue close、org/user: Status → Done) |
 | `gh tasks review [--period daily\|weekly\|sprint]` | 振り返り |
