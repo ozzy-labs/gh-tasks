@@ -7,6 +7,31 @@ import (
 	"github.com/ozzy-labs/gh-tasks/internal/testfake"
 )
 
+// TestCheckJSONSchema_TableEscapesPipes pins the markdown safety
+// contract: catalog Type / Description containing `|` must be escaped
+// to `\|` so the pipe does not collide with the table-cell separator.
+// `linkedTo` carries `object | null` so we use that as the canary.
+func TestCheckJSONSchema_TableEscapesPipes(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "check-json-schema")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	got := stdout.String()
+	// Negative: the bare `object | null` must NOT appear (would break
+	// the column count of the row).
+	if strings.Contains(got, "| object | null |") {
+		t.Errorf("unescaped pipe in `object | null`; got:\n%s", got)
+	}
+	// Positive: the escaped form must appear.
+	if !strings.Contains(got, `object \| null`) {
+		t.Errorf("expected `object \\| null` (escaped) in output, got:\n%s", got)
+	}
+}
+
 // TestCheckJSONSchema_PrintsAllCatalogs pins the dev tool: every public
 // `--json` catalog name appears as a markdown heading in the output, in
 // the canonical order item → activity → link → projectInit. New catalogs

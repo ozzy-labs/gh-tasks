@@ -40,23 +40,38 @@ Tab completion works on the field list: `gh tasks list --json id,<TAB>` offers t
 
 ### `item` (list / today / triage / plan / add / done)
 
+<!-- begin: jsonout-catalog item -->
+
 | Field | Type | Notes |
 | --- | --- | --- |
-| `id` | string | GraphQL global ID of the Issue / PR / Project item |
-| `number` | int | Issue / PR / Project item number. `0` for draft items |
-| `state` | string | Issue / PR state: `"OPEN"` \| `"CLOSED"` \| `"MERGED"`. Empty string `""` for draft items where it does not apply |
-| `title` | string | Title |
-| `type` | string | `"ISSUE"` \| `"PULL_REQUEST"` \| `"DRAFT_ISSUE"` |
+| `id` | string | GraphQL global ID of the Issue or Project item |
+| `number` | int | Issue / Project item number (0 for draft items) |
+| `state` | string | Issue / PR state (`OPEN` / `CLOSED` / `MERGED`); empty string for draft items where it does not apply |
+| `title` | string | Title of the Issue or Project item |
+| `type` | string | ISSUE \| PULL_REQUEST \| DRAFT_ISSUE |
 | `updatedAt` | string | Last-update timestamp (RFC 3339) |
-| `url` | string | Absolute URL on github.com. Empty string for draft items |
+| `url` | string | Absolute URL on github.com (empty for draft items) |
+
+<!-- end: jsonout-catalog item -->
 
 ### `activity` (standup / review)
 
-`activity` is `item` + one extra field:
+`activity` extends `item` with a `category` discriminator:
+
+<!-- begin: jsonout-catalog activity -->
 
 | Field | Type | Notes |
 | --- | --- | --- |
-| `category` | string | Activity bucket. Values per command below |
+| `id` | string | GraphQL global ID of the Issue or Project item |
+| `number` | int | Issue / Project item number (0 for draft items) |
+| `state` | string | Issue / PR state (`OPEN` / `CLOSED` / `MERGED`); empty string for draft items where it does not apply |
+| `title` | string | Title of the Issue or Project item |
+| `type` | string | ISSUE \| PULL_REQUEST \| DRAFT_ISSUE |
+| `updatedAt` | string | Last-update timestamp (RFC 3339) |
+| `url` | string | Absolute URL on github.com (empty for draft items) |
+| `category` | string | Activity bucket the row belongs to (e.g. closed / merged / in-progress / done / completed) |
+
+<!-- end: jsonout-catalog activity -->
 
 #### `category` values
 
@@ -69,26 +84,41 @@ Tab completion works on the field list: `gh tasks list --json id,<TAB>` offers t
 
 ### `link` (link)
 
-`link` is `item` + two extra fields describing the binding:
+`link` extends `item` with two extra fields describing the binding:
+
+<!-- begin: jsonout-catalog link -->
 
 | Field | Type | Notes |
 | --- | --- | --- |
-| `linkType` | string | How the link was established: `"closesAdded"` (PR body got `Closes #N`) or `"projectBind"` (PR + task bound to the same Project v2) |
-| `linkedTo` | object \| null | Target task that the PR was linked to. Object `{id, number, title, type, url}` when newly linked, `null` when the link was already in place |
+| `id` | string | GraphQL global ID of the Issue or Project item |
+| `number` | int | Issue / Project item number (0 for draft items) |
+| `state` | string | Issue / PR state (`OPEN` / `CLOSED` / `MERGED`); empty string for draft items where it does not apply |
+| `title` | string | Title of the Issue or Project item |
+| `type` | string | ISSUE \| PULL_REQUEST \| DRAFT_ISSUE |
+| `updatedAt` | string | Last-update timestamp (RFC 3339) |
+| `url` | string | Absolute URL on github.com (empty for draft items) |
+| `linkType` | string | How the link was established: `closesAdded` (PR body got `Closes #N`) or `projectBind` (PR + task bound to the same Project v2) |
+| `linkedTo` | object \| null | Target task that the PR was linked to. Object `{id, number, type, url}` or null when the link was already in place |
+
+<!-- end: jsonout-catalog link -->
 
 ### `projectInit` (projects init / init-templates)
 
+<!-- begin: jsonout-catalog projectInit -->
+
 | Field | Type | Notes |
 | --- | --- | --- |
-| `id` | string | GraphQL global ID of the created Project. Empty for `--dry-run` and `init-templates` |
-| `number` | int | Project number. `0` for `--dry-run` and `init-templates` |
+| `id` | string | GraphQL global ID of the created Project v2 (empty for --dry-run / init-templates) |
+| `number` | int | Project v2 number (0 for --dry-run / init-templates) |
 | `title` | string | Project title |
-| `url` | string | Project URL on github.com. Empty for `--dry-run` and `init-templates` |
-| `owner` | string | Owner login (`@me` resolved to the actual viewer login at runtime). Empty for `init-templates` |
-| `template` | string | Template name (`"user"` / `"org"`) or empty when a custom yaml path was used |
-| `fields` | array | `[{name, dataType, options?}]` for the configured field set. `options` is `null` for fields without single-select options |
+| `url` | string | Project URL on github.com (empty for --dry-run / init-templates) |
+| `owner` | string | Owner login (`@me` resolved to the actual viewer login at runtime; empty for init-templates) |
+| `template` | string | Template name (`user` / `org`) or empty when a custom yaml path was used |
+| `fields` | array | Array of `{name, dataType, options?}` for the configured field set |
 
-`projects init --json` emits a single-element array; `projects init-templates --json` emits a 2-element array (user → org) so consumers can iterate.
+<!-- end: jsonout-catalog projectInit -->
+
+`projects init --json` emits a single-element array; `projects init-templates --json` emits a 2-element array (user → org). Each `fields` entry's `options` is `null` for non-single-select fields.
 
 ## Behaviour and contract
 

@@ -18,39 +18,39 @@ import (
 // today both publish exactly this set; standup and review extend it via
 // activityJSONFields below.
 var itemJSONFields = jsonout.FieldList{
-	{Name: "id", Description: "GraphQL global ID of the Issue or Project item"},
-	{Name: "number", Description: "Issue / Project item number (0 for draft items)"},
-	{Name: "state", Description: "Issue / PR state (`OPEN` / `CLOSED` / `MERGED`); empty string for draft items where it does not apply"},
-	{Name: "title", Description: "Title of the Issue or Project item"},
-	{Name: "type", Description: "ISSUE | PULL_REQUEST | DRAFT_ISSUE"},
-	{Name: "updatedAt", Description: "Last-update timestamp (RFC 3339)"},
-	{Name: "url", Description: "Absolute URL on github.com (empty for draft items)"},
+	{Name: "id", Type: "string", Description: "GraphQL global ID of the Issue or Project item"},
+	{Name: "number", Type: "int", Description: "Issue / Project item number (0 for draft items)"},
+	{Name: "state", Type: "string", Description: "Issue / PR state (`OPEN` / `CLOSED` / `MERGED`); empty string for draft items where it does not apply"},
+	{Name: "title", Type: "string", Description: "Title of the Issue or Project item"},
+	{Name: "type", Type: "string", Description: "ISSUE | PULL_REQUEST | DRAFT_ISSUE"},
+	{Name: "updatedAt", Type: "string", Description: "Last-update timestamp (RFC 3339)"},
+	{Name: "url", Type: "string", Description: "Absolute URL on github.com (empty for draft items)"},
 }
 
 // activityJSONFields is itemJSONFields plus a `category` discriminator used
 // by standup / review to flatten their multi-section output (closed,
 // merged, in-progress, etc.) into a single jq-friendly array.
 var activityJSONFields = append(append(jsonout.FieldList{}, itemJSONFields...),
-	jsonout.Field{Name: "category", Description: "Activity bucket the row belongs to (e.g. closed / merged / in-progress / done / completed)"})
+	jsonout.Field{Name: "category", Type: "string", Description: "Activity bucket the row belongs to (e.g. closed / merged / in-progress / done / completed)"})
 
 // linkJSONFields is itemJSONFields plus link-specific metadata. Used by
 // `link` to describe the PR row plus the task it was bound to.
 var linkJSONFields = append(append(jsonout.FieldList{}, itemJSONFields...),
-	jsonout.Field{Name: "linkType", Description: "How the link was established: `closesAdded` (PR body got `Closes #N`) or `projectBind` (PR + task bound to the same Project v2)"},
-	jsonout.Field{Name: "linkedTo", Description: "Target task that the PR was linked to. Object `{id, number, type, url}` or null when the link was already in place"},
+	jsonout.Field{Name: "linkType", Type: "string", Description: "How the link was established: `closesAdded` (PR body got `Closes #N`) or `projectBind` (PR + task bound to the same Project v2)"},
+	jsonout.Field{Name: "linkedTo", Type: "object | null", Description: "Target task that the PR was linked to. Object `{id, number, type, url}` or null when the link was already in place"},
 )
 
 // projectInitJSONFields is the catalog for `projects init` and
 // `projects init-templates`. Each row describes a Project v2 (created
 // or template) plus its field definitions.
 var projectInitJSONFields = jsonout.FieldList{
-	{Name: "id", Description: "GraphQL global ID of the created Project v2 (empty for --dry-run / init-templates)"},
-	{Name: "number", Description: "Project v2 number (0 for --dry-run / init-templates)"},
-	{Name: "title", Description: "Project title"},
-	{Name: "url", Description: "Project URL on github.com (empty for --dry-run / init-templates)"},
-	{Name: "owner", Description: "Owner login (`@me` resolved to the actual viewer login at runtime; empty for init-templates)"},
-	{Name: "template", Description: "Template name (`user` / `org`) or empty when a custom yaml path was used"},
-	{Name: "fields", Description: "Array of `{name, dataType, options?}` for the configured field set"},
+	{Name: "id", Type: "string", Description: "GraphQL global ID of the created Project v2 (empty for --dry-run / init-templates)"},
+	{Name: "number", Type: "int", Description: "Project v2 number (0 for --dry-run / init-templates)"},
+	{Name: "title", Type: "string", Description: "Project title"},
+	{Name: "url", Type: "string", Description: "Project URL on github.com (empty for --dry-run / init-templates)"},
+	{Name: "owner", Type: "string", Description: "Owner login (`@me` resolved to the actual viewer login at runtime; empty for init-templates)"},
+	{Name: "template", Type: "string", Description: "Template name (`user` / `org`) or empty when a custom yaml path was used"},
+	{Name: "fields", Type: "array", Description: "Array of `{name, dataType, options?}` for the configured field set"},
 }
 
 // jsonRequest carries the resolved --json / --jq flag values from the
