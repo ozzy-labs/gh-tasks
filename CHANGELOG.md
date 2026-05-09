@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [release-please-config.json](./release-please-config.json) for the automated release flow.
 
+## [0.4.0](https://github.com/ozzy-labs/gh-tasks/compare/v0.3.0...v0.4.0) (2026-05-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* **cmd:** previously this combo returned `error.json.writeNotSupported` (exit 2). Now it returns the bound items as JSON.
+
+### Features
+
+* **ci:** wire check-json-schema into pre-commit and ci ([#386](https://github.com/ozzy-labs/gh-tasks/issues/386) pr 2) ([#388](https://github.com/ozzy-labs/gh-tasks/issues/388)) ([fba1848](https://github.com/ozzy-labs/gh-tasks/commit/fba1848163d7527f87ae9b693e220c6f634b5f2d))
+* **cmd:** add --json / --jq output to add + user docs ([#367](https://github.com/ozzy-labs/gh-tasks/issues/367) phase 4) ([#375](https://github.com/ozzy-labs/gh-tasks/issues/375)) ([d4078d3](https://github.com/ozzy-labs/gh-tasks/commit/d4078d35c8c146bc81d1b217801b00b686203817))
+* **cmd:** add --json / --jq output to list ([#367](https://github.com/ozzy-labs/gh-tasks/issues/367) phase 1) ([#371](https://github.com/ozzy-labs/gh-tasks/issues/371)) ([c806a14](https://github.com/ozzy-labs/gh-tasks/commit/c806a140782e5003bff5377329d13cf4d56d1592))
+* **cmd:** add --json / --jq output to plan / triage ([#367](https://github.com/ozzy-labs/gh-tasks/issues/367) phase 3) ([#374](https://github.com/ozzy-labs/gh-tasks/issues/374)) ([277e635](https://github.com/ozzy-labs/gh-tasks/commit/277e6356e03787403114df78c9631b1d00229e4b))
+* **cmd:** add --json / --jq output to today / standup / review ([#367](https://github.com/ozzy-labs/gh-tasks/issues/367) phase 2) ([#373](https://github.com/ozzy-labs/gh-tasks/issues/373)) ([e5d69bc](https://github.com/ozzy-labs/gh-tasks/commit/e5d69bcc2ac5cd31f3982f6a3fc7875aa41c5b6e))
+* **cmd:** add --json output to done + extend item catalog with state ([#376](https://github.com/ozzy-labs/gh-tasks/issues/376) pr 1) ([#377](https://github.com/ozzy-labs/gh-tasks/issues/377)) ([3511efc](https://github.com/ozzy-labs/gh-tasks/commit/3511efc7ea87059768a40663dfcde3f370411f35))
+* **cmd:** add --json output to link with linktype + linkedto ([#376](https://github.com/ozzy-labs/gh-tasks/issues/376) pr 2) ([#378](https://github.com/ozzy-labs/gh-tasks/issues/378)) ([4c5153e](https://github.com/ozzy-labs/gh-tasks/commit/4c5153e5f7305b3202de9bd3954ade69ec40cc2e))
+* **cmd:** add --json output to projects init / init-templates ([#376](https://github.com/ozzy-labs/gh-tasks/issues/376) pr 4) ([#380](https://github.com/ozzy-labs/gh-tasks/issues/380)) ([9248461](https://github.com/ozzy-labs/gh-tasks/commit/9248461782486563998aec18e2497723473d9131))
+* **cmd:** add --paginate flag for read commands ([#376](https://github.com/ozzy-labs/gh-tasks/issues/376) pr 6) ([#382](https://github.com/ozzy-labs/gh-tasks/issues/382)) ([f970134](https://github.com/ozzy-labs/gh-tasks/commit/f970134af57a42506426c78009ef1e28914ff8ba))
+* **cmd:** add --update / --check modes to check-json-schema ([#386](https://github.com/ozzy-labs/gh-tasks/issues/386) pr 1) ([#387](https://github.com/ozzy-labs/gh-tasks/issues/387)) ([f5ada0b](https://github.com/ozzy-labs/gh-tasks/commit/f5ada0baee86a0a7f2fa14fcbaae9f397d5f1c91))
+* **cmd:** add hidden check-json-schema dev tool ([#376](https://github.com/ozzy-labs/gh-tasks/issues/376) pr 8) ([#384](https://github.com/ozzy-labs/gh-tasks/issues/384)) ([8eec144](https://github.com/ozzy-labs/gh-tasks/commit/8eec144ee7e018865f7e8b35d4dce5008cdbf482))
+* **cmd:** add shell completion for --json field names ([#376](https://github.com/ozzy-labs/gh-tasks/issues/376) pr 5) ([#381](https://github.com/ozzy-labs/gh-tasks/issues/381)) ([79fac79](https://github.com/ozzy-labs/gh-tasks/commit/79fac792189972d23be4f733f79f640a8597187c))
+* **cmd:** lift --json + --write carve-out for plan ([#376](https://github.com/ozzy-labs/gh-tasks/issues/376) pr 3) ([#379](https://github.com/ozzy-labs/gh-tasks/issues/379)) ([b564bb2](https://github.com/ozzy-labs/gh-tasks/commit/b564bb21667d65b798d81b3075940db7d4cc7173))
+* **internal:** backfill issue and pr metadata in graphql ops ([#376](https://github.com/ozzy-labs/gh-tasks/issues/376) pr 7) ([#383](https://github.com/ozzy-labs/gh-tasks/issues/383)) ([349c371](https://github.com/ozzy-labs/gh-tasks/commit/349c371cac853e62cb26910d61d30a914c47976f))
+
 ## [0.3.0](https://github.com/ozzy-labs/gh-tasks/compare/v0.2.3...v0.3.0) (2026-05-09)
 
 
