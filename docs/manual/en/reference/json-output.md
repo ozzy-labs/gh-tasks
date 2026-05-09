@@ -156,13 +156,23 @@ See [`docs/design/json-output.md`](../../../design/json-output.md) for the full 
 
 ### Maintaining this reference
 
-The catalogs above are owned by `cmd/jsonpath.go` (`itemJSONFields`, `activityJSONFields`, `linkJSONFields`, `projectInitJSONFields`). The hidden `gh tasks check-json-schema` command renders every catalog as a markdown table in canonical order so the field tables on this page can be diff-checked against the in-source catalog without copy-pasting:
+The catalogs above are owned by `cmd/jsonpath.go` (`itemJSONFields`, `activityJSONFields`, `linkJSONFields`, `projectInitJSONFields`). The field tables on this page are wrapped in `<!-- begin: jsonout-catalog NAME -->` markers and **rewritten in place** from the in-source catalogs. Pre-commit (lefthook) and CI (`go` job) call `check-json-schema --check` and fail when the docs drift.
 
-```bash
-go run . check-json-schema
-```
+Workflow when changing a catalog:
 
-Add new catalogs to `jsonSchemaCatalogs()` in `cmd/check_json_schema.go` so they show up here.
+1. Edit `cmd/jsonpath.go` (add / rename / remove fields, tweak descriptions, set the `Type` value)
+2. If you added a *new* catalog, register it in `jsonSchemaCatalogs()` in `cmd/check_json_schema.go` and add a markdown section here with the `<!-- begin: jsonout-catalog NAME -->` / `<!-- end: jsonout-catalog NAME -->` marker pair (empty body — the next step fills it)
+3. Regenerate the tables:
+
+   ```bash
+   mise run check-json-schema:update
+   # or, equivalently:
+   go run . check-json-schema --update
+   ```
+
+4. `git add docs/manual/{en,ja}/reference/json-output.md` and commit alongside your `cmd/` change
+
+The dev tool also has a no-arg "print everything" mode for ad-hoc inspection (`go run . check-json-schema` with no flags). The CI gate uses `--check` and exits non-zero on drift.
 
 ## Examples
 
