@@ -157,3 +157,46 @@ func TestRender_EmptyCatalog(t *testing.T) {
 		t.Errorf("expected empty-catalog error, got %v", err)
 	}
 }
+
+// TestCompleteFields_NoCommas pins the bare-prefix case: no comma in
+// `current` means the prefix is empty and bare field names match.
+func TestCompleteFields_NoCommas(t *testing.T) {
+	t.Parallel()
+	got := jsonout.CompleteFields(testCatalog, "ti")
+	if len(got) != 1 || got[0] != "title" {
+		t.Errorf("CompleteFields(\"ti\") = %v; want [title]", got)
+	}
+}
+
+// TestCompleteFields_WithPrefix pins the multi-token case: existing
+// field is filtered out and the prefix (incl. trailing comma) is
+// preserved on every candidate.
+func TestCompleteFields_WithPrefix(t *testing.T) {
+	t.Parallel()
+	got := jsonout.CompleteFields(testCatalog, "id,t")
+	if len(got) != 1 || got[0] != "id,title" {
+		t.Errorf("CompleteFields(\"id,t\") = %v; want [id,title]", got)
+	}
+}
+
+// TestCompleteFields_EmptyTail offers all remaining fields when the
+// user has just typed a trailing comma.
+func TestCompleteFields_EmptyTail(t *testing.T) {
+	t.Parallel()
+	got := jsonout.CompleteFields(testCatalog, "id,")
+	// Catalog has id / title / labels; id is used, so two candidates.
+	if len(got) != 2 {
+		t.Fatalf("CompleteFields(\"id,\") = %v; want 2 candidates", got)
+	}
+	for _, want := range []string{"id,title", "id,labels"} {
+		found := false
+		for _, g := range got {
+			if g == want {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("missing candidate %q in %v", want, got)
+		}
+	}
+}

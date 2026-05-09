@@ -76,3 +76,33 @@ type UnknownFieldError struct {
 func (e *UnknownFieldError) Error() string {
 	return fmt.Sprintf("unknown JSON field(s): %s", strings.Join(e.Fields, ", "))
 }
+
+// CompleteFields returns shell-completion candidates for the comma-
+// separated `--json` value the user is editing. `current` is the raw
+// flag value seen by cobra; the helper handles the trailing token,
+// excludes fields that already appear earlier in the list, and returns
+// each candidate as `<prefix>,<remaining-name>` so the shell drops the
+// completion in place. When current has no commas yet, the prefix is
+// empty and bare field names are returned.
+func CompleteFields(catalog FieldList, current string) []string {
+	parts := strings.Split(current, ",")
+	prefix := ""
+	if len(parts) > 1 {
+		prefix = strings.Join(parts[:len(parts)-1], ",") + ","
+	}
+	tail := strings.TrimSpace(parts[len(parts)-1])
+	used := map[string]bool{}
+	for _, p := range parts[:len(parts)-1] {
+		used[strings.TrimSpace(p)] = true
+	}
+	var out []string
+	for _, f := range catalog {
+		if used[f.Name] {
+			continue
+		}
+		if tail == "" || strings.HasPrefix(f.Name, tail) {
+			out = append(out, prefix+f.Name)
+		}
+	}
+	return out
+}

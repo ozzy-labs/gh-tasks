@@ -25,6 +25,7 @@ func newLinkCmd(deps Deps) *cobra.Command {
 		},
 	}
 	addJSONFlags(c)
+	addJSONCompletion(c, linkJSONFields)
 	return c
 }
 

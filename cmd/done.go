@@ -30,6 +30,7 @@ func newDoneCmd(deps Deps) *cobra.Command {
 		},
 	}
 	addJSONFlags(c)
+	addJSONCompletion(c, itemJSONFields)
 	return c
 }
 

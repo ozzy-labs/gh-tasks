@@ -29,6 +29,7 @@ func newStandupCmd(deps Deps) *cobra.Command {
 	c.Flags().String("since", "", "ISO-8601 timestamp to anchor the window (default: 24h ago)")
 	c.Flags().Bool("mine", false, "filter to items where the viewer is author or assignee")
 	addJSONFlags(c)
+	addJSONCompletion(c, activityJSONFields)
 	return c
 }
 

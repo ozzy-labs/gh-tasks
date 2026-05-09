@@ -34,6 +34,7 @@ func newPlanCmd(deps Deps) *cobra.Command {
 	c.Flags().String("period", "weekly", "aggregation window: daily | weekly | sprint")
 	c.Flags().Bool("write", false, "apply milestone / iteration changes (otherwise preview only)")
 	addJSONFlags(c)
+	addJSONCompletion(c, itemJSONFields)
 	return c
 }
 

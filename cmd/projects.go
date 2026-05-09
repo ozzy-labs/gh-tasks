@@ -113,6 +113,7 @@ func newProjectsInitCmd(deps Deps) *cobra.Command {
 	c.Flags().String("title", "", "Project v2 title (required)")
 	c.Flags().Bool("dry-run", false, "print the planned creation without mutating GitHub")
 	addJSONFlags(c)
+	addJSONCompletion(c, projectInitJSONFields)
 	return c
 }
 
@@ -146,6 +147,7 @@ func newProjectsInitTemplatesCmd(deps Deps) *cobra.Command {
 		},
 	}
 	addJSONFlags(c)
+	addJSONCompletion(c, projectInitJSONFields)
 	return c
 }
 
