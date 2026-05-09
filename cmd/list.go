@@ -27,6 +27,7 @@ func newListCmd(deps Deps) *cobra.Command {
 	}
 	c.Flags().Int("limit", defaultListLimit, "max number of items to list")
 	addJSONFlags(c)
+	addJSONCompletion(c, itemJSONFields)
 	return c
 }
 

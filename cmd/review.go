@@ -28,6 +28,7 @@ func newReviewCmd(deps Deps) *cobra.Command {
 	}
 	c.Flags().String("period", "weekly", "aggregation window: daily | weekly | sprint")
 	addJSONFlags(c)
+	addJSONCompletion(c, activityJSONFields)
 	return c
 }
 

@@ -30,6 +30,7 @@ func newTriageCmd(deps Deps) *cobra.Command {
 	}
 	c.Flags().Int("limit", triageDefaultLimit, "max number of untriaged items to show")
 	addJSONFlags(c)
+	addJSONCompletion(c, itemJSONFields)
 	return c
 }
 

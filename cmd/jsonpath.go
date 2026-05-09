@@ -66,6 +66,18 @@ func addJSONFlags(c *cobra.Command) {
 	c.Flags().String("jq", "", "filter JSON output via jq expression")
 }
 
+// addJSONCompletion registers a flag-completion function for `--json`
+// that suggests catalog field names. Comma-separated entries are
+// supported: existing fields are filtered out so the shell only offers
+// names that have not been picked yet. cobra's `ShellCompDirectiveNoSpace`
+// keeps the cursor adjacent to the comma so the user can chain field
+// names without re-tabbing.
+func addJSONCompletion(c *cobra.Command, catalog jsonout.FieldList) {
+	_ = c.RegisterFlagCompletionFunc("json", func(_ *cobra.Command, _ []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return jsonout.CompleteFields(catalog, toComplete), cobra.ShellCompDirectiveNoSpace
+	})
+}
+
 // resolveJSONRequest reads --json / --jq from the command, validates them,
 // and returns (request, jsonOn, error). When --json is given as empty
 // (`--json=` or `--json ""`), the catalog is printed to stderr and

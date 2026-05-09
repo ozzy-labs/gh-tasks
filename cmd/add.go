@@ -23,6 +23,7 @@ func newAddCmd(deps Deps) *cobra.Command {
 	}
 	c.Flags().String("body", "", "Issue / draft item body")
 	addJSONFlags(c)
+	addJSONCompletion(c, itemJSONFields)
 	return c
 }
 
