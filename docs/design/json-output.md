@@ -143,8 +143,8 @@ scope 跨ぎで意味が同じフィールドは同名にする(`id`, `title`, `
 ### `--json [fields]` の挙動
 
 ```bash
-# 引数なし → 利用可能フィールド一覧を stderr に出して exit 1
-$ gh tasks list --json
+# 空値 → 利用可能フィールド一覧を stderr に出して exit 1
+$ gh tasks list --json=
 Specify one or more comma-separated fields for `--json`:
   id          Issue / draft item の GraphQL global ID
   number      Issue / Project item の番号
@@ -154,19 +154,21 @@ Specify one or more comma-separated fields for `--json`:
 exit status 1
 
 # フィールド指定 → 指定された field のみ JSON 出力
-$ gh tasks list --json id,title,status
+$ gh tasks list --json id,number,title
 [
-  {"id": "I_a", "title": "Task A", "status": "OPEN"},
+  {"id": "I_a", "number": 42, "title": "Task A"},
   ...
 ]
 
 # --jq と併用
-$ gh tasks list --json id,title --jq '.[].title'
-"Task A"
-"Task B"
+$ gh tasks list --json id --jq '.[].id'
+"I_a"
+"I_b"
 ```
 
-cobra/pflag の `StringSlice` 標準では「`--json` 引数なし」を捕捉できないため、`internal/jsonout` 側で `PreRunE`-style 検証を実装する(後述)。
+cobra/pflag の `String` フラグは bare `--json` (値なし) を `flag needs an argument` で拒否するため、ユーザーには **空値の明示** (`--json=` または `--json ""`) を案内する。help text の `Empty value (`--json=`) lists available fields.` がガイド。`StringSlice` + `NoOptDefVal` で bare `--json` を許容する案も検討したが、`NoOptDefVal` が value-bearing 形式 (`--json id,title`) を hijack する pflag 既知の罠があるため `String` + 手動 CSV split を採用。
+
+検証は cmd 側 (`runList` 冒頭の `resolveJSONRequest`) で集約して実装する。`PreRunE` ではなく `RunE` 冒頭でやる理由は、`Resolve(c)` が返す `r.T` を localized error 表示で使うため(deps の解決順序を破らない)。
 
 ### `--jq <query>` の挙動
 
@@ -186,7 +188,7 @@ $ gh tasks list --json id,title --jq '.[] | select(.title | startswith("[E2E]"))
 cobra の help text では下記で固定する:
 
 ```text
-      --json strings   output as JSON. Empty value lists available fields.
+      --json string    output as JSON. Empty value (`--json=`) lists available fields.
       --jq string      filter JSON output via jq expression
 ```
 
@@ -243,26 +245,23 @@ func ListFields(w io.Writer, catalog FieldList)
 
 ### cobra integration パターン
 
-各コマンドは下記スニペットで `--json` / `--jq` を有効化する:
+各コマンドは下記スニペットで `--json` / `--jq` を有効化する。`String`(comma-separated CSV)を採用するのは pflag `StringSlice` の `NoOptDefVal` がバグるため(上記)。検証は `RunE` 冒頭の `resolveJSONRequest` で集約して、`Resolve(c)` 後の locale を使った localized error 表示と整合させる:
 
 ```go
-c.Flags().StringSlice("json", nil, "output as JSON. Empty value lists available fields.")
+c.Flags().String("json", "", "output as JSON. Empty value (`--json=`) lists available fields.")
 c.Flags().String("jq", "", "filter JSON output via jq expression")
 
-// PreRunE で --json の値を検証(StringSlice の Changed() で検出)
-c.PreRunE = func(c *cobra.Command, _ []string) error {
-    if c.Flags().Changed("json") {
-        v, _ := c.Flags().GetStringSlice("json")
-        if len(v) == 0 || (len(v) == 1 && v[0] == "") {
-            jsonout.ListFields(c.ErrOrStderr(), listFields)
-            return ErrSilent  // exit 1、usage は出さない
-        }
-    }
-    return nil
-}
+// runList 冒頭:
+jsonReq, jsonOn, err := resolveJSONRequest(c, r, listJSONFields)
+if err != nil { return err }  // ErrSilentArgs (空値 → field list 表示済み)
+
+// RunE で:
+//   - --json="" or --json=  → ListFields(stderr) + ErrSilentArgs
+//   - --json=id,title       → 通常 JSON 出力
+//   - --jq= without --json  → error.json.jqWithoutJson + ErrSilentArgs
 ```
 
-`ErrSilent` は `cmd/errors.go` 既存の sentinel(`ErrSilentRuntime`)を流用するか、必要なら別に定義する。
+`ErrSilentArgs` は `cmd/errors.go` 既存の sentinel(`ErrSilent` の sub-class、exit 2)を流用。runtime 系エラー(API 失敗、unknown field)とは区別する。
 
 ### DTO 命名
 
