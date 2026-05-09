@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [release-please-config.json](./release-please-config.json) for the automated release flow.
 
+## [0.3.0](https://github.com/ozzy-labs/gh-tasks/compare/v0.2.3...v0.3.0) (2026-05-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* require --write for plan to apply milestone / iteration changes ([#365](https://github.com/ozzy-labs/gh-tasks/issues/365))
+
+### Features
+
+* require --write for plan to apply milestone / iteration changes ([#365](https://github.com/ozzy-labs/gh-tasks/issues/365)) ([ccce3a6](https://github.com/ozzy-labs/gh-tasks/commit/ccce3a6cf64262fef8739cd56e67dc0e625f0809))
+
 ## [0.2.3](https://github.com/ozzy-labs/gh-tasks/compare/v0.2.2...v0.2.3) (2026-05-08)
 
 
