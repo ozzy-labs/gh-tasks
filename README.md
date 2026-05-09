@@ -33,7 +33,7 @@ The extension inherits authentication from `gh auth login` — no separate token
 | `gh tasks add <title>` | Add an Issue or Project draft item. `--scope repo\|org\|user`, `--repo <name>`, `--project <id>` |
 | `gh tasks list` | List filtered tasks (scope-aware). `--limit <N>` (default 30) |
 | `gh tasks today` | Show tasks due / scheduled today |
-| `gh tasks plan [--period daily\|weekly\|sprint] [--dry-run]` | Plan a week / iteration (Milestone for repo, Iteration for org/user) |
+| `gh tasks plan [--period daily\|weekly\|sprint] [--write]` | Plan a week / iteration (Milestone for repo, Iteration for org/user). Preview by default; pass `--write` to apply |
 | `gh tasks triage [--limit <N>]` | Triage untriaged Issues / draft items (default 20) |
 | `gh tasks done <id>` | Close an Issue (repo) or set Status → Done (org/user) |
 | `gh tasks review [--period daily\|weekly\|sprint]` | Retrospective summary |
