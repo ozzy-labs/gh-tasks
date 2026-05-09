@@ -50,8 +50,10 @@ query GetIssueByNumber($owner: String!, $name: String!, $number: Int!) {
     issue(number: $number) {
       id
       number
+      title
       url
       state
+      updatedAt
     }
   }
 }
@@ -145,8 +147,10 @@ query GetPullRequestByNumber($owner: String!, $name: String!, $number: Int!) {
     pullRequest(number: $number) {
       id
       number
+      title
       url
       body
+      updatedAt
     }
   }
 }
@@ -432,7 +436,9 @@ mutation CreateIssue($input: CreateIssueInput!) {
     issue {
       id
       number
+      title
       url
+      updatedAt
     }
   }
 }
@@ -443,8 +449,10 @@ mutation CloseIssue($input: CloseIssueInput!) {
     issue {
       id
       number
+      title
       url
       state
+      updatedAt
     }
   }
 }
@@ -473,7 +481,9 @@ mutation UpdatePullRequest($input: UpdatePullRequestInput!) {
     pullRequest {
       id
       number
+      title
       url
+      updatedAt
     }
   }
 }
@@ -485,6 +495,7 @@ mutation AddProjectV2DraftIssue($input: AddProjectV2DraftIssueInput!) {
   addProjectV2DraftIssue(input: $input) {
     projectItem {
       id
+      updatedAt
     }
   }
 }

@@ -89,8 +89,8 @@ func runDoneRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, r
 		if jsonOn {
 			return renderJSONItems(c, r, []map[string]any{{
 				"id": resp.Repository.Issue.Id, "number": resp.Repository.Issue.Number,
-				"state": "CLOSED", "title": nil, "type": "ISSUE",
-				"updatedAt": nil, "url": resp.Repository.Issue.Url,
+				"state": "CLOSED", "title": resp.Repository.Issue.Title, "type": "ISSUE",
+				"updatedAt": resp.Repository.Issue.UpdatedAt, "url": resp.Repository.Issue.Url,
 			}}, jsonReq, itemJSONFields)
 		}
 		fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("done.alreadyClosed"), resp.Repository.Issue.Url)
@@ -103,8 +103,8 @@ func runDoneRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, r
 	if jsonOn {
 		return renderJSONItems(c, r, []map[string]any{{
 			"id": closed.CloseIssue.Issue.Id, "number": closed.CloseIssue.Issue.Number,
-			"state": "CLOSED", "title": nil, "type": "ISSUE",
-			"updatedAt": nil, "url": closed.CloseIssue.Issue.Url,
+			"state": "CLOSED", "title": closed.CloseIssue.Issue.Title, "type": "ISSUE",
+			"updatedAt": closed.CloseIssue.Issue.UpdatedAt, "url": closed.CloseIssue.Issue.Url,
 		}}, jsonReq, itemJSONFields)
 	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("done.closed"), closed.CloseIssue.Issue.Url)

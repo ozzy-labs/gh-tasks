@@ -301,8 +301,8 @@ func TestDone_ProjectSearchLimitHint(t *testing.T) {
 
 // TestDone_JSONRepoClosed pins the --json output for the repo path: a
 // single-element JSON array carrying id / number / state ("CLOSED") /
-// type / url. Title is null because GetIssueByNumber does not return
-// title (operations.graphql gap; tracked as PR 7 of #376).
+// title / type / url. After PR 7 of #376 (operations.graphql backfill)
+// title now flows from CloseIssue's mutation response.
 func TestDone_JSONRepoClosed(t *testing.T) {
 	t.Parallel()
 
@@ -310,13 +310,15 @@ func TestDone_JSONRepoClosed(t *testing.T) {
 		{
 			MatchSubstring: "query GetIssueByNumber (",
 			Data: map[string]any{"repository": map[string]any{"issue": map[string]any{
-				"id": "I_open", "number": 7, "url": "u/7", "state": "OPEN",
+				"id": "I_open", "number": 7, "title": "Fix login", "url": "u/7",
+				"state": "OPEN", "updatedAt": "2026-05-04T08:00:00Z",
 			}}},
 		},
 		{
 			MatchSubstring: "mutation CloseIssue (",
 			Data: map[string]any{"closeIssue": map[string]any{"issue": map[string]any{
-				"id": "I_open", "number": 7, "url": "u/7", "state": "CLOSED",
+				"id": "I_open", "number": 7, "title": "Fix login", "url": "u/7",
+				"state": "CLOSED", "updatedAt": "2026-05-04T09:00:00Z",
 			}}},
 		},
 	}}
@@ -330,5 +332,5 @@ func TestDone_JSONRepoClosed(t *testing.T) {
 	assertJSONFieldEquals(t, stdout.String(), 0, "number", 7)
 	assertJSONFieldEquals(t, stdout.String(), 0, "state", "CLOSED")
 	assertJSONFieldEquals(t, stdout.String(), 0, "type", "ISSUE")
-	assertJSONFieldEquals(t, stdout.String(), 0, "title", nil)
+	assertJSONFieldEquals(t, stdout.String(), 0, "title", "Fix login")
 }
