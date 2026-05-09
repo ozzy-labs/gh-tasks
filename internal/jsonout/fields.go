@@ -17,6 +17,12 @@ import (
 type Field struct {
 	// Name is the JSON output key (camelCase, English only).
 	Name string
+	// Type is the JSON value type as it would appear in TypeScript / JSON
+	// Schema notation. Examples: `string`, `int`, `string | null`,
+	// `object | null`, `array`. Empty string means "unspecified" (used by
+	// older catalogs before the Type field landed); the schema dump renders
+	// such rows with a placeholder dash.
+	Type string
 	// Description is a one-line English explanation surfaced when the user
 	// runs `--json` with no argument. Keep ASCII-only; this is part of the
 	// CLI surface, not localized message catalog.
