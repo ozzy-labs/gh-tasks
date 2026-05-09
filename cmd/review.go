@@ -27,6 +27,7 @@ func newReviewCmd(deps Deps) *cobra.Command {
 		},
 	}
 	c.Flags().String("period", "weekly", "aggregation window: daily | weekly | sprint")
+	addJSONFlags(c)
 	return c
 }
 
@@ -34,6 +35,10 @@ func runReview(ctx context.Context, c *cobra.Command, deps Deps) error {
 	r, err := deps.Resolve(c)
 	if err != nil {
 		return localizedError(c, r, err)
+	}
+	jsonReq, jsonOn, err := resolveJSONRequest(c, r, activityJSONFields)
+	if err != nil {
+		return err
 	}
 	pflag, _ := c.Flags().GetString("period")
 	p, err := period.Parse(pflag)
@@ -50,12 +55,12 @@ func runReview(ctx context.Context, c *cobra.Command, deps Deps) error {
 		return localizedError(c, r, err)
 	}
 	if sc == scope.Repo {
-		return runReviewRepo(ctx, c, deps, r, p, rng)
+		return runReviewRepo(ctx, c, deps, r, p, rng, jsonOn, jsonReq)
 	}
-	return runReviewProject(ctx, c, deps, r, sc, p, rng)
+	return runReviewProject(ctx, c, deps, r, sc, p, rng, jsonOn, jsonReq)
 }
 
-func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p period.Period, rng period.Range) error {
+func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p period.Period, rng period.Range, jsonOn bool, jsonReq jsonRequest) error {
 	id, err := repo.Resolve(repo.ResolveOptions{Flag: flagString(c, "repo"), GetRemoteURL: deps.GetRemoteURL})
 	if err != nil {
 		return localizedError(c, r, err)
@@ -87,6 +92,7 @@ func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 		URL    string
 	}
 	closed := []closedItem{}
+	jsonRows := []map[string]any{}
 	for _, n := range closedIssues {
 		if n == nil {
 			continue
@@ -97,6 +103,12 @@ func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 		}
 		if withinPeriodRange(closedAt, rng) {
 			closed = append(closed, closedItem{Number: n.Number, Title: n.Title, URL: n.Url})
+			if jsonOn {
+				jsonRows = append(jsonRows, withCategory(map[string]any{
+					"id": n.Id, "number": n.Number, "title": n.Title,
+					"type": "ISSUE", "updatedAt": closedAt, "url": n.Url,
+				}, "closedIssue"))
+			}
 		}
 	}
 	type mergedItem struct {
@@ -115,7 +127,16 @@ func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 		}
 		if withinPeriodRange(mergedAt, rng) {
 			merged = append(merged, mergedItem{Number: n.Number, Title: n.Title, URL: n.Url})
+			if jsonOn {
+				jsonRows = append(jsonRows, withCategory(map[string]any{
+					"id": n.Id, "number": n.Number, "title": n.Title,
+					"type": "PULL_REQUEST", "updatedAt": mergedAt, "url": n.Url,
+				}, "mergedPR"))
+			}
 		}
+	}
+	if jsonOn {
+		return renderJSONItems(c, r, jsonRows, jsonReq, activityJSONFields)
 	}
 	out := c.OutOrStdout()
 	fmt.Fprintf(out, "# %s (%s)\n", r.T("review.heading"), r.T("review.period."+string(p)))
@@ -140,7 +161,7 @@ func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 	return nil
 }
 
-func runReviewProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, p period.Period, rng period.Range) error {
+func runReviewProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, p period.Period, rng period.Range, jsonOn bool, jsonReq jsonRequest) error {
 	pref, err := project.Resolve(project.ResolveOptions{
 		Scope:       sc,
 		Flag:        flagString(c, "project"),
@@ -178,6 +199,13 @@ func runReviewProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 		if withinPeriodRange(item.UpdatedAt, rng) && isItemDone(item) {
 			completed = append(completed, item)
 		}
+	}
+	if jsonOn {
+		jsonRows := make([]map[string]any, 0, len(completed))
+		for _, row := range projectItemRowsToJSON(completed) {
+			jsonRows = append(jsonRows, withCategory(row, "completedProjectItem"))
+		}
+		return renderJSONItems(c, r, jsonRows, jsonReq, activityJSONFields)
 	}
 	out := c.OutOrStdout()
 	fmt.Fprintf(out, "# %s (%s)\n", r.T("review.heading"), r.T("review.period."+string(p)))

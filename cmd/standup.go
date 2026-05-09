@@ -28,6 +28,7 @@ func newStandupCmd(deps Deps) *cobra.Command {
 	}
 	c.Flags().String("since", "", "ISO-8601 timestamp to anchor the window (default: 24h ago)")
 	c.Flags().Bool("mine", false, "filter to items where the viewer is author or assignee")
+	addJSONFlags(c)
 	return c
 }
 
@@ -35,6 +36,10 @@ func runStandup(ctx context.Context, c *cobra.Command, deps Deps) error {
 	r, err := deps.Resolve(c)
 	if err != nil {
 		return localizedError(c, r, err)
+	}
+	jsonReq, jsonOn, err := resolveJSONRequest(c, r, activityJSONFields)
+	if err != nil {
+		return err
 	}
 	sc, err := scope.Detect(scope.DetectOptions{
 		Flag:         flagString(c, "scope"),
@@ -50,12 +55,12 @@ func runStandup(ctx context.Context, c *cobra.Command, deps Deps) error {
 	}
 	mine, _ := c.Flags().GetBool("mine")
 	if sc == scope.Repo {
-		return runStandupRepo(ctx, c, deps, r, since, mine)
+		return runStandupRepo(ctx, c, deps, r, since, mine, jsonOn, jsonReq)
 	}
-	return runStandupProject(ctx, c, deps, r, sc, since, mine)
+	return runStandupProject(ctx, c, deps, r, sc, since, mine, jsonOn, jsonReq)
 }
 
-func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, since time.Time, mine bool) error {
+func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, since time.Time, mine bool, jsonOn bool, jsonReq jsonRequest) error {
 	id, err := repo.Resolve(repo.ResolveOptions{Flag: flagString(c, "repo"), GetRemoteURL: deps.GetRemoteURL})
 	if err != nil {
 		return localizedError(c, r, err)
@@ -107,6 +112,7 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		URL    string
 	}
 	closed := []closedItem{}
+	jsonRows := []map[string]any{}
 	for _, n := range closedIssues {
 		if n == nil {
 			continue
@@ -135,6 +141,12 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 			continue
 		}
 		closed = append(closed, closedItem{Number: n.Number, Title: n.Title, URL: n.Url})
+		if jsonOn {
+			jsonRows = append(jsonRows, withCategory(map[string]any{
+				"id": n.Id, "number": n.Number, "title": n.Title,
+				"type": "ISSUE", "updatedAt": closedAt, "url": n.Url,
+			}, "closed"))
+		}
 	}
 	type mergedItem struct {
 		Number int
@@ -170,6 +182,12 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 			continue
 		}
 		merged = append(merged, mergedItem{Number: n.Number, Title: n.Title, URL: n.Url})
+		if jsonOn {
+			jsonRows = append(jsonRows, withCategory(map[string]any{
+				"id": n.Id, "number": n.Number, "title": n.Title,
+				"type": "PULL_REQUEST", "updatedAt": mergedAt, "url": n.Url,
+			}, "merged"))
+		}
 	}
 	type openItem struct {
 		Number int
@@ -201,6 +219,16 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 			continue
 		}
 		open = append(open, openItem{Number: n.Number, Title: n.Title, URL: n.Url})
+		if jsonOn {
+			jsonRows = append(jsonRows, withCategory(map[string]any{
+				"id": n.Id, "number": n.Number, "title": n.Title,
+				"type": "ISSUE", "updatedAt": n.UpdatedAt, "url": n.Url,
+			}, "in-progress"))
+		}
+	}
+
+	if jsonOn {
+		return renderJSONItems(c, r, jsonRows, jsonReq, activityJSONFields)
 	}
 
 	out := c.OutOrStdout()
@@ -233,7 +261,7 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	return nil
 }
 
-func runStandupProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, since time.Time, mine bool) error {
+func runStandupProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, since time.Time, mine bool, jsonOn bool, jsonReq jsonRequest) error {
 	pref, err := project.Resolve(project.ResolveOptions{
 		Scope:       sc,
 		Flag:        flagString(c, "project"),
@@ -291,6 +319,16 @@ func runStandupProject(ctx context.Context, c *cobra.Command, deps Deps, r Resol
 		} else {
 			today = append(today, item)
 		}
+	}
+	if jsonOn {
+		jsonRows := make([]map[string]any, 0, len(yesterday)+len(today))
+		for _, row := range projectItemRowsToJSON(yesterday) {
+			jsonRows = append(jsonRows, withCategory(row, "done"))
+		}
+		for _, row := range projectItemRowsToJSON(today) {
+			jsonRows = append(jsonRows, withCategory(row, "in-progress"))
+		}
+		return renderJSONItems(c, r, jsonRows, jsonReq, activityJSONFields)
 	}
 	out := c.OutOrStdout()
 	header := r.T("standup.heading")

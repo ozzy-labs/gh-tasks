@@ -227,3 +227,38 @@ func TestReview_PeriodFlagInvalid(t *testing.T) {
 	assertI18nMessage(t, stderr.String(), i18n.LocaleEN,
 		"error.period.invalid", "value", "yearly", "valid", i18n.JoinPipe(period.Periods))
 }
+
+// TestReview_JSONFlattenWithCategory pins the review --json contract:
+// closed Issues and merged PRs (the two sections in the text output)
+// collapse into a single JSON array, each row tagged with a
+// `category` discriminator (`closedIssue` / `mergedPR`).
+func TestReview_JSONFlattenWithCategory(t *testing.T) {
+	t.Parallel()
+
+	closed := map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{
+		map[string]any{
+			"id": "I_c", "number": 10, "title": "Closed in window", "url": "u/10",
+			"closedAt": "2026-05-04T08:00:00Z",
+		},
+	}}}}
+	merged := map[string]any{"repository": map[string]any{"pullRequests": map[string]any{"nodes": []any{
+		map[string]any{
+			"id": "PR_m", "number": 20, "title": "Merged in window", "url": "u/20",
+			"mergedAt": "2026-05-04T09:00:00Z",
+		},
+	}}}}
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query ListClosedIssues (", Data: closed},
+		{MatchSubstring: "query ListMergedPRs (", Data: merged},
+	}}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "review", "--period", "daily", "--json", "id,number,type,category")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	assertJSONLength(t, stdout.String(), 2)
+	assertJSONFieldEquals(t, stdout.String(), 0, "category", "closedIssue")
+	assertJSONFieldEquals(t, stdout.String(), 0, "type", "ISSUE")
+	assertJSONFieldEquals(t, stdout.String(), 1, "category", "mergedPR")
+	assertJSONFieldEquals(t, stdout.String(), 1, "type", "PULL_REQUEST")
+}
