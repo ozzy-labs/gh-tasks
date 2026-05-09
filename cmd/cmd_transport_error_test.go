@@ -182,7 +182,7 @@ func TestPlan_RepoMilestonesError(t *testing.T) {
 		{MatchSubstring: "query ListMilestones (", Err: transportErr},
 	}}
 	d := testDeps(g)
-	_, _, err := runCmd(t, d, "plan", "--period", "daily")
+	_, _, err := runCmd(t, d, "plan", "--period", "daily", "--write")
 	if err == nil {
 		t.Fatalf("expected milestones error to surface, got nil")
 	}
@@ -316,7 +316,7 @@ func TestPlan_RepoCreateMilestoneError(t *testing.T) {
 			return newClientsWithREST(g, rest), nil
 		}
 	})
-	_, _, err := runCmd(t, d, "plan", "--period", "daily")
+	_, _, err := runCmd(t, d, "plan", "--period", "daily", "--write")
 	if err == nil {
 		t.Fatalf("expected REST create-milestone error to surface, got nil")
 	}
@@ -449,7 +449,7 @@ func TestPlan_RepoUpdateIssueMilestoneError(t *testing.T) {
 			return newClientsWithREST(g, rest), nil
 		}
 	})
-	_, _, err := runCmd(t, d, "plan", "--period", "daily")
+	_, _, err := runCmd(t, d, "plan", "--period", "daily", "--write")
 	if err == nil {
 		t.Fatalf("expected update-milestone error to surface, got nil")
 	}

@@ -40,7 +40,7 @@ skill の SSOT は `skills/{name}/SKILL.md`。frontmatter の `name` / `descript
 /task-plan --period weekly --scope user
 ```
 
-skill が `gh tasks plan` を `--dry-run` で試行 → 候補を提示 → 確定した時点で本実行する流れ。`--scope` を省略すると git remote から推定される。
+skill が `gh tasks plan` を実行(デフォルトで preview)→ 候補を提示 → 確定後に `--write` を付けて再実行する流れ。`--scope` を省略すると git remote から推定される。
 
 ### 2. inbox triage
 

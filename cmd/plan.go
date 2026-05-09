@@ -32,7 +32,7 @@ func newPlanCmd(deps Deps) *cobra.Command {
 		},
 	}
 	c.Flags().String("period", "weekly", "aggregation window: daily | weekly | sprint")
-	c.Flags().Bool("dry-run", false, "preview without writing milestone / iteration changes")
+	c.Flags().Bool("write", false, "apply milestone / iteration changes (otherwise preview only)")
 	return c
 }
 
@@ -42,7 +42,7 @@ func runPlan(ctx context.Context, c *cobra.Command, deps Deps) error {
 		return localizedError(c, r, err)
 	}
 	pflag, _ := c.Flags().GetString("period")
-	dryRun, _ := c.Flags().GetBool("dry-run")
+	write, _ := c.Flags().GetBool("write")
 	p, err := period.Parse(pflag)
 	if err != nil {
 		return localizedError(c, r, err)
@@ -58,12 +58,12 @@ func runPlan(ctx context.Context, c *cobra.Command, deps Deps) error {
 		return localizedError(c, r, err)
 	}
 	if sc == scope.Repo {
-		return runPlanRepo(ctx, c, deps, r, p, rng, dryRun, now)
+		return runPlanRepo(ctx, c, deps, r, p, rng, write, now)
 	}
-	return runPlanProject(ctx, c, deps, r, sc, p, rng, dryRun, now)
+	return runPlanProject(ctx, c, deps, r, sc, p, rng, write, now)
 }
 
-func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p period.Period, rng period.Range, dryRun bool, now time.Time) error {
+func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p period.Period, rng period.Range, write bool, now time.Time) error {
 	id, err := repo.Resolve(repo.ResolveOptions{Flag: flagString(c, "repo"), GetRemoteURL: deps.GetRemoteURL})
 	if err != nil {
 		return localizedError(c, r, err)
@@ -97,8 +97,8 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 	fmt.Fprintf(out, "  %s → %s\n\n", rng.Start.Format("2006-01-02"), rng.End.Format("2006-01-02"))
 	if len(inRange) == 0 {
 		fmt.Fprintln(out, r.T("plan.empty"))
-		if dryRun {
-			fmt.Fprintf(out, "\n%s\n", r.T("plan.dryRunNote"))
+		if !write {
+			fmt.Fprintf(out, "\n%s\n", r.T("plan.previewNote"))
 		}
 		return nil
 	}
@@ -107,8 +107,8 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 		fmt.Fprintf(out, "  #%d  %s\n", n.Number, n.Title)
 	}
 	fmt.Fprintln(out)
-	if dryRun {
-		fmt.Fprintln(out, r.T("plan.dryRunNote"))
+	if !write {
+		fmt.Fprintln(out, r.T("plan.previewNote"))
 		return nil
 	}
 
@@ -164,7 +164,7 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 	return nil
 }
 
-func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, p period.Period, rng period.Range, dryRun bool, now time.Time) error {
+func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, p period.Period, rng period.Range, write bool, now time.Time) error {
 	pref, err := project.Resolve(project.ResolveOptions{
 		Scope:       sc,
 		Flag:        flagString(c, "project"),
@@ -237,8 +237,8 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	}
 	if len(inRange) == 0 {
 		fmt.Fprintln(out, r.T("plan.empty.project"))
-		if dryRun {
-			fmt.Fprintf(out, "\n%s\n", r.T("plan.dryRunNote.project"))
+		if !write {
+			fmt.Fprintf(out, "\n%s\n", r.T("plan.previewNote.project"))
 		}
 		return nil
 	}
@@ -247,8 +247,8 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		fmt.Fprint(out, formatItemLineForPlan(item))
 	}
 	fmt.Fprintln(out)
-	if dryRun {
-		fmt.Fprintln(out, r.T("plan.dryRunNote.project"))
+	if !write {
+		fmt.Fprintln(out, r.T("plan.previewNote.project"))
 		return nil
 	}
 	for _, item := range inRange {
