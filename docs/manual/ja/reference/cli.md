@@ -11,6 +11,10 @@
 - `--help`, `-h`: ヘルプ表示
 - `--version`, `-v`: バージョン表示
 
+### 構造化出力
+
+read 系コマンド(`list` / `today` / `triage` / `plan` preview / `standup` / `review`)と `add` は `--json [fields]` / `--jq <query>` で機械可読な出力に切り替えられる。フィールドカタログ・契約・利用例は [json-output.md](./json-output.md) を参照。
+
 ## コマンド
 
 ### `gh tasks add <title>` ✅

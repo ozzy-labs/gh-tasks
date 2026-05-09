@@ -44,6 +44,26 @@ The extension inherits authentication from `gh auth login` — no separate token
 
 Default `--scope` resolves in this order: explicit `--scope` flag → current working directory's git remote (`origin` present → `repo`) → `~/.config/ozzylabs/gh-tasks.toml` `default_scope` → `user`. Full flag reference: [docs/manual/en/reference/cli.md](docs/manual/en/reference/cli.md).
 
+## Structured output
+
+Every read-only command and `add` accept `--json [fields]` and `--jq <query>` so they pipe cleanly into shell scripts, agents, and `jq` / `yq`.
+
+```bash
+# List available fields (empty value)
+gh tasks list --json=
+
+# JSON array of selected fields
+gh tasks list --json id,number,title,type
+
+# Built-in jq filter (Pure Go gojq, no external dep)
+gh tasks list --json id --jq '.[].id'
+
+# Capture a created Issue's id for downstream commands
+issue_id=$(gh tasks add "Bug: 404 on /api" --json id --jq '.[0].id')
+```
+
+`stdout` is JSON-only; warnings and localized errors stay on `stderr`. Output is locale-independent (field names are English, values are GitHub source-of-truth) so scripts behave the same whether run with `--lang en` or `--lang ja`. Full reference: [docs/manual/en/reference/json-output.md](docs/manual/en/reference/json-output.md).
+
 ## Skills
 
 | Skill | Purpose |

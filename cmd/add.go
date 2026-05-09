@@ -22,6 +22,7 @@ func newAddCmd(deps Deps) *cobra.Command {
 		},
 	}
 	c.Flags().String("body", "", "Issue / draft item body")
+	addJSONFlags(c)
 	return c
 }
 
@@ -29,6 +30,10 @@ func runAdd(ctx context.Context, c *cobra.Command, deps Deps, args []string) err
 	r, err := deps.Resolve(c)
 	if err != nil {
 		return localizedError(c, r, err)
+	}
+	jsonReq, jsonOn, err := resolveJSONRequest(c, r, itemJSONFields)
+	if err != nil {
+		return err
 	}
 	if len(args) == 0 || args[0] == "" {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.add.titleRequired"))
@@ -46,12 +51,12 @@ func runAdd(ctx context.Context, c *cobra.Command, deps Deps, args []string) err
 		return localizedError(c, r, err)
 	}
 	if sc == scope.Repo {
-		return runAddRepo(ctx, c, deps, r, title, body)
+		return runAddRepo(ctx, c, deps, r, title, body, jsonOn, jsonReq)
 	}
-	return runAddProject(ctx, c, deps, r, sc, title, body)
+	return runAddProject(ctx, c, deps, r, sc, title, body, jsonOn, jsonReq)
 }
 
-func runAddRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, title, body string) error {
+func runAddRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, title, body string, jsonOn bool, jsonReq jsonRequest) error {
 	id, err := repo.Resolve(repo.ResolveOptions{Flag: flagString(c, "repo"), GetRemoteURL: deps.GetRemoteURL})
 	if err != nil {
 		return localizedError(c, r, err)
@@ -77,11 +82,21 @@ func runAddRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, ti
 	if err != nil {
 		return wrapTransport(c.ErrOrStderr(), r.Locale, "create issue", err)
 	}
+	if jsonOn {
+		// updatedAt is not in the CreateIssue mutation response; emit null
+		// per the contract (selected fields always appear). Consumers who
+		// need the timestamp can re-fetch via gh tasks list --json.
+		return renderJSONItems(c, r, []map[string]any{{
+			"id": resp.CreateIssue.Issue.Id, "number": resp.CreateIssue.Issue.Number,
+			"title": title, "type": "ISSUE",
+			"updatedAt": nil, "url": resp.CreateIssue.Issue.Url,
+		}}, jsonReq, itemJSONFields)
+	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("add.created.repo"), resp.CreateIssue.Issue.Url)
 	return nil
 }
 
-func runAddProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, title, body string) error {
+func runAddProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, title, body string, jsonOn bool, jsonReq jsonRequest) error {
 	pref, err := project.Resolve(project.ResolveOptions{
 		Scope:       sc,
 		Flag:        flagString(c, "project"),
@@ -110,6 +125,16 @@ func runAddProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 	resp, err := queries.AddProjectV2DraftIssue(ctx, clients.AsGenqlientClient(), input)
 	if err != nil {
 		return wrapTransport(c.ErrOrStderr(), r.Locale, "add project draft issue", err)
+	}
+	if jsonOn {
+		// Draft items have no GitHub-side number / url / updatedAt at
+		// creation time. Number is 0 (zero-valued int), url is empty,
+		// updatedAt is null per the contract.
+		return renderJSONItems(c, r, []map[string]any{{
+			"id": resp.AddProjectV2DraftIssue.ProjectItem.Id, "number": 0,
+			"title": title, "type": "DRAFT_ISSUE",
+			"updatedAt": nil, "url": "",
+		}}, jsonReq, itemJSONFields)
 	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("add.created.project"), resp.AddProjectV2DraftIssue.ProjectItem.Id)
 	return nil
