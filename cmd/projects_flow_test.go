@@ -466,3 +466,46 @@ func TestProjectsInitTemplates_InvalidTemplate(t *testing.T) {
 			err, stderr.String())
 	}
 }
+
+// TestProjectsInit_JSONDryRun pins the JSON output for the dry-run path:
+// title / owner / template come from flags, fields list reflects the
+// parsed template, id / number / url are blank/zero because no project
+// has been created yet.
+func TestProjectsInit_JSONDryRun(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "projects", "init",
+		"--template", "user", "--title", "My Todo",
+		"--dry-run", "--json", "title,owner,template,fields,id")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	assertJSONLength(t, stdout.String(), 1)
+	assertJSONFieldEquals(t, stdout.String(), 0, "title", "My Todo")
+	assertJSONFieldEquals(t, stdout.String(), 0, "owner", "@me")
+	assertJSONFieldEquals(t, stdout.String(), 0, "template", "user")
+	assertJSONFieldEquals(t, stdout.String(), 0, "id", "")
+	rows := parseJSONArray(t, stdout.String())
+	fields, _ := rows[0]["fields"].([]any)
+	if len(fields) < 2 {
+		t.Fatalf("expected >=2 fields (Status, Iteration), got: %v", rows[0]["fields"])
+	}
+}
+
+// TestProjectsInitTemplates_JSON pins that --json on init-templates
+// emits both bundled templates (user + org) as a 2-element array.
+func TestProjectsInitTemplates_JSON(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "projects", "init-templates", "--json", "template,fields")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	assertJSONLength(t, stdout.String(), 2)
+	assertJSONFieldEquals(t, stdout.String(), 0, "template", "user")
+	assertJSONFieldEquals(t, stdout.String(), 1, "template", "org")
+}
