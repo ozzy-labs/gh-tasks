@@ -33,6 +33,7 @@ func newPlanCmd(deps Deps) *cobra.Command {
 	}
 	c.Flags().String("period", "weekly", "aggregation window: daily | weekly | sprint")
 	c.Flags().Bool("write", false, "apply milestone / iteration changes (otherwise preview only)")
+	addJSONFlags(c)
 	return c
 }
 
@@ -41,8 +42,16 @@ func runPlan(ctx context.Context, c *cobra.Command, deps Deps) error {
 	if err != nil {
 		return localizedError(c, r, err)
 	}
+	jsonReq, jsonOn, err := resolveJSONRequest(c, r, itemJSONFields)
+	if err != nil {
+		return err
+	}
 	pflag, _ := c.Flags().GetString("period")
 	write, _ := c.Flags().GetBool("write")
+	if jsonOn && write {
+		fmt.Fprintln(c.ErrOrStderr(), r.T("error.json.writeNotSupported"))
+		return ErrSilentArgs
+	}
 	p, err := period.Parse(pflag)
 	if err != nil {
 		return localizedError(c, r, err)
@@ -58,12 +67,12 @@ func runPlan(ctx context.Context, c *cobra.Command, deps Deps) error {
 		return localizedError(c, r, err)
 	}
 	if sc == scope.Repo {
-		return runPlanRepo(ctx, c, deps, r, p, rng, write, now)
+		return runPlanRepo(ctx, c, deps, r, p, rng, write, now, jsonOn, jsonReq)
 	}
-	return runPlanProject(ctx, c, deps, r, sc, p, rng, write, now)
+	return runPlanProject(ctx, c, deps, r, sc, p, rng, write, now, jsonOn, jsonReq)
 }
 
-func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p period.Period, rng period.Range, write bool, now time.Time) error {
+func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p period.Period, rng period.Range, write bool, now time.Time, jsonOn bool, jsonReq jsonRequest) error {
 	id, err := repo.Resolve(repo.ResolveOptions{Flag: flagString(c, "repo"), GetRemoteURL: deps.GetRemoteURL})
 	if err != nil {
 		return localizedError(c, r, err)
@@ -90,6 +99,19 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 			(t.Equal(rng.Start) || t.After(rng.Start)) && t.Before(rng.End) {
 			inRange = append(inRange, n)
 		}
+	}
+	if jsonOn {
+		// preview-only contract: --json + --write was rejected upfront,
+		// so we always reach this branch with write == false. Emit the
+		// candidate list as a flat JSON array using the shared catalog.
+		rows := make([]map[string]any, 0, len(inRange))
+		for _, n := range inRange {
+			rows = append(rows, map[string]any{
+				"id": n.Id, "number": n.Number, "title": n.Title,
+				"type": "ISSUE", "updatedAt": n.UpdatedAt, "url": n.Url,
+			})
+		}
+		return renderJSONItems(c, r, rows, jsonReq, itemJSONFields)
 	}
 	title := period.SuggestMilestoneTitle(p, period.Options{Getenv: deps.Env, Now: now})
 	out := c.OutOrStdout()
@@ -164,7 +186,7 @@ func runPlanRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p
 	return nil
 }
 
-func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, p period.Period, rng period.Range, write bool, now time.Time) error {
+func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, p period.Period, rng period.Range, write bool, now time.Time, jsonOn bool, jsonReq jsonRequest) error {
 	pref, err := project.Resolve(project.ResolveOptions{
 		Scope:       sc,
 		Flag:        flagString(c, "project"),
@@ -234,6 +256,10 @@ func runPlanProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 			(t.Equal(rng.Start) || t.After(rng.Start)) && t.Before(rng.End) {
 			inRange = append(inRange, item)
 		}
+	}
+	if jsonOn {
+		// preview-only contract (see runPlanRepo for rationale).
+		return renderJSONItems(c, r, projectItemRowsToJSON(inRange), jsonReq, itemJSONFields)
 	}
 	if len(inRange) == 0 {
 		fmt.Fprintln(out, r.T("plan.empty.project"))

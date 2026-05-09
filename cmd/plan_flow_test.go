@@ -621,3 +621,50 @@ func TestPlan_DryRunFlagRemoved(t *testing.T) {
 		t.Errorf("expected cobra `unknown flag` error, got: %v", err)
 	}
 }
+
+// TestPlan_JSONPreviewRepo pins the --json output for the preview path:
+// in-range candidates emerge as a flat JSON array using the shared item
+// catalog. Proposed-milestone metadata stays in text mode (`Phase 2` of
+// #367 will reconsider mutation-side metadata when --json + --write
+// becomes supported).
+func TestPlan_JSONPreviewRepo(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{
+			MatchSubstring: "query ListRepoIssuesWithMilestone (",
+			Data: map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{
+				map[string]any{
+					"id": "I_a", "number": 1, "title": "Task A", "url": "u/1",
+					"updatedAt": "2026-05-04T08:00:00Z",
+					"milestone": nil,
+				},
+			}}}},
+		},
+	}}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "plan", "--period", "daily", "--json", "id,number,title,type")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	assertJSONLength(t, stdout.String(), 1)
+	assertJSONFieldEquals(t, stdout.String(), 0, "id", "I_a")
+	assertJSONFieldEquals(t, stdout.String(), 0, "number", 1)
+	assertJSONFieldEquals(t, stdout.String(), 0, "type", "ISSUE")
+}
+
+// TestPlan_JSONWithWriteRejected pins the Phase 1 carve-out: combining
+// --json with --write returns ErrSilentArgs and emits the localized
+// guidance. Phase 2 (#367 follow-up) will lift this restriction once
+// mutation results have a stable JSON shape.
+func TestPlan_JSONWithWriteRejected(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{}}
+	d := testDeps(g)
+	_, stderr, err := runCmd(t, d, "plan", "--period", "daily", "--json", "id", "--write")
+	if !errors.Is(err, cmd.ErrSilent) {
+		t.Fatalf("expected ErrSilent for --json + --write, got %v", err)
+	}
+	assertI18nMessage(t, stderr.String(), i18n.LocaleEN, "error.json.writeNotSupported")
+}
