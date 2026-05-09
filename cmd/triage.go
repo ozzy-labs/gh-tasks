@@ -31,6 +31,7 @@ func newTriageCmd(deps Deps) *cobra.Command {
 	c.Flags().Int("limit", triageDefaultLimit, "max number of untriaged items to show")
 	addJSONFlags(c)
 	addJSONCompletion(c, itemJSONFields)
+	addPaginateFlag(c)
 	return c
 }
 
@@ -55,13 +56,14 @@ func runTriage(ctx context.Context, c *cobra.Command, deps Deps) error {
 	if limit <= 0 {
 		limit = triageDefaultLimit
 	}
+	fetchLimit := effectivePaginateLimit(c, triageFetchLimit)
 	if sc == scope.Repo {
-		return runTriageRepo(ctx, c, deps, r, limit, jsonOn, jsonReq)
+		return runTriageRepo(ctx, c, deps, r, limit, jsonOn, jsonReq, fetchLimit)
 	}
-	return runTriageProject(ctx, c, deps, r, sc, limit, jsonOn, jsonReq)
+	return runTriageProject(ctx, c, deps, r, sc, limit, jsonOn, jsonReq, fetchLimit)
 }
 
-func runTriageRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, limit int, jsonOn bool, jsonReq jsonRequest) error {
+func runTriageRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, limit int, jsonOn bool, jsonReq jsonRequest, fetchLimit int) error {
 	id, err := repo.Resolve(repo.ResolveOptions{Flag: flagString(c, "repo"), GetRemoteURL: deps.GetRemoteURL})
 	if err != nil {
 		return localizedError(c, r, err)
@@ -70,7 +72,7 @@ func runTriageRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 	if err != nil {
 		return localizedError(c, r, err)
 	}
-	issues, err := queries.PaginateRepoIssuesWithLabels(ctx, clients.AsGenqlientClient(), id.Owner, id.Name, triageFetchLimit)
+	issues, err := queries.PaginateRepoIssuesWithLabels(ctx, clients.AsGenqlientClient(), id.Owner, id.Name, fetchLimit)
 	if errors.Is(err, queries.ErrRepoNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
@@ -118,7 +120,7 @@ func runTriageRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 	return nil
 }
 
-func runTriageProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, limit int, jsonOn bool, jsonReq jsonRequest) error {
+func runTriageProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, limit int, jsonOn bool, jsonReq jsonRequest, fetchLimit int) error {
 	pref, err := project.Resolve(project.ResolveOptions{
 		Scope:       sc,
 		Flag:        flagString(c, "project"),
@@ -140,7 +142,7 @@ func runTriageProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	items, err := queries.PaginateProjectV2Items(ctx, clients.AsGenqlientClient(), pid, triageFetchLimit)
+	items, err := queries.PaginateProjectV2Items(ctx, clients.AsGenqlientClient(), pid, fetchLimit)
 	if errors.Is(err, queries.ErrProjectNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime

@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -64,6 +65,26 @@ type jsonRequest struct {
 func addJSONFlags(c *cobra.Command) {
 	c.Flags().String("json", "", "output as JSON. Empty value (`--json=`) lists available fields.")
 	c.Flags().String("jq", "", "filter JSON output via jq expression")
+}
+
+// addPaginateFlag wires --paginate onto a read-only command. When set,
+// the per-command fetch limit is overridden with math.MaxInt32 so the
+// underlying paginator walks the whole result set. Note that Projects v2
+// GraphQL is cost-heavy; --paginate may consume noticeable rate-limit
+// budget on large boards.
+func addPaginateFlag(c *cobra.Command) {
+	c.Flags().Bool("paginate", false, "fetch all pages (overrides --limit). May consume noticeable rate-limit budget on large Projects v2.")
+}
+
+// effectivePaginateLimit returns math.MaxInt32 when --paginate is set,
+// otherwise returns the supplied default. Use it in read-only commands
+// after computing the local default so --paginate cleanly overrides.
+func effectivePaginateLimit(c *cobra.Command, defaultLimit int) int {
+	paginate, _ := c.Flags().GetBool("paginate")
+	if paginate {
+		return math.MaxInt32
+	}
+	return defaultLimit
 }
 
 // addJSONCompletion registers a flag-completion function for `--json`

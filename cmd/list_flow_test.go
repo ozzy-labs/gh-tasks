@@ -632,6 +632,36 @@ func TestList_JQFiltersOutput(t *testing.T) {
 	}
 }
 
+// TestList_PaginateOverridesLimit pins the --paginate contract: the
+// effective limit passed to the paginator is large enough to stand in
+// for "all pages", regardless of the user-facing --limit. We verify by
+// capturing the GraphQL `first` variable on ListRepoIssues.
+func TestList_PaginateOverridesLimit(t *testing.T) {
+	t.Parallel()
+
+	var capturedFirst int
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query ListRepoIssues (", Data: repoIssuesPayload()},
+	}}
+	wrap := &captureGraphQL{inner: g, capture: func(_ string, vars map[string]any) {
+		capturedFirst = intFromVar(vars["first"])
+	}}
+	d := testDeps(g, func(d *cmd.Deps) {
+		d.NewClients = func() (*github.Clients, error) {
+			return &github.Clients{Host: "github.com", GraphQL: wrap, REST: fakeREST{}}, nil
+		}
+	})
+	if _, _, err := runCmd(t, d, "list", "--limit", "5", "--paginate"); err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	// `first` is page-size capped (the paginator splits into 100-item
+	// pages), so we assert it is >= the small explicit --limit value to
+	// confirm --paginate took precedence.
+	if capturedFirst <= 5 {
+		t.Errorf("--paginate should override --limit=5; first=%d", capturedFirst)
+	}
+}
+
 // TestList_JQWithoutJSON pins the rule that --jq requires --json. Mixing
 // text mode with a jq expression is rejected at flag-validation time.
 func TestList_JQWithoutJSON(t *testing.T) {
