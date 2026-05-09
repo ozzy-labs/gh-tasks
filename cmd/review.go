@@ -29,6 +29,7 @@ func newReviewCmd(deps Deps) *cobra.Command {
 	c.Flags().String("period", "weekly", "aggregation window: daily | weekly | sprint")
 	addJSONFlags(c)
 	addJSONCompletion(c, activityJSONFields)
+	addPaginateFlag(c)
 	return c
 }
 
@@ -55,13 +56,14 @@ func runReview(ctx context.Context, c *cobra.Command, deps Deps) error {
 	if err != nil {
 		return localizedError(c, r, err)
 	}
+	fetchLimit := effectivePaginateLimit(c, reviewFetchLimit)
 	if sc == scope.Repo {
-		return runReviewRepo(ctx, c, deps, r, p, rng, jsonOn, jsonReq)
+		return runReviewRepo(ctx, c, deps, r, p, rng, jsonOn, jsonReq, fetchLimit)
 	}
-	return runReviewProject(ctx, c, deps, r, sc, p, rng, jsonOn, jsonReq)
+	return runReviewProject(ctx, c, deps, r, sc, p, rng, jsonOn, jsonReq, fetchLimit)
 }
 
-func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p period.Period, rng period.Range, jsonOn bool, jsonReq jsonRequest) error {
+func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, p period.Period, rng period.Range, jsonOn bool, jsonReq jsonRequest, fetchLimit int) error {
 	id, err := repo.Resolve(repo.ResolveOptions{Flag: flagString(c, "repo"), GetRemoteURL: deps.GetRemoteURL})
 	if err != nil {
 		return localizedError(c, r, err)
@@ -71,7 +73,7 @@ func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 		return localizedError(c, r, err)
 	}
 	gqlClient := clients.AsGenqlientClient()
-	closedIssues, err := queries.PaginateClosedIssues(ctx, gqlClient, id.Owner, id.Name, reviewFetchLimit)
+	closedIssues, err := queries.PaginateClosedIssues(ctx, gqlClient, id.Owner, id.Name, fetchLimit)
 	if errors.Is(err, queries.ErrRepoNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
@@ -79,7 +81,7 @@ func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 	if err != nil {
 		return wrapTransport(c.ErrOrStderr(), r.Locale, "list closed issues", err)
 	}
-	mergedPRs, err := queries.PaginateMergedPRs(ctx, gqlClient, id.Owner, id.Name, reviewFetchLimit)
+	mergedPRs, err := queries.PaginateMergedPRs(ctx, gqlClient, id.Owner, id.Name, fetchLimit)
 	if errors.Is(err, queries.ErrRepoNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
@@ -162,7 +164,7 @@ func runReviewRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 	return nil
 }
 
-func runReviewProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, p period.Period, rng period.Range, jsonOn bool, jsonReq jsonRequest) error {
+func runReviewProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, p period.Period, rng period.Range, jsonOn bool, jsonReq jsonRequest, fetchLimit int) error {
 	pref, err := project.Resolve(project.ResolveOptions{
 		Scope:       sc,
 		Flag:        flagString(c, "project"),
@@ -184,7 +186,7 @@ func runReviewProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolv
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	items, err := queries.PaginateProjectV2Items(ctx, clients.AsGenqlientClient(), pid, reviewFetchLimit)
+	items, err := queries.PaginateProjectV2Items(ctx, clients.AsGenqlientClient(), pid, fetchLimit)
 	if errors.Is(err, queries.ErrProjectNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime

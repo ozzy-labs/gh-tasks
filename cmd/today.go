@@ -27,6 +27,7 @@ func newTodayCmd(deps Deps) *cobra.Command {
 	}
 	addJSONFlags(c)
 	addJSONCompletion(c, itemJSONFields)
+	addPaginateFlag(c)
 	return c
 }
 
@@ -48,13 +49,14 @@ func runToday(ctx context.Context, c *cobra.Command, deps Deps) error {
 		return localizedError(c, r, err)
 	}
 	startUTC, endUTC := todayRange(deps.Now())
+	limit := effectivePaginateLimit(c, todayFetchLimit)
 	if sc == scope.Repo {
-		return runTodayRepo(ctx, c, deps, r, startUTC, endUTC, jsonOn, jsonReq)
+		return runTodayRepo(ctx, c, deps, r, startUTC, endUTC, jsonOn, jsonReq, limit)
 	}
-	return runTodayProject(ctx, c, deps, r, sc, startUTC, endUTC, jsonOn, jsonReq)
+	return runTodayProject(ctx, c, deps, r, sc, startUTC, endUTC, jsonOn, jsonReq, limit)
 }
 
-func runTodayRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, startUTC, endUTC time.Time, jsonOn bool, jsonReq jsonRequest) error {
+func runTodayRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, startUTC, endUTC time.Time, jsonOn bool, jsonReq jsonRequest, limit int) error {
 	id, err := repo.Resolve(repo.ResolveOptions{Flag: flagString(c, "repo"), GetRemoteURL: deps.GetRemoteURL})
 	if err != nil {
 		return localizedError(c, r, err)
@@ -63,7 +65,7 @@ func runTodayRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, 
 	if err != nil {
 		return localizedError(c, r, err)
 	}
-	issues, err := queries.PaginateRepoIssues(ctx, clients.AsGenqlientClient(), id.Owner, id.Name, todayFetchLimit)
+	issues, err := queries.PaginateRepoIssues(ctx, clients.AsGenqlientClient(), id.Owner, id.Name, limit)
 	if errors.Is(err, queries.ErrRepoNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
@@ -97,7 +99,7 @@ func runTodayRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, 
 	return nil
 }
 
-func runTodayProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, startUTC, endUTC time.Time, jsonOn bool, jsonReq jsonRequest) error {
+func runTodayProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, startUTC, endUTC time.Time, jsonOn bool, jsonReq jsonRequest, limit int) error {
 	pref, err := project.Resolve(project.ResolveOptions{
 		Scope:       sc,
 		Flag:        flagString(c, "project"),
@@ -119,7 +121,7 @@ func runTodayProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolve
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	items, err := queries.PaginateProjectV2Items(ctx, clients.AsGenqlientClient(), pid, todayFetchLimit)
+	items, err := queries.PaginateProjectV2Items(ctx, clients.AsGenqlientClient(), pid, limit)
 	if errors.Is(err, queries.ErrProjectNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime

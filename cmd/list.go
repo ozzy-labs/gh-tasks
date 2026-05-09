@@ -28,6 +28,7 @@ func newListCmd(deps Deps) *cobra.Command {
 	c.Flags().Int("limit", defaultListLimit, "max number of items to list")
 	addJSONFlags(c)
 	addJSONCompletion(c, itemJSONFields)
+	addPaginateFlag(c)
 	return c
 }
 
@@ -57,6 +58,7 @@ func runList(ctx context.Context, c *cobra.Command, deps Deps) error {
 	if limit <= 0 {
 		limit = defaultListLimit
 	}
+	limit = effectivePaginateLimit(c, limit)
 	if sc == scope.Repo {
 		return runListRepo(ctx, c, deps, r, limit, jsonOn, jsonReq)
 	}

@@ -30,6 +30,7 @@ func newStandupCmd(deps Deps) *cobra.Command {
 	c.Flags().Bool("mine", false, "filter to items where the viewer is author or assignee")
 	addJSONFlags(c)
 	addJSONCompletion(c, activityJSONFields)
+	addPaginateFlag(c)
 	return c
 }
 
@@ -55,13 +56,14 @@ func runStandup(ctx context.Context, c *cobra.Command, deps Deps) error {
 		return localizedError(c, r, err)
 	}
 	mine, _ := c.Flags().GetBool("mine")
+	fetchLimit := effectivePaginateLimit(c, standupFetchLimit)
 	if sc == scope.Repo {
-		return runStandupRepo(ctx, c, deps, r, since, mine, jsonOn, jsonReq)
+		return runStandupRepo(ctx, c, deps, r, since, mine, jsonOn, jsonReq, fetchLimit)
 	}
-	return runStandupProject(ctx, c, deps, r, sc, since, mine, jsonOn, jsonReq)
+	return runStandupProject(ctx, c, deps, r, sc, since, mine, jsonOn, jsonReq, fetchLimit)
 }
 
-func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, since time.Time, mine bool, jsonOn bool, jsonReq jsonRequest) error {
+func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, since time.Time, mine bool, jsonOn bool, jsonReq jsonRequest, fetchLimit int) error {
 	id, err := repo.Resolve(repo.ResolveOptions{Flag: flagString(c, "repo"), GetRemoteURL: deps.GetRemoteURL})
 	if err != nil {
 		return localizedError(c, r, err)
@@ -82,7 +84,7 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		viewerLogin = v.Viewer.Login
 	}
 	gqlClient := clients.AsGenqlientClient()
-	closedIssues, err := queries.PaginateClosedIssues(ctx, gqlClient, id.Owner, id.Name, standupFetchLimit)
+	closedIssues, err := queries.PaginateClosedIssues(ctx, gqlClient, id.Owner, id.Name, fetchLimit)
 	if errors.Is(err, queries.ErrRepoNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
@@ -90,7 +92,7 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	if err != nil {
 		return wrapTransport(c.ErrOrStderr(), r.Locale, "list closed issues", err)
 	}
-	mergedPRs, err := queries.PaginateMergedPRs(ctx, gqlClient, id.Owner, id.Name, standupFetchLimit)
+	mergedPRs, err := queries.PaginateMergedPRs(ctx, gqlClient, id.Owner, id.Name, fetchLimit)
 	if errors.Is(err, queries.ErrRepoNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
@@ -98,7 +100,7 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	if err != nil {
 		return wrapTransport(c.ErrOrStderr(), r.Locale, "list merged PRs", err)
 	}
-	openIssues, err := queries.PaginateRepoIssues(ctx, gqlClient, id.Owner, id.Name, standupFetchLimit)
+	openIssues, err := queries.PaginateRepoIssues(ctx, gqlClient, id.Owner, id.Name, fetchLimit)
 	if errors.Is(err, queries.ErrRepoNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.repo.notFound", "owner", id.Owner, "name", id.Name))
 		return ErrSilentRuntime
@@ -262,7 +264,7 @@ func runStandupRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 	return nil
 }
 
-func runStandupProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, since time.Time, mine bool, jsonOn bool, jsonReq jsonRequest) error {
+func runStandupProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, since time.Time, mine bool, jsonOn bool, jsonReq jsonRequest, fetchLimit int) error {
 	pref, err := project.Resolve(project.ResolveOptions{
 		Scope:       sc,
 		Flag:        flagString(c, "project"),
@@ -295,7 +297,7 @@ func runStandupProject(ctx context.Context, c *cobra.Command, deps Deps, r Resol
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
 	}
-	items, err := queries.PaginateProjectV2Items(ctx, clients.AsGenqlientClient(), pid, standupFetchLimit)
+	items, err := queries.PaginateProjectV2Items(ctx, clients.AsGenqlientClient(), pid, fetchLimit)
 	if errors.Is(err, queries.ErrProjectNotFound) {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.project.notFound", "owner", pref.Owner, "number", pref.Number, "scope", sc))
 		return ErrSilentRuntime
