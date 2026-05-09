@@ -120,3 +120,32 @@ func TestToday_UserScopeEmpty(t *testing.T) {
 		t.Errorf("expected today.empty.project, got:\n%s", stdout.String())
 	}
 }
+
+// TestToday_JSONFields pins that --json on `today` reuses the shared item
+// catalog (id / number / title / type / updatedAt / url) and applies the
+// same UTC-day filter as the text path. Only the today-dated entry must
+// surface in the JSON array; the yesterday / tomorrow rows from the fake
+// payload are filtered out before the DTO is constructed.
+func TestToday_JSONFields(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{
+			MatchSubstring: "query ListRepoIssues (",
+			Data: repoIssuesPayload(
+				map[string]any{"id": "I_old", "number": 1, "title": "Yesterday", "url": "u1", "updatedAt": "2026-05-03T08:00:00Z"},
+				map[string]any{"id": "I_today", "number": 2, "title": "Today", "url": "u2", "updatedAt": "2026-05-04T08:00:00Z"},
+			),
+		},
+	}}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "today", "--json", "id,number,title,type")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	assertJSONLength(t, stdout.String(), 1)
+	assertJSONFieldEquals(t, stdout.String(), 0, "id", "I_today")
+	assertJSONFieldEquals(t, stdout.String(), 0, "number", 2)
+	assertJSONFieldEquals(t, stdout.String(), 0, "title", "Today")
+	assertJSONFieldEquals(t, stdout.String(), 0, "type", "ISSUE")
+}

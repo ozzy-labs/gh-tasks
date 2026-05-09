@@ -18,19 +18,25 @@ import (
 const todayFetchLimit = 100
 
 func newTodayCmd(deps Deps) *cobra.Command {
-	return &cobra.Command{
+	c := &cobra.Command{
 		Use:   "today",
 		Short: "Show today's tasks",
 		RunE: func(c *cobra.Command, _ []string) error {
 			return runToday(c.Context(), c, deps)
 		},
 	}
+	addJSONFlags(c)
+	return c
 }
 
 func runToday(ctx context.Context, c *cobra.Command, deps Deps) error {
 	r, err := deps.Resolve(c)
 	if err != nil {
 		return localizedError(c, r, err)
+	}
+	jsonReq, jsonOn, err := resolveJSONRequest(c, r, itemJSONFields)
+	if err != nil {
+		return err
 	}
 	sc, err := scope.Detect(scope.DetectOptions{
 		Flag:         flagString(c, "scope"),
@@ -42,12 +48,12 @@ func runToday(ctx context.Context, c *cobra.Command, deps Deps) error {
 	}
 	startUTC, endUTC := todayRange(deps.Now())
 	if sc == scope.Repo {
-		return runTodayRepo(ctx, c, deps, r, startUTC, endUTC)
+		return runTodayRepo(ctx, c, deps, r, startUTC, endUTC, jsonOn, jsonReq)
 	}
-	return runTodayProject(ctx, c, deps, r, sc, startUTC, endUTC)
+	return runTodayProject(ctx, c, deps, r, sc, startUTC, endUTC, jsonOn, jsonReq)
 }
 
-func runTodayRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, startUTC, endUTC time.Time) error {
+func runTodayRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, startUTC, endUTC time.Time, jsonOn bool, jsonReq jsonRequest) error {
 	id, err := repo.Resolve(repo.ResolveOptions{Flag: flagString(c, "repo"), GetRemoteURL: deps.GetRemoteURL})
 	if err != nil {
 		return localizedError(c, r, err)
@@ -77,6 +83,9 @@ func runTodayRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, 
 			hits = append(hits, issue)
 		}
 	}
+	if jsonOn {
+		return renderJSONItems(c, r, repoIssueRowsToJSON(hits), jsonReq, itemJSONFields)
+	}
 	if len(hits) == 0 {
 		fmt.Fprintln(c.OutOrStdout(), r.T("today.empty"))
 		return nil
@@ -87,7 +96,7 @@ func runTodayRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, 
 	return nil
 }
 
-func runTodayProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, startUTC, endUTC time.Time) error {
+func runTodayProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, startUTC, endUTC time.Time, jsonOn bool, jsonReq jsonRequest) error {
 	pref, err := project.Resolve(project.ResolveOptions{
 		Scope:       sc,
 		Flag:        flagString(c, "project"),
@@ -129,6 +138,9 @@ func runTodayProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolve
 		if (t.Equal(startUTC) || t.After(startUTC)) && t.Before(endUTC) {
 			hits = append(hits, item)
 		}
+	}
+	if jsonOn {
+		return renderJSONItems(c, r, projectItemRowsToJSON(hits), jsonReq, itemJSONFields)
 	}
 	if len(hits) == 0 {
 		fmt.Fprintln(c.OutOrStdout(), r.T("today.empty.project"))

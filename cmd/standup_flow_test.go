@@ -404,3 +404,55 @@ func TestStandup_MineMatchesAuthorAndAssignee(t *testing.T) {
 		t.Errorf("expected exactly one occurrence of item title, got %d in:\n%s", n, got)
 	}
 }
+
+// TestStandup_JSONFlattenWithCategory pins the standup --json contract:
+// the three text-mode sections (closed Issues, merged PRs, open / in-
+// progress Issues) collapse into a single JSON array where each row
+// carries a `category` discriminator. Order: closed → merged → open
+// (matches the in-source iteration order so script consumers can rely
+// on deterministic positioning when needed).
+func TestStandup_JSONFlattenWithCategory(t *testing.T) {
+	t.Parallel()
+
+	closed := map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{
+		map[string]any{
+			"id": "I_c", "number": 1, "title": "Closed", "url": "u/1",
+			"closedAt":  "2026-05-04T08:00:00Z",
+			"author":    map[string]any{"__typename": "User", "login": "alice"},
+			"assignees": map[string]any{"nodes": []any{}},
+		},
+	}}}}
+	merged := map[string]any{"repository": map[string]any{"pullRequests": map[string]any{"nodes": []any{
+		map[string]any{
+			"id": "PR_m", "number": 2, "title": "Merged", "url": "u/2",
+			"mergedAt":  "2026-05-04T09:00:00Z",
+			"author":    map[string]any{"__typename": "User", "login": "alice"},
+			"assignees": map[string]any{"nodes": []any{}},
+		},
+	}}}}
+	open := map[string]any{"repository": map[string]any{"issues": map[string]any{"nodes": []any{
+		map[string]any{
+			"id": "I_o", "number": 3, "title": "Open", "url": "u/3",
+			"updatedAt": "2026-05-04T10:00:00Z",
+			"author":    map[string]any{"__typename": "User", "login": "alice"},
+			"assignees": map[string]any{"nodes": []any{}},
+		},
+	}}}}
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query ListClosedIssues (", Data: closed},
+		{MatchSubstring: "query ListMergedPRs (", Data: merged},
+		{MatchSubstring: "query ListRepoIssues (", Data: open},
+	}}
+	d := testDeps(g)
+	stdout, _, err := runCmd(t, d, "standup", "--since", "2026-05-04T00:00:00Z", "--json", "id,number,title,type,category")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	assertJSONLength(t, stdout.String(), 3)
+	assertJSONFieldEquals(t, stdout.String(), 0, "category", "closed")
+	assertJSONFieldEquals(t, stdout.String(), 0, "type", "ISSUE")
+	assertJSONFieldEquals(t, stdout.String(), 1, "category", "merged")
+	assertJSONFieldEquals(t, stdout.String(), 1, "type", "PULL_REQUEST")
+	assertJSONFieldEquals(t, stdout.String(), 2, "category", "in-progress")
+	assertJSONFieldEquals(t, stdout.String(), 2, "type", "ISSUE")
+}
