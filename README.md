@@ -46,20 +46,27 @@ Default `--scope` resolves in this order: explicit `--scope` flag → current wo
 
 ## Structured output
 
-Every read-only command and `add` accept `--json [fields]` and `--jq <query>` so they pipe cleanly into shell scripts, agents, and `jq` / `yq`.
+Every command (read-only **and** mutation: `add` / `done` / `link` / `plan --write` / `projects init` / `init-templates`) accepts `--json [fields]` and `--jq <query>` so they pipe cleanly into shell scripts, agents, and `jq` / `yq`. Tab completion is wired on `--json`; `--paginate` walks the full result set on the read commands.
 
 ```bash
 # List available fields (empty value)
 gh tasks list --json=
 
-# JSON array of selected fields
-gh tasks list --json id,number,title,type
+# JSON array of selected fields (state OPEN / CLOSED / MERGED is part of the catalog)
+gh tasks list --json id,number,state,title
 
 # Built-in jq filter (Pure Go gojq, no external dep)
 gh tasks list --json id --jq '.[].id'
 
 # Capture a created Issue's id for downstream commands
 issue_id=$(gh tasks add "Bug: 404 on /api" --json id --jq '.[0].id')
+
+# Walk the full result set instead of the per-command default cap
+gh tasks list --paginate --json id
+
+# Verify a closed Issue's state programmatically
+gh tasks done 42 --json state --jq '.[0].state'
+# "CLOSED"
 ```
 
 `stdout` is JSON-only; warnings and localized errors stay on `stderr`. Output is locale-independent (field names are English, values are GitHub source-of-truth) so scripts behave the same whether run with `--lang en` or `--lang ja`. Full reference: [docs/manual/en/reference/json-output.md](docs/manual/en/reference/json-output.md).

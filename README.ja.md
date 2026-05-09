@@ -46,20 +46,27 @@ gh alias set task tasks
 
 ## 構造化出力
 
-read 系コマンドと `add` は `--json [fields]` / `--jq <query>` を受け付け、シェルスクリプト・エージェント・`jq` / `yq` への接続が容易。
+全コマンド(read 系と mutation 系: `add` / `done` / `link` / `plan --write` / `projects init` / `init-templates`)が `--json [fields]` / `--jq <query>` を受け付け、シェルスクリプト・エージェント・`jq` / `yq` への接続が容易。`--json` は tab 補完対応、`--paginate` で read 系コマンドの全件取得も可能。
 
 ```bash
 # 利用可能フィールドを一覧表示(空値)
 gh tasks list --json=
 
-# 指定フィールドの JSON 配列
-gh tasks list --json id,number,title,type
+# 指定フィールドの JSON 配列(state OPEN / CLOSED / MERGED もカタログに含まれる)
+gh tasks list --json id,number,state,title
 
 # 内蔵 jq フィルタ(Pure Go の gojq、外部依存なし)
 gh tasks list --json id --jq '.[].id'
 
 # 作成した Issue の id を後続コマンドで使う
 issue_id=$(gh tasks add "Bug: /api/foo が 404" --json id --jq '.[0].id')
+
+# 既定の取得上限を超えて全件取得
+gh tasks list --paginate --json id
+
+# close 済 Issue の state を script で確認
+gh tasks done 42 --json state --jq '.[0].state'
+# "CLOSED"
 ```
 
 `stdout` は JSON 専用。警告と localized エラーは `stderr` に出る。出力はロケール非依存(フィールド名は英語、値は GitHub 実体値)なので、`--lang en` でも `--lang ja` でも script の挙動が変わらない。詳細は [docs/manual/ja/reference/json-output.md](docs/manual/ja/reference/json-output.md) を参照。

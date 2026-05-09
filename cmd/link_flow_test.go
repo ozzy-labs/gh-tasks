@@ -138,6 +138,65 @@ func TestLink_ProjectDualAdd(t *testing.T) {
 	}
 }
 
+// TestLink_JSONProjectBind pins the project-scope --json contract:
+// linkType=projectBind plus a linkedTo object carrying the bound
+// Issue's id / number / type / url. Mirrors TestLink_ProjectDualAdd
+// for the GraphQL fixtures but exercises the JSON path.
+func TestLink_JSONProjectBind(t *testing.T) {
+	t.Parallel()
+
+	g := &testfake.FakeGraphQL{Responses: []testfake.FakeResponse{
+		{MatchSubstring: "query GetOrgProjectV2 (", Data: orgProject("PVT_org")},
+		{
+			MatchSubstring: "query GetPullRequestByNumber (",
+			Data: map[string]any{"repository": map[string]any{"pullRequest": map[string]any{
+				"id": "PR_1", "number": 12, "url": "u/12", "body": "",
+			}}},
+		},
+		{
+			MatchSubstring: "query GetIssueByNumber (",
+			Data: map[string]any{"repository": map[string]any{"issue": map[string]any{
+				"id": "I_42", "number": 42, "url": "u/42", "state": "OPEN",
+			}}},
+		},
+		{
+			MatchSubstring: "mutation AddProjectV2ItemById (",
+			Data:           map[string]any{"addProjectV2ItemById": map[string]any{"item": map[string]any{"id": "PI_pr"}}},
+		},
+		{
+			MatchSubstring: "mutation AddProjectV2ItemById (",
+			Data:           map[string]any{"addProjectV2ItemById": map[string]any{"item": map[string]any{"id": "PI_iss"}}},
+		},
+	}}
+	d := testDeps(g, func(d *cmd.Deps) {
+		d.HasGitRemote = func() bool { return true }
+		d.LoadConfig = func() (config.AppConfig, error) {
+			return config.AppConfig{OrgProject: project.Ref{Owner: "octo", Number: 7}}, nil
+		}
+	})
+	stdout, _, err := runCmd(t, d, "link", "12", "42", "--scope=org", "--json", "id,linkType,linkedTo")
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	assertJSONLength(t, stdout.String(), 1)
+	assertJSONFieldEquals(t, stdout.String(), 0, "id", "PR_1")
+	assertJSONFieldEquals(t, stdout.String(), 0, "linkType", "projectBind")
+	rows := parseJSONArray(t, stdout.String())
+	linkedTo, _ := rows[0]["linkedTo"].(map[string]any)
+	if linkedTo == nil {
+		t.Fatalf("expected linkedTo object, got: %v", rows[0]["linkedTo"])
+	}
+	if linkedTo["id"] != "I_42" || linkedTo["url"] != "u/42" {
+		t.Errorf("linkedTo missing id/url; got: %v", linkedTo)
+	}
+	if got, _ := linkedTo["number"].(float64); int(got) != 42 {
+		t.Errorf("linkedTo.number = %v; want 42", linkedTo["number"])
+	}
+	if linkedTo["type"] != "ISSUE" {
+		t.Errorf("linkedTo.type = %v; want ISSUE", linkedTo["type"])
+	}
+}
+
 // TestLink_JSONRepoCloses pins the --json output for the repo path: a
 // single-element JSON array carrying the PR row plus linkType=
 // "closesAdded" and a linkedTo object with the target Issue number.

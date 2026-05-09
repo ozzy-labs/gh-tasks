@@ -13,7 +13,7 @@ All `gh tasks` commands and flags.
 
 ### Structured output
 
-The read-only commands (`list`, `today`, `triage`, `plan` preview, `standup`, `review`) and `add` accept `--json [fields]` and `--jq <query>` to emit machine-readable output for scripts and agents. See [json-output.md](./json-output.md) for the field catalog, contract, and examples.
+Every command (read-only **and** mutation: `add` / `done` / `link` / `plan --write` / `projects init` / `init-templates`) accepts `--json [fields]` and `--jq <query>` to emit machine-readable output for scripts and agents. `--json` is tab-completable, and `--paginate` walks the full result set on the read commands (`list`, `today`, `triage`, `standup`, `review`). See [json-output.md](./json-output.md) for the field catalog, contract, and examples.
 
 ## Commands
 
