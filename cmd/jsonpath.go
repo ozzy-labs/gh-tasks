@@ -32,6 +32,13 @@ var itemJSONFields = jsonout.FieldList{
 var activityJSONFields = append(append(jsonout.FieldList{}, itemJSONFields...),
 	jsonout.Field{Name: "category", Description: "Activity bucket the row belongs to (e.g. closed / merged / in-progress / done / completed)"})
 
+// linkJSONFields is itemJSONFields plus link-specific metadata. Used by
+// `link` to describe the PR row plus the task it was bound to.
+var linkJSONFields = append(append(jsonout.FieldList{}, itemJSONFields...),
+	jsonout.Field{Name: "linkType", Description: "How the link was established: `closesAdded` (PR body got `Closes #N`) or `projectBind` (PR + task bound to the same Project v2)"},
+	jsonout.Field{Name: "linkedTo", Description: "Target task that the PR was linked to. Object `{id, number, type, url}` or null when the link was already in place"},
+)
+
 // jsonRequest carries the resolved --json / --jq flag values from the
 // shared resolver to per-scope handlers.
 type jsonRequest struct {
