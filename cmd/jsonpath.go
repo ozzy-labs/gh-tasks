@@ -19,6 +19,7 @@ import (
 var itemJSONFields = jsonout.FieldList{
 	{Name: "id", Description: "GraphQL global ID of the Issue or Project item"},
 	{Name: "number", Description: "Issue / Project item number (0 for draft items)"},
+	{Name: "state", Description: "Issue / PR state (`OPEN` / `CLOSED` / `MERGED`); empty string for draft items where it does not apply"},
 	{Name: "title", Description: "Title of the Issue or Project item"},
 	{Name: "type", Description: "ISSUE | PULL_REQUEST | DRAFT_ISSUE"},
 	{Name: "updatedAt", Description: "Last-update timestamp (RFC 3339)"},
@@ -111,7 +112,8 @@ func renderJSONItems(c *cobra.Command, r Resolved, items []map[string]any, req j
 // repoIssueRowsToJSON maps repo-scope issues to the camelCase rows expected
 // by jsonout.Render for itemJSONFields. Nil entries from the paginator are
 // skipped. Caller may add extra keys (e.g. `category`) to each row before
-// passing to renderJSONItems.
+// passing to renderJSONItems. State is "OPEN" because the source paginator
+// (PaginateRepoIssues) only returns open issues.
 func repoIssueRowsToJSON(issues []*queries.RepoIssue) []map[string]any {
 	out := make([]map[string]any, 0, len(issues))
 	for _, issue := range issues {
@@ -121,6 +123,7 @@ func repoIssueRowsToJSON(issues []*queries.RepoIssue) []map[string]any {
 		out = append(out, map[string]any{
 			"id":        issue.Id,
 			"number":    issue.Number,
+			"state":     "OPEN",
 			"title":     issue.Title,
 			"type":      "ISSUE",
 			"updatedAt": issue.UpdatedAt,
@@ -132,6 +135,8 @@ func repoIssueRowsToJSON(issues []*queries.RepoIssue) []map[string]any {
 
 // projectItemRowsToJSON flattens project-scope items via projectitem.ContentOf
 // so org/user-scope output matches the repo shape on the shared keys.
+// `state` reflects the GitHub-side state of the underlying content (Issue /
+// PR); draft items have no native state so `""` is emitted.
 func projectItemRowsToJSON(items []*queries.ProjectV2ItemNode) []map[string]any {
 	out := make([]map[string]any, 0, len(items))
 	for _, item := range items {
@@ -142,6 +147,7 @@ func projectItemRowsToJSON(items []*queries.ProjectV2ItemNode) []map[string]any 
 		out = append(out, map[string]any{
 			"id":        item.Id,
 			"number":    c.Number,
+			"state":     c.State,
 			"title":     c.Title,
 			"type":      contentTypeName(c.Typename),
 			"updatedAt": item.UpdatedAt,

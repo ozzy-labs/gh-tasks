@@ -22,19 +22,25 @@ const (
 )
 
 func newDoneCmd(deps Deps) *cobra.Command {
-	return &cobra.Command{
+	c := &cobra.Command{
 		Use:   "done <id>",
 		Short: "Mark a task as done",
 		RunE: func(c *cobra.Command, args []string) error {
 			return runDone(c.Context(), c, deps, args)
 		},
 	}
+	addJSONFlags(c)
+	return c
 }
 
 func runDone(ctx context.Context, c *cobra.Command, deps Deps, args []string) error {
 	r, err := deps.Resolve(c)
 	if err != nil {
 		return localizedError(c, r, err)
+	}
+	jsonReq, jsonOn, err := resolveJSONRequest(c, r, itemJSONFields)
+	if err != nil {
+		return err
 	}
 	if len(args) == 0 || args[0] == "" {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.done.idRequired"))
@@ -50,12 +56,12 @@ func runDone(ctx context.Context, c *cobra.Command, deps Deps, args []string) er
 		return localizedError(c, r, err)
 	}
 	if sc == scope.Repo {
-		return runDoneRepo(ctx, c, deps, r, rawID)
+		return runDoneRepo(ctx, c, deps, r, rawID, jsonOn, jsonReq)
 	}
-	return runDoneProject(ctx, c, deps, r, sc, rawID)
+	return runDoneProject(ctx, c, deps, r, sc, rawID, jsonOn, jsonReq)
 }
 
-func runDoneRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, rawID string) error {
+func runDoneRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, rawID string, jsonOn bool, jsonReq jsonRequest) error {
 	num, ok := parseIssueNumber(rawID)
 	if !ok {
 		fmt.Fprintln(c.ErrOrStderr(), r.T("error.done.idRequired"))
@@ -79,6 +85,13 @@ func runDoneRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, r
 		return ErrSilentRuntime
 	}
 	if resp.Repository.Issue.State == queries.IssueStateClosed {
+		if jsonOn {
+			return renderJSONItems(c, r, []map[string]any{{
+				"id": resp.Repository.Issue.Id, "number": resp.Repository.Issue.Number,
+				"state": "CLOSED", "title": nil, "type": "ISSUE",
+				"updatedAt": nil, "url": resp.Repository.Issue.Url,
+			}}, jsonReq, itemJSONFields)
+		}
 		fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("done.alreadyClosed"), resp.Repository.Issue.Url)
 		return nil
 	}
@@ -86,11 +99,18 @@ func runDoneRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, r
 	if err != nil {
 		return wrapTransport(c.ErrOrStderr(), r.Locale, "close issue", err)
 	}
+	if jsonOn {
+		return renderJSONItems(c, r, []map[string]any{{
+			"id": closed.CloseIssue.Issue.Id, "number": closed.CloseIssue.Issue.Number,
+			"state": "CLOSED", "title": nil, "type": "ISSUE",
+			"updatedAt": nil, "url": closed.CloseIssue.Issue.Url,
+		}}, jsonReq, itemJSONFields)
+	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("done.closed"), closed.CloseIssue.Issue.Url)
 	return nil
 }
 
-func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, itemID string) error {
+func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, sc scope.Scope, itemID string, jsonOn bool, jsonReq jsonRequest) error {
 	pref, err := project.Resolve(project.ResolveOptions{
 		Scope:       sc,
 		Flag:        flagString(c, "project"),
@@ -163,6 +183,9 @@ func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		return ErrSilentRuntime
 	}
 	if isAlreadyDone(target, statusField.ID, doneOption.ID) {
+		if jsonOn {
+			return renderJSONItems(c, r, projectItemRowsToJSON([]*queries.ProjectV2ItemNode{target}), jsonReq, itemJSONFields)
+		}
 		fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("done.alreadyDone.project"), itemID)
 		return nil
 	}
@@ -173,6 +196,9 @@ func runDoneProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved
 		Value:     &queries.ProjectV2FieldValue{SingleSelectOptionId: &doneOption.ID},
 	}); err != nil {
 		return wrapTransport(c.ErrOrStderr(), r.Locale, "update item field value", err)
+	}
+	if jsonOn {
+		return renderJSONItems(c, r, projectItemRowsToJSON([]*queries.ProjectV2ItemNode{target}), jsonReq, itemJSONFields)
 	}
 	fmt.Fprintf(c.OutOrStdout(), "%s: %s\n", r.T("done.statusUpdated.project"), itemID)
 	return nil

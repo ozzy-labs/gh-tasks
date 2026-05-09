@@ -88,7 +88,7 @@ func runAddRepo(ctx context.Context, c *cobra.Command, deps Deps, r Resolved, ti
 		// need the timestamp can re-fetch via gh tasks list --json.
 		return renderJSONItems(c, r, []map[string]any{{
 			"id": resp.CreateIssue.Issue.Id, "number": resp.CreateIssue.Issue.Number,
-			"title": title, "type": "ISSUE",
+			"state": "OPEN", "title": title, "type": "ISSUE",
 			"updatedAt": nil, "url": resp.CreateIssue.Issue.Url,
 		}}, jsonReq, itemJSONFields)
 	}
@@ -132,7 +132,7 @@ func runAddProject(ctx context.Context, c *cobra.Command, deps Deps, r Resolved,
 		// updatedAt is null per the contract.
 		return renderJSONItems(c, r, []map[string]any{{
 			"id": resp.AddProjectV2DraftIssue.ProjectItem.Id, "number": 0,
-			"title": title, "type": "DRAFT_ISSUE",
+			"state": "", "title": title, "type": "DRAFT_ISSUE",
 			"updatedAt": nil, "url": "",
 		}}, jsonReq, itemJSONFields)
 	}
