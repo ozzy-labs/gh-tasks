@@ -106,6 +106,9 @@ jobs:
       - name: i18n catalog reference check
         run: go run . check-i18n --refs
 
+      - name: json schema drift check
+        run: go run . check-json-schema --check
+
   go-skill-build-smoke:
     runs-on: ubuntu-latest
     steps:

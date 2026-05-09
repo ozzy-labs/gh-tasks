@@ -34,6 +34,13 @@ pre-commit:
     check-i18n-catalog-refs:
       glob: '{cmd,internal}/**/*.go'
       run: mise exec -- go run . check-i18n --refs
+    check-json-schema:
+      # Detect drift between the in-source --json catalogs (cmd/jsonpath.go)
+      # and the field tables in docs/manual/{en,ja}/reference/json-output.md.
+      # Run when either side changes; fix with
+      # `go run . check-json-schema --update`.
+      glob: '{cmd/jsonpath.go,cmd/check_json_schema.go,docs/manual/{en,ja}/reference/json-output.md}'
+      run: mise exec -- go run . check-json-schema --check
     audit-mutations:
       # Detect new genqlient input types that are missing the null-
       # serialization workaround (constructors / MarshalJSON). See

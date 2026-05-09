@@ -21,6 +21,14 @@ actionlint = "1"
 gitleaks = "8"
 "github:tamasfe/taplo" = "0.10.0"
 
+[tasks.check-json-schema]
+description = "Verify the docs catalog tables match the in-source --json catalogs (no drift)"
+run = "go run . check-json-schema --check"
+
+[tasks."check-json-schema:update"]
+description = "Rewrite the docs catalog tables from the in-source --json catalogs"
+run = "go run . check-json-schema --update"
+
 [tasks.e2e]
 description = "Run all gh-tasks E2E tests against real GitHub (writes [E2E]-prefixed resources to ozzy-labs/3, ozzy-3/5)"
 run = "go test -tags=e2e -v -count=1 -timeout=20m ./e2e/..."
