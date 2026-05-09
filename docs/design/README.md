@@ -31,4 +31,5 @@
 | [adapter-pipeline.md](./adapter-pipeline.md) | skill SSOT → dist/{adapter}/ → consumer の処理連鎖、4 adapter の出力仕様 |
 | [release-process.md](./release-process.md) | release.yaml の 3 job 構成、release-please 連携、attestations / checksums、release-as の経緯 |
 | [test-structure.md](./test-structure.md) | `cmd/` パッケージのテスト構成 (ファイル分担、mock 戦略、命名規則、新規テスト追加先のフロー) |
+| [json-output.md](./json-output.md) | 構造化出力 (`--json` / `--jq`) の採用方針・契約・命名規則・安定性ポリシー・実装ガイドライン (#367) |
 | [go-migration-plan.md](./go-migration-plan.md) | TS から Go への完全移行計画(2026-05 完了済の歴史的記録) |
