@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [release-please-config.json](./release-please-config.json) for the automated release flow.
 
+## [0.4.1](https://github.com/ozzy-labs/gh-tasks/compare/v0.4.0...v0.4.1) (2026-07-04)
+
+
+### Bug Fixes
+
+* gate pre-commit trivy on high/critical severity ([#406](https://github.com/ozzy-labs/gh-tasks/issues/406)) ([dc10d79](https://github.com/ozzy-labs/gh-tasks/commit/dc10d7972f7cd3bf67443314ee214ef79e586008))
+
 ## [0.4.0](https://github.com/ozzy-labs/gh-tasks/compare/v0.3.0...v0.4.0) (2026-05-09)
 
 
